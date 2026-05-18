@@ -136,6 +136,12 @@ npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000
 See [docs/launch-monitoring.md](docs/launch-monitoring.md) for status meanings
 and faster modes.
 
+Operational launch backlog:
+
+```text
+docs/launch-issues.md
+```
+
 ## Modes
 
 Default mode is dry-run:
@@ -369,6 +375,7 @@ Future live procurement must require:
 - `docs/bazaar-indexing.md` - CDP Bazaar indexing runbook and verification state.
 - `docs/external-marketplace-listing.md` - public-safe listing copy and directory submission plan.
 - `docs/launch-monitoring.md` - combined production launch monitoring runbook.
+- `docs/launch-issues.md` - tracked manual launch and live-spend policy gates.
 - `compose.yaml` - local Docker Compose service with dry-run defaults.
 - `docs/github-release-checklist.md` - public release checklist.
 - `scripts/check-bazaar-indexing.js` - read-only CDP Bazaar visibility check.

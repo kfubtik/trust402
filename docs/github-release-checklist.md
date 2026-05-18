@@ -111,6 +111,21 @@ Use [external-marketplace-listing.md](external-marketplace-listing.md) as the
 public-safe payload for external directories after the user approves public
 outreach.
 
+## Launch Backlog
+
+Track the remaining manual and spend-policy gates in
+[launch-issues.md](launch-issues.md). These issues are intentionally separate
+from the launch MVP because they either require third-party dashboard access or
+explicit live-spend policy.
+
+Current open tracks:
+
+- Git-backed Vercel deploys for the private repo;
+- external directory submissions and visibility;
+- AgentCash auto-refill policy;
+- live procurement spend limits;
+- paid Proof402 delegation policy.
+
 ## Launch Positioning
 
 Launch as:
