@@ -13,3 +13,15 @@ jobs:
         with:
           node-version: 20
       - run: npm run verify
+      - run: docker build -t trust402:test .
+      - name: Smoke Docker image
+        run: |
+          docker run -d --name trust402-test -p 4032:4032 -e PUBLIC_BASE_URL=http://127.0.0.1:4032 trust402:test
+          node -e "let tries=0; const wait=async()=>{try{const r=await fetch('http://127.0.0.1:4032/health'); if(r.ok) return;}catch{} if(++tries>30) process.exit(1); setTimeout(wait, 1000)}; wait()"
+          npm run smoke -- http://127.0.0.1:4032
+      - name: Docker logs
+        if: failure()
+        run: docker logs trust402-test || true
+      - name: Stop Docker container
+        if: always()
+        run: docker rm -f trust402-test || true

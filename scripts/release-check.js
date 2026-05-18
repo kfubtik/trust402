@@ -4,6 +4,7 @@ import { openApiSpec, x402WellKnown } from "../src/openapi.js";
 
 const catalog = JSON.parse(readFileSync("marketplace/resources.json", "utf8"));
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
+const workflow = readFileSync(".github/workflows/test.yml", "utf8");
 const openapi = openApiSpec();
 const wellKnown = x402WellKnown();
 
@@ -21,6 +22,8 @@ assert(existsSync("Dockerfile"), "Dockerfile must exist");
 assert(existsSync(".dockerignore"), ".dockerignore must exist");
 assert(existsSync("docs/deployment.md"), "deployment docs must exist");
 assert(existsSync("docs/github-release-checklist.md"), "GitHub release checklist must exist");
+assert(workflow.includes("docker build -t trust402:test ."), "CI must build the Docker image");
+assert(workflow.includes("npm run smoke -- http://127.0.0.1:4032"), "CI must smoke test the Docker image");
 assert(catalog.paidLaunchResources.length === 10, "expected 10 paid launch resources");
 assert(catalog.laterResourcesToPreserve.length >= 2, "expected preserved later resources");
 assert(catalog.safety.liveSpendDefault === false, "live spend must default to false");

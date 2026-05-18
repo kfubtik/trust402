@@ -21,6 +21,9 @@ PROOF402_MAX_SPEND_USD=0
 
 ## Docker
 
+The GitHub Actions workflow builds the Docker image and runs a container smoke
+test on every push.
+
 Build:
 
 ```powershell
