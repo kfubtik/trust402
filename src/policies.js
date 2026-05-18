@@ -93,6 +93,7 @@ function agentcashAutoRefillPolicy(runtimeConfig) {
   const blockers = [];
   if (!runtimeConfig.agentcashAutoRefillApproved) blockers.push(blocker("agentcash_refill_not_approved", "AGENTCASH_AUTO_REFILL_APPROVED is false."));
   if (!runtimeConfig.agentcashAutoRefillEnabled) blockers.push(blocker("agentcash_refill_disabled", "AGENTCASH_AUTO_REFILL_ENABLED is false."));
+  if (!runtimeConfig.agentcashAutoRefillProvider) blockers.push(blocker("missing_refill_provider", "AGENTCASH_AUTO_REFILL_PROVIDER is not configured."));
   if (!(runtimeConfig.agentcashAutoRefillThresholdUsd > 0)) blockers.push(blocker("missing_refill_threshold", "AGENTCASH_AUTO_REFILL_THRESHOLD_USD must be greater than zero."));
   if (!(runtimeConfig.agentcashAutoRefillAmountUsd > 0)) blockers.push(blocker("missing_refill_amount", "AGENTCASH_AUTO_REFILL_AMOUNT_USD must be greater than zero."));
   if (!(runtimeConfig.agentcashAutoRefillDailyCapUsd > 0)) blockers.push(blocker("missing_refill_daily_cap", "AGENTCASH_AUTO_REFILL_DAILY_CAP_USD must be greater than zero."));
@@ -111,7 +112,8 @@ function agentcashAutoRefillPolicy(runtimeConfig) {
     controls: {
       thresholdUsd: runtimeConfig.agentcashAutoRefillThresholdUsd,
       refillAmountUsd: runtimeConfig.agentcashAutoRefillAmountUsd,
-      dailyCapUsd: runtimeConfig.agentcashAutoRefillDailyCapUsd
+      dailyCapUsd: runtimeConfig.agentcashAutoRefillDailyCapUsd,
+      providerConfigured: Boolean(runtimeConfig.agentcashAutoRefillProvider)
     },
     blockers
   };

@@ -27,6 +27,8 @@ payment headers, private receipts, or AgentCash internals.
 - Trust402 live procurement: disabled.
 - Paid Proof402 delegation: disabled.
 - AgentCash auto-refill: disabled.
+- Planned auto-refill threshold: `$0.50`, still blocked until provider,
+  explicit approval, caps, audit log, and emergency stop are defined.
 
 ## Regression Commands
 

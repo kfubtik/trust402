@@ -353,6 +353,7 @@ MVP guarantees:
 Future live procurement must require:
 
 - hot-wallet profile;
+- AgentCash auto-refill provider and stop rule if refill is enabled;
 - per-call limit;
 - per-job limit;
 - daily limit;
