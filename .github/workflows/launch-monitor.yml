@@ -1,0 +1,34 @@
+name: launch-monitor
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Production base URL to monitor
+        required: true
+        default: https://trust402.vercel.app
+      timeout_ms:
+        description: Per-request timeout in milliseconds
+        required: true
+        default: "10000"
+      include_external_directories:
+        description: Check external directory visibility as an advisory signal
+        required: true
+        type: boolean
+        default: true
+
+jobs:
+  launch-monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - name: Fast production API and x402 monitor
+        if: ${{ !inputs.include_external_directories }}
+        run: npm run launch:monitor -- "${{ inputs.base_url }}" --timeout-ms=${{ inputs.timeout_ms }} --skip-directories --strict
+      - name: Full production launch monitor
+        if: ${{ inputs.include_external_directories }}
+        run: npm run launch:monitor -- "${{ inputs.base_url }}" --timeout-ms=${{ inputs.timeout_ms }} --strict

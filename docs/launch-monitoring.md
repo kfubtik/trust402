@@ -53,6 +53,22 @@ Fail non-zero if required checks fail:
 npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000 --strict
 ```
 
+## GitHub Workflow
+
+The private repository includes a manual workflow:
+
+```text
+.github/workflows/launch-monitor.yml
+```
+
+Use GitHub Actions -> `launch-monitor` -> Run workflow. The default run checks
+production API readiness, unpaid x402 challenge, CDP Bazaar, and external
+directories. Set `include_external_directories=false` for a faster production
+and CDP Bazaar gate.
+
+The workflow does not need secrets. It calls only public production URLs and
+public directory pages.
+
 ## Latest Verified Baseline
 
 Last checked on 2026-05-18 at 16:20:50 +07:00 with:

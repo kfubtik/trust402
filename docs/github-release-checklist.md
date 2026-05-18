@@ -24,6 +24,10 @@ docker build -t trust402:local .
 docker compose config
 ```
 
+After pushing, run the manual GitHub Actions workflow `launch-monitor` against
+`https://trust402.vercel.app` when you want a remote production/Bazaar snapshot
+from GitHub. It uses public URLs only and does not require secrets.
+
 `smoke:x402` expects `TRUST402_PAYWALL_MODE=mock` or approved `real` mode. Do not
 run it against default demo mode.
 
