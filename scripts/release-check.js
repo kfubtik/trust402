@@ -17,6 +17,9 @@ assert(Array.isArray(packageJson.keywords) && packageJson.keywords.includes("x40
 assert(existsSync("README.md"), "README.md must exist");
 assert(existsSync("SECURITY.md"), "SECURITY.md must exist");
 assert(existsSync("LICENSE"), "LICENSE must exist");
+assert(existsSync("Dockerfile"), "Dockerfile must exist");
+assert(existsSync(".dockerignore"), ".dockerignore must exist");
+assert(existsSync("docs/deployment.md"), "deployment docs must exist");
 assert(existsSync("docs/github-release-checklist.md"), "GitHub release checklist must exist");
 assert(catalog.paidLaunchResources.length === 10, "expected 10 paid launch resources");
 assert(catalog.laterResourcesToPreserve.length >= 2, "expected preserved later resources");

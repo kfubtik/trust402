@@ -52,6 +52,13 @@ npm run verify
 npm run dev
 ```
 
+Docker:
+
+```powershell
+docker build -t trust402 .
+docker run --rm -p 4032:4032 --env PUBLIC_BASE_URL=http://127.0.0.1:4032 trust402
+```
+
 Open:
 
 ```text
@@ -208,5 +215,6 @@ Future live procurement must require:
 - `docs/resource-catalog.md` - human-readable resource catalog and prices.
 - `docs/safety-policy.md` - live-spend and secret-handling policy.
 - `docs/mvp-roadmap.md` - build phases.
+- `docs/deployment.md` - Docker and production environment notes.
 - `docs/github-release-checklist.md` - public release checklist.
 - `test/` - API and engine tests.

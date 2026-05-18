@@ -1,0 +1,12 @@
+.git
+.github
+node_modules
+.env
+.env.*
+!.env.example
+*.log
+data
+wallet*.json
+.agentcash
+coverage
+npm-debug.log*
