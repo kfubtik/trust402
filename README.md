@@ -80,6 +80,7 @@ http://127.0.0.1:4032/api/status
 http://127.0.0.1:4032/api/launch/checklist
 http://127.0.0.1:4032/api/marketplace/bundle
 http://127.0.0.1:4032/api/settlement/status
+http://127.0.0.1:4032/api/policies/spend
 http://127.0.0.1:4032/api/resources
 http://127.0.0.1:4032/openapi.json
 http://127.0.0.1:4032/.well-known/x402
@@ -207,6 +208,7 @@ GET /api/launch/checklist
 GET /api/marketplace/bundle
 GET /api/settlement/status
 GET /api/settlement/preflight
+GET /api/policies/spend
 GET /api/resources
 POST /api/receipts/hash-result
 POST /api/receipts/notarize-result
@@ -322,6 +324,12 @@ Inspect the paid-smoke preflight without spending:
 Invoke-RestMethod -Method Get -Uri http://127.0.0.1:4032/api/settlement/preflight
 ```
 
+Inspect live-spend policy gates without spending:
+
+```powershell
+Invoke-RestMethod -Method Get -Uri http://127.0.0.1:4032/api/policies/spend
+```
+
 ## Safety
 
 Trust402 is allowed to reason about spending before it is allowed to spend.
@@ -363,6 +371,7 @@ Future live procurement must require:
 - `src/proof402Client.js` - Proof402 request preview/probe logic with live calls blocked.
 - `src/settlement.js` - real x402 settlement readiness and unpaid challenge metadata.
 - `src/x402SdkAdapter.js` - disabled-by-default x402 SDK adapter used by the Express bridge.
+- `src/policies.js` - machine-readable spend policy gates and launch issue links.
 - `src/marketplace.js` - marketplace submission bundle and Bazaar extension drafts.
 - `src/openapi.js` - OpenAPI, capabilities, and `.well-known/x402`.
 - `src/readiness.js` - dry-run launch and public marketplace readiness checks.

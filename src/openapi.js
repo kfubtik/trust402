@@ -44,6 +44,7 @@ export function openApiSpec() {
     "/api/marketplace/bundle": getPath("Marketplace submission metadata and Bazaar extension drafts"),
     "/api/settlement/status": getPath("Real x402 settlement readiness and unpaid challenge status"),
     "/api/settlement/preflight": getPath("Operator preflight for one paid settlement smoke"),
+    "/api/policies/spend": getPath("Spend policy gates for live procurement, Proof402 delegation, and AgentCash auto-refill"),
     "/api/resources": getPath("Public Trust402 resource catalog"),
     "/api/receipts/hash-result": {
       post: {
@@ -193,6 +194,7 @@ export function capabilities() {
       marketplaceBundle: "/api/marketplace/bundle",
       settlementStatus: "/api/settlement/status",
       settlementPreflight: "/api/settlement/preflight",
+      spendPolicy: "/api/policies/spend",
       openapi: "/openapi.json",
       x402WellKnown: "/.well-known/x402"
     }

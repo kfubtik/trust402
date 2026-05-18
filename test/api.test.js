@@ -37,6 +37,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/receipts/notarize-result"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/settlement/status"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/settlement/preflight"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/policies/spend"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/procurement/execute"));
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/trust/check-x402"));
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/procurement/quote"));
@@ -51,6 +52,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(status.body.launchReadiness.readyForControlledProcurementDryRun, true);
     assert.equal(status.body.launchReadiness.readyForOneShotMonitoring, true);
     assert.equal(status.body.launchReadiness.readyForLiveSpend, false);
+    assert.equal(status.body.launchReadiness.readyForAgentCashAutoRefill, false);
     assert.equal(status.body.launchReadiness.readyForRealX402Settlement, false);
 
     const settlement = await request(baseUrl, "/api/settlement/status");
@@ -65,6 +67,15 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(preflight.body.tool, "settlement.preflight");
     assert.equal(preflight.body.readiness.paidSmokeReady, false);
     assert.ok(preflight.body.blockers.some((item) => item.id === "paid_smoke_approved"));
+
+    const policies = await request(baseUrl, "/api/policies/spend");
+    assert.equal(policies.response.status, 200);
+    assert.equal(policies.body.tool, "policies.spend_status");
+    assert.equal(policies.body.readiness.anyLiveSpendReady, false);
+    assert.equal(policies.body.policies.liveProcurement.enabled, false);
+    assert.equal(policies.body.policies.agentcashAutoRefill.enabled, false);
+    assert.equal(policies.body.policies.proof402Delegation.mode, "disabled");
+    assert.ok(policies.body.issues.agentcashAutoRefill.includes("/issues/7"));
 
     const checklist = await request(baseUrl, "/api/launch/checklist");
     assert.equal(checklist.response.status, 200);
@@ -90,6 +101,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/api/marketplace/bundle"].get);
     assert.ok(openapi.body.paths["/api/settlement/status"].get);
     assert.ok(openapi.body.paths["/api/settlement/preflight"].get);
+    assert.ok(openapi.body.paths["/api/policies/spend"].get);
     assert.ok(openapi.body.paths["/api/receipts/hash-result"].post);
     assert.ok(openapi.body.paths["/api/receipts/notarize-result"].post);
     assert.ok(openapi.body.paths["/api/procurement/quote"].post["x-payment-info"]);

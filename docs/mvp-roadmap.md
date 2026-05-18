@@ -65,6 +65,8 @@ Added:
 - `npm run smoke:x402` for unpaid challenge verification in mock or future real mode.
 - `npm run settlement:check` for x402 SDK import checks and route config drafts.
 - `/api/settlement/preflight` and `npm run settlement:preflight` for one paid-smoke readiness check without sending payment.
+- `/api/policies/spend` for read-only live procurement, Proof402 delegation,
+  and AgentCash auto-refill policy gates.
 - `src/expressApp.js` bridge for Vercel/serverless and real-mode Express middleware.
 - fail-closed protected routes when `TRUST402_PAYWALL_MODE=real` is requested
   before all settlement guards pass.

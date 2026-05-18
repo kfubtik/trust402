@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { openApiSpec, x402WellKnown } from "../src/openapi.js";
+import { spendPolicyStatus } from "../src/policies.js";
 import { launchChecklist } from "../src/readiness.js";
 import { marketplaceBundle } from "../src/marketplace.js";
 
@@ -20,6 +21,7 @@ const openapi = openApiSpec();
 const wellKnown = x402WellKnown();
 const checklist = launchChecklist();
 const bundle = marketplaceBundle();
+const spendPolicy = spendPolicyStatus();
 
 assert(packageJson.name === "trust402", "package name must be trust402");
 assert(packageJson.private === false, "package private must be false before GitHub release");
@@ -54,6 +56,7 @@ assert(existsSync(".github/workflows/launch-monitor.yml"), "launch monitor workf
 assert(existsSync("vercel.json"), "vercel.json must exist");
 assert(existsSync("api/index.js"), "Vercel API handler must exist");
 assert(existsSync("src/expressApp.js"), "Express x402 entrypoint bridge must exist");
+assert(existsSync("src/policies.js"), "spend policy status module must exist");
 assert(existsSync("compose.yaml"), "compose.yaml must exist");
 assert(existsSync("docs/deployment.md"), "deployment docs must exist");
 assert(existsSync("docs/bazaar-indexing.md"), "Bazaar indexing runbook must exist");
@@ -113,6 +116,10 @@ assert(
   "free settlement preflight helper must exist"
 );
 assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/policies/spend"),
+  "free spend policy status helper must exist"
+);
+assert(
   catalog.freeResources.some((resource) => resource.path === "/api/procurement/execute" && resource.priceUsd === 0),
   "free dry-run execute helper must exist"
 );
@@ -122,6 +129,7 @@ assert(openapi.paths?.["/api/launch/checklist"]?.get, "launch checklist must be 
 assert(openapi.paths?.["/api/marketplace/bundle"]?.get, "marketplace bundle must be present in OpenAPI");
 assert(openapi.paths?.["/api/settlement/status"]?.get, "settlement status must be present in OpenAPI");
 assert(openapi.paths?.["/api/settlement/preflight"]?.get, "settlement preflight must be present in OpenAPI");
+assert(openapi.paths?.["/api/policies/spend"]?.get, "spend policy status must be present in OpenAPI");
 assert(checklist.readiness.dryRunLaunchReady === true, "dry-run launch checklist must pass");
 assert(checklist.readiness.publicMarketplaceReady === false, "public marketplace readiness must remain false for localhost/no-settlement defaults");
 assert(checklist.settlement.realSettlementReady === false, "real settlement must remain disabled by default");
@@ -130,6 +138,10 @@ assert(bundle.listingState.dryRunMetadataReady === true, "marketplace bundle met
 assert(bundle.listingState.realSettlementReady === false, "marketplace bundle must not claim real settlement readiness by default");
 assert(bundle.listingState.cdpBazaarIndexingReady === false, "marketplace bundle must not claim CDP Bazaar indexing readiness");
 assert(bundle.indexing?.cdpBazaar?.status === "blocked", "default marketplace bundle must mark CDP Bazaar indexing blocked");
+assert(spendPolicy.readiness.anyLiveSpendReady === false, "spend policy status must keep live spend unavailable by default");
+assert(spendPolicy.policies.agentcashAutoRefill.ready === false, "AgentCash auto-refill must not be ready by default");
+assert(spendPolicy.policies.liveProcurement.ready === false, "live procurement must not be ready by default");
+assert(spendPolicy.policies.proof402Delegation.ready === false, "Proof402 delegation must not be ready by default");
 assert(
   bundle.resources.every((resource) => resource.metadata?.inputSchema && resource.bazaarExtensionDraft?.bazaar),
   "marketplace bundle resources must include input schemas and Bazaar drafts"

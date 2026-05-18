@@ -54,6 +54,11 @@
     },
     {
       "method": "GET",
+      "path": "/api/policies/spend",
+      "purpose": "Spend policy gates for live procurement, Proof402 delegation, and AgentCash auto-refill."
+    },
+    {
+      "method": "GET",
       "path": "/api/resources",
       "purpose": "Public resource catalog."
     },

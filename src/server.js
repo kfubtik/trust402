@@ -6,6 +6,7 @@ import { ApiError, errorBody } from "./errors.js";
 import { marketplaceBundle } from "./marketplace.js";
 import { monitorBadge, monitorSnapshot } from "./monitor.js";
 import { capabilities, openApiSpec, x402WellKnown } from "./openapi.js";
+import { spendPolicyStatus } from "./policies.js";
 import { procurementExecute, procurementQuote } from "./procurement.js";
 import { notarizeResult } from "./proof402Client.js";
 import { launchChecklist } from "./readiness.js";
@@ -61,6 +62,7 @@ export async function handleTrust402Request(req, res) {
           marketplaceBundle: "/api/marketplace/bundle",
           settlementStatus: "/api/settlement/status",
           settlementPreflight: "/api/settlement/preflight",
+          spendPolicy: "/api/policies/spend",
           resources: "/api/resources",
           proof402Preview: "/api/receipts/notarize-result",
           capabilities: "/api/capabilities",
@@ -115,6 +117,10 @@ export async function handleTrust402Request(req, res) {
       return sendJson(res, 200, settlementPreflight());
     }
 
+    if (req.method === "GET" && path === "/api/policies/spend") {
+      return sendJson(res, 200, spendPolicyStatus());
+    }
+
     if (req.method === "GET" && path === "/openapi.json") {
       return sendJson(res, 200, openApiSpec());
     }
@@ -158,6 +164,7 @@ function statusSummary() {
       readyForProof402Preview: Boolean(config.proof402BaseUrl),
       readyForLiveSpend: false,
       readyForProof402Delegation: false,
+      readyForAgentCashAutoRefill: false,
       readyForRealX402Settlement: settlementStatus().readiness.realSettlementReady
     },
     resources: {
@@ -179,6 +186,7 @@ function statusSummary() {
       marketplaceBundle: "/api/marketplace/bundle",
       settlementStatus: "/api/settlement/status",
       settlementPreflight: "/api/settlement/preflight",
+      spendPolicy: "/api/policies/spend",
       openapi: "/openapi.json",
       x402WellKnown: "/.well-known/x402",
       roadmap: "docs/mvp-roadmap.md",

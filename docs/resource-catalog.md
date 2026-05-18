@@ -63,6 +63,18 @@ Price: free.
 Reason: the first paid smoke is operationally sensitive. It should be planned
 and bounded before any buyer wallet signs a payment.
 
+### `GET /api/policies/spend`
+
+Machine-readable spend policy gates for live procurement, paid Proof402
+delegation, and AgentCash auto-refill. This endpoint is read-only: it does not
+read private keys, send payment headers, mutate wallet balance, or make paid
+subcalls.
+
+Price: free.
+
+Reason: future autonomous spend should be enabled from a policy checklist, not
+from scattered env flags.
+
 ### `GET /api/resources`
 
 Public catalog of Trust402 resources, prices, input schemas, and safety notes.

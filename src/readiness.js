@@ -179,6 +179,7 @@ function nextActions(failedChecks) {
 
 function isLiveSpendDisabled() {
   return config.defaultMode === "dry-run" &&
+    config.liveSpendEnabled === false &&
     config.proof402DelegationMode === "disabled" &&
     config.proof402MaxSpendUsd === 0;
 }
