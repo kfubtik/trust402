@@ -98,6 +98,10 @@ Production CDP Bazaar indexing is currently verified for all 10 launch
 resources, but local default configs should not claim readiness without the
 matching environment and receipt evidence.
 
+Use [external-marketplace-listing.md](external-marketplace-listing.md) as the
+public-safe payload for external directories after the user approves public
+outreach.
+
 ## Launch Positioning
 
 Launch as:

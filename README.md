@@ -349,6 +349,7 @@ Future live procurement must require:
 - `docs/mvp-roadmap.md` - build phases.
 - `docs/deployment.md` - Docker and production environment notes.
 - `docs/bazaar-indexing.md` - CDP Bazaar indexing runbook and verification state.
+- `docs/external-marketplace-listing.md` - public-safe listing copy and directory submission plan.
 - `compose.yaml` - local Docker Compose service with dry-run defaults.
 - `docs/github-release-checklist.md` - public release checklist.
 - `scripts/check-bazaar-indexing.js` - read-only CDP Bazaar visibility check.
