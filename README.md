@@ -127,6 +127,15 @@ npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
 See [docs/external-marketplace-listing.md](docs/external-marketplace-listing.md)
 for public-safe listing copy and directory submission gates.
 
+Run the combined production launch monitor:
+
+```powershell
+npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000
+```
+
+See [docs/launch-monitoring.md](docs/launch-monitoring.md) for status meanings
+and faster modes.
+
 ## Modes
 
 Default mode is dry-run:
@@ -359,8 +368,10 @@ Future live procurement must require:
 - `docs/deployment.md` - Docker and production environment notes.
 - `docs/bazaar-indexing.md` - CDP Bazaar indexing runbook and verification state.
 - `docs/external-marketplace-listing.md` - public-safe listing copy and directory submission plan.
+- `docs/launch-monitoring.md` - combined production launch monitoring runbook.
 - `compose.yaml` - local Docker Compose service with dry-run defaults.
 - `docs/github-release-checklist.md` - public release checklist.
 - `scripts/check-bazaar-indexing.js` - read-only CDP Bazaar visibility check.
 - `scripts/check-external-directories.js` - read-only external directory visibility check.
+- `scripts/launch-monitor.js` - combined production API, x402, Bazaar, and directory monitor.
 - `test/` - API and engine tests.

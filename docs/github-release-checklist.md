@@ -15,6 +15,7 @@ npm run settlement:preflight
 npm run marketplace:bundle
 npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10000 --limit=20
 npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
+npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000
 npm run smoke -- https://trust402.vercel.app
 npm run smoke:x402 -- https://trust402.vercel.app
 npm run smoke -- http://127.0.0.1:4032

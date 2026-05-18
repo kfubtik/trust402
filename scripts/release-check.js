@@ -27,6 +27,7 @@ assert(packageJson.scripts?.doctor, "package must expose npm run doctor");
 assert(packageJson.scripts?.["bazaar:indexing:check"], "package must expose npm run bazaar:indexing:check");
 assert(packageJson.scripts?.["bazaar:indexing:check:all"], "package must expose npm run bazaar:indexing:check:all");
 assert(packageJson.scripts?.["directories:check"], "package must expose npm run directories:check");
+assert(packageJson.scripts?.["launch:monitor"], "package must expose npm run launch:monitor");
 assert(packageJson.scripts?.["marketplace:bundle"], "package must expose npm run marketplace:bundle");
 assert(packageJson.scripts?.["privacy:check"], "package must expose npm run privacy:check");
 assert(packageJson.scripts?.["release:check"], "package must expose npm run release:check");
@@ -65,6 +66,7 @@ assert(vercelIgnore.includes(".agentcash"), "Vercel ignore must exclude AgentCas
 assert(apiIndex.includes("createTrust402ExpressApp"), "Vercel API handler must use the Express x402 bridge");
 assert(serverSource.includes("createTrust402ExpressApp"), "node start must use the Express bridge in real paywall mode");
 assert(existsSync("scripts/check-external-directories.js"), "external directory check script must exist");
+assert(existsSync("scripts/launch-monitor.js"), "production launch monitor script must exist");
 assert(workflow.includes("docker build -t trust402:test ."), "CI must build the Docker image");
 assert(workflow.includes("docker compose config"), "CI must validate docker compose config");
 assert(workflow.includes("npm run smoke -- http://127.0.0.1:4032"), "CI must smoke test the Docker image");
