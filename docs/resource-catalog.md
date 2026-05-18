@@ -211,7 +211,39 @@ Buyer gets:
 
 Launch price: `$0.04`.
 
-### 8. `POST /api/reports/x402-diligence`
+### 8. `POST /api/monitor/snapshot`
+
+Runs a one-shot x402 payment-flow and trust drift snapshot.
+
+Checks:
+
+- endpoint probe result;
+- current trust score;
+- optional expected status;
+- optional expected price;
+- receipt-ready snapshot hash.
+
+Launch price: `$0.015`.
+
+Reason: this is not a subscription yet; it lets buyers test whether recurring
+monitoring is valuable.
+
+### 9. `POST /api/monitor/badge`
+
+Generates a one-shot Trust402 badge payload from a snapshot.
+
+Buyer gets:
+
+- status label;
+- score;
+- color;
+- snapshot hash;
+- markdown badge string;
+- receipt bundle.
+
+Launch price: `$0.02`.
+
+### 10. `POST /api/reports/x402-diligence`
 
 Full report for an x402 endpoint or origin.
 
@@ -265,25 +297,6 @@ Later price: pass-through proof cost plus `$0.005-$0.01`.
 Reason to wait: Proof402 should be integrated as an external service, not
 modified inside this project.
 
-### `POST /api/monitor/snapshot`
-
-One-shot x402 payment-flow and drift check.
-
-Later price: `$0.01-$0.02`.
-
-Reason to wait: the launch `check-x402` should prove whether users want
-repeated checks.
-
-### `POST /api/monitor/badge`
-
-Generates or refreshes a public trust badge snapshot after repeated checks
-exist.
-
-Later price: `$0.02` per refresh, or a monthly package only after demand is
-visible.
-
-Reason to wait: badges need history and credibility, not just a single check.
-
 ## Pricing Anchors
 
 Current x402 markets often price simple utility/data calls around
@@ -309,11 +322,11 @@ Build first:
 6. `procurement-plan`
 7. `procurement-quote`
 8. `procurement-execute` dry-run
-9. `x402-diligence`
+9. `monitor-snapshot`
+10. `monitor-badge`
+11. `x402-diligence`
 
 Build later:
 
 1. `procurement-execute` live mode
 2. `receipts-notarize-result`
-3. `monitor-snapshot`
-4. `monitor-badge`

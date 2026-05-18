@@ -31,12 +31,14 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
 
     const resources = await request(baseUrl, "/api/resources");
     assert.equal(resources.response.status, 200);
-    assert.equal(resources.body.paidLaunchResources.length, 8);
+    assert.equal(resources.body.paidLaunchResources.length, 10);
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/status"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/receipts/hash-result"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/procurement/execute"));
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/trust/check-x402"));
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/procurement/quote"));
+    assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/monitor/snapshot"));
+    assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/monitor/badge"));
     assert.ok(resources.body.laterResourcesToPreserve.some((resource) => resource.path === "/api/procurement/execute"));
 
     const status = await request(baseUrl, "/api/status");
@@ -44,6 +46,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(status.body.launchReadiness.readyForGitHub, true);
     assert.equal(status.body.launchReadiness.readyForReceiptLayer, true);
     assert.equal(status.body.launchReadiness.readyForControlledProcurementDryRun, true);
+    assert.equal(status.body.launchReadiness.readyForOneShotMonitoring, true);
     assert.equal(status.body.launchReadiness.readyForLiveSpend, false);
 
     const openapi = await request(baseUrl, "/openapi.json");
@@ -53,6 +56,8 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/api/receipts/hash-result"].post);
     assert.ok(openapi.body.paths["/api/procurement/quote"].post["x-payment-info"]);
     assert.ok(openapi.body.paths["/api/procurement/execute"].post);
+    assert.ok(openapi.body.paths["/api/monitor/snapshot"].post["x-payment-info"]);
+    assert.ok(openapi.body.paths["/api/monitor/badge"].post["x-payment-info"]);
     assert.ok(openapi.body.paths["/api/reports/x402-diligence"].post["x-payment-info"]);
 
     const wellKnown = await request(baseUrl, "/.well-known/x402");
@@ -130,6 +135,36 @@ test("hash-result returns a dry-run receipt bundle", async () => {
     assert.equal(body.receiptBundle.proofProvider, "Proof402");
     assert.equal(body.receiptBundle.delegation.paidProofCallMade, false);
     assert.equal(body.receiptBundle.policy.liveSpendEnabled, false);
+  });
+});
+
+test("monitor snapshot and badge endpoints return one-shot outputs", async () => {
+  await withServer(async (baseUrl) => {
+    const snapshot = await request(baseUrl, "/api/monitor/snapshot", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        endpoint: `${baseUrl}/api/trust/score-resource`,
+        method: "POST",
+        expectedStatus: 402
+      })
+    });
+
+    assert.equal(snapshot.response.status, 200);
+    assert.equal(snapshot.body.tool, "monitor.snapshot");
+    assert.match(snapshot.body.snapshotHash, /^sha256:[a-f0-9]{64}$/);
+    assert.equal(snapshot.body.policy.storesHistory, false);
+
+    const badge = await request(baseUrl, "/api/monitor/badge", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ snapshot: snapshot.body })
+    });
+
+    assert.equal(badge.response.status, 200);
+    assert.equal(badge.body.tool, "monitor.badge");
+    assert.match(badge.body.badgeHash, /^sha256:[a-f0-9]{64}$/);
+    assert.equal(badge.body.policy.paidSubcallsMade, 0);
   });
 });
 

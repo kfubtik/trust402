@@ -6,7 +6,7 @@ async function main() {
   assert(health.liveSpendEnabled === false, "/health must keep liveSpendEnabled=false");
 
   const resources = await getJson("/api/resources");
-  assert(resources.paidLaunchResources?.length === 8, "/api/resources expected 8 launch resources");
+  assert(resources.paidLaunchResources?.length === 10, "/api/resources expected 10 launch resources");
 
   const status = await getJson("/api/status");
   assert(status.launchReadiness?.readyForGitHub === true, "/api/status readyForGitHub mismatch");
@@ -16,6 +16,7 @@ async function main() {
   assert(openapi.openapi === "3.1.0", "/openapi.json version mismatch");
   assert(openapi.paths?.["/api/trust/check-x402"]?.post, "/openapi missing check-x402");
   assert(openapi.paths?.["/api/receipts/hash-result"]?.post, "/openapi missing hash-result");
+  assert(openapi.paths?.["/api/monitor/snapshot"]?.post, "/openapi missing monitor snapshot");
 
   const score = await postJson("/api/trust/score-resource", {
     endpoint: "https://example.com/api/paid",
@@ -77,6 +78,16 @@ async function main() {
     payload: { recommendation: "use", score: 88 }
   });
   assert(receipt.receiptBundle?.delegation?.paidProofCallMade === false, "/api/receipts/hash-result must not call Proof402");
+
+  const snapshot = await postJson("/api/monitor/snapshot", {
+    endpoint: `${baseUrl}/api/trust/score-resource`,
+    method: "POST",
+    expectedStatus: 402
+  });
+  assert(snapshot.policy?.storesHistory === false, "/api/monitor/snapshot must not store history");
+
+  const badge = await postJson("/api/monitor/badge", { snapshot });
+  assert(badge.policy?.paidSubcallsMade === 0, "/api/monitor/badge must not make paid subcalls");
 
   console.log(`Trust402 smoke passed for ${baseUrl}`);
 }

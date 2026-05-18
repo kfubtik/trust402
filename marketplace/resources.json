@@ -112,6 +112,22 @@
       "purpose": "Produce a concrete quote and approval payload for a multi-resource purchase path without spending."
     },
     {
+      "id": "monitor.snapshot",
+      "method": "POST",
+      "path": "/api/monitor/snapshot",
+      "priceUsd": 0.015,
+      "status": "launch-mvp",
+      "purpose": "Run a one-shot x402 payment-flow and trust drift snapshot without storing history."
+    },
+    {
+      "id": "monitor.badge",
+      "method": "POST",
+      "path": "/api/monitor/badge",
+      "priceUsd": 0.02,
+      "status": "launch-mvp",
+      "purpose": "Generate a one-shot Trust402 badge payload from a snapshot."
+    },
+    {
       "id": "reports.x402_diligence",
       "method": "POST",
       "path": "/api/reports/x402-diligence",
@@ -141,27 +157,6 @@
       "status": "later",
       "reasonToWait": "Proof402 should be integrated externally after core trust tools prove useful.",
       "purpose": "Create or delegate a proof receipt for a purchased result hash."
-    },
-    {
-      "id": "monitor.snapshot",
-      "method": "POST",
-      "path": "/api/monitor/snapshot",
-      "laterPriceUsd": {
-        "min": 0.01,
-        "max": 0.02
-      },
-      "status": "later",
-      "reasonToWait": "The launch check-x402 tool should prove whether repeated checks are wanted.",
-      "purpose": "Run a one-shot x402 payment-flow and drift check."
-    },
-    {
-      "id": "monitor.badge",
-      "method": "POST",
-      "path": "/api/monitor/badge",
-      "laterPriceUsd": 0.02,
-      "status": "later",
-      "reasonToWait": "Badges need historical checks and credibility.",
-      "purpose": "Generate or refresh a public trust badge snapshot."
     }
   ],
   "pricingLadder": [
@@ -181,7 +176,9 @@
         "seller.readiness",
         "trust.compare_resources",
         "procurement.plan",
-        "procurement.quote"
+        "procurement.quote",
+        "monitor.snapshot",
+        "monitor.badge"
       ]
     },
     {

@@ -14,6 +14,7 @@ In dry-run mode Trust402 may:
 - produce spend plans;
 - produce procurement quotes;
 - simulate procurement execution;
+- create one-shot monitor snapshots and badge payloads;
 - estimate costs;
 - create local reports;
 - prepare result hashes and receipt bundles.
@@ -22,6 +23,7 @@ In dry-run mode Trust402 must not:
 
 - send paid x402 requests;
 - execute procurement live;
+- create recurring paid monitors;
 - call Proof402 as a paid delegation target;
 - forward `X-Payment`, `Authorization`, cookie, or proxy authorization headers in unpaid probes;
 - move funds;

@@ -28,6 +28,7 @@ Implemented:
 - procurement planning;
 - controlled procurement quotes;
 - dry-run procurement execution audits;
+- one-shot monitor snapshots and badge payloads;
 - x402 diligence reports with a `sha256:` evidence hash;
 - dry-run receipt bundles for Proof402-ready result hashes;
 - optional mock 402 paywall for local payment-flow testing;
@@ -109,6 +110,8 @@ POST /api/receipts/hash-result
 | `POST /api/trust/compare-resources` | Rank 2-10 candidate resources | `$0.03` |
 | `POST /api/procurement/plan` | Bounded spend plan without spending | `$0.02` |
 | `POST /api/procurement/quote` | Concrete quote and approval payload | `$0.04` |
+| `POST /api/monitor/snapshot` | One-shot x402 trust/drift snapshot | `$0.015` |
+| `POST /api/monitor/badge` | One-shot Trust402 badge payload | `$0.02` |
 | `POST /api/reports/x402-diligence` | Full x402 endpoint/origin diligence report | `$0.08-$0.15` |
 
 ## Example Calls
@@ -139,6 +142,18 @@ Simulate controlled execution:
 ```powershell
 $body = Get-Content .\examples\procurement-execute-dry-run.json -Raw
 Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/procurement/execute -ContentType application/json -Body $body
+```
+
+Create a monitor snapshot:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/monitor/snapshot -ContentType application/json -Body '{"endpoint":"https://example.com/api/paid","method":"GET","expectedStatus":402}'
+```
+
+Create a badge payload:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/monitor/badge -ContentType application/json -Body '{"endpoint":"https://example.com/api/paid"}'
 ```
 
 Compare candidate resources:
@@ -186,6 +201,7 @@ Future live procurement must require:
 - `src/server.js` - HTTP API and mock paywall.
 - `src/trustEngine.js` - checks, scoring, planning, and report logic.
 - `src/procurement.js` - quote and dry-run execution audit logic.
+- `src/monitor.js` - one-shot monitor snapshot and badge logic.
 - `src/openapi.js` - OpenAPI, capabilities, and `.well-known/x402`.
 - `src/receipts.js` - dry-run receipt bundles and Proof402-ready hashes.
 - `marketplace/resources.json` - machine-readable launch and backlog catalog.

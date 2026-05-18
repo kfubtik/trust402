@@ -1,0 +1,6 @@
+{
+  "endpoint": "https://example.com/api/paid",
+  "method": "GET",
+  "expectedStatus": 402,
+  "expectedPriceUsd": 0.01
+}

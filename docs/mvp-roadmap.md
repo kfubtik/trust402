@@ -120,9 +120,26 @@ Backlog resources to preserve for later:
 
 - `/api/procurement/execute` live mode
 - `/api/receipts/notarize-result`
-- `/api/monitor/snapshot`
-- `/api/monitor/badge`
 - free helper or SDK example for result hashing
+
+## Phase 5 - One-Shot Monitoring
+
+Status: complete for launch MVP.
+
+Implemented:
+
+- `/api/monitor/snapshot`;
+- `/api/monitor/badge`;
+- no subscription billing;
+- no stored history;
+- receipt bundles for snapshots and badges.
+
+Later:
+
+- recurring checks;
+- hosted badge pages;
+- historical uptime/trust charts;
+- subscription packages only after repeated one-shot usage.
 
 ## Launch Wedge
 

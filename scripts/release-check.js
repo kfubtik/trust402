@@ -18,8 +18,8 @@ assert(existsSync("README.md"), "README.md must exist");
 assert(existsSync("SECURITY.md"), "SECURITY.md must exist");
 assert(existsSync("LICENSE"), "LICENSE must exist");
 assert(existsSync("docs/github-release-checklist.md"), "GitHub release checklist must exist");
-assert(catalog.paidLaunchResources.length === 8, "expected 8 paid launch resources");
-assert(catalog.laterResourcesToPreserve.length >= 4, "expected preserved later resources");
+assert(catalog.paidLaunchResources.length === 10, "expected 10 paid launch resources");
+assert(catalog.laterResourcesToPreserve.length >= 2, "expected preserved later resources");
 assert(catalog.safety.liveSpendDefault === false, "live spend must default to false");
 assert(catalog.safety.storesPrivateKeys === false, "storesPrivateKeys must be false");
 assert(

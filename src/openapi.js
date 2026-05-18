@@ -276,6 +276,41 @@ function requestSchemaFor(id) {
     };
   }
 
+  if (id === "monitor.snapshot") {
+    return {
+      type: "object",
+      properties: {
+        endpoint: { type: "string", format: "uri" },
+        origin: { type: "string", format: "uri" },
+        method: { type: "string", enum: ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"], default: "GET" },
+        expectedStatus: { type: "integer" },
+        expectedPriceUsd: { type: "number" },
+        timeoutMs: { type: "integer" }
+      },
+      anyOf: [
+        { required: ["endpoint"] },
+        { required: ["origin"] }
+      ]
+    };
+  }
+
+  if (id === "monitor.badge") {
+    return {
+      type: "object",
+      properties: {
+        endpoint: { type: "string", format: "uri" },
+        origin: { type: "string", format: "uri" },
+        label: { type: "string" },
+        snapshot: { type: "object" }
+      },
+      anyOf: [
+        { required: ["endpoint"] },
+        { required: ["origin"] },
+        { required: ["snapshot"] }
+      ]
+    };
+  }
+
   if (id === "trust.compare_resources") {
     return {
       type: "object",
@@ -360,6 +395,20 @@ function exampleFor(id) {
         { id: "a", endpoint: "https://example.com/a", priceUsd: 0.01, has402: true, hasInputSchema: true, hasOpenApi: true, hasWellKnown: true },
         { id: "b", endpoint: "https://example.com/b", priceUsd: 0.04, hasInputSchema: false }
       ]
+    };
+  }
+  if (id === "monitor.snapshot") {
+    return {
+      endpoint: "https://example.com/api/paid",
+      method: "GET",
+      expectedStatus: 402,
+      expectedPriceUsd: 0.01
+    };
+  }
+  if (id === "monitor.badge") {
+    return {
+      endpoint: "https://example.com/api/paid",
+      label: "Trust402"
     };
   }
   if (id === "trust.compare_resources") {
