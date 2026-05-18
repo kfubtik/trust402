@@ -1,7 +1,11 @@
 node_modules/
 .env
+.env.*
+!.env.example
 *.log
 data/
 wallet*.json
 .agentcash/
 .local/
+.tmp/
+.vercel/

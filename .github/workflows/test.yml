@@ -12,16 +12,27 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - run: npm ci
       - run: npm run verify
       - run: docker build -t trust402:test .
+      - run: docker compose config
       - name: Smoke Docker image
         run: |
           docker run -d --name trust402-test -p 4032:4032 -e PUBLIC_BASE_URL=http://127.0.0.1:4032 trust402:test
           node -e "let tries=0; const wait=async()=>{try{const r=await fetch('http://127.0.0.1:4032/health'); if(r.ok) return;}catch{} if(++tries>30) process.exit(1); setTimeout(wait, 1000)}; wait()"
           npm run smoke -- http://127.0.0.1:4032
+      - name: Smoke mock x402 challenge
+        run: |
+          docker run -d --name trust402-x402-test -p 4036:4032 -e PUBLIC_BASE_URL=http://127.0.0.1:4036 -e TRUST402_PAYWALL_MODE=mock -e PAY_TO=0x1111111111111111111111111111111111111111 trust402:test
+          node -e "let tries=0; const wait=async()=>{try{const r=await fetch('http://127.0.0.1:4036/health'); if(r.ok) return;}catch{} if(++tries>30) process.exit(1); setTimeout(wait, 1000)}; wait()"
+          npm run smoke:x402 -- http://127.0.0.1:4036
       - name: Docker logs
         if: failure()
-        run: docker logs trust402-test || true
+        run: |
+          docker logs trust402-test || true
+          docker logs trust402-x402-test || true
       - name: Stop Docker container
         if: always()
-        run: docker rm -f trust402-test || true
+        run: |
+          docker rm -f trust402-test || true
+          docker rm -f trust402-x402-test || true

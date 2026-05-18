@@ -1,0 +1,15 @@
+{
+  "origin": "https://trust402.vercel.app",
+  "endpoint": "https://trust402.vercel.app/api/trust/score-resource",
+  "method": "POST",
+  "priceUsd": 0.01,
+  "has402": true,
+  "hasInputSchema": true,
+  "hasOpenApi": true,
+  "hasWellKnown": true,
+  "payTo": "0x3f4CEE4c6bad04FcCA3138dFFDEE579ddf17049B",
+  "network": "eip155:8453",
+  "asset": "USDC",
+  "description": "Trust402 score-resource paid x402 endpoint with Bazaar metadata.",
+  "receiptReady": true
+}

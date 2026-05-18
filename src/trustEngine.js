@@ -652,9 +652,14 @@ function safeProbeHeaders(inputHeaders) {
   const blocked = new Set([
     "authorization",
     "cookie",
+    "payment-required",
+    "payment-response",
+    "payment-signature",
     "proxy-authorization",
     "set-cookie",
-    "x-payment"
+    "x-payment",
+    "x-payment-payload",
+    "x-payment-response"
   ]);
 
   if (!inputHeaders || typeof inputHeaders !== "object" || Array.isArray(inputHeaders)) {

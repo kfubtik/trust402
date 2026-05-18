@@ -34,6 +34,9 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(resources.body.paidLaunchResources.length, 10);
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/status"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/receipts/hash-result"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/receipts/notarize-result"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/settlement/status"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/settlement/preflight"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/procurement/execute"));
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/trust/check-x402"));
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/procurement/quote"));
@@ -48,12 +51,47 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(status.body.launchReadiness.readyForControlledProcurementDryRun, true);
     assert.equal(status.body.launchReadiness.readyForOneShotMonitoring, true);
     assert.equal(status.body.launchReadiness.readyForLiveSpend, false);
+    assert.equal(status.body.launchReadiness.readyForRealX402Settlement, false);
+
+    const settlement = await request(baseUrl, "/api/settlement/status");
+    assert.equal(settlement.response.status, 200);
+    assert.equal(settlement.body.tool, "settlement.status");
+    assert.equal(settlement.body.readiness.realSettlementReady, false);
+    assert.equal(settlement.body.readiness.marketplaceIndexingReady, false);
+    assert.ok(settlement.body.blockers.some((item) => item.id === "explicit_real_settlement_enabled"));
+
+    const preflight = await request(baseUrl, "/api/settlement/preflight");
+    assert.equal(preflight.response.status, 200);
+    assert.equal(preflight.body.tool, "settlement.preflight");
+    assert.equal(preflight.body.readiness.paidSmokeReady, false);
+    assert.ok(preflight.body.blockers.some((item) => item.id === "paid_smoke_approved"));
+
+    const checklist = await request(baseUrl, "/api/launch/checklist");
+    assert.equal(checklist.response.status, 200);
+    assert.equal(checklist.body.tool, "launch.checklist");
+    assert.equal(checklist.body.readiness.dryRunLaunchReady, true);
+    assert.equal(checklist.body.readiness.publicMarketplaceReady, false);
+
+    const bundle = await request(baseUrl, "/api/marketplace/bundle");
+    assert.equal(bundle.response.status, 200);
+    assert.equal(bundle.body.tool, "marketplace.bundle");
+    assert.equal(bundle.body.resources.length, 10);
+    assert.equal(bundle.body.listingState.dryRunMetadataReady, true);
+    assert.equal(bundle.body.listingState.cdpBazaarIndexingReady, false);
+    assert.equal(bundle.body.indexing.cdpBazaar.status, "blocked");
+    assert.ok(bundle.body.resources.every((resource) => resource.bazaarExtensionDraft?.bazaar));
+    assert.ok(bundle.body.resources.every((resource) => resource.listingStatus === "blocked"));
 
     const openapi = await request(baseUrl, "/openapi.json");
     assert.equal(openapi.response.status, 200);
     assert.equal(openapi.body.openapi, "3.1.0");
     assert.ok(openapi.body.paths["/api/status"].get);
+    assert.ok(openapi.body.paths["/api/launch/checklist"].get);
+    assert.ok(openapi.body.paths["/api/marketplace/bundle"].get);
+    assert.ok(openapi.body.paths["/api/settlement/status"].get);
+    assert.ok(openapi.body.paths["/api/settlement/preflight"].get);
     assert.ok(openapi.body.paths["/api/receipts/hash-result"].post);
+    assert.ok(openapi.body.paths["/api/receipts/notarize-result"].post);
     assert.ok(openapi.body.paths["/api/procurement/quote"].post["x-payment-info"]);
     assert.ok(openapi.body.paths["/api/procurement/execute"].post);
     assert.ok(openapi.body.paths["/api/monitor/snapshot"].post["x-payment-info"]);
@@ -135,6 +173,21 @@ test("hash-result returns a dry-run receipt bundle", async () => {
     assert.equal(body.receiptBundle.proofProvider, "Proof402");
     assert.equal(body.receiptBundle.delegation.paidProofCallMade, false);
     assert.equal(body.receiptBundle.policy.liveSpendEnabled, false);
+
+    const notarize = await request(baseUrl, "/api/receipts/notarize-result", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        subject: "example result",
+        resultHash: body.resultHash,
+        metadata: { taskId: "api_test" }
+      })
+    });
+
+    assert.equal(notarize.response.status, 200);
+    assert.equal(notarize.body.tool, "receipts.notarize_result");
+    assert.equal(notarize.body.resultHash, body.resultHash);
+    assert.equal(notarize.body.delegation.paidProofCallMade, false);
   });
 });
 
@@ -240,7 +293,45 @@ test("mock paywall returns 402 when enabled", async (t) => {
     assert.equal(response.status, 402);
     assert.ok(response.headers.get("payment-required"));
     const body = await response.json();
+    assert.equal(body.x402Version, 2);
+    assert.equal(body.paymentRequired.x402Version, 2);
+    assert.equal(body.error.details.requiredHeader, "PAYMENT-SIGNATURE");
     assert.equal(body.error.code, "payment_required");
+  } finally {
+    await new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+  }
+});
+
+test("mock paywall accepts modern PAYMENT-SIGNATURE header", async (t) => {
+  const oldMode = process.env.TRUST402_PAYWALL_MODE;
+  process.env.TRUST402_PAYWALL_MODE = "mock";
+  t.after(() => {
+    if (oldMode === undefined) delete process.env.TRUST402_PAYWALL_MODE;
+    else process.env.TRUST402_PAYWALL_MODE = oldMode;
+  });
+
+  const { createTrust402Server: createFreshServer } = await import(`../src/server.js?payment-signature=${Date.now()}`);
+  const server = createFreshServer();
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  try {
+    const { port } = server.address();
+    const response = await fetch(`http://127.0.0.1:${port}/api/trust/score-resource`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "PAYMENT-SIGNATURE": "mock-signature"
+      },
+      body: JSON.stringify({
+        endpoint: "https://example.com/api/paid",
+        priceUsd: 0.01,
+        has402: true,
+        hasInputSchema: true
+      })
+    });
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(body.tool, "trust.score_resource");
   } finally {
     await new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
   }

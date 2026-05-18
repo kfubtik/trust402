@@ -1,0 +1,26 @@
+services:
+  trust402:
+    build: .
+    image: trust402:local
+    ports:
+      - "4032:4032"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 4032
+      PUBLIC_BASE_URL: http://127.0.0.1:4032
+      TRUST402_MODE: dry-run
+      TRUST402_PAYWALL_MODE: demo
+      TRUST402_REAL_SETTLEMENT_ENABLED: "false"
+      TRUST402_SUCCESSFUL_SETTLEMENT_OBSERVED: "false"
+      PROOF402_DELEGATION_MODE: disabled
+      PROOF402_MAX_SPEND_USD: "0"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:4032/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

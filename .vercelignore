@@ -1,0 +1,14 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+.agentcash
+.local
+.vercel
+data
+wallet*.json
+*.log
+node_modules
+coverage
+npm-debug.log*

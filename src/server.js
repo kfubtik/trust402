@@ -3,10 +3,14 @@ import { createServer } from "node:http";
 import { config, isMockPaywallEnabled } from "./config.js";
 import { paidResourceByPath, publicResources } from "./catalog.js";
 import { ApiError, errorBody } from "./errors.js";
+import { marketplaceBundle } from "./marketplace.js";
 import { monitorBadge, monitorSnapshot } from "./monitor.js";
 import { capabilities, openApiSpec, x402WellKnown } from "./openapi.js";
 import { procurementExecute, procurementQuote } from "./procurement.js";
+import { notarizeResult } from "./proof402Client.js";
+import { launchChecklist } from "./readiness.js";
 import { hashResult } from "./receipts.js";
+import { paymentChallengeFor, settlementPreflight, settlementStatus } from "./settlement.js";
 import {
   checkX402,
   compareResources,
@@ -19,6 +23,7 @@ import {
 
 const routes = new Map([
   ["POST /api/receipts/hash-result", hashResult],
+  ["POST /api/receipts/notarize-result", notarizeResult],
   ["POST /api/procurement/quote", procurementQuote],
   ["POST /api/procurement/execute", procurementExecute],
   ["POST /api/monitor/snapshot", monitorSnapshot],
@@ -33,84 +38,108 @@ const routes = new Map([
 ]);
 
 export function createTrust402Server() {
-  return createServer(async (req, res) => {
-    try {
-      setSecurityHeaders(res);
-      if (req.method === "OPTIONS") return sendJson(res, 204, {});
+  return createServer(handleTrust402Request);
+}
 
-      const url = new URL(req.url || "/", config.publicBaseUrl);
-      const path = url.pathname;
+export async function handleTrust402Request(req, res) {
+  try {
+    setSecurityHeaders(res);
+    if (req.method === "OPTIONS") return sendJson(res, 204, {});
 
-      if (req.method === "GET" && path === "/") {
-        return sendJson(res, 200, {
-          ok: true,
-          service: config.serviceName,
-          tagline: "Trust before you pay. Proof after you buy.",
-          links: {
-            health: "/health",
-            status: "/api/status",
-            resources: "/api/resources",
-            capabilities: "/api/capabilities",
-            openapi: "/openapi.json",
-            x402WellKnown: "/.well-known/x402"
-          }
-        });
-      }
+    const url = new URL(req.url || "/", config.publicBaseUrl);
+    const path = url.pathname;
 
-      if (req.method === "GET" && path === "/health") {
-        return sendJson(res, 200, {
-          ok: true,
-          service: config.serviceName,
-          version: config.version,
-          mode: config.defaultMode,
-          paywallMode: config.paywallMode,
-          liveSpendEnabled: false,
-          safety: {
-            storesPrivateKeys: false,
-            paidSubcallsEnabled: false,
-            dryRunFirst: true
-          }
-        });
-      }
-
-      if (req.method === "GET" && path === "/api/resources") {
-        return sendJson(res, 200, publicResources());
-      }
-
-      if (req.method === "GET" && path === "/api/capabilities") {
-        return sendJson(res, 200, capabilities());
-      }
-
-      if (req.method === "GET" && path === "/api/status") {
-        return sendJson(res, 200, statusSummary());
-      }
-
-      if (req.method === "GET" && path === "/openapi.json") {
-        return sendJson(res, 200, openApiSpec());
-      }
-
-      if (req.method === "GET" && path === "/.well-known/x402") {
-        return sendJson(res, 200, x402WellKnown());
-      }
-
-      const handler = routes.get(`${req.method} ${path}`);
-      if (!handler) {
-        throw new ApiError(404, "not_found", "Route not found.", { method: req.method, path });
-      }
-
-      const resource = paidResourceByPath(path);
-      if (resource && isMockPaywallEnabled() && !req.headers["x-payment"]) {
-        return sendPaymentRequired(res, resource);
-      }
-
-      const body = await readJson(req);
-      const result = await handler(body);
-      return sendJson(res, 200, result);
-    } catch (error) {
-      const status = error instanceof ApiError ? error.status : 500;
-      return sendJson(res, status, errorBody(error));
+    if (req.method === "GET" && path === "/") {
+      return sendJson(res, 200, {
+        ok: true,
+        service: config.serviceName,
+        tagline: "Trust before you pay. Proof after you buy.",
+        links: {
+          health: "/health",
+          status: "/api/status",
+          launchChecklist: "/api/launch/checklist",
+          marketplaceBundle: "/api/marketplace/bundle",
+          settlementStatus: "/api/settlement/status",
+          settlementPreflight: "/api/settlement/preflight",
+          resources: "/api/resources",
+          proof402Preview: "/api/receipts/notarize-result",
+          capabilities: "/api/capabilities",
+          openapi: "/openapi.json",
+          x402WellKnown: "/.well-known/x402"
+        }
+      });
     }
-  });
+
+    if (req.method === "GET" && path === "/health") {
+      return sendJson(res, 200, {
+        ok: true,
+        service: config.serviceName,
+        version: config.version,
+        mode: config.defaultMode,
+        paywallMode: config.paywallMode,
+        realSettlementEnabled: config.realSettlementEnabled,
+        liveSpendEnabled: false,
+        safety: {
+          storesPrivateKeys: false,
+          paidSubcallsEnabled: false,
+          dryRunFirst: true
+        }
+      });
+    }
+
+    if (req.method === "GET" && path === "/api/resources") {
+      return sendJson(res, 200, publicResources());
+    }
+
+    if (req.method === "GET" && path === "/api/capabilities") {
+      return sendJson(res, 200, capabilities());
+    }
+
+    if (req.method === "GET" && path === "/api/status") {
+      return sendJson(res, 200, statusSummary());
+    }
+
+    if (req.method === "GET" && path === "/api/launch/checklist") {
+      return sendJson(res, 200, launchChecklist());
+    }
+
+    if (req.method === "GET" && path === "/api/marketplace/bundle") {
+      return sendJson(res, 200, marketplaceBundle());
+    }
+
+    if (req.method === "GET" && path === "/api/settlement/status") {
+      return sendJson(res, 200, settlementStatus());
+    }
+
+    if (req.method === "GET" && path === "/api/settlement/preflight") {
+      return sendJson(res, 200, settlementPreflight());
+    }
+
+    if (req.method === "GET" && path === "/openapi.json") {
+      return sendJson(res, 200, openApiSpec());
+    }
+
+    if (req.method === "GET" && path === "/.well-known/x402") {
+      return sendJson(res, 200, x402WellKnown());
+    }
+
+    const handler = routes.get(`${req.method} ${path}`);
+    if (!handler) {
+      throw new ApiError(404, "not_found", "Route not found.", { method: req.method, path });
+    }
+
+    const resource = paidResourceByPath(path);
+    if (resource && isMockPaywallEnabled() && !hasPaymentAttempt(req)) {
+      return sendPaymentRequired(res, resource);
+    }
+
+    const body = await readJson(req);
+    const result = await handler(body);
+    return sendJson(res, 200, result);
+  } catch (error) {
+    const status = error instanceof ApiError ? error.status : 500;
+    return sendJson(res, status, errorBody(error));
+  }
 }
 
 function statusSummary() {
@@ -126,9 +155,10 @@ function statusSummary() {
       readyForReceiptLayer: true,
       readyForControlledProcurementDryRun: true,
       readyForOneShotMonitoring: true,
+      readyForProof402Preview: Boolean(config.proof402BaseUrl),
       readyForLiveSpend: false,
       readyForProof402Delegation: false,
-      readyForRealX402Settlement: false
+      readyForRealX402Settlement: settlementStatus().readiness.realSettlementReady
     },
     resources: {
       free: resources.freeResources.length,
@@ -145,6 +175,10 @@ function statusSummary() {
     links: {
       resources: "/api/resources",
       capabilities: "/api/capabilities",
+      launchChecklist: "/api/launch/checklist",
+      marketplaceBundle: "/api/marketplace/bundle",
+      settlementStatus: "/api/settlement/status",
+      settlementPreflight: "/api/settlement/preflight",
       openapi: "/openapi.json",
       x402WellKnown: "/.well-known/x402",
       roadmap: "docs/mvp-roadmap.md",
@@ -154,36 +188,35 @@ function statusSummary() {
 }
 
 function sendPaymentRequired(res, resource) {
-  const amount = priceToBaseUnits(resource.priceUsd);
-  const challenge = {
-    x402Version: 2,
-    accepts: [
-      {
-        scheme: "exact",
-        network: config.x402Network,
-        asset: config.x402Asset,
-        amount,
-        payTo: config.payTo,
-        resource: `${config.publicBaseUrl}${resource.path}`,
-        maxTimeoutSeconds: 300
-      }
-    ]
-  };
+  const challenge = paymentChallengeFor(resource);
 
-  res.setHeader("payment-required", Buffer.from(JSON.stringify(challenge)).toString("base64url"));
+  const encodedChallenge = Buffer.from(JSON.stringify(challenge)).toString("base64url");
+  res.setHeader("PAYMENT-REQUIRED", encodedChallenge);
   return sendJson(res, 402, {
     ok: false,
+    x402Version: challenge.x402Version,
+    paymentRequired: challenge,
+    accepts: challenge.accepts,
     error: {
       code: "payment_required",
       message: "x402 payment is required for this Trust402 resource in mock paywall mode.",
       details: {
         resource: resource.id,
         priceUsd: resource.priceUsd,
-        mock: true
+        mock: true,
+        requiredHeader: "PAYMENT-SIGNATURE",
+        legacyAcceptedHeaders: ["X-Payment", "X-Payment-Payload"]
       }
-    },
-    accepts: challenge.accepts
+    }
   });
+}
+
+function hasPaymentAttempt(req) {
+  return Boolean(
+    req.headers["payment-signature"] ||
+    req.headers["x-payment"] ||
+    req.headers["x-payment-payload"]
+  );
 }
 
 async function readJson(req) {
@@ -222,17 +255,40 @@ function setSecurityHeaders(res) {
   res.setHeader("cross-origin-resource-policy", "same-origin");
   res.setHeader("access-control-allow-origin", "*");
   res.setHeader("access-control-allow-methods", "GET,POST,OPTIONS");
-  res.setHeader("access-control-allow-headers", "content-type,x-payment");
+  res.setHeader("access-control-allow-headers", "content-type,payment-signature,x-payment,x-payment-payload");
+  res.setHeader("access-control-expose-headers", "payment-required,payment-response");
 }
 
-function priceToBaseUnits(priceUsd) {
-  const price = typeof priceUsd === "object" ? priceUsd.max : priceUsd;
-  const parsed = Number(price);
-  if (!Number.isFinite(parsed)) return "0";
-  return String(Math.round(parsed * 1_000_000));
+let realEntrypointAppPromise;
+
+export async function handleTrust402Entrypoint(req, res, options = {}) {
+  const runtimeConfig = options.config || config;
+  if (runtimeConfig.paywallMode !== "real") {
+    return handleTrust402Request(req, res);
+  }
+
+  const { createTrust402ExpressApp } = await import("./expressApp.js");
+  const appPromise = options.config
+    ? createTrust402ExpressApp(options)
+    : realEntrypointAppPromise ||
+      (realEntrypointAppPromise = createTrust402ExpressApp({
+        syncFacilitatorOnStart: options.syncFacilitatorOnStart
+      }));
+
+  const app = await appPromise;
+  return app(req, res);
 }
 
-export function startServer() {
+export async function startServer() {
+  if (config.paywallMode === "real") {
+    const { createTrust402ExpressApp } = await import("./expressApp.js");
+    const app = await createTrust402ExpressApp();
+    const server = app.listen(config.port, config.host, () => {
+      console.log(`Trust402 listening on http://${config.host}:${config.port}`);
+    });
+    return server;
+  }
+
   const server = createTrust402Server();
   server.listen(config.port, config.host, () => {
     console.log(`Trust402 listening on http://${config.host}:${config.port}`);
@@ -240,5 +296,12 @@ export function startServer() {
   return server;
 }
 
+export default handleTrust402Entrypoint;
+
 const isMain = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
-if (isMain) startServer();
+if (isMain) {
+  startServer().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}

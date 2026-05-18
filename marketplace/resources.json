@@ -34,6 +34,26 @@
     },
     {
       "method": "GET",
+      "path": "/api/launch/checklist",
+      "purpose": "Dry-run launch and public marketplace readiness checklist."
+    },
+    {
+      "method": "GET",
+      "path": "/api/marketplace/bundle",
+      "purpose": "Marketplace submission metadata and Bazaar extension drafts."
+    },
+    {
+      "method": "GET",
+      "path": "/api/settlement/status",
+      "purpose": "Real x402 settlement readiness, blockers, route config drafts, and unpaid challenge status."
+    },
+    {
+      "method": "GET",
+      "path": "/api/settlement/preflight",
+      "purpose": "Operator preflight for a single paid settlement smoke without exposing secrets or sending payment."
+    },
+    {
+      "method": "GET",
       "path": "/api/resources",
       "purpose": "Public resource catalog."
     },
@@ -44,6 +64,14 @@
       "priceUsd": 0,
       "status": "free-helper",
       "purpose": "Prepare a proof-ready result hash and dry-run receipt bundle."
+    },
+    {
+      "id": "receipts.notarize_result",
+      "method": "POST",
+      "path": "/api/receipts/notarize-result",
+      "priceUsd": 0,
+      "status": "free-helper",
+      "purpose": "Preview or unpaid-probe Proof402 notarization for a result hash without paid proof delegation."
     },
     {
       "id": "procurement.execute",
@@ -150,13 +178,13 @@
       "purpose": "Execute approved paid subcalls inside strict spend policy."
     },
     {
-      "id": "receipts.notarize_result",
+      "id": "receipts.notarize_result_live",
       "method": "POST",
       "path": "/api/receipts/notarize-result",
       "laterPriceUsd": "pass-through-plus-0.005-to-0.01",
-      "status": "later",
-      "reasonToWait": "Proof402 should be integrated externally after core trust tools prove useful.",
-      "purpose": "Create or delegate a proof receipt for a purchased result hash."
+      "status": "future-disabled",
+      "reasonToWait": "Paid Proof402 calls require explicit live spend policy, receipt logging, and operator approval.",
+      "purpose": "Create a paid Proof402 proof receipt for a purchased result hash."
     }
   ],
   "pricingLadder": [

@@ -73,7 +73,7 @@ export function receiptBundle({ subject, resultHash, payloadHash = null, purpose
       storesPrivatePayload: false
     },
     nextAction: proofConfigured
-      ? "Enable paid proof delegation only after explicit max-spend approval and receipt logging."
+      ? "Call /api/receipts/notarize-result for a Proof402 request preview; enable paid proof delegation only after explicit max-spend approval and receipt logging."
       : "Set PROOF402_BASE_URL later to delegate this hash to Proof402 without modifying Proof402."
   };
 }

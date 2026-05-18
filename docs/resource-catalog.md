@@ -30,6 +30,39 @@ Short machine-readable summary for agents and marketplaces.
 
 Launch readiness, safety state, resource counts, and verification commands.
 
+### `GET /api/launch/checklist`
+
+Dry-run launch and public marketplace readiness checklist. This separates what
+is ready now from what still blocks an external paid marketplace listing.
+
+### `GET /api/marketplace/bundle`
+
+Marketplace submission metadata, per-resource input/output examples, and Bazaar
+extension drafts. This is free because it helps directories and autonomous
+buyers understand what Trust402 exposes before any settlement is enabled.
+
+### `GET /api/settlement/status`
+
+Real x402 settlement readiness, blockers, route config drafts, and unpaid
+challenge status.
+
+Price: free.
+
+Reason: buyers and directories should see whether Trust402 is merely exporting
+metadata or has completed facilitator-backed settlement. This avoids claiming
+marketplace readiness before a real paid smoke.
+
+### `GET /api/settlement/preflight`
+
+Operator preflight for one paid settlement smoke. It checks explicit real-mode
+flags, CDP credential presence, the selected smoke resource, and the max spend
+cap without exposing secret values or sending payment.
+
+Price: free.
+
+Reason: the first paid smoke is operationally sensitive. It should be planned
+and bounded before any buyer wallet signs a payment.
+
 ### `GET /api/resources`
 
 Public catalog of Trust402 resources, prices, input schemas, and safety notes.
@@ -43,6 +76,19 @@ Price: free.
 
 Reason: hashing alone is too simple to sell, but it makes the paid diligence
 reports more credible and easier to connect to Proof402 later.
+
+### `POST /api/receipts/notarize-result`
+
+Free helper that builds the Proof402 notarization request for a `sha256:` result
+hash. In `disabled` mode it only returns a preview. In `probe` mode it may make
+an unpaid health/payment-challenge probe to Proof402, but it still does not send
+payment headers or execute a paid proof call.
+
+Price: free.
+
+Reason: this is a trust bridge, not the paid proof product itself. It lets
+buyers verify what would be sent to Proof402 while preserving live paid
+delegation for a later approved profile.
 
 ### `POST /api/procurement/execute`
 
@@ -288,14 +334,14 @@ Later price:
 Reason to wait: live spending needs hot-wallet policy, allowlists, receipts,
 and human approval thresholds.
 
-### `POST /api/receipts/notarize-result`
+### `POST /api/receipts/notarize-result` live mode
 
-Creates or delegates a proof receipt for a purchased result hash.
+Creates a paid Proof402 proof receipt for a purchased result hash.
 
 Later price: pass-through proof cost plus `$0.005-$0.01`.
 
-Reason to wait: Proof402 should be integrated as an external service, not
-modified inside this project.
+Reason to wait: paid Proof402 calls require explicit live spend policy, receipt
+logging, and operator approval.
 
 ## Pricing Anchors
 
@@ -325,8 +371,9 @@ Build first:
 9. `monitor-snapshot`
 10. `monitor-badge`
 11. `x402-diligence`
+12. `receipts-notarize-result` preview/probe
 
 Build later:
 
 1. `procurement-execute` live mode
-2. `receipts-notarize-result`
+2. `receipts-notarize-result` paid live mode

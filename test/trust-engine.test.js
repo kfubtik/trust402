@@ -120,6 +120,7 @@ test("checkX402 strips payment and secret headers from unpaid probes", async () 
       method: "GET",
       headers: {
         "X-Payment": "do-not-send",
+        "PAYMENT-SIGNATURE": "do-not-send-v2",
         Authorization: "Bearer do-not-send",
         "X-Trace-Id": "trace-123"
       }
@@ -136,10 +137,11 @@ test("checkX402 strips payment and secret headers from unpaid probes", async () 
   );
 
   assert.equal(capturedHeaders["X-Payment"], undefined);
+  assert.equal(capturedHeaders["PAYMENT-SIGNATURE"], undefined);
   assert.equal(capturedHeaders.Authorization, undefined);
   assert.equal(capturedHeaders["X-Trace-Id"], "trace-123");
   assert.equal(result.policy.sentPaymentHeader, false);
-  assert.deepEqual(result.policy.droppedSensitiveHeaders, ["X-Payment", "Authorization"]);
+  assert.deepEqual(result.policy.droppedSensitiveHeaders, ["X-Payment", "PAYMENT-SIGNATURE", "Authorization"]);
 });
 
 test("evaluateOrigin scores OpenAPI and well-known discovery", async () => {

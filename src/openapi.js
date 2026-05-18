@@ -40,6 +40,10 @@ export function openApiSpec() {
     "/.well-known/x402": getPath("x402 discovery document"),
     "/api/capabilities": getPath("Machine-readable capability summary"),
     "/api/status": getPath("Launch readiness, safety, and backlog status"),
+    "/api/launch/checklist": getPath("Dry-run launch and public marketplace readiness checklist"),
+    "/api/marketplace/bundle": getPath("Marketplace submission metadata and Bazaar extension drafts"),
+    "/api/settlement/status": getPath("Real x402 settlement readiness and unpaid challenge status"),
+    "/api/settlement/preflight": getPath("Operator preflight for one paid settlement smoke"),
     "/api/resources": getPath("Public Trust402 resource catalog"),
     "/api/receipts/hash-result": {
       post: {
@@ -58,6 +62,28 @@ export function openApiSpec() {
         responses: {
           "200": jsonResponse,
           "400": errorResponse
+        }
+      }
+    },
+    "/api/receipts/notarize-result": {
+      post: {
+        operationId: "receipts_notarize_result",
+        summary: "Preview or probe Proof402 notarization for a result hash without paid delegation",
+        tags: ["Trust402"],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: requestSchemaFor("receipts.notarize_result"),
+              example: exampleFor("receipts.notarize_result")
+            }
+          }
+        },
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse,
+          "403": errorResponse,
+          "501": errorResponse
         }
       }
     },
@@ -163,6 +189,10 @@ export function capabilities() {
       health: "/health",
       resources: "/api/resources",
       status: "/api/status",
+      launchChecklist: "/api/launch/checklist",
+      marketplaceBundle: "/api/marketplace/bundle",
+      settlementStatus: "/api/settlement/status",
+      settlementPreflight: "/api/settlement/preflight",
       openapi: "/openapi.json",
       x402WellKnown: "/.well-known/x402"
     }
@@ -346,6 +376,27 @@ function requestSchemaFor(id) {
     };
   }
 
+  if (id === "receipts.notarize_result") {
+    return {
+      type: "object",
+      properties: {
+        subject: { type: "string" },
+        label: { type: "string" },
+        payload: {},
+        result: {},
+        resultHash: { type: "string", pattern: "^sha256:[a-f0-9]{64}$" },
+        metadata: { type: "object" },
+        idempotencyKey: { type: "string" },
+        proof402Mode: { type: "string", enum: ["disabled", "preview", "probe", "live"] }
+      },
+      anyOf: [
+        { required: ["payload"] },
+        { required: ["result"] },
+        { required: ["resultHash"] }
+      ]
+    };
+  }
+
   return {
     type: "object",
     properties: {
@@ -429,6 +480,17 @@ function exampleFor(id) {
         recommendation: "test-first"
       },
       purpose: "proof-ready result hash"
+    };
+  }
+  if (id === "receipts.notarize_result") {
+    return {
+      subject: "example diligence result",
+      resultHash: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      label: "Trust402 diligence result",
+      metadata: {
+        agent: "trust402",
+        taskId: "task_123"
+      }
     };
   }
   return {

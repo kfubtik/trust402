@@ -1,29 +1,71 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { openApiSpec, x402WellKnown } from "../src/openapi.js";
+import { launchChecklist } from "../src/readiness.js";
+import { marketplaceBundle } from "../src/marketplace.js";
 
 const catalog = JSON.parse(readFileSync("marketplace/resources.json", "utf8"));
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 const workflow = readFileSync(".github/workflows/test.yml", "utf8");
+const dockerfile = readFileSync("Dockerfile", "utf8");
+const compose = readFileSync("compose.yaml", "utf8");
+const vercelConfig = readFileSync("vercel.json", "utf8");
+const vercelIgnore = readFileSync(".vercelignore", "utf8");
+const apiIndex = readFileSync("api/index.js", "utf8");
+const serverSource = readFileSync("src/server.js", "utf8");
 const openapi = openApiSpec();
 const wellKnown = x402WellKnown();
+const checklist = launchChecklist();
+const bundle = marketplaceBundle();
 
 assert(packageJson.name === "trust402", "package name must be trust402");
 assert(packageJson.private === false, "package private must be false before GitHub release");
 assert(packageJson.license === "MIT", "package license must be MIT");
+assert(packageJson.main === "src/server.js", "package main must point at src/server.js for Vercel entrypoint inference");
 assert(packageJson.scripts?.test, "package must expose npm test");
+assert(packageJson.scripts?.doctor, "package must expose npm run doctor");
+assert(packageJson.scripts?.["bazaar:indexing:check"], "package must expose npm run bazaar:indexing:check");
+assert(packageJson.scripts?.["bazaar:indexing:check:all"], "package must expose npm run bazaar:indexing:check:all");
+assert(packageJson.scripts?.["marketplace:bundle"], "package must expose npm run marketplace:bundle");
 assert(packageJson.scripts?.["privacy:check"], "package must expose npm run privacy:check");
 assert(packageJson.scripts?.["release:check"], "package must expose npm run release:check");
+assert(packageJson.scripts?.["settlement:preflight"], "package must expose npm run settlement:preflight");
+assert(packageJson.scripts?.["settlement:check"], "package must expose npm run settlement:check");
+assert(packageJson.scripts?.["smoke:x402"], "package must expose npm run smoke:x402");
+assert(packageJson.dependencies?.["@x402/express"], "package must include @x402/express dependency");
+assert(packageJson.dependencies?.["@x402/core"], "package must include @x402/core dependency");
+assert(packageJson.dependencies?.["@x402/evm"], "package must include @x402/evm dependency");
+assert(packageJson.dependencies?.["@coinbase/x402"], "package must include @coinbase/x402 dependency");
+assert(existsSync("package-lock.json"), "package-lock.json must exist for reproducible installs");
 assert(Array.isArray(packageJson.keywords) && packageJson.keywords.includes("x402"), "package keywords must include x402");
 assert(existsSync("README.md"), "README.md must exist");
 assert(existsSync("SECURITY.md"), "SECURITY.md must exist");
 assert(existsSync("LICENSE"), "LICENSE must exist");
 assert(existsSync("Dockerfile"), "Dockerfile must exist");
 assert(existsSync(".dockerignore"), ".dockerignore must exist");
+assert(existsSync(".vercelignore"), ".vercelignore must exist");
+assert(existsSync("vercel.json"), "vercel.json must exist");
+assert(existsSync("api/index.js"), "Vercel API handler must exist");
+assert(existsSync("src/expressApp.js"), "Express x402 entrypoint bridge must exist");
+assert(existsSync("compose.yaml"), "compose.yaml must exist");
 assert(existsSync("docs/deployment.md"), "deployment docs must exist");
+assert(existsSync("docs/bazaar-indexing.md"), "Bazaar indexing runbook must exist");
 assert(existsSync("docs/github-release-checklist.md"), "GitHub release checklist must exist");
+assert(existsSync("examples/x402-diligence.json"), "x402 diligence example must exist");
+assert(dockerfile.includes("HEALTHCHECK"), "Dockerfile must expose a healthcheck");
+assert(dockerfile.includes("npm ci --omit=dev"), "Dockerfile must install production dependencies");
+assert(compose.includes("TRUST402_MODE: dry-run"), "compose must keep Trust402 in dry-run mode");
+assert(compose.includes("TRUST402_REAL_SETTLEMENT_ENABLED: \"false\""), "compose must keep real settlement disabled");
+assert(compose.includes("PROOF402_DELEGATION_MODE: disabled"), "compose must keep Proof402 delegation disabled");
+assert(vercelConfig.includes("/api/index.js"), "Vercel config must route traffic to api/index.js");
+assert(vercelIgnore.includes(".env"), "Vercel ignore must exclude local env files");
+assert(vercelIgnore.includes(".agentcash"), "Vercel ignore must exclude AgentCash material");
+assert(apiIndex.includes("createTrust402ExpressApp"), "Vercel API handler must use the Express x402 bridge");
+assert(serverSource.includes("createTrust402ExpressApp"), "node start must use the Express bridge in real paywall mode");
 assert(workflow.includes("docker build -t trust402:test ."), "CI must build the Docker image");
+assert(workflow.includes("docker compose config"), "CI must validate docker compose config");
 assert(workflow.includes("npm run smoke -- http://127.0.0.1:4032"), "CI must smoke test the Docker image");
+assert(workflow.includes("npm run smoke:x402 -- http://127.0.0.1:4036"), "CI must smoke test mock x402 challenge");
 assert(catalog.paidLaunchResources.length === 10, "expected 10 paid launch resources");
 assert(catalog.laterResourcesToPreserve.length >= 2, "expected preserved later resources");
 assert(catalog.safety.liveSpendDefault === false, "live spend must default to false");
@@ -33,13 +75,50 @@ assert(
   "free hash-result receipt helper must exist"
 );
 assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/receipts/notarize-result" && resource.priceUsd === 0),
+  "free Proof402 notarize-result helper must exist"
+);
+assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/settlement/status"),
+  "free settlement status helper must exist"
+);
+assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/settlement/preflight"),
+  "free settlement preflight helper must exist"
+);
+assert(
   catalog.freeResources.some((resource) => resource.path === "/api/procurement/execute" && resource.priceUsd === 0),
   "free dry-run execute helper must exist"
 );
 assert(openapi.paths?.["/api/receipts/hash-result"]?.post, "hash-result helper must be present in OpenAPI");
+assert(openapi.paths?.["/api/receipts/notarize-result"]?.post, "notarize-result helper must be present in OpenAPI");
+assert(openapi.paths?.["/api/launch/checklist"]?.get, "launch checklist must be present in OpenAPI");
+assert(openapi.paths?.["/api/marketplace/bundle"]?.get, "marketplace bundle must be present in OpenAPI");
+assert(openapi.paths?.["/api/settlement/status"]?.get, "settlement status must be present in OpenAPI");
+assert(openapi.paths?.["/api/settlement/preflight"]?.get, "settlement preflight must be present in OpenAPI");
+assert(checklist.readiness.dryRunLaunchReady === true, "dry-run launch checklist must pass");
+assert(checklist.readiness.publicMarketplaceReady === false, "public marketplace readiness must remain false for localhost/no-settlement defaults");
+assert(checklist.settlement.realSettlementReady === false, "real settlement must remain disabled by default");
+assert(bundle.resources.length === catalog.paidLaunchResources.length, "marketplace bundle must cover every paid launch resource");
+assert(bundle.listingState.dryRunMetadataReady === true, "marketplace bundle metadata must be dry-run ready");
+assert(bundle.listingState.realSettlementReady === false, "marketplace bundle must not claim real settlement readiness by default");
+assert(bundle.listingState.cdpBazaarIndexingReady === false, "marketplace bundle must not claim CDP Bazaar indexing readiness");
+assert(bundle.indexing?.cdpBazaar?.status === "blocked", "default marketplace bundle must mark CDP Bazaar indexing blocked");
+assert(
+  bundle.resources.every((resource) => resource.metadata?.inputSchema && resource.bazaarExtensionDraft?.bazaar),
+  "marketplace bundle resources must include input schemas and Bazaar drafts"
+);
+assert(
+  bundle.resources.every((resource) => resource.listingStatus === "blocked" && resource.listingBlockers.length > 0),
+  "default marketplace bundle resources must keep listing blockers"
+);
 assert(
   !openapi.paths["/api/receipts/hash-result"].post["x-payment-info"],
   "hash-result helper must not require payment"
+);
+assert(
+  !openapi.paths["/api/receipts/notarize-result"].post["x-payment-info"],
+  "notarize-result helper must not require payment"
 );
 assert(openapi.paths?.["/api/procurement/execute"]?.post, "dry-run execute helper must be present in OpenAPI");
 assert(
@@ -70,6 +149,7 @@ for (const resource of catalog.laterResourcesToPreserve) {
 }
 
 run("node", ["scripts/privacy-check.js"]);
+run("node", ["scripts/settlement-check.js"]);
 run("node", ["--test", "test"]);
 
 console.log("Trust402 release check passed.");

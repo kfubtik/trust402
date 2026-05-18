@@ -1,0 +1,9 @@
+{
+  "subject": "example diligence result",
+  "resultHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "label": "Trust402 diligence result",
+  "metadata": {
+    "agent": "trust402",
+    "taskId": "task_123"
+  }
+}

@@ -18,14 +18,22 @@ In dry-run mode Trust402 may:
 - estimate costs;
 - create local reports;
 - prepare result hashes and receipt bundles.
+- preview Proof402 notarization requests for `sha256:` hashes.
+- optionally make unpaid Proof402 health/payment-challenge probes when
+  `PROOF402_DELEGATION_MODE=probe`.
+- expose settlement-readiness metadata and unpaid x402 challenge tests.
+- expose a paid-smoke preflight that checks readiness without sending payment.
 
 In dry-run mode Trust402 must not:
 
 - send paid x402 requests;
+- claim real x402 settlement readiness before a successful paid smoke;
+- run protected resources for free when real paywall mode was requested but settlement guards are incomplete;
 - execute procurement live;
 - create recurring paid monitors;
 - call Proof402 as a paid delegation target;
-- forward `X-Payment`, `Authorization`, cookie, or proxy authorization headers in unpaid probes;
+- send private payloads to Proof402;
+- forward `PAYMENT-SIGNATURE`, `X-Payment`, `Authorization`, cookie, or proxy authorization headers in unpaid probes;
 - move funds;
 - store private keys;
 - ask for customer private keys;
@@ -95,3 +103,4 @@ Trust402 must stop instead of spending when:
 - result cannot be verified or hashed;
 - registry is not allowlisted;
 - caller requests private-key handling in a public service flow.
+- real paywall mode is requested before `/api/settlement/status` has no blockers.

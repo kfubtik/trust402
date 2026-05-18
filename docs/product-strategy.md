@@ -51,7 +51,7 @@ Normal uptime monitors do not understand x402.
 Trust402 can evaluate x402-specific signals:
 
 - `402 Payment Required` behavior;
-- `X-PAYMENT` lifecycle readiness;
+- `PAYMENT-SIGNATURE` / legacy `X-Payment` lifecycle readiness;
 - network, asset, scheme, amount, and `payTo`;
 - input schema quality;
 - marketplace metadata quality;
