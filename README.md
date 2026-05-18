@@ -118,6 +118,15 @@ npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10
 See [docs/bazaar-indexing.md](docs/bazaar-indexing.md) for the current
 production indexing state and verification commands.
 
+Check external directory visibility without submitting forms:
+
+```powershell
+npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
+```
+
+See [docs/external-marketplace-listing.md](docs/external-marketplace-listing.md)
+for public-safe listing copy and directory submission gates.
+
 ## Modes
 
 Default mode is dry-run:
@@ -353,4 +362,5 @@ Future live procurement must require:
 - `compose.yaml` - local Docker Compose service with dry-run defaults.
 - `docs/github-release-checklist.md` - public release checklist.
 - `scripts/check-bazaar-indexing.js` - read-only CDP Bazaar visibility check.
+- `scripts/check-external-directories.js` - read-only external directory visibility check.
 - `test/` - API and engine tests.

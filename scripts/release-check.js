@@ -26,6 +26,7 @@ assert(packageJson.scripts?.test, "package must expose npm test");
 assert(packageJson.scripts?.doctor, "package must expose npm run doctor");
 assert(packageJson.scripts?.["bazaar:indexing:check"], "package must expose npm run bazaar:indexing:check");
 assert(packageJson.scripts?.["bazaar:indexing:check:all"], "package must expose npm run bazaar:indexing:check:all");
+assert(packageJson.scripts?.["directories:check"], "package must expose npm run directories:check");
 assert(packageJson.scripts?.["marketplace:bundle"], "package must expose npm run marketplace:bundle");
 assert(packageJson.scripts?.["privacy:check"], "package must expose npm run privacy:check");
 assert(packageJson.scripts?.["release:check"], "package must expose npm run release:check");
@@ -50,6 +51,7 @@ assert(existsSync("src/expressApp.js"), "Express x402 entrypoint bridge must exi
 assert(existsSync("compose.yaml"), "compose.yaml must exist");
 assert(existsSync("docs/deployment.md"), "deployment docs must exist");
 assert(existsSync("docs/bazaar-indexing.md"), "Bazaar indexing runbook must exist");
+assert(existsSync("docs/external-marketplace-listing.md"), "external marketplace listing pack must exist");
 assert(existsSync("docs/github-release-checklist.md"), "GitHub release checklist must exist");
 assert(existsSync("examples/x402-diligence.json"), "x402 diligence example must exist");
 assert(dockerfile.includes("HEALTHCHECK"), "Dockerfile must expose a healthcheck");
@@ -62,6 +64,7 @@ assert(vercelIgnore.includes(".env"), "Vercel ignore must exclude local env file
 assert(vercelIgnore.includes(".agentcash"), "Vercel ignore must exclude AgentCash material");
 assert(apiIndex.includes("createTrust402ExpressApp"), "Vercel API handler must use the Express x402 bridge");
 assert(serverSource.includes("createTrust402ExpressApp"), "node start must use the Express bridge in real paywall mode");
+assert(existsSync("scripts/check-external-directories.js"), "external directory check script must exist");
 assert(workflow.includes("docker build -t trust402:test ."), "CI must build the Docker image");
 assert(workflow.includes("docker compose config"), "CI must validate docker compose config");
 assert(workflow.includes("npm run smoke -- http://127.0.0.1:4032"), "CI must smoke test the Docker image");

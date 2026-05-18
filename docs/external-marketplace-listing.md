@@ -28,7 +28,46 @@ Trust402 is ready to present as a production x402 service, but not as a
 universal autonomous buyer. Live Trust402 procurement, paid Proof402 delegation,
 and AgentCash auto-refill remain disabled until separately approved.
 
+## Current External Directory Visibility
+
+Last checked on 2026-05-18 at 16:10:39 +07:00 with:
+
+```powershell
+npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
+```
+
+Result:
+
+```text
+status = not-visible-yet
+checked = 6
+reachable = 4
+visible = 0
+notVisibleYet = 4
+unreachable = 2
+```
+
+Interpretation:
+
+- CDP Bazaar remains the authoritative discovery signal for Trust402 right now;
+- Agentic.Market, x402Bazaar, RelAI market, and x402list were reachable but did
+  not expose Trust402 in the fetched public HTML/search pages;
+- x402scan and x402.org ecosystem were not reliably reachable within the
+  10-second read-only check window;
+- `not-visible-yet` is not proof of absence because several directories are
+  client-rendered, asynchronously indexed, curated, or rate-limited.
+
 ## Directory Strategy
+
+Run the read-only directory visibility monitor:
+
+```powershell
+npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
+```
+
+Use `--strict` only for a gate that should fail until at least one external
+directory page contains Trust402. The script checks public pages only; it does
+not submit forms, send payment headers, or use secrets.
 
 ### CDP Bazaar
 
@@ -206,6 +245,7 @@ npm run release:check
 npm run smoke -- https://trust402.vercel.app
 npm run smoke:x402 -- https://trust402.vercel.app
 npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10000 --limit=20
+npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
 npx vercel@latest logs https://trust402.vercel.app --since 30m --level error
 ```
 
@@ -218,6 +258,7 @@ unpaid x402 smoke passed
 routeSummary.expected = 10
 routeSummary.indexed = 10
 routeSummary.missing = []
+external directory check completes read-only
 Vercel production error logs are empty
 ```
 
