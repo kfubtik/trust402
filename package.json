@@ -1,0 +1,28 @@
+{
+  "name": "trust402",
+  "version": "0.1.0",
+  "private": false,
+  "license": "MIT",
+  "type": "module",
+  "description": "Buyer-side trust and procurement agent for x402 resources.",
+  "keywords": [
+    "x402",
+    "agent",
+    "trust",
+    "procurement",
+    "micropayments"
+  ],
+  "scripts": {
+    "dev": "node src/server.js",
+    "dev:detached": "node scripts/start-detached.js",
+    "privacy:check": "node scripts/privacy-check.js",
+    "release:check": "node scripts/release-check.js",
+    "start": "node src/server.js",
+    "smoke": "node scripts/smoke.js",
+    "test": "node --test test",
+    "verify": "node scripts/release-check.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

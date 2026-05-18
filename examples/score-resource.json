@@ -1,0 +1,13 @@
+{
+  "endpoint": "https://example.com/api/paid",
+  "priceUsd": 0.01,
+  "has402": true,
+  "hasInputSchema": true,
+  "hasOpenApi": true,
+  "hasWellKnown": true,
+  "payTo": "0x1111111111111111111111111111111111111111",
+  "network": "eip155:8453",
+  "asset": "USDC",
+  "description": "Structured paid x402 resource for autonomous agents.",
+  "receiptReady": true
+}

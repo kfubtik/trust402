@@ -1,0 +1,11 @@
+{
+  "goal": "Choose the safest x402 endpoint intelligence resource.",
+  "budgetUsd": 0.25,
+  "maxPaidCalls": 5,
+  "riskTolerance": "low",
+  "allowedRegistries": [
+    "https://agora402.io",
+    "https://www.x402scan.com"
+  ],
+  "requireProofReceipts": true
+}

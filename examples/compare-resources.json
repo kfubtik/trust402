@@ -1,0 +1,26 @@
+{
+  "goal": "Choose a low-risk x402 domain intelligence resource.",
+  "budgetUsd": 0.05,
+  "candidates": [
+    {
+      "id": "candidate-a",
+      "endpoint": "https://example.com/a",
+      "priceUsd": 0.01,
+      "has402": true,
+      "hasInputSchema": true,
+      "hasOpenApi": true,
+      "hasWellKnown": true,
+      "payTo": "0x1111111111111111111111111111111111111111",
+      "network": "eip155:8453",
+      "asset": "USDC",
+      "description": "Structured paid x402 resource with clear discovery docs.",
+      "receiptReady": true
+    },
+    {
+      "id": "candidate-b",
+      "endpoint": "https://example.com/b",
+      "priceUsd": 0.04,
+      "description": "Paid endpoint with limited metadata."
+    }
+  ]
+}

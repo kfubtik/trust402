@@ -1,0 +1,199 @@
+{
+  "name": "Trust402",
+  "tagline": "Trust before you pay. Proof after you buy.",
+  "category": "agent-infrastructure",
+  "status": "draft",
+  "publicSafe": true,
+  "defaultMode": "dry-run",
+  "positioning": "Buyer-side trust and procurement agent for x402 resources.",
+  "freeResources": [
+    {
+      "method": "GET",
+      "path": "/health",
+      "purpose": "Runtime status and spend mode."
+    },
+    {
+      "method": "GET",
+      "path": "/openapi.json",
+      "purpose": "OpenAPI contract for agents and marketplaces."
+    },
+    {
+      "method": "GET",
+      "path": "/.well-known/x402",
+      "purpose": "x402 discovery document."
+    },
+    {
+      "method": "GET",
+      "path": "/api/capabilities",
+      "purpose": "Machine-readable capability summary."
+    },
+    {
+      "method": "GET",
+      "path": "/api/status",
+      "purpose": "Launch readiness, safety, and backlog status."
+    },
+    {
+      "method": "GET",
+      "path": "/api/resources",
+      "purpose": "Public resource catalog."
+    }
+  ],
+  "paidLaunchResources": [
+    {
+      "id": "trust.check_x402",
+      "method": "POST",
+      "path": "/api/trust/check-x402",
+      "priceUsd": 0.005,
+      "status": "launch-mvp",
+      "purpose": "Run a fast live probe for one x402 endpoint and summarize challenge/payment-flow readiness."
+    },
+    {
+      "id": "trust.score_resource",
+      "method": "POST",
+      "path": "/api/trust/score-resource",
+      "priceUsd": 0.01,
+      "status": "launch-mvp",
+      "purpose": "Score one x402 resource for trust, schema, price, discovery, and receipt readiness."
+    },
+    {
+      "id": "trust.evaluate_origin",
+      "method": "POST",
+      "path": "/api/trust/evaluate-origin",
+      "priceUsd": 0.02,
+      "status": "launch-mvp",
+      "purpose": "Evaluate a full origin/domain and its x402 discovery posture."
+    },
+    {
+      "id": "seller.readiness",
+      "method": "POST",
+      "path": "/api/seller/readiness",
+      "priceUsd": 0.02,
+      "status": "launch-mvp",
+      "purpose": "Check whether a seller endpoint is ready for marketplace discovery and autonomous buyers."
+    },
+    {
+      "id": "trust.compare_resources",
+      "method": "POST",
+      "path": "/api/trust/compare-resources",
+      "priceUsd": 0.03,
+      "status": "launch-mvp",
+      "purpose": "Rank 2-10 candidate paid resources for a goal, budget, and risk policy."
+    },
+    {
+      "id": "procurement.plan",
+      "method": "POST",
+      "path": "/api/procurement/plan",
+      "priceUsd": 0.02,
+      "status": "launch-mvp",
+      "purpose": "Create a bounded spend plan without spending money."
+    },
+    {
+      "id": "reports.x402_diligence",
+      "method": "POST",
+      "path": "/api/reports/x402-diligence",
+      "priceUsd": {
+        "min": 0.08,
+        "max": 0.15
+      },
+      "status": "launch-mvp",
+      "purpose": "Produce a full diligence report for an x402 endpoint or origin with hash-ready evidence."
+    }
+  ],
+  "laterResourcesToPreserve": [
+    {
+      "id": "procurement.quote",
+      "method": "POST",
+      "path": "/api/procurement/quote",
+      "laterPriceUsd": {
+        "min": 0.03,
+        "max": 0.05
+      },
+      "status": "later",
+      "reasonToWait": "Useful only after compare-resources and procurement-plan are trusted.",
+      "purpose": "Produce a concrete quote for a multi-resource purchase path."
+    },
+    {
+      "id": "procurement.execute",
+      "method": "POST",
+      "path": "/api/procurement/execute",
+      "laterPriceUsd": "pass-through-plus-15-25-percent-min-0.02",
+      "status": "future-disabled",
+      "reasonToWait": "Live spending requires hot-wallet policy, allowlists, receipts, and approval thresholds.",
+      "purpose": "Execute approved paid subcalls inside strict spend policy."
+    },
+    {
+      "id": "receipts.notarize_result",
+      "method": "POST",
+      "path": "/api/receipts/notarize-result",
+      "laterPriceUsd": "pass-through-plus-0.005-to-0.01",
+      "status": "later",
+      "reasonToWait": "Proof402 should be integrated externally after core trust tools prove useful.",
+      "purpose": "Create or delegate a proof receipt for a purchased result hash."
+    },
+    {
+      "id": "monitor.snapshot",
+      "method": "POST",
+      "path": "/api/monitor/snapshot",
+      "laterPriceUsd": {
+        "min": 0.01,
+        "max": 0.02
+      },
+      "status": "later",
+      "reasonToWait": "The launch check-x402 tool should prove whether repeated checks are wanted.",
+      "purpose": "Run a one-shot x402 payment-flow and drift check."
+    },
+    {
+      "id": "monitor.badge",
+      "method": "POST",
+      "path": "/api/monitor/badge",
+      "laterPriceUsd": 0.02,
+      "status": "later",
+      "reasonToWait": "Badges need historical checks and credibility.",
+      "purpose": "Generate or refresh a public trust badge snapshot."
+    },
+    {
+      "id": "receipts.hash_result",
+      "method": "POST",
+      "path": "/api/receipts/hash-result",
+      "laterPriceUsd": 0,
+      "status": "free-helper",
+      "reasonToWait": "Hashing is too simple to be a strong paid resource by itself.",
+      "purpose": "Prepare a result hash for receipt workflows."
+    }
+  ],
+  "pricingLadder": [
+    {
+      "tier": "entry",
+      "rangeUsd": "0.005",
+      "resources": [
+        "trust.check_x402"
+      ]
+    },
+    {
+      "tier": "decision-tools",
+      "rangeUsd": "0.01-0.03",
+      "resources": [
+        "trust.score_resource",
+        "trust.evaluate_origin",
+        "seller.readiness",
+        "trust.compare_resources",
+        "procurement.plan"
+      ]
+    },
+    {
+      "tier": "report",
+      "rangeUsd": "0.08-0.15",
+      "resources": [
+        "reports.x402_diligence"
+      ]
+    }
+  ],
+  "safety": {
+    "liveSpendDefault": false,
+    "requiresBudget": true,
+    "requiresPerCallLimit": true,
+    "requiresAllowlist": true,
+    "storesPrivateKeys": false,
+    "receiptRequiredForLiveProcurement": true
+  }
+}
