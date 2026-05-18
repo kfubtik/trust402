@@ -67,6 +67,7 @@ assert(workflow.includes("docker compose config"), "CI must validate docker comp
 assert(workflow.includes("npm run smoke -- http://127.0.0.1:4032"), "CI must smoke test the Docker image");
 assert(workflow.includes("npm run smoke:x402 -- http://127.0.0.1:4036"), "CI must smoke test mock x402 challenge");
 assert(catalog.paidLaunchResources.length === 10, "expected 10 paid launch resources");
+assert(catalog.status === "production-mvp", "catalog status must reflect production MVP state");
 assert(catalog.laterResourcesToPreserve.length >= 2, "expected preserved later resources");
 assert(catalog.safety.liveSpendDefault === false, "live spend must default to false");
 assert(catalog.safety.storesPrivateKeys === false, "storesPrivateKeys must be false");

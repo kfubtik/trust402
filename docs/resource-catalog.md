@@ -1,4 +1,4 @@
-# Trust402 Resource Catalog Draft
+# Trust402 Resource Catalog
 
 Trust402 should expose a suite of resources around one buyer problem:
 safe selection and use of paid x402 tools.

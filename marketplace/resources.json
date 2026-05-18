@@ -2,7 +2,7 @@
   "name": "Trust402",
   "tagline": "Trust before you pay. Proof after you buy.",
   "category": "agent-infrastructure",
-  "status": "draft",
+  "status": "production-mvp",
   "publicSafe": true,
   "defaultMode": "dry-run",
   "positioning": "Buyer-side trust and procurement agent for x402 resources.",
