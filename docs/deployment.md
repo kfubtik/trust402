@@ -123,6 +123,43 @@ CDP_API_KEY_SECRET=
 CDP_WALLET_SECRET=
 ```
 
+### Git-backed Deploys
+
+Manual Vercel CLI production deploys work:
+
+```powershell
+npx vercel@latest --prod --yes
+```
+
+Git-backed auto-deploy is still a Vercel/GitHub integration permission issue,
+not a Trust402 code issue. The current private GitHub remote is:
+
+```text
+https://github.com/kfubtik/trust402.git
+```
+
+This command currently fails until the Vercel GitHub App has access to that
+private repository:
+
+```powershell
+npx vercel@latest git connect https://github.com/kfubtik/trust402.git --non-interactive
+```
+
+Expected failure while access is missing:
+
+```text
+Failed to connect kfubtik/trust402 to project. Make sure there aren't any
+typos and that you have access to the repository if it's private.
+```
+
+Fix in Vercel/GitHub UI:
+
+- keep the GitHub repository private;
+- open the Vercel project `trust402`;
+- connect the Git repository or update the Vercel GitHub App installation;
+- grant access to `kfubtik/trust402`;
+- rerun the `vercel git connect` command above.
+
 ## Live x402 Settlement
 
 The Express middleware bridge protects paid launch resources when
