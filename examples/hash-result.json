@@ -1,0 +1,9 @@
+{
+  "subject": "example diligence result",
+  "payload": {
+    "endpoint": "https://example.com/api/paid",
+    "recommendation": "test-first",
+    "score": 76
+  },
+  "purpose": "proof-ready result hash"
+}

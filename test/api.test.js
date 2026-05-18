@@ -33,23 +33,46 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(resources.response.status, 200);
     assert.equal(resources.body.paidLaunchResources.length, 7);
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/status"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/receipts/hash-result"));
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/trust/check-x402"));
     assert.ok(resources.body.laterResourcesToPreserve.some((resource) => resource.path === "/api/procurement/execute"));
 
     const status = await request(baseUrl, "/api/status");
     assert.equal(status.response.status, 200);
     assert.equal(status.body.launchReadiness.readyForGitHub, true);
+    assert.equal(status.body.launchReadiness.readyForReceiptLayer, true);
     assert.equal(status.body.launchReadiness.readyForLiveSpend, false);
 
     const openapi = await request(baseUrl, "/openapi.json");
     assert.equal(openapi.response.status, 200);
     assert.equal(openapi.body.openapi, "3.1.0");
     assert.ok(openapi.body.paths["/api/status"].get);
+    assert.ok(openapi.body.paths["/api/receipts/hash-result"].post);
     assert.ok(openapi.body.paths["/api/reports/x402-diligence"].post["x-payment-info"]);
 
     const wellKnown = await request(baseUrl, "/.well-known/x402");
     assert.equal(wellKnown.response.status, 200);
     assert.ok(wellKnown.body.resources.some((resource) => resource.includes("/api/trust/score-resource")));
+  });
+});
+
+test("hash-result returns a dry-run receipt bundle", async () => {
+  await withServer(async (baseUrl) => {
+    const { response, body } = await request(baseUrl, "/api/receipts/hash-result", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        subject: "example result",
+        payload: { recommendation: "test-first", score: 76 }
+      })
+    });
+
+    assert.equal(response.status, 200);
+    assert.equal(body.tool, "receipts.hash_result");
+    assert.match(body.resultHash, /^sha256:[a-f0-9]{64}$/);
+    assert.equal(body.receiptBundle.proofProvider, "Proof402");
+    assert.equal(body.receiptBundle.delegation.paidProofCallMade, false);
+    assert.equal(body.receiptBundle.policy.liveSpendEnabled, false);
   });
 });
 

@@ -65,21 +65,28 @@ Verification:
 
 ## Phase 3 - Receipt Layer
 
-Status: next.
+Status: dry-run helper complete; live Proof402 delegation still disabled.
 
 Integrate with Proof402 as an external dependency, not by modifying Proof402.
 
-Implement:
+Implemented:
 
 - hash final report;
+- return receipt bundle;
+- free `/api/receipts/hash-result` helper;
+- diligence reports include Proof402-ready receipt bundles.
+
+Still later:
+
 - call Proof402 only when configured;
 - store proof links;
-- return receipt bundle.
+- optional paid proof smoke with max spend approval.
 
 Verification:
 
 - dry-run receipt output;
-- optional paid proof smoke with max spend approval.
+- tests for receipt hash helper;
+- no paid proof call is made in MVP.
 
 ## Phase 4 - Controlled Procurement
 

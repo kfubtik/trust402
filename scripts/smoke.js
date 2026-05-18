@@ -15,6 +15,7 @@ async function main() {
   const openapi = await getJson("/openapi.json");
   assert(openapi.openapi === "3.1.0", "/openapi.json version mismatch");
   assert(openapi.paths?.["/api/trust/check-x402"]?.post, "/openapi missing check-x402");
+  assert(openapi.paths?.["/api/receipts/hash-result"]?.post, "/openapi missing hash-result");
 
   const score = await postJson("/api/trust/score-resource", {
     endpoint: "https://example.com/api/paid",
@@ -38,6 +39,12 @@ async function main() {
     riskTolerance: "low"
   });
   assert(plan.policy?.mode === "plan-only", "/api/procurement/plan must be plan-only");
+
+  const receipt = await postJson("/api/receipts/hash-result", {
+    subject: "smoke result",
+    payload: { recommendation: "use", score: 88 }
+  });
+  assert(receipt.receiptBundle?.delegation?.paidProofCallMade === false, "/api/receipts/hash-result must not call Proof402");
 
   console.log(`Trust402 smoke passed for ${baseUrl}`);
 }

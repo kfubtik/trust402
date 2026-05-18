@@ -36,6 +36,14 @@
       "method": "GET",
       "path": "/api/resources",
       "purpose": "Public resource catalog."
+    },
+    {
+      "id": "receipts.hash_result",
+      "method": "POST",
+      "path": "/api/receipts/hash-result",
+      "priceUsd": 0,
+      "status": "free-helper",
+      "purpose": "Prepare a proof-ready result hash and dry-run receipt bundle."
     }
   ],
   "paidLaunchResources": [
@@ -150,15 +158,6 @@
       "status": "later",
       "reasonToWait": "Badges need historical checks and credibility.",
       "purpose": "Generate or refresh a public trust badge snapshot."
-    },
-    {
-      "id": "receipts.hash_result",
-      "method": "POST",
-      "path": "/api/receipts/hash-result",
-      "laterPriceUsd": 0,
-      "status": "free-helper",
-      "reasonToWait": "Hashing is too simple to be a strong paid resource by itself.",
-      "purpose": "Prepare a result hash for receipt workflows."
     }
   ],
   "pricingLadder": [

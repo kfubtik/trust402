@@ -1,6 +1,7 @@
 import { ApiError } from "./errors.js";
 import { sha256Json } from "./hash.js";
 import { config } from "./config.js";
+import { receiptBundle } from "./receipts.js";
 
 const HTTPS_URL_RE = /^https:\/\/[^\s/$.?#].[^\s]*$/i;
 const LOCAL_URL_RE = /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?(\/.*)?$/i;
@@ -370,9 +371,17 @@ export async function x402Diligence(input = {}, options = {}) {
     }
   };
 
+  const evidenceHash = sha256Json(report);
+
   return {
     ...report,
-    evidenceHash: sha256Json(report),
+    evidenceHash,
+    receiptBundle: receiptBundle({
+      subject: report.subject,
+      resultHash: evidenceHash,
+      payloadHash: evidenceHash,
+      purpose: "x402 diligence report evidence"
+    }),
     nextSteps: diligenceNextSteps(report)
   };
 }

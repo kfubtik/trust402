@@ -27,6 +27,7 @@ Implemented:
 - resource comparison;
 - procurement planning;
 - x402 diligence reports with a `sha256:` evidence hash;
+- dry-run receipt bundles for Proof402-ready result hashes;
 - optional mock 402 paywall for local payment-flow testing;
 - tests and smoke script.
 
@@ -92,6 +93,7 @@ GET /.well-known/x402
 GET /api/capabilities
 GET /api/status
 GET /api/resources
+POST /api/receipts/hash-result
 ```
 
 ## Paid Launch Resources
@@ -129,6 +131,13 @@ $body = Get-Content .\examples\compare-resources.json -Raw
 Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/trust/compare-resources -ContentType application/json -Body $body
 ```
 
+Prepare a dry-run receipt bundle:
+
+```powershell
+$body = Get-Content .\examples\hash-result.json -Raw
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/receipts/hash-result -ContentType application/json -Body $body
+```
+
 ## Safety
 
 Trust402 is allowed to reason about spending before it is allowed to spend.
@@ -159,6 +168,7 @@ Future live procurement must require:
 - `src/server.js` - HTTP API and mock paywall.
 - `src/trustEngine.js` - checks, scoring, planning, and report logic.
 - `src/openapi.js` - OpenAPI, capabilities, and `.well-known/x402`.
+- `src/receipts.js` - dry-run receipt bundles and Proof402-ready hashes.
 - `marketplace/resources.json` - machine-readable launch and backlog catalog.
 - `docs/resource-catalog.md` - human-readable resource catalog and prices.
 - `docs/safety-policy.md` - live-spend and secret-handling policy.

@@ -34,6 +34,16 @@ Launch readiness, safety state, resource counts, and verification commands.
 
 Public catalog of Trust402 resources, prices, input schemas, and safety notes.
 
+### `POST /api/receipts/hash-result`
+
+Free helper that prepares a `sha256:` result hash and a dry-run receipt bundle
+for later Proof402 delegation.
+
+Price: free.
+
+Reason: hashing alone is too simple to sell, but it makes the paid diligence
+reports more credible and easier to connect to Proof402 later.
+
 ## Paid Launch Resources
 
 ### 1. `POST /api/trust/check-x402`
@@ -256,14 +266,6 @@ Later price: `$0.02` per refresh, or a monthly package only after demand is
 visible.
 
 Reason to wait: badges need history and credibility, not just a single check.
-
-### `POST /api/receipts/hash-result`
-
-Hash helper for receipt workflows.
-
-Launch decision: do not sell this as a paid resource. Keep it free in docs or
-SDK examples because hashing is too simple to be a strong paid product by
-itself.
 
 ## Pricing Anchors
 

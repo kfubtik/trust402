@@ -4,6 +4,7 @@ import { config, isMockPaywallEnabled } from "./config.js";
 import { paidResourceByPath, publicResources } from "./catalog.js";
 import { ApiError, errorBody } from "./errors.js";
 import { capabilities, openApiSpec, x402WellKnown } from "./openapi.js";
+import { hashResult } from "./receipts.js";
 import {
   checkX402,
   compareResources,
@@ -15,6 +16,7 @@ import {
 } from "./trustEngine.js";
 
 const routes = new Map([
+  ["POST /api/receipts/hash-result", hashResult],
   ["POST /api/trust/check-x402", checkX402],
   ["POST /api/trust/score-resource", scoreResource],
   ["POST /api/trust/evaluate-origin", evaluateOrigin],
@@ -113,9 +115,11 @@ function statusSummary() {
     version: config.version,
     generatedAt: new Date().toISOString(),
     launchReadiness: {
-      phase: "dry-run-public-mvp",
+      phase: "dry-run-public-mvp-with-receipts",
       readyForGitHub: true,
+      readyForReceiptLayer: true,
       readyForLiveSpend: false,
+      readyForProof402Delegation: false,
       readyForRealX402Settlement: false
     },
     resources: {

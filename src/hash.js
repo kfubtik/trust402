@@ -8,6 +8,10 @@ export function sha256Json(value) {
   return `sha256:${createHash("sha256").update(stableJson(value)).digest("hex")}`;
 }
 
+export function sha256Text(value) {
+  return `sha256:${createHash("sha256").update(String(value)).digest("hex")}`;
+}
+
 function sortValue(value) {
   if (Array.isArray(value)) return value.map(sortValue);
   if (value && typeof value === "object") {

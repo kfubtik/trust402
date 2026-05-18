@@ -40,7 +40,27 @@ export function openApiSpec() {
     "/.well-known/x402": getPath("x402 discovery document"),
     "/api/capabilities": getPath("Machine-readable capability summary"),
     "/api/status": getPath("Launch readiness, safety, and backlog status"),
-    "/api/resources": getPath("Public Trust402 resource catalog")
+    "/api/resources": getPath("Public Trust402 resource catalog"),
+    "/api/receipts/hash-result": {
+      post: {
+        operationId: "receipts_hash_result",
+        summary: "Prepare a proof-ready SHA-256 receipt bundle without paid delegation",
+        tags: ["Trust402"],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: requestSchemaFor("receipts.hash_result"),
+              example: exampleFor("receipts.hash_result")
+            }
+          }
+        },
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse
+        }
+      }
+    }
   };
 
   for (const resource of catalog.paidLaunchResources) {
@@ -204,6 +224,24 @@ function requestSchemaFor(id) {
     };
   }
 
+  if (id === "receipts.hash_result") {
+    return {
+      type: "object",
+      properties: {
+        subject: { type: "string" },
+        payload: {},
+        result: {},
+        resultHash: { type: "string", pattern: "^sha256:[a-f0-9]{64}$" },
+        purpose: { type: "string" }
+      },
+      anyOf: [
+        { required: ["payload"] },
+        { required: ["result"] },
+        { required: ["resultHash"] }
+      ]
+    };
+  }
+
   return {
     type: "object",
     properties: {
@@ -240,6 +278,16 @@ function exampleFor(id) {
         { id: "a", endpoint: "https://example.com/a", priceUsd: 0.01, hasInputSchema: true, hasOpenApi: true, hasWellKnown: true },
         { id: "b", endpoint: "https://example.com/b", priceUsd: 0.03, hasInputSchema: false }
       ]
+    };
+  }
+  if (id === "receipts.hash_result") {
+    return {
+      subject: "example diligence result",
+      payload: {
+        endpoint: "https://example.com/api/paid",
+        recommendation: "test-first"
+      },
+      purpose: "proof-ready result hash"
     };
   }
   return {

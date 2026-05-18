@@ -22,6 +22,15 @@ assert(catalog.paidLaunchResources.length === 7, "expected 7 paid launch resourc
 assert(catalog.laterResourcesToPreserve.length >= 5, "expected preserved later resources");
 assert(catalog.safety.liveSpendDefault === false, "live spend must default to false");
 assert(catalog.safety.storesPrivateKeys === false, "storesPrivateKeys must be false");
+assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/receipts/hash-result" && resource.priceUsd === 0),
+  "free hash-result receipt helper must exist"
+);
+assert(openapi.paths?.["/api/receipts/hash-result"]?.post, "hash-result helper must be present in OpenAPI");
+assert(
+  !openapi.paths["/api/receipts/hash-result"].post["x-payment-info"],
+  "hash-result helper must not require payment"
+);
 
 const ids = new Set();
 const paths = new Set();

@@ -9,6 +9,9 @@ export const config = {
   x402Network: process.env.X402_NETWORK || "eip155:8453",
   x402Asset: process.env.X402_ASSET || "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
   payTo: process.env.PAY_TO || "0x0000000000000000000000000000000000000000",
+  proof402BaseUrl: process.env.PROOF402_BASE_URL || "",
+  proof402DelegationMode: process.env.PROOF402_DELEGATION_MODE || "disabled",
+  proof402MaxSpendUsd: Number.parseFloat(process.env.PROOF402_MAX_SPEND_USD || "0"),
   requestTimeoutMs: Number.parseInt(process.env.TRUST402_REQUEST_TIMEOUT_MS || "6000", 10),
   maxJsonBytes: Number.parseInt(process.env.TRUST402_MAX_JSON_BYTES || "131072", 10)
 };

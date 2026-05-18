@@ -223,6 +223,9 @@ test("x402Diligence returns hash-ready evidence report", async () => {
 
     assert.equal(result.tool, "reports.x402_diligence");
     assert.match(result.evidenceHash, /^sha256:[a-f0-9]{64}$/);
+    assert.equal(result.receiptBundle.resultHash, result.evidenceHash);
+    assert.equal(result.receiptBundle.proofProvider, "Proof402");
+    assert.equal(result.receiptBundle.delegation.paidProofCallMade, false);
     assert.equal(result.policy.liveSpendEnabled, false);
   });
 });
