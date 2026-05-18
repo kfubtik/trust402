@@ -14,13 +14,13 @@ npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10
 
 ## Current Production State
 
-Last checked on 2026-05-18 at 15:44:27 +07:00.
+Last checked on 2026-05-18 at 16:03:33 +07:00.
 
 Latest production deployment:
 
 ```text
-dpl_5c8gLbZK27gHndeMDpZtycG4xA47
-https://trust402-ge2k9tg9s-sergo565456-2815s-projects.vercel.app
+dpl_H49hy4WbLpc7RavbCtPTLexxAvw1
+https://trust402-qlrycbdrm-sergo565456-2815s-projects.vercel.app
 ```
 
 - indexed resources: 10 of 10;
