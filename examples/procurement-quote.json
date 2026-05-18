@@ -1,0 +1,31 @@
+{
+  "goal": "Buy one safe x402 data resource.",
+  "budgetUsd": 0.5,
+  "maxPaidCalls": 3,
+  "riskTolerance": "low",
+  "allowedRegistries": [
+    "https://www.x402.org/ecosystem",
+    "https://x402bazaar.org"
+  ],
+  "candidates": [
+    {
+      "id": "good",
+      "endpoint": "https://example.com/good",
+      "priceUsd": 0.01,
+      "has402": true,
+      "hasInputSchema": true,
+      "hasOpenApi": true,
+      "hasWellKnown": true,
+      "payTo": "0x1111111111111111111111111111111111111111",
+      "network": "eip155:8453",
+      "asset": "USDC",
+      "description": "Good structured endpoint for x402 buyers.",
+      "receiptReady": true
+    },
+    {
+      "id": "weak",
+      "endpoint": "https://example.com/weak",
+      "priceUsd": 0.04
+    }
+  ]
+}

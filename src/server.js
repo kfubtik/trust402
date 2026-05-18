@@ -4,6 +4,7 @@ import { config, isMockPaywallEnabled } from "./config.js";
 import { paidResourceByPath, publicResources } from "./catalog.js";
 import { ApiError, errorBody } from "./errors.js";
 import { capabilities, openApiSpec, x402WellKnown } from "./openapi.js";
+import { procurementExecute, procurementQuote } from "./procurement.js";
 import { hashResult } from "./receipts.js";
 import {
   checkX402,
@@ -17,6 +18,8 @@ import {
 
 const routes = new Map([
   ["POST /api/receipts/hash-result", hashResult],
+  ["POST /api/procurement/quote", procurementQuote],
+  ["POST /api/procurement/execute", procurementExecute],
   ["POST /api/trust/check-x402", checkX402],
   ["POST /api/trust/score-resource", scoreResource],
   ["POST /api/trust/evaluate-origin", evaluateOrigin],
@@ -118,6 +121,7 @@ function statusSummary() {
       phase: "dry-run-public-mvp-with-receipts",
       readyForGitHub: true,
       readyForReceiptLayer: true,
+      readyForControlledProcurementDryRun: true,
       readyForLiveSpend: false,
       readyForProof402Delegation: false,
       readyForRealX402Settlement: false

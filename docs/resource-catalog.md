@@ -44,6 +44,16 @@ Price: free.
 Reason: hashing alone is too simple to sell, but it makes the paid diligence
 reports more credible and easier to connect to Proof402 later.
 
+### `POST /api/procurement/execute`
+
+Dry-run helper that simulates controlled procurement execution and returns an
+audit bundle without making paid subcalls.
+
+Price: free while live spend is disabled.
+
+Reason: buyers need to see exactly what would happen before trusting live
+procurement.
+
 ## Paid Launch Resources
 
 ### 1. `POST /api/trust/check-x402`
@@ -185,7 +195,23 @@ Output:
 
 Launch price: `$0.02`.
 
-### 7. `POST /api/reports/x402-diligence`
+### 7. `POST /api/procurement/quote`
+
+Builds a concrete quote for a planned multi-resource purchase path without
+spending.
+
+Buyer gets:
+
+- selected resources that fit score and budget policy;
+- pass-through cost estimate;
+- Trust402 fee estimate;
+- quote hash;
+- approval payload;
+- receipt bundle for the quote.
+
+Launch price: `$0.04`.
+
+### 8. `POST /api/reports/x402-diligence`
 
 Full report for an x402 endpoint or origin.
 
@@ -216,16 +242,7 @@ These are intentionally not launch resources. Keep them in the backlog so the
 ideas are not lost, but do not implement them before the launch set proves
 usage.
 
-### `POST /api/procurement/quote`
-
-Builds a concrete quote for a planned multi-agent purchase path.
-
-Later price: `$0.03-$0.05`.
-
-Reason to wait: quote is useful only after `compare-resources` and
-`procurement-plan` are already trusted.
-
-### `POST /api/procurement/execute`
+### `POST /api/procurement/execute` live mode
 
 Executes approved paid subcalls inside a strict budget.
 
@@ -277,7 +294,7 @@ that combine multiple checks into one decision.
 Recommended launch ladder:
 
 1. `$0.005` quick check.
-2. `$0.01-$0.03` scoring, origin, seller, compare, and plan tools.
+2. `$0.01-$0.04` scoring, origin, seller, compare, plan, and quote tools.
 3. `$0.08-$0.15` full diligence report.
 
 ## MVP Priority
@@ -290,12 +307,13 @@ Build first:
 4. `seller-readiness`
 5. `compare-resources`
 6. `procurement-plan`
-7. `x402-diligence`
+7. `procurement-quote`
+8. `procurement-execute` dry-run
+9. `x402-diligence`
 
 Build later:
 
-1. `procurement-quote`
-2. `procurement-execute`
-3. `receipts-notarize-result`
-4. `monitor-snapshot`
-5. `monitor-badge`
+1. `procurement-execute` live mode
+2. `receipts-notarize-result`
+3. `monitor-snapshot`
+4. `monitor-badge`

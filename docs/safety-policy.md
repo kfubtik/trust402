@@ -12,6 +12,8 @@ In dry-run mode Trust402 may:
 - parse OpenAPI, AgentCard, Bazaar, and `.well-known` documents;
 - score supplied metadata;
 - produce spend plans;
+- produce procurement quotes;
+- simulate procurement execution;
 - estimate costs;
 - create local reports;
 - prepare result hashes and receipt bundles.
@@ -19,6 +21,7 @@ In dry-run mode Trust402 may:
 In dry-run mode Trust402 must not:
 
 - send paid x402 requests;
+- execute procurement live;
 - call Proof402 as a paid delegation target;
 - forward `X-Payment`, `Authorization`, cookie, or proxy authorization headers in unpaid probes;
 - move funds;

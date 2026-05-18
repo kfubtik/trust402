@@ -31,16 +31,19 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
 
     const resources = await request(baseUrl, "/api/resources");
     assert.equal(resources.response.status, 200);
-    assert.equal(resources.body.paidLaunchResources.length, 7);
+    assert.equal(resources.body.paidLaunchResources.length, 8);
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/status"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/receipts/hash-result"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/procurement/execute"));
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/trust/check-x402"));
+    assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/procurement/quote"));
     assert.ok(resources.body.laterResourcesToPreserve.some((resource) => resource.path === "/api/procurement/execute"));
 
     const status = await request(baseUrl, "/api/status");
     assert.equal(status.response.status, 200);
     assert.equal(status.body.launchReadiness.readyForGitHub, true);
     assert.equal(status.body.launchReadiness.readyForReceiptLayer, true);
+    assert.equal(status.body.launchReadiness.readyForControlledProcurementDryRun, true);
     assert.equal(status.body.launchReadiness.readyForLiveSpend, false);
 
     const openapi = await request(baseUrl, "/openapi.json");
@@ -48,11 +51,65 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(openapi.body.openapi, "3.1.0");
     assert.ok(openapi.body.paths["/api/status"].get);
     assert.ok(openapi.body.paths["/api/receipts/hash-result"].post);
+    assert.ok(openapi.body.paths["/api/procurement/quote"].post["x-payment-info"]);
+    assert.ok(openapi.body.paths["/api/procurement/execute"].post);
     assert.ok(openapi.body.paths["/api/reports/x402-diligence"].post["x-payment-info"]);
 
     const wellKnown = await request(baseUrl, "/.well-known/x402");
     assert.equal(wellKnown.response.status, 200);
     assert.ok(wellKnown.body.resources.some((resource) => resource.includes("/api/trust/score-resource")));
+  });
+});
+
+test("procurement quote and execute endpoints stay dry-run", async () => {
+  await withServer(async (baseUrl) => {
+    const candidates = [
+      {
+        id: "good",
+        endpoint: "https://example.com/good",
+        priceUsd: 0.01,
+        has402: true,
+        hasInputSchema: true,
+        hasOpenApi: true,
+        hasWellKnown: true,
+        payTo: "0x1111111111111111111111111111111111111111",
+        network: "eip155:8453",
+        asset: "USDC",
+        description: "Good structured endpoint for x402 buyers.",
+        receiptReady: true
+      },
+      {
+        id: "weak",
+        endpoint: "https://example.com/weak",
+        priceUsd: 0.04
+      }
+    ];
+
+    const quote = await request(baseUrl, "/api/procurement/quote", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        goal: "Buy one safe x402 data resource.",
+        budgetUsd: 0.5,
+        candidates
+      })
+    });
+
+    assert.equal(quote.response.status, 200);
+    assert.equal(quote.body.tool, "procurement.quote");
+    assert.equal(quote.body.approvalPayload.liveSpendEnabled, false);
+
+    const execute = await request(baseUrl, "/api/procurement/execute", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(quote.body)
+    });
+
+    assert.equal(execute.response.status, 200);
+    assert.equal(execute.body.tool, "procurement.execute");
+    assert.equal(execute.body.mode, "dry-run");
+    assert.equal(execute.body.paidSubcallsMade, 0);
+    assert.equal(execute.body.liveSpendEnabled, false);
   });
 });
 

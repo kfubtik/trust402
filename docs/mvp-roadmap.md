@@ -90,9 +90,19 @@ Verification:
 
 ## Phase 4 - Controlled Procurement
 
-Status: later, disabled until real usage proves demand.
+Status: dry-run quote and execution audit complete; live spending remains
+disabled until explicit operator approval.
 
-Implement live paid subcalls only after policy is proven.
+Implemented:
+
+- `/api/procurement/quote` quote-only resource;
+- selected-resource policy;
+- pass-through and Trust402 fee estimates;
+- approval payload;
+- `/api/procurement/execute` dry-run audit;
+- hard rejection for live spend requests.
+
+Live paid subcalls can only be added after policy is proven.
 
 Required:
 
@@ -108,8 +118,7 @@ Do not build this before Phase 1 and Phase 2 have usage.
 
 Backlog resources to preserve for later:
 
-- `/api/procurement/quote`
-- `/api/procurement/execute`
+- `/api/procurement/execute` live mode
 - `/api/receipts/notarize-result`
 - `/api/monitor/snapshot`
 - `/api/monitor/badge`

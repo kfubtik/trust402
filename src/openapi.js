@@ -60,6 +60,27 @@ export function openApiSpec() {
           "400": errorResponse
         }
       }
+    },
+    "/api/procurement/execute": {
+      post: {
+        operationId: "procurement_execute",
+        summary: "Simulate controlled procurement execution without live spend",
+        tags: ["Trust402"],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: requestSchemaFor("procurement.execute"),
+              example: exampleFor("procurement.execute")
+            }
+          }
+        },
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse,
+          "403": errorResponse
+        }
+      }
     }
   };
 
@@ -202,7 +223,55 @@ function requestSchemaFor(id) {
         goal: { type: "string" },
         budgetUsd: { type: "number" },
         maxPaidCalls: { type: "integer", default: 5 },
-        riskTolerance: { type: "string", enum: ["low", "medium", "high"], default: "low" }
+        riskTolerance: { type: "string", enum: ["low", "medium", "high"], default: "low" },
+        candidates: {
+          type: "array",
+          minItems: 2,
+          maxItems: 10,
+          items: { type: "object" }
+        }
+      }
+    };
+  }
+
+  if (id === "procurement.quote") {
+    return {
+      type: "object",
+      required: ["goal", "budgetUsd"],
+      properties: {
+        goal: { type: "string" },
+        budgetUsd: { type: "number" },
+        maxPaidCalls: { type: "integer", default: 5 },
+        riskTolerance: { type: "string", enum: ["low", "medium", "high"], default: "low" },
+        allowedRegistries: {
+          type: "array",
+          items: { type: "string" }
+        },
+        candidates: {
+          type: "array",
+          minItems: 2,
+          maxItems: 10,
+          items: { type: "object" }
+        }
+      }
+    };
+  }
+
+  if (id === "procurement.execute") {
+    return {
+      type: "object",
+      properties: {
+        mode: { type: "string", enum: ["dry-run"], default: "dry-run" },
+        liveSpendEnabled: { type: "boolean", default: false },
+        quote: { type: "object" },
+        goal: { type: "string" },
+        budgetUsd: { type: "number" },
+        candidates: {
+          type: "array",
+          minItems: 2,
+          maxItems: 10,
+          items: { type: "object" }
+        }
       }
     };
   }
@@ -268,6 +337,29 @@ function exampleFor(id) {
       budgetUsd: 0.25,
       maxPaidCalls: 5,
       riskTolerance: "low"
+    };
+  }
+  if (id === "procurement.quote") {
+    return {
+      goal: "Buy one safe endpoint intelligence resource.",
+      budgetUsd: 0.25,
+      maxPaidCalls: 3,
+      riskTolerance: "low",
+      candidates: [
+        { id: "a", endpoint: "https://example.com/a", priceUsd: 0.01, has402: true, hasInputSchema: true, hasOpenApi: true, hasWellKnown: true },
+        { id: "b", endpoint: "https://example.com/b", priceUsd: 0.04, hasInputSchema: false }
+      ]
+    };
+  }
+  if (id === "procurement.execute") {
+    return {
+      mode: "dry-run",
+      goal: "Simulate a controlled x402 procurement run.",
+      budgetUsd: 0.25,
+      candidates: [
+        { id: "a", endpoint: "https://example.com/a", priceUsd: 0.01, has402: true, hasInputSchema: true, hasOpenApi: true, hasWellKnown: true },
+        { id: "b", endpoint: "https://example.com/b", priceUsd: 0.04, hasInputSchema: false }
+      ]
     };
   }
   if (id === "trust.compare_resources") {

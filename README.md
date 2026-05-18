@@ -26,6 +26,8 @@ Implemented:
 - seller readiness checks;
 - resource comparison;
 - procurement planning;
+- controlled procurement quotes;
+- dry-run procurement execution audits;
 - x402 diligence reports with a `sha256:` evidence hash;
 - dry-run receipt bundles for Proof402-ready result hashes;
 - optional mock 402 paywall for local payment-flow testing;
@@ -106,6 +108,7 @@ POST /api/receipts/hash-result
 | `POST /api/seller/readiness` | Seller checklist for marketplace readiness | `$0.02` |
 | `POST /api/trust/compare-resources` | Rank 2-10 candidate resources | `$0.03` |
 | `POST /api/procurement/plan` | Bounded spend plan without spending | `$0.02` |
+| `POST /api/procurement/quote` | Concrete quote and approval payload | `$0.04` |
 | `POST /api/reports/x402-diligence` | Full x402 endpoint/origin diligence report | `$0.08-$0.15` |
 
 ## Example Calls
@@ -122,6 +125,20 @@ Create a procurement plan:
 ```powershell
 $body = Get-Content .\examples\procurement-plan.json -Raw
 Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/procurement/plan -ContentType application/json -Body $body
+```
+
+Create a procurement quote:
+
+```powershell
+$body = Get-Content .\examples\procurement-quote.json -Raw
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/procurement/quote -ContentType application/json -Body $body
+```
+
+Simulate controlled execution:
+
+```powershell
+$body = Get-Content .\examples\procurement-execute-dry-run.json -Raw
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/procurement/execute -ContentType application/json -Body $body
 ```
 
 Compare candidate resources:
@@ -147,6 +164,7 @@ MVP guarantees:
 - live spend is disabled;
 - no private keys are required;
 - no paid subcalls are made;
+- `/api/procurement/execute` is dry-run only and returns an audit instead of buying;
 - unpaid probes strip `X-Payment`, `Authorization`, cookie, and proxy authorization headers;
 - `procurement/plan` is plan-only;
 - diligence reports include hash-ready evidence but do not call Proof402 yet;
@@ -167,6 +185,7 @@ Future live procurement must require:
 
 - `src/server.js` - HTTP API and mock paywall.
 - `src/trustEngine.js` - checks, scoring, planning, and report logic.
+- `src/procurement.js` - quote and dry-run execution audit logic.
 - `src/openapi.js` - OpenAPI, capabilities, and `.well-known/x402`.
 - `src/receipts.js` - dry-run receipt bundles and Proof402-ready hashes.
 - `marketplace/resources.json` - machine-readable launch and backlog catalog.

@@ -44,6 +44,14 @@
       "priceUsd": 0,
       "status": "free-helper",
       "purpose": "Prepare a proof-ready result hash and dry-run receipt bundle."
+    },
+    {
+      "id": "procurement.execute",
+      "method": "POST",
+      "path": "/api/procurement/execute",
+      "priceUsd": 0,
+      "status": "dry-run-helper",
+      "purpose": "Simulate controlled procurement execution and return an audit bundle without live spend."
     }
   ],
   "paidLaunchResources": [
@@ -96,6 +104,14 @@
       "purpose": "Create a bounded spend plan without spending money."
     },
     {
+      "id": "procurement.quote",
+      "method": "POST",
+      "path": "/api/procurement/quote",
+      "priceUsd": 0.04,
+      "status": "launch-mvp",
+      "purpose": "Produce a concrete quote and approval payload for a multi-resource purchase path without spending."
+    },
+    {
       "id": "reports.x402_diligence",
       "method": "POST",
       "path": "/api/reports/x402-diligence",
@@ -109,19 +125,7 @@
   ],
   "laterResourcesToPreserve": [
     {
-      "id": "procurement.quote",
-      "method": "POST",
-      "path": "/api/procurement/quote",
-      "laterPriceUsd": {
-        "min": 0.03,
-        "max": 0.05
-      },
-      "status": "later",
-      "reasonToWait": "Useful only after compare-resources and procurement-plan are trusted.",
-      "purpose": "Produce a concrete quote for a multi-resource purchase path."
-    },
-    {
-      "id": "procurement.execute",
+      "id": "procurement.execute_live",
       "method": "POST",
       "path": "/api/procurement/execute",
       "laterPriceUsd": "pass-through-plus-15-25-percent-min-0.02",
@@ -176,7 +180,8 @@
         "trust.evaluate_origin",
         "seller.readiness",
         "trust.compare_resources",
-        "procurement.plan"
+        "procurement.plan",
+        "procurement.quote"
       ]
     },
     {

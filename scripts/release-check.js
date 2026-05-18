@@ -18,18 +18,27 @@ assert(existsSync("README.md"), "README.md must exist");
 assert(existsSync("SECURITY.md"), "SECURITY.md must exist");
 assert(existsSync("LICENSE"), "LICENSE must exist");
 assert(existsSync("docs/github-release-checklist.md"), "GitHub release checklist must exist");
-assert(catalog.paidLaunchResources.length === 7, "expected 7 paid launch resources");
-assert(catalog.laterResourcesToPreserve.length >= 5, "expected preserved later resources");
+assert(catalog.paidLaunchResources.length === 8, "expected 8 paid launch resources");
+assert(catalog.laterResourcesToPreserve.length >= 4, "expected preserved later resources");
 assert(catalog.safety.liveSpendDefault === false, "live spend must default to false");
 assert(catalog.safety.storesPrivateKeys === false, "storesPrivateKeys must be false");
 assert(
   catalog.freeResources.some((resource) => resource.path === "/api/receipts/hash-result" && resource.priceUsd === 0),
   "free hash-result receipt helper must exist"
 );
+assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/procurement/execute" && resource.priceUsd === 0),
+  "free dry-run execute helper must exist"
+);
 assert(openapi.paths?.["/api/receipts/hash-result"]?.post, "hash-result helper must be present in OpenAPI");
 assert(
   !openapi.paths["/api/receipts/hash-result"].post["x-payment-info"],
   "hash-result helper must not require payment"
+);
+assert(openapi.paths?.["/api/procurement/execute"]?.post, "dry-run execute helper must be present in OpenAPI");
+assert(
+  !openapi.paths["/api/procurement/execute"].post["x-payment-info"],
+  "dry-run execute helper must not require payment"
 );
 
 const ids = new Set();

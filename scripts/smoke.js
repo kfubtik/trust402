@@ -6,7 +6,7 @@ async function main() {
   assert(health.liveSpendEnabled === false, "/health must keep liveSpendEnabled=false");
 
   const resources = await getJson("/api/resources");
-  assert(resources.paidLaunchResources?.length === 7, "/api/resources expected 7 launch resources");
+  assert(resources.paidLaunchResources?.length === 8, "/api/resources expected 8 launch resources");
 
   const status = await getJson("/api/status");
   assert(status.launchReadiness?.readyForGitHub === true, "/api/status readyForGitHub mismatch");
@@ -39,6 +39,38 @@ async function main() {
     riskTolerance: "low"
   });
   assert(plan.policy?.mode === "plan-only", "/api/procurement/plan must be plan-only");
+
+  const candidates = [
+    {
+      id: "good",
+      endpoint: "https://example.com/good",
+      priceUsd: 0.01,
+      has402: true,
+      hasInputSchema: true,
+      hasOpenApi: true,
+      hasWellKnown: true,
+      payTo: "0x1111111111111111111111111111111111111111",
+      network: "eip155:8453",
+      asset: "USDC",
+      description: "Good structured endpoint for x402 buyers.",
+      receiptReady: true
+    },
+    {
+      id: "weak",
+      endpoint: "https://example.com/weak",
+      priceUsd: 0.04
+    }
+  ];
+  const quote = await postJson("/api/procurement/quote", {
+    goal: "Buy one safe x402 data resource.",
+    budgetUsd: 0.5,
+    candidates
+  });
+  assert(quote.approvalPayload?.liveSpendEnabled === false, "/api/procurement/quote must not enable live spend");
+
+  const execute = await postJson("/api/procurement/execute", quote);
+  assert(execute.mode === "dry-run", "/api/procurement/execute must stay dry-run");
+  assert(execute.paidSubcallsMade === 0, "/api/procurement/execute must not make paid subcalls");
 
   const receipt = await postJson("/api/receipts/hash-result", {
     subject: "smoke result",
