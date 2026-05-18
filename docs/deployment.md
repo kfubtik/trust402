@@ -25,7 +25,14 @@ PROOF402_MAX_SPEND_USD=0
 ## Docker
 
 The GitHub Actions workflow builds the Docker image and runs a container smoke
-test on every push.
+test on every push. It also runs a high-severity production dependency audit:
+
+```powershell
+npm audit --omit=dev --audit-level=high
+```
+
+Dependabot monitors npm and GitHub Actions dependencies weekly and opens PRs
+instead of changing production automatically.
 
 Build:
 

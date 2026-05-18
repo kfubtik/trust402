@@ -9,6 +9,7 @@ Run from `D:\Agents_402\trust402`:
 
 ```powershell
 npm ci
+npm audit --omit=dev --audit-level=high
 npm run verify
 npm run doctor
 npm run settlement:preflight
@@ -44,7 +45,9 @@ Keep these public:
 - `CONTRIBUTING.md`
 - `CODE_OF_CONDUCT.md`
 - `.env.example`
+- `.github/dependabot.yml`
 - `.github/workflows/test.yml`
+- `.github/workflows/launch-monitor.yml`
 - `Dockerfile`
 - `compose.yaml`
 - `src/`

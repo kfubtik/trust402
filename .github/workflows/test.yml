@@ -13,6 +13,7 @@ jobs:
         with:
           node-version: 20
       - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
       - run: npm run verify
       - run: docker build -t trust402:test .
       - run: docker compose config
