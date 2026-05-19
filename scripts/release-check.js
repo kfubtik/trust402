@@ -138,6 +138,7 @@ assert(liveEvidenceSmokeScript.includes("writeEvidenceLedger"), "live evidence s
 assert(smokeScript.includes("/api/jobs/autonomous-run"), "smoke script must cover autonomous job dry-run");
 assert(smokeScript.includes("/api/agentcash/refill-check"), "smoke script must cover AgentCash refill dry-run");
 assert(smokeScript.includes("/api/completion/audit"), "smoke script must cover completion audit");
+assert(smokeScript.includes("/api/deployments/preflight"), "smoke script must cover deployment preflight API");
 assert(smokeScript.includes("/api/domains/activation-pack"), "smoke script must cover domain activation pack");
 assert(smokeScript.includes("/api/directories/submission-pack"), "smoke script must cover directory submission pack");
 assert(smokeScript.includes("/api/live/window-plan"), "smoke script must cover live window plan");
@@ -217,6 +218,10 @@ assert(
   "free completion audit helper must exist"
 );
 assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/deployments/preflight" && resource.priceUsd === 0),
+  "free deployment preflight helper must exist"
+);
+assert(
   catalog.freeResources.some((resource) => resource.path === "/api/domains/activation-pack" && resource.priceUsd === 0),
   "free domain activation pack helper must exist"
 );
@@ -252,6 +257,8 @@ assert(openapi.paths?.["/api/settlement/status"]?.get, "settlement status must b
 assert(openapi.paths?.["/api/settlement/preflight"]?.get, "settlement preflight must be present in OpenAPI");
 assert(openapi.paths?.["/api/policies/spend"]?.get, "spend policy status must be present in OpenAPI");
 assert(openapi.paths?.["/api/completion/audit"]?.get, "completion audit must be present in OpenAPI");
+assert(openapi.paths?.["/api/deployments/preflight"]?.get, "deployment preflight GET must be present in OpenAPI");
+assert(openapi.paths?.["/api/deployments/preflight"]?.post, "deployment preflight POST must be present in OpenAPI");
 assert(openapi.paths?.["/api/domains/activation-pack"]?.get, "domain activation pack GET must be present in OpenAPI");
 assert(openapi.paths?.["/api/domains/activation-pack"]?.post, "domain activation pack POST must be present in OpenAPI");
 assert(openapi.paths?.["/api/directories/submission-pack"]?.get, "directory submission pack GET must be present in OpenAPI");
@@ -329,6 +336,10 @@ assert(
 assert(
   !openapi.paths["/api/live/window-plan"].post["x-payment-info"],
   "live window plan helper must not require payment"
+);
+assert(
+  !openapi.paths["/api/deployments/preflight"].post["x-payment-info"],
+  "deployment preflight helper must not require payment"
 );
 assert(
   !openapi.paths["/api/domains/activation-pack"].post["x-payment-info"],

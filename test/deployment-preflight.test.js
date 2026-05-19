@@ -58,7 +58,8 @@ test("deploymentPreflight exposes fallback readiness and custom-domain blocker",
 
 test("deploymentPreflight verifies when evidence, secrets, Git link, and domain are proven", () => {
   const result = deploymentPreflight({
-    baseUrl: "https://trust402.example",
+    baseUrl: "https://trust402.vercel.app",
+    customDomain: "trust402.example",
     gitRemote: "https://github.com/kfubtik/trust402.git",
     gitHead: "abc1234",
     vercelProject: {
@@ -85,6 +86,7 @@ test("deploymentPreflight verifies when evidence, secrets, Git link, and domain 
   assert.equal(result.status, "verified");
   assert.equal(result.blockers.length, 0);
   assert.equal(result.summary.customDomainReady, true);
+  assert.equal(result.domain.host, "trust402.example");
   assert.equal(result.evidenceEnv.TRUST402_GIT_AUTO_DEPLOY_COMMIT_SHA, "abc1234");
 });
 

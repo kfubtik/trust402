@@ -46,6 +46,34 @@ export function openApiSpec() {
     "/api/settlement/preflight": getPath("Operator preflight for one paid settlement smoke"),
     "/api/policies/spend": getPath("Spend policy gates for live procurement, Proof402 delegation, and AgentCash auto-refill"),
     "/api/completion/audit": getPath("Requirement-by-requirement audit of Trust402 autonomous buyer-agent completion"),
+    "/api/deployments/preflight": {
+      get: {
+        operationId: "deployments_preflight_get",
+        summary: "Read Git/Vercel/custom-domain deployment blocker profile",
+        tags: ["Trust402"],
+        responses: {
+          "200": jsonResponse
+        }
+      },
+      post: {
+        operationId: "deployments_preflight",
+        summary: "Generate a public-safe deployment preflight profile from supplied evidence",
+        tags: ["Trust402"],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: requestSchemaFor("deployments.preflight"),
+              example: exampleFor("deployments.preflight")
+            }
+          }
+        },
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse
+        }
+      }
+    },
     "/api/domains/activation-pack": {
       get: {
         operationId: "domains_activation_pack_get",
@@ -363,6 +391,7 @@ export function capabilities() {
       settlementPreflight: "/api/settlement/preflight",
       spendPolicy: "/api/policies/spend",
       completionAudit: "/api/completion/audit",
+      deploymentPreflight: "/api/deployments/preflight",
       domainActivationPack: "/api/domains/activation-pack",
       directorySubmissionPack: "/api/directories/submission-pack",
       liveWindowPlan: "/api/live/window-plan",
@@ -570,6 +599,28 @@ function requestSchemaFor(id) {
           ]
         },
         vercelProjectName: { type: "string", default: "trust402" }
+      }
+    };
+  }
+
+  if (id === "deployments.preflight") {
+    return {
+      type: "object",
+      properties: {
+        baseUrl: { type: "string", format: "uri" },
+        customDomain: { type: "string" },
+        gitRemote: { type: "string" },
+        gitHead: { type: "string" },
+        vercelProject: { type: "object" },
+        productionDeployWorkflowText: { type: "string" },
+        launchMonitorWorkflowText: { type: "string" },
+        vercelGitConnected: { type: "boolean" },
+        githubActionsSecretsConfigured: { type: "boolean" },
+        gitAutoDeployVerified: { type: "boolean" },
+        gitAutoDeployEvidenceUrl: { type: "string", format: "uri" },
+        gitAutoDeployCommitSha: { type: "string" },
+        githubCli: { type: "object" },
+        vercelDeployment: { type: "object" }
       }
     };
   }
@@ -827,6 +878,20 @@ function exampleFor(id) {
       baseUrl: "https://trust402.vercel.app",
       selectedDomain: "trust402.dev",
       candidateDomains: ["trust402.dev", "trust402.xyz", "trust402.org"]
+    };
+  }
+  if (id === "deployments.preflight") {
+    return {
+      baseUrl: "https://trust402.vercel.app",
+      customDomain: "trust402.dev",
+      gitRemote: "https://github.com/kfubtik/trust402.git",
+      gitHead: "43b96cf",
+      vercelProject: {
+        projectName: "trust402",
+        projectId: "prj_...",
+        orgId: "team_..."
+      },
+      gitAutoDeployVerified: false
     };
   }
   if (id === "operator.action_pack") {

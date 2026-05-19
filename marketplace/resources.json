@@ -79,6 +79,14 @@
       "purpose": "Generate a public-safe custom-domain activation plan, Vercel env plan, verification commands, and directory evidence fields without buying a domain."
     },
     {
+      "id": "deployments.preflight",
+      "method": "GET/POST",
+      "path": "/api/deployments/preflight",
+      "priceUsd": 0,
+      "status": "dry-run-helper",
+      "purpose": "Generate a public-safe Git/Vercel/custom-domain preflight profile and evidence env without mutating GitHub or Vercel."
+    },
+    {
       "method": "GET",
       "path": "/api/resources",
       "purpose": "Public resource catalog."

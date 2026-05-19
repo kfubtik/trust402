@@ -115,6 +115,19 @@ domains. This endpoint makes the domain step agent-readable without buying a
 domain, mutating Vercel, setting env vars, submitting directory forms, or
 claiming unverified availability/pricing.
 
+### `GET/POST /api/deployments/preflight`
+
+Public-safe Git/Vercel/custom-domain deployment preflight profile. It returns
+the current blocker state, evidence env names, workflow expectations, and
+custom-domain readiness from supplied public evidence.
+
+Price: free.
+
+Reason: Git-backed deployment and custom-domain evidence must be
+machine-readable for autonomous operators, but this endpoint must never read
+secret values, mutate GitHub, mutate Vercel, or claim push-triggered deploy
+success without explicit evidence.
+
 ### `GET /api/resources`
 
 Public catalog of Trust402 resources, prices, input schemas, and safety notes.

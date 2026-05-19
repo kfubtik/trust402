@@ -82,6 +82,7 @@ http://127.0.0.1:4032/api/marketplace/bundle
 http://127.0.0.1:4032/api/settlement/status
 http://127.0.0.1:4032/api/policies/spend
 http://127.0.0.1:4032/api/completion/audit
+http://127.0.0.1:4032/api/deployments/preflight
 http://127.0.0.1:4032/api/domains/activation-pack
 http://127.0.0.1:4032/api/directories/submission-pack
 http://127.0.0.1:4032/api/jobs/autonomous-run
@@ -144,6 +145,15 @@ Vercel:
 Invoke-RestMethod -Method Post -Uri https://trust402.vercel.app/api/domains/activation-pack `
   -ContentType application/json `
   -Body '{"selectedDomain":"trust402.dev"}'
+```
+
+Generate the Git/Vercel/custom-domain preflight pack without mutating GitHub or
+Vercel:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri https://trust402.vercel.app/api/deployments/preflight `
+  -ContentType application/json `
+  -Body '{"customDomain":"trust402.dev","gitRemote":"https://github.com/kfubtik/trust402.git","gitHead":"43b96cf"}'
 ```
 
 See [docs/external-marketplace-listing.md](docs/external-marketplace-listing.md)
@@ -232,6 +242,8 @@ GET /api/settlement/status
 GET /api/settlement/preflight
 GET /api/policies/spend
 GET /api/completion/audit
+GET /api/deployments/preflight
+POST /api/deployments/preflight
 GET /api/domains/activation-pack
 POST /api/domains/activation-pack
 GET /api/directories/submission-pack
@@ -501,6 +513,9 @@ MVP guarantees:
 - `/api/settlement/preflight` can plan one paid smoke but never sends payment;
 - `/api/completion/audit` keeps final success criteria machine-readable and
   marks live/manual/external blockers as unresolved until real evidence exists;
+- `/api/deployments/preflight` makes Git/Vercel/custom-domain deployment
+  blockers machine-readable without reading secret values or mutating GitHub or
+  Vercel;
 - `/api/domains/activation-pack` plans custom-domain activation but never buys a
   domain, mutates Vercel, sets env vars, or claims availability/pricing;
 - `/api/directories/submission-pack` builds public-safe listing payloads and
@@ -542,6 +557,7 @@ Future live procurement must require:
 - `src/evidenceLedger.js` - local public-safe JSONL ledger for evidence hashes and refs.
 - `src/liveWindowPlan.js` - read-only live evidence window planner.
 - `src/operatorActionPack.js` - public-safe action pack for remaining completion blockers.
+- `src/deploymentPreflight.js` - public-safe Git/Vercel/custom-domain preflight profile.
 - `src/domainActivationPack.js` - public-safe custom-domain activation pack.
 - `src/directorySubmissionPack.js` - public-safe external directory submission pack.
 - `src/monitor.js` - one-shot monitor snapshot and badge logic.

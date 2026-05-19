@@ -197,6 +197,17 @@ Those flags do not enable deployment by themselves. They only let
 `/api/completion/audit` verify the Git/Vercel requirement after the real
 integration has been proven.
 
+The same read-only profile is exposed for agents at:
+
+```text
+GET /api/deployments/preflight
+POST /api/deployments/preflight
+```
+
+It accepts public evidence such as `customDomain`, `gitRemote`, `gitHead`,
+workflow snippets, GitHub run metadata, and Vercel deployment metadata. It does
+not read secret values and does not mutate GitHub or Vercel.
+
 ### GitHub Actions Fallback Deploy
 
 If the Vercel GitHub App cannot access the private repository yet, the repo also

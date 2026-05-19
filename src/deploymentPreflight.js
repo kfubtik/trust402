@@ -335,8 +335,12 @@ function normalizeBaseUrl(value) {
 }
 
 function safeHost(value) {
+  const raw = String(value || "").trim();
+  if (raw && /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/i.test(raw)) {
+    return raw.toLowerCase();
+  }
   try {
-    return new URL(value).host;
+    return new URL(raw).host;
   } catch {
     return "";
   }

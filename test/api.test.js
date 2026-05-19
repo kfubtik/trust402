@@ -39,6 +39,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/settlement/preflight"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/policies/spend"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/completion/audit"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/deployments/preflight"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/domains/activation-pack"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/directories/submission-pack"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/procurement/execute"));
@@ -95,6 +96,13 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(completion.body.requirements.some((item) => item.id === "unified_spend_policy" && item.status === "verified"));
     assert.ok(completion.body.blockers.some((item) => item.id === "git_vercel_auto_deploy"));
 
+    const deploymentPreflightGet = await request(baseUrl, "/api/deployments/preflight");
+    assert.equal(deploymentPreflightGet.response.status, 200);
+    assert.equal(deploymentPreflightGet.body.tool, "deployment.preflight");
+    assert.equal(deploymentPreflightGet.body.safety.readOnly, true);
+    assert.equal(deploymentPreflightGet.body.safety.mutatesVercel, false);
+    assert.equal(deploymentPreflightGet.body.safety.mutatesGitHub, false);
+
     const directoryPackGet = await request(baseUrl, "/api/directories/submission-pack");
     assert.equal(directoryPackGet.response.status, 200);
     assert.equal(directoryPackGet.body.tool, "directories.submission_pack");
@@ -143,6 +151,8 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/api/settlement/preflight"].get);
     assert.ok(openapi.body.paths["/api/policies/spend"].get);
     assert.ok(openapi.body.paths["/api/completion/audit"].get);
+    assert.ok(openapi.body.paths["/api/deployments/preflight"].get);
+    assert.ok(openapi.body.paths["/api/deployments/preflight"].post);
     assert.ok(openapi.body.paths["/api/domains/activation-pack"].get);
     assert.ok(openapi.body.paths["/api/domains/activation-pack"].post);
     assert.ok(openapi.body.paths["/api/directories/submission-pack"].get);
@@ -213,6 +223,27 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(domainPackPost.body.tool, "domains.activation_pack");
     assert.equal(domainPackPost.body.vercelPlan.envPlan.PUBLIC_BASE_URL, "https://trust402.dev");
     assert.equal(domainPackPost.body.safety.mutatesVercel, false);
+
+    const deploymentPreflightPost = await request(baseUrl, "/api/deployments/preflight", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        baseUrl,
+        customDomain: "trust402.dev",
+        gitRemote: "https://github.com/kfubtik/trust402.git",
+        gitHead: "abc1234",
+        vercelProject: {
+          projectName: "trust402",
+          projectId: "prj_test",
+          orgId: "team_test"
+        },
+        gitAutoDeployVerified: false
+      })
+    });
+    assert.equal(deploymentPreflightPost.response.status, 200);
+    assert.equal(deploymentPreflightPost.body.tool, "deployment.preflight");
+    assert.equal(deploymentPreflightPost.body.domain.ready, true);
+    assert.equal(deploymentPreflightPost.body.safety.readsSecretValues, false);
 
     const unblockPost = await request(baseUrl, "/api/operator/unblock-report", {
       method: "POST",

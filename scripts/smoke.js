@@ -59,6 +59,12 @@ async function main() {
     "/api/completion/audit must expose Git/Vercel blocker"
   );
 
+  const deploymentPreflightGet = await getJson("/api/deployments/preflight");
+  assert(deploymentPreflightGet.tool === "deployment.preflight", "/api/deployments/preflight GET tool mismatch");
+  assert(deploymentPreflightGet.safety?.readOnly === true, "/api/deployments/preflight must be read-only");
+  assert(deploymentPreflightGet.safety?.mutatesVercel === false, "/api/deployments/preflight must not mutate Vercel");
+  assert(deploymentPreflightGet.safety?.mutatesGitHub === false, "/api/deployments/preflight must not mutate GitHub");
+
   const directoryPackGet = await getJson("/api/directories/submission-pack");
   assert(directoryPackGet.tool === "directories.submission_pack", "/api/directories/submission-pack GET tool mismatch");
   assert(directoryPackGet.safety?.readOnly === true, "/api/directories/submission-pack must be read-only");
@@ -112,6 +118,22 @@ async function main() {
   assert(domainPackPost.vercelPlan?.envPlan?.PUBLIC_BASE_URL === "https://trust402.dev", "/api/domains/activation-pack must plan PUBLIC_BASE_URL");
   assert(domainPackPost.safety?.mutatesVercel === false, "/api/domains/activation-pack must not mutate Vercel");
 
+  const deploymentPreflightPost = await postJson("/api/deployments/preflight", {
+    baseUrl,
+    customDomain: "trust402.dev",
+    gitRemote: "https://github.com/kfubtik/trust402.git",
+    gitHead: "abc1234",
+    vercelProject: {
+      projectName: "trust402",
+      projectId: "prj_smoke",
+      orgId: "team_smoke"
+    },
+    gitAutoDeployVerified: false
+  });
+  assert(deploymentPreflightPost.tool === "deployment.preflight", "/api/deployments/preflight POST tool mismatch");
+  assert(deploymentPreflightPost.domain?.ready === true, "/api/deployments/preflight must accept bare customDomain");
+  assert(deploymentPreflightPost.safety?.readsSecretValues === false, "/api/deployments/preflight must not read secret values");
+
   const unblockPost = await postJson("/api/operator/unblock-report", {
     baseUrl,
     candidatePriceUsd: 0.01,
@@ -144,6 +166,8 @@ async function main() {
   assert(openapi.paths?.["/api/settlement/preflight"]?.get, "/openapi missing settlement preflight");
   assert(openapi.paths?.["/api/policies/spend"]?.get, "/openapi missing spend policy");
   assert(openapi.paths?.["/api/completion/audit"]?.get, "/openapi missing completion audit");
+  assert(openapi.paths?.["/api/deployments/preflight"]?.get, "/openapi missing deployment preflight GET");
+  assert(openapi.paths?.["/api/deployments/preflight"]?.post, "/openapi missing deployment preflight POST");
   assert(openapi.paths?.["/api/domains/activation-pack"]?.get, "/openapi missing domain activation pack GET");
   assert(openapi.paths?.["/api/domains/activation-pack"]?.post, "/openapi missing domain activation pack POST");
   assert(openapi.paths?.["/api/directories/submission-pack"]?.get, "/openapi missing directory submission pack GET");

@@ -331,6 +331,17 @@ ready to configure, which Vercel secret names are required, whether Vercel Git
 App access is still blocked, and whether the current host satisfies the
 custom-domain requirement.
 
+Agents can request the same public-safe deployment profile through:
+
+```text
+GET /api/deployments/preflight
+POST /api/deployments/preflight
+```
+
+The API form accepts public evidence such as `gitRemote`, `gitHead`,
+`customDomain`, workflow snippets, GitHub run metadata, and Vercel deployment
+metadata. It does not read secret values and does not mutate GitHub or Vercel.
+
 Then generate the read-only live-window plan for the exact approved resource,
 budget, and provider:
 
