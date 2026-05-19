@@ -459,6 +459,13 @@ autonomous job evidence, and final verification evidence. It does not set env
 vars, submit directory forms, write local policy, mutate wallets, or include
 secret values.
 
+The action pack also includes `evidenceCollection`: a single ordered evidence
+plan with `nextBlockingActionId`, `blockingActionIds`, public-safe
+`evidenceEnvPlan`, verification commands, and local-only evidence commands such
+as `npm run agentcash:policy`. Do not set any `TRUST402_*_OBSERVED=true` value
+until the corresponding action reports `ready` and the verification command has
+produced a reviewed public-safe evidence reference.
+
 ## Live x402 Settlement
 
 The Express middleware bridge protects paid launch resources when

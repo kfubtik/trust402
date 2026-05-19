@@ -64,18 +64,20 @@ export function operatorActionPack(input = {}, options = {}) {
     gitVercelAction(cfg, input),
     customDomainAction(baseUrl),
     externalDirectoryAction(cfg, baseUrl),
-    liveProcurementAction(livePlan),
-    proof402Action(livePlan),
-    agentcashRefillAction(livePlan, includeAutoRefill),
-    autonomousJobAction(livePlan),
-    finalVerificationAction(baseUrl)
+    liveProcurementAction(livePlan, cfg),
+    proof402Action(livePlan, cfg),
+    agentcashRefillAction(livePlan, includeAutoRefill, cfg),
+    autonomousJobAction(livePlan, cfg),
+    finalVerificationAction(baseUrl, cfg)
   ];
+  const evidenceCollection = evidenceCollectionPlan(actions, livePlan);
 
   const packCore = {
     baseUrl,
     candidateEndpoint,
     unblockStatus: unblock.status,
     livePlanStatus: livePlan.status,
+    evidenceCollectionStatus: evidenceCollection.status,
     actions: actions.map((action) => ({
       id: action.id,
       status: action.status,
@@ -108,6 +110,7 @@ export function operatorActionPack(input = {}, options = {}) {
       blockers: unblock.blockers,
       summary: unblock.summary
     },
+    evidenceCollection,
     liveWindowPlan: {
       status: livePlan.status,
       planHash: livePlan.planHash,
@@ -243,12 +246,13 @@ function externalDirectoryAction(cfg, baseUrl) {
   };
 }
 
-function liveProcurementAction(livePlan) {
+function liveProcurementAction(livePlan, cfg) {
+  const evidenceReady = cfg.liveProcurementSmokeObserved && Boolean(cfg.liveProcurementEvidenceRef);
   return {
     id: "live_procurement",
     title: "Open bounded live procurement smoke window",
     required: true,
-    status: livePlan.status === "ready-to-stage" ? "blocked-manual-approval" : "blocked-policy",
+    status: evidenceReady ? "ready" : livePlan.status === "ready-to-stage" ? "blocked-manual-approval" : "blocked-policy",
     planHash: livePlan.planHash,
     envPlan: pick(livePlan.vercelEnvPlan.production, [
       "LIVE_SPEND_ENABLED",
@@ -275,12 +279,13 @@ function liveProcurementAction(livePlan) {
   };
 }
 
-function proof402Action(livePlan) {
+function proof402Action(livePlan, cfg) {
+  const evidenceReady = cfg.proof402PaidSmokeObserved && Boolean(cfg.proof402EvidenceRef);
   return {
     id: "paid_proof402_delegation",
     title: "Enable paid Proof402 proof for approved hashes",
     required: true,
-    status: livePlan.includeProof ? "blocked-manual-approval" : "blocked-policy",
+    status: evidenceReady ? "ready" : livePlan.includeProof ? "blocked-manual-approval" : "blocked-policy",
     envPlan: pick(livePlan.vercelEnvPlan.production, [
       "PROOF402_BASE_URL",
       "PROOF402_DELEGATION_MODE",
@@ -299,12 +304,13 @@ function proof402Action(livePlan) {
   };
 }
 
-function agentcashRefillAction(livePlan, includeAutoRefill) {
+function agentcashRefillAction(livePlan, includeAutoRefill, cfg) {
+  const evidenceReady = cfg.agentcashAutoRefillEvidenceObserved && Boolean(cfg.agentcashAutoRefillEvidenceRef);
   return {
     id: "agentcash_auto_refill",
     title: "Approve AgentCash auto-refill policy",
     required: true,
-    status: includeAutoRefill ? "blocked-manual-approval" : "blocked-policy",
+    status: evidenceReady ? "ready" : includeAutoRefill ? "blocked-manual-approval" : "blocked-policy",
     envPlan: pick(livePlan.vercelEnvPlan.production, [
       "AGENTCASH_AUTO_REFILL_APPROVED",
       "AGENTCASH_AUTO_REFILL_ENABLED",
@@ -325,12 +331,16 @@ function agentcashRefillAction(livePlan, includeAutoRefill) {
   };
 }
 
-function autonomousJobAction(livePlan) {
+function autonomousJobAction(livePlan, cfg) {
+  const evidenceReady = cfg.liveProcurementSmokeObserved &&
+    Boolean(cfg.liveProcurementEvidenceRef) &&
+    cfg.autonomousJobSmokeObserved &&
+    Boolean(cfg.autonomousJobEvidenceRef);
   return {
     id: "autonomous_job_flow",
     title: "Run bounded autonomous live job evidence",
     required: true,
-    status: livePlan.includeAutonomous ? "blocked-evidence" : "blocked-policy",
+    status: evidenceReady ? "ready" : livePlan.includeAutonomous ? "blocked-evidence" : "blocked-policy",
     prerequisite: "Live procurement smoke must pass first.",
     runCommand: livePlan.includeAutonomous
       ? livePlan.command
@@ -343,12 +353,13 @@ function autonomousJobAction(livePlan) {
   };
 }
 
-function finalVerificationAction(baseUrl) {
+function finalVerificationAction(baseUrl, cfg) {
+  const evidenceReady = cfg.finalVerificationObserved && Boolean(cfg.finalVerificationEvidenceRef);
   return {
     id: "final_verification",
     title: "Run final verification and record evidence",
     required: true,
-    status: "blocked-evidence",
+    status: evidenceReady ? "ready" : "blocked-evidence",
     commands: [
       "npm test",
       "npm run release:check",
@@ -364,6 +375,58 @@ function finalVerificationAction(baseUrl) {
       TRUST402_FINAL_VERIFICATION_EVIDENCE_REF: "<public-safe final verification hash or run URL>"
     },
     publicSafe: true
+  };
+}
+
+function evidenceCollectionPlan(actions, livePlan) {
+  const orderedActionIds = [
+    "git_vercel_auto_deploy",
+    "custom_domain",
+    "external_x402_directories",
+    "live_procurement",
+    "paid_proof402_delegation",
+    "agentcash_auto_refill",
+    "autonomous_job_flow",
+    "final_verification"
+  ].filter((id) => actions.some((action) => action.id === id));
+  const blockingActionIds = orderedActionIds.filter((id) => {
+    const action = actions.find((item) => item.id === id);
+    return action?.required && action.status !== "ready";
+  });
+  const evidenceEnvPlan = {};
+  for (const id of orderedActionIds) {
+    const action = actions.find((item) => item.id === id);
+    Object.assign(evidenceEnvPlan, action?.evidenceEnv || {});
+  }
+  const verifyCommands = uniqueList(
+    orderedActionIds.flatMap((id) => {
+      const action = actions.find((item) => item.id === id);
+      return [
+        ...(Array.isArray(action?.verifyCommands) ? action.verifyCommands : []),
+        ...(Array.isArray(action?.commands) ? action.commands : []),
+        action?.runCommand || null
+      ];
+    }).filter(Boolean)
+  );
+  return {
+    status: blockingActionIds.length === 0 ? "ready-to-record-final-evidence" : "blocked",
+    orderedActionIds,
+    blockingActionIds,
+    nextBlockingActionId: blockingActionIds[0] || null,
+    evidenceEnvPlan,
+    verifyCommands,
+    liveWindowPlanHash: livePlan.planHash,
+    localEvidenceRequired: [
+      "npm run agentcash:policy",
+      "npm run payment:bridge-check -- --adapter-url=<LIVE_PAYMENT_ADAPTER_URL> --provider=<LIVE_PAYMENT_PROVIDER> --candidate-endpoint=<approved-x402-endpoint> --max-amount-usd=<LIVE_MAX_PER_CALL_USD> --strict",
+      "npm run live:evidence-smoke -- <base-url> --live --candidate-endpoint=<approved-x402-endpoint> --candidate-price=<price> --max-total-usd=<budget>"
+    ],
+    safety: {
+      publicSafe: true,
+      includesSecretValues: false,
+      mutatesExternalSystems: false,
+      recordsEvidenceOnlyAfterVerification: true
+    }
   };
 }
 
@@ -400,4 +463,8 @@ function localAgentcashPolicyDefaults(policyResult) {
 
 function hasValue(value) {
   return value !== undefined && value !== null && value !== "";
+}
+
+function uniqueList(values) {
+  return Array.from(new Set(values));
 }

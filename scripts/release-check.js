@@ -175,6 +175,8 @@ assert(launchMonitorWorkflow.includes("--strict"), "launch monitor workflow must
 assert(finalVerificationScript.includes("--strict"), "final verifier must run launch monitor in strict mode");
 assert(operatorActionPackScript.includes("/api/operator/action-pack"), "operator action pack CLI must support production API mode");
 assert(operatorActionPackScript.includes("args.local"), "operator action pack CLI must preserve explicit local mode");
+assert(readFileSync("src/operatorActionPack.js", "utf8").includes("evidenceCollectionPlan"), "operator action pack must aggregate final evidence collection steps");
+assert(readFileSync("src/operatorActionPack.js", "utf8").includes("nextBlockingActionId"), "operator action pack must expose the next blocking action");
 assert(operatorUnblockCheckScript.includes("/api/operator/unblock-report"), "operator unblock CLI must support production API mode");
 assert(operatorUnblockCheckScript.includes("args.local"), "operator unblock CLI must preserve explicit local mode");
 assert(operatorUnblockCheckScript.includes("localAgentcashPolicyProbe"), "operator unblock CLI must include local AgentCash policy probe context");
