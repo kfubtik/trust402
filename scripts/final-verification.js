@@ -87,8 +87,9 @@ function runCommand(id, label, command, commandArgs, options = {}) {
   const stdout = String(result.stdout || "");
   const stderr = String(result.stderr || result.error?.message || "");
   const required = options.required !== false;
+  const combinedOutput = `${stdout}\n${stderr}`;
   const passed = result.status === 0 &&
-    (!options.passWhenOutputIncludes || stdout.includes(options.passWhenOutputIncludes));
+    (!options.passWhenOutputIncludes || combinedOutput.includes(options.passWhenOutputIncludes));
   return {
     id,
     label,
