@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { config } from "../src/config.js";
 import { finalVerificationReport } from "../src/finalVerification.js";
@@ -12,7 +13,7 @@ const includeDetails = args.includes("--include-details");
 const skipDocker = args.includes("--skip-docker");
 const skipDirectories = args.includes("--skip-directories");
 const withVercelLogs = args.includes("--with-vercel-logs");
-const dockerBin = valueArg("--docker-bin") || process.env.TRUST402_DOCKER_BIN || "docker";
+const dockerBin = valueArg("--docker-bin") || process.env.TRUST402_DOCKER_BIN || defaultDockerBin();
 const npmBin = "npm";
 const npxBin = "npx";
 
@@ -114,6 +115,12 @@ function envWithCommandDirectory(command) {
     ...process.env,
     [pathKey]: `${directory}${path.delimiter}${currentPath}`
   };
+}
+
+function defaultDockerBin() {
+  if (process.platform !== "win32") return "docker";
+  const knownDockerDesktopPath = "D:\\Programs\\Docker\\resources\\bin\\docker.exe";
+  return existsSync(knownDockerDesktopPath) ? knownDockerDesktopPath : "docker";
 }
 
 function skipped(id, label, reason, required = true) {

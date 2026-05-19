@@ -226,6 +226,10 @@ Use the read-only verifier to produce the evidence ref:
 npm run final:verify -- https://trust402.vercel.app --timeout-ms=10000
 ```
 
+On this workstation the verifier auto-detects Docker Desktop at
+`D:\Programs\Docker\resources\bin\docker.exe`. If Docker is installed elsewhere,
+pass `--docker-bin=<path-to-docker.exe>` or set `TRUST402_DOCKER_BIN`.
+
 ## Current Safety Blockers
 
 As of 2026-05-19, the local AgentCash policy has zero remaining manual smoke
