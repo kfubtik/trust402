@@ -111,8 +111,8 @@ function gitAutoDeployCheck(cfg, input) {
 }
 
 function externalDirectoryCheck(cfg, hostPolicy) {
-  const cdpBazaarReady = cfg.cdpBazaarAllResourcesIndexed &&
-    Boolean(cfg.cdpBazaarEvidenceRef);
+  const cdpBazaar = cdpBazaarEvidenceStatus(cfg);
+  const cdpBazaarReady = cdpBazaar.verified;
   const nonCdpDirectoryReady = cfg.externalDirectoryStatus === "visible" &&
     Boolean(cfg.externalDirectoryEvidenceUrl) &&
     Boolean(cfg.externalDirectoryName);
@@ -131,6 +131,10 @@ function externalDirectoryCheck(cfg, hostPolicy) {
     evidence: {
       cdpBazaarAllResourcesIndexed: cfg.cdpBazaarAllResourcesIndexed,
       cdpBazaarEvidenceRefConfigured: Boolean(cfg.cdpBazaarEvidenceRef),
+      cdpBazaarCheckStatus: cdpBazaar.status || null,
+      cdpBazaarExpectedResources: cdpBazaar.expected,
+      cdpBazaarIndexedResources: cdpBazaar.indexed,
+      cdpBazaarMissingResources: cdpBazaar.missingResources,
       cdpBazaarReady,
       status: cfg.externalDirectoryStatus,
       evidenceUrlConfigured: Boolean(cfg.externalDirectoryEvidenceUrl),
@@ -147,6 +151,32 @@ function externalDirectoryCheck(cfg, hostPolicy) {
           ? "Attach a custom production domain before submitting to directories that reject free-hosting domains."
           : "Submit the public-safe listing pack and record a visible listing evidence URL."
   };
+}
+
+function cdpBazaarEvidenceStatus(cfg) {
+  const expected = positiveInt(cfg.cdpBazaarExpectedResources);
+  const indexed = positiveInt(cfg.cdpBazaarIndexedResources);
+  const missingResources = Array.isArray(cfg.cdpBazaarMissingResources)
+    ? cfg.cdpBazaarMissingResources.filter(Boolean)
+    : [];
+  const status = cfg.cdpBazaarCheckStatus || "";
+  const verified = cfg.cdpBazaarAllResourcesIndexed === true &&
+    Boolean(cfg.cdpBazaarEvidenceRef) &&
+    status === "all-indexed" &&
+    expected > 0 &&
+    indexed >= expected &&
+    missingResources.length === 0;
+  return {
+    verified,
+    status,
+    expected,
+    indexed,
+    missingResources
+  };
+}
+
+function positiveInt(value) {
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
 }
 
 function customDomainCheck(hostPolicy) {

@@ -79,8 +79,8 @@ function gitVercelAutoDeploy(runtimeConfig) {
 }
 
 function externalDirectories(runtimeConfig) {
-  const cdpBazaarVerified = runtimeConfig.cdpBazaarAllResourcesIndexed &&
-    Boolean(runtimeConfig.cdpBazaarEvidenceRef);
+  const cdpBazaar = cdpBazaarEvidenceStatus(runtimeConfig);
+  const cdpBazaarVerified = cdpBazaar.verified;
   const nonCdpDirectoryVerified = runtimeConfig.externalDirectoryStatus === "visible" &&
     Boolean(runtimeConfig.externalDirectoryEvidenceUrl);
   const verified = cdpBazaarVerified && nonCdpDirectoryVerified;
@@ -97,6 +97,9 @@ function externalDirectories(runtimeConfig) {
       `evidenceUrl=${runtimeConfig.externalDirectoryEvidenceUrl || "not-configured"}`,
       `cdpBazaarAllResourcesIndexed=${runtimeConfig.cdpBazaarAllResourcesIndexed}`,
       `cdpBazaarEvidenceRef=${runtimeConfig.cdpBazaarEvidenceRef || "not-configured"}`,
+      `cdpBazaarCheckStatus=${cdpBazaar.status || "not-configured"}`,
+      `cdpBazaarRouteSummary=${cdpBazaar.indexed}/${cdpBazaar.expected}`,
+      `cdpBazaarMissingResources=${cdpBazaar.missingResources.join(",") || "none"}`,
       `publicBaseUrlHost=${hostPolicy.host || "not-configured"}`,
       `customDomainRequiredForSomeDirectories=${hostPolicy.requiresCustomDomain}`,
       verified
@@ -105,6 +108,7 @@ function externalDirectories(runtimeConfig) {
     ],
     details: {
       hostPolicy,
+      cdpBazaar,
       cdpBazaarVerified,
       nonCdpDirectoryVerified
     },
@@ -273,9 +277,9 @@ function monitoringAndProtection(spend) {
 }
 
 function finalVerification({ settlement, checklist, spend, runtimeConfig }) {
+  const cdpBazaar = cdpBazaarEvidenceStatus(runtimeConfig);
   const allRuntimeReady = settlement.readiness.marketplaceIndexingReady &&
-    runtimeConfig.cdpBazaarAllResourcesIndexed &&
-    Boolean(runtimeConfig.cdpBazaarEvidenceRef) &&
+    cdpBazaar.verified &&
     checklist.readiness.publicMarketplaceReady &&
     spend.readiness.anyLiveSpendReady &&
     runtimeConfig.finalVerificationObserved &&
@@ -288,6 +292,9 @@ function finalVerification({ settlement, checklist, spend, runtimeConfig }) {
       `marketplaceIndexingReady=${settlement.readiness.marketplaceIndexingReady}`,
       `cdpBazaarAllResourcesIndexed=${runtimeConfig.cdpBazaarAllResourcesIndexed}`,
       `cdpBazaarEvidenceRef=${runtimeConfig.cdpBazaarEvidenceRef || "not-configured"}`,
+      `cdpBazaarCheckStatus=${cdpBazaar.status || "not-configured"}`,
+      `cdpBazaarRouteSummary=${cdpBazaar.indexed}/${cdpBazaar.expected}`,
+      `cdpBazaarMissingResources=${cdpBazaar.missingResources.join(",") || "none"}`,
       `publicMarketplaceReady=${checklist.readiness.publicMarketplaceReady}`,
       `anyLiveSpendReady=${spend.readiness.anyLiveSpendReady}`,
       `finalVerificationObserved=${runtimeConfig.finalVerificationObserved}`,
@@ -298,6 +305,36 @@ function finalVerification({ settlement, checklist, spend, runtimeConfig }) {
       ? "Keep final verification evidence current after future deploys."
       : "Run the full final command set after manual blockers and live-spend approvals are resolved, then set final verification evidence refs."
   });
+}
+
+function cdpBazaarEvidenceStatus(runtimeConfig) {
+  const expected = positiveInt(runtimeConfig.cdpBazaarExpectedResources);
+  const indexed = positiveInt(runtimeConfig.cdpBazaarIndexedResources);
+  const missingResources = Array.isArray(runtimeConfig.cdpBazaarMissingResources)
+    ? runtimeConfig.cdpBazaarMissingResources.filter(Boolean)
+    : [];
+  const status = runtimeConfig.cdpBazaarCheckStatus || "";
+  const hasRouteSummary = expected > 0 && indexed >= expected && missingResources.length === 0;
+  const verified = runtimeConfig.cdpBazaarAllResourcesIndexed === true &&
+    Boolean(runtimeConfig.cdpBazaarEvidenceRef) &&
+    status === "all-indexed" &&
+    hasRouteSummary;
+  return {
+    verified,
+    claimedAllResourcesIndexed: runtimeConfig.cdpBazaarAllResourcesIndexed === true,
+    evidenceRef: runtimeConfig.cdpBazaarEvidenceRef || "",
+    status,
+    expected,
+    indexed,
+    missingResources,
+    reason: verified
+      ? "CDP Bazaar all-resource evidence includes current route-count proof."
+      : "CDP Bazaar evidence must include all-indexed status, expected/indexed counts, zero missing resources, and a public-safe evidence ref."
+  };
+}
+
+function positiveInt(value) {
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
 }
 
 function requirement({ id, title, status, evidence, nextAction, issue = null, details = null }) {

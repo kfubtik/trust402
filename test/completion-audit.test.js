@@ -35,6 +35,10 @@ test("completionAudit can verify manual/external requirements only with explicit
     gitAutoDeployCommitSha: "abc123",
     cdpBazaarAllResourcesIndexed: true,
     cdpBazaarEvidenceRef: "sha256:cdp-bazaar-10-of-10",
+    cdpBazaarCheckStatus: "all-indexed",
+    cdpBazaarExpectedResources: 10,
+    cdpBazaarIndexedResources: 10,
+    cdpBazaarMissingResources: [],
     externalDirectoryStatus: "visible",
     externalDirectoryEvidenceUrl: "https://example.com/trust402-directory",
     externalDirectoryName: "Example x402 Directory"
@@ -60,6 +64,29 @@ test("completionAudit does not treat non-CDP directory visibility as CDP 10/10 e
   assert.ok(external?.evidence.some((item) => item === "cdpBazaarAllResourcesIndexed=false"));
 });
 
+test("completionAudit does not treat stale CDP Bazaar boolean as current 10/10 evidence", () => {
+  const audit = completionAudit({
+    ...config,
+    cdpBazaarAllResourcesIndexed: true,
+    cdpBazaarEvidenceRef: "sha256:old-cdp-bazaar-claim",
+    cdpBazaarCheckStatus: "partially-indexed",
+    cdpBazaarExpectedResources: 10,
+    cdpBazaarIndexedResources: 9,
+    cdpBazaarMissingResources: ["trust.compare_resources"],
+    externalDirectoryStatus: "visible",
+    externalDirectoryEvidenceUrl: "https://example.com/trust402-directory",
+    externalDirectoryName: "Example x402 Directory"
+  });
+  const external = audit.requirements.find((item) => item.id === "external_x402_directories");
+
+  assert.equal(external?.status, "blocked-external");
+  assert.equal(external?.details.cdpBazaarVerified, false);
+  assert.equal(external?.details.nonCdpDirectoryVerified, true);
+  assert.ok(external?.evidence.some((item) => item === "cdpBazaarCheckStatus=partially-indexed"));
+  assert.ok(external?.evidence.some((item) => item === "cdpBazaarRouteSummary=9/10"));
+  assert.ok(external?.evidence.some((item) => item === "cdpBazaarMissingResources=trust.compare_resources"));
+});
+
 test("completionAudit does not treat pending directory review as visible", () => {
   const audit = completionAudit({
     ...config,
@@ -77,6 +104,10 @@ test("completionAudit explains custom-domain blocker for external directories", 
     publicBaseUrl: "https://trust402.vercel.app",
     cdpBazaarAllResourcesIndexed: true,
     cdpBazaarEvidenceRef: "sha256:cdp-bazaar-10-of-10",
+    cdpBazaarCheckStatus: "all-indexed",
+    cdpBazaarExpectedResources: 10,
+    cdpBazaarIndexedResources: 10,
+    cdpBazaarMissingResources: [],
     externalDirectoryStatus: "not-visible-yet",
     externalDirectoryEvidenceUrl: ""
   });
@@ -118,6 +149,10 @@ test("completionAudit requires smoke evidence even when live policies are ready"
     ...livePolicyReadyConfig,
     cdpBazaarAllResourcesIndexed: true,
     cdpBazaarEvidenceRef: "sha256:cdp-bazaar-10-of-10",
+    cdpBazaarCheckStatus: "all-indexed",
+    cdpBazaarExpectedResources: 10,
+    cdpBazaarIndexedResources: 10,
+    cdpBazaarMissingResources: [],
     liveProcurementSmokeObserved: true,
     liveProcurementEvidenceRef: "receipt:live-procurement-smoke",
     proof402PaidSmokeObserved: true,

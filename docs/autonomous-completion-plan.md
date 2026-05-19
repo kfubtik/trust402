@@ -107,6 +107,10 @@ Completion evidence:
 
 - set `TRUST402_CDP_BAZAAR_ALL_RESOURCES_INDEXED=true` only after the
   all-resource CDP Bazaar check reports 10/10 indexed;
+- set `TRUST402_CDP_BAZAAR_CHECK_STATUS=all-indexed`,
+  `TRUST402_CDP_BAZAAR_EXPECTED_RESOURCES=10`,
+  `TRUST402_CDP_BAZAAR_INDEXED_RESOURCES=10`, and
+  `TRUST402_CDP_BAZAAR_MISSING_RESOURCES=` from the same current check;
 - set `TRUST402_CDP_BAZAAR_EVIDENCE_REF` to the public-safe check hash, run
   URL, or other evidence ref for that 10/10 check;
 - set `TRUST402_EXTERNAL_DIRECTORY_STATUS=visible`;

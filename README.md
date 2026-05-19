@@ -457,8 +457,10 @@ Manual or external requirements become `verified` only when public-safe
 evidence env vars are set, such as `TRUST402_GIT_AUTO_DEPLOY_VERIFIED=true` with
 a deployment evidence URL. The external-directory requirement needs both
 `TRUST402_CDP_BAZAAR_ALL_RESOURCES_INDEXED=true` with a public-safe 10/10 CDP
-Bazaar evidence ref and `TRUST402_EXTERNAL_DIRECTORY_STATUS=visible` with a
-non-CDP directory evidence URL.
+Bazaar evidence ref, `TRUST402_CDP_BAZAAR_CHECK_STATUS=all-indexed`,
+expected/indexed resource counts, zero missing resources, and
+`TRUST402_EXTERNAL_DIRECTORY_STATUS=visible` with a non-CDP directory evidence
+URL.
 
 Live buyer-agent requirements also require public-safe evidence refs:
 `TRUST402_LIVE_PROCUREMENT_SMOKE_OBSERVED`,

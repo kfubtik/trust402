@@ -5,7 +5,11 @@ import { directorySubmissionPack } from "../src/directorySubmissionPack.js";
 const baseConfig = {
   publicBaseUrl: "https://trust402.vercel.app",
   cdpBazaarAllResourcesIndexed: true,
-  cdpBazaarEvidenceRef: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  cdpBazaarEvidenceRef: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  cdpBazaarCheckStatus: "all-indexed",
+  cdpBazaarExpectedResources: 10,
+  cdpBazaarIndexedResources: 10,
+  cdpBazaarMissingResources: []
 };
 
 test("directorySubmissionPack exposes a public-safe custom-domain blocker", () => {

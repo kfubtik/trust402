@@ -257,6 +257,10 @@ function externalDirectoryAction(cfg, baseUrl) {
     ],
     evidenceEnv: {
       TRUST402_CDP_BAZAAR_ALL_RESOURCES_INDEXED: "true",
+      TRUST402_CDP_BAZAAR_CHECK_STATUS: "all-indexed",
+      TRUST402_CDP_BAZAAR_EXPECTED_RESOURCES: "10",
+      TRUST402_CDP_BAZAAR_INDEXED_RESOURCES: "10",
+      TRUST402_CDP_BAZAAR_MISSING_RESOURCES: "",
       TRUST402_CDP_BAZAAR_EVIDENCE_REF: "<public-safe CDP Bazaar 10/10 check hash or run URL>",
       TRUST402_EXTERNAL_DIRECTORY_STATUS: "visible",
       TRUST402_EXTERNAL_DIRECTORY_EVIDENCE_URL: "<public listing URL where Trust402 is visible>",

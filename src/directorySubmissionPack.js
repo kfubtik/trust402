@@ -102,7 +102,8 @@ export function directorySubmissionPack(input = {}, options = {}) {
   const catalog = options.catalog || loadCatalog();
   const baseUrl = normalizeBaseUrl(input.baseUrl || cfg.publicBaseUrl || "https://trust402.vercel.app");
   const hostPolicy = hostPolicyFor(baseUrl);
-  const cdpBazaarReady = cfg.cdpBazaarAllResourcesIndexed && Boolean(cfg.cdpBazaarEvidenceRef);
+  const cdpBazaar = cdpBazaarEvidenceStatus(cfg);
+  const cdpBazaarReady = cdpBazaar.verified;
   const userApprovedOutreach = input.userApprovedOutreach === true;
   const directoryTargets = DIRECTORY_TARGETS.map((target) =>
     targetPlan(target, { baseUrl, hostPolicy, cdpBazaarReady, userApprovedOutreach })
@@ -137,7 +138,12 @@ export function directorySubmissionPack(input = {}, options = {}) {
       ready: cdpBazaarReady,
       allResourcesIndexed: cfg.cdpBazaarAllResourcesIndexed,
       evidenceRefConfigured: Boolean(cfg.cdpBazaarEvidenceRef),
-      evidenceRef: cfg.cdpBazaarEvidenceRef || null
+      evidenceRef: cfg.cdpBazaarEvidenceRef || null,
+      checkStatus: cdpBazaar.status || null,
+      expectedResources: cdpBazaar.expected,
+      indexedResources: cdpBazaar.indexed,
+      missingResources: cdpBazaar.missingResources,
+      reason: cdpBazaar.reason
     },
     summary: {
       targets: directoryTargets.length,
@@ -156,6 +162,14 @@ export function directorySubmissionPack(input = {}, options = {}) {
       "Record only public-safe evidence after a directory visibly lists Trust402."
     ],
     evidenceEnv,
+    cdpBazaarEvidenceEnv: {
+      TRUST402_CDP_BAZAAR_ALL_RESOURCES_INDEXED: "true",
+      TRUST402_CDP_BAZAAR_CHECK_STATUS: "all-indexed",
+      TRUST402_CDP_BAZAAR_EXPECTED_RESOURCES: String(catalog.paidLaunchResources.length),
+      TRUST402_CDP_BAZAAR_INDEXED_RESOURCES: String(catalog.paidLaunchResources.length),
+      TRUST402_CDP_BAZAAR_MISSING_RESOURCES: "",
+      TRUST402_CDP_BAZAAR_EVIDENCE_REF: "<public-safe CDP Bazaar 10/10 check hash or run URL>"
+    },
     verifyCommands: [
       `npm run smoke -- ${baseUrl}`,
       `npm run smoke:x402 -- ${baseUrl}`,
@@ -172,6 +186,35 @@ export function directorySubmissionPack(input = {}, options = {}) {
       setsEnv: false
     }
   };
+}
+
+function cdpBazaarEvidenceStatus(cfg) {
+  const expected = positiveInt(cfg.cdpBazaarExpectedResources);
+  const indexed = positiveInt(cfg.cdpBazaarIndexedResources);
+  const missingResources = Array.isArray(cfg.cdpBazaarMissingResources)
+    ? cfg.cdpBazaarMissingResources.filter(Boolean)
+    : [];
+  const status = cfg.cdpBazaarCheckStatus || "";
+  const verified = cfg.cdpBazaarAllResourcesIndexed === true &&
+    Boolean(cfg.cdpBazaarEvidenceRef) &&
+    status === "all-indexed" &&
+    expected > 0 &&
+    indexed >= expected &&
+    missingResources.length === 0;
+  return {
+    verified,
+    status,
+    expected,
+    indexed,
+    missingResources,
+    reason: verified
+      ? "CDP Bazaar all-resource evidence includes current route-count proof."
+      : "CDP Bazaar evidence must include all-indexed status, expected/indexed counts, zero missing resources, and a public-safe evidence ref."
+  };
+}
+
+function positiveInt(value) {
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
 }
 
 function targetPlan(target, context) {
