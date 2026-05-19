@@ -73,21 +73,21 @@ public directory pages.
 
 ## Latest Verified Baseline
 
-Last checked on 2026-05-19 at 17:38:58 +07:00 after production commit
-`02b1fee` with:
+Last checked on 2026-05-20 at 00:14:56 +07:00 after production commit
+`04f0f73` with:
 
 ```powershell
-npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=15000
+npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=15000 --limit=20 --concurrency=8
 npm run smoke -- https://trust402.vercel.app
-npm run smoke:x402 -- https://trust402.vercel.app /api/trust/compare-resources
+npm run smoke:x402 -- https://trust402.vercel.app
 npm run directories:check -- https://trust402.vercel.app --timeout-ms=15000
-npm run final:verify -- https://trust402.vercel.app --timeout-ms=15000 --docker-bin=D:\Programs\Docker\resources\bin\docker.exe
+npm run final:verify -- https://trust402.vercel.app --timeout-ms=15000 --docker-bin=D:\Programs\Docker\resources\bin\docker.exe --include-details
 ```
 
 Trust402's verified production/discovery state is:
 
 ```text
-status = needs-attention
+status = healthy-cdp-indexed
 api.status = healthy
 api.catalogStatus = production-mvp
 api.paidLaunchResources = 10
@@ -95,28 +95,28 @@ api.anyLiveSpendReady = false
 api.autoRefillReady = false
 x402Challenge.status = challenge-ready
 x402Challenge.httpStatus = 402
-cdpBazaar.status = partially-indexed
+cdpBazaar.status = all-indexed
 cdpBazaar.routeSummary.expected = 10
-cdpBazaar.routeSummary.indexed = 9
-cdpBazaar.routeSummary.missing = [trust.compare_resources]
+cdpBazaar.routeSummary.indexed = 10
+cdpBazaar.routeSummary.missing = []
 externalDirectories.status = not-visible-yet
 externalDirectories.visible = 0
 externalDirectories.checked = 8
 finalVerification.status = blocked
-finalVerification.commandsPassed = false
+finalVerification.commandsPassed = true
 finalVerification.nonFinalOpenRequirements = 6
-finalVerification.verificationHash = sha256:3349957abf236fcc9f7c28cb088d86e096537d22ee3d44f0e17cc2ee918b58a7
+finalVerification.verificationHash = sha256:138d70754768114b2c3127fcf6b03a336d3a16eafedb9d33d9fc4443b5ba5478
 ```
 
 That state is production-healthy for API/x402/spend safety, but launch
-attention is required for CDP Bazaar 10/10 visibility, non-CDP external
-directory visibility, and intentionally closed live-spend gates.
+attention is still required for non-CDP external directory visibility,
+Git/Vercel auto-deploy evidence, and intentionally closed live-spend gates.
 
 The latest final verifier passed local release checks, Docker build,
 production smoke, production x402 smoke, AgentCash refill dry-run, external
-directory read-only check, and production completion audit. The only failing
-required command gate was the launch monitor because CDP Bazaar still reports
-`trust.compare_resources` missing.
+directory read-only check, launch monitor, and production completion audit.
+It remains blocked only because non-final completion requirements are still
+open, not because a command gate failed.
 
 ## AgentCash Refill Check
 
@@ -171,6 +171,12 @@ Docker credential helper directory is available to the verifier:
 
 ```powershell
 npm run final:verify -- https://trust402.vercel.app --timeout-ms=10000 --docker-bin=D:\Programs\Docker\resources\bin\docker.exe
+```
+
+If CDP discovery is slow, the Bazaar checker supports bounded concurrency:
+
+```powershell
+npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=15000 --limit=20 --concurrency=8
 ```
 
 Useful safe modes:
