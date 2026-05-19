@@ -36,9 +36,33 @@ test("live window plan stays read-only and produces a bounded staging profile", 
   assert.equal(result.localPolicyPatch.restrictions.trust402LiveProcurement, "approved-for-manual-smoke");
   assert.equal(result.localPolicyPatch.restrictions.proof402Delegation, "approved-for-manual-smoke");
   assert.equal(result.localPolicyPatch.limits.agentcashGlobalMaxAmountUsd, "0.03");
+  assert.equal(result.downstreamRequestPolicy.privatePayloadAllowed, false);
   assert.match(result.command, /npm run live:evidence-smoke -- https:\/\/trust402\.vercel\.app --live/);
   assert.match(result.command, /--candidate-endpoint=https:\/\/trusted\.example\/api\/paid/);
+  assert.match(result.command, /--proof-reserve-usd=0\.01/);
   assert.match(result.planHash, /^sha256:[a-f0-9]{64}$/);
+});
+
+test("live window plan describes Proof402 notarize payload safety", () => {
+  const result = liveWindowPlan({
+    candidateEndpoint: "https://proof402.vercel.app/api/proof/notarize",
+    candidatePriceUsd: 0.005,
+    proofReserveUsd: 0.005,
+    maxTotalUsd: 0.015,
+    manualSmokeBudgetUsd: 0.015,
+    lastVerifiedBalanceUsd: 1.25,
+    minimumReserveUsd: 0.5,
+    includeProof: true
+  }, { config: baseConfig });
+
+  assert.equal(result.status, "ready-to-stage");
+  assert.equal(result.estimatedMaxSpendUsd, 0.01);
+  assert.equal(result.vercelEnvPlan.production.LIVE_ALLOWED_REGISTRIES, "https://proof402.vercel.app");
+  assert.equal(result.downstreamRequestPolicy.schema, "proof402.notarize");
+  assert.deepEqual(result.downstreamRequestPolicy.sendsOnly, ["contentHash", "label", "idempotencyKey", "metadata"]);
+  assert.equal(result.downstreamRequestPolicy.privatePayloadAllowed, false);
+  assert.match(result.command, /--candidate-price=0\.005/);
+  assert.match(result.command, /--proof-reserve-usd=0\.005/);
 });
 
 test("live window plan blocks unsafe or underfunded staging profiles", () => {

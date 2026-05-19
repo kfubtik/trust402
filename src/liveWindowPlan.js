@@ -10,6 +10,7 @@ export function liveWindowPlan(input = {}, options = {}) {
   const baseUrl = normalizeBaseUrl(input.baseUrl || cfg.publicBaseUrl || DEFAULT_BASE_URL);
   const candidateEndpoint = input.candidateEndpoint || input.endpoint || "";
   const candidateOrigin = originOf(candidateEndpoint);
+  const downstreamRequestPolicy = requestPolicyForCandidate(candidateEndpoint);
   const proof402BaseUrl = normalizeBaseUrl(input.proof402BaseUrl || cfg.proof402BaseUrl || DEFAULT_PROOF402_BASE_URL);
   const proof402Origin = originOf(proof402BaseUrl);
   const paymentProvider = choosePaymentProvider(input.paymentProvider, cfg.livePaymentProvider);
@@ -110,6 +111,7 @@ export function liveWindowPlan(input = {}, options = {}) {
     `--candidate-endpoint=${candidateEndpoint || "<approved-x402-endpoint>"}`,
     `--candidate-price=${usd(candidatePriceUsd)}`,
     `--max-total-usd=${usd(maxTotalUsd)}`,
+    includeProof ? `--proof-reserve-usd=${usd(proofReserveUsd)}` : null,
     `--live-spent-today-usd=${usd(liveSpentTodayUsd)}`,
     includeProof ? null : "--skip-proof",
     includeAutonomous ? "--include-autonomous-live" : null
@@ -126,6 +128,7 @@ export function liveWindowPlan(input = {}, options = {}) {
     includeProof,
     includeAutonomous,
     includeAutoRefill,
+    downstreamRequestPolicy,
     blockers,
     vercelEnvPlan,
     localPolicyPatch,
@@ -183,6 +186,33 @@ function planBlockers(input) {
   if (input.includeProof && !input.proof402BaseUrl) blockers.push("PROOF402_BASE_URL is required when paid Proof402 is included.");
   if (input.includeProof && !(input.proofReserveUsd > 0)) blockers.push("Proof402 reserve must be greater than zero.");
   return blockers;
+}
+
+function requestPolicyForCandidate(candidateEndpoint) {
+  if (isProof402NotarizeEndpoint(candidateEndpoint)) {
+    return {
+      schema: "proof402.notarize",
+      sendsOnly: ["contentHash", "label", "idempotencyKey", "metadata"],
+      privatePayloadAllowed: false,
+      generatedBy: "scripts/live-evidence-smoke.js",
+      note: "The live evidence runner generates a sha256 contentHash and public-safe metadata for this endpoint."
+    };
+  }
+  return {
+    schema: "generic-json",
+    sendsOnly: ["goal"],
+    privatePayloadAllowed: false,
+    generatedBy: "scripts/live-evidence-smoke.js"
+  };
+}
+
+function isProof402NotarizeEndpoint(value) {
+  try {
+    const url = new URL(value);
+    return url.hostname === "proof402.vercel.app" && url.pathname === "/api/proof/notarize";
+  } catch {
+    return false;
+  }
 }
 
 function originOf(value) {

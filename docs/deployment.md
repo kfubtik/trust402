@@ -278,9 +278,10 @@ $env:TRUST402_LIVE_EVIDENCE_SMOKE_APPROVED='true'
 $env:TRUST402_OPERATOR_API_KEY='<operator key already configured in Vercel>'
 npm run live:evidence-smoke -- https://trust402.vercel.app `
   --live `
-  --candidate-endpoint=https://approved.example/paid `
-  --candidate-price=0.01 `
-  --max-total-usd=0.05
+  --candidate-endpoint=https://proof402.vercel.app/api/proof/notarize `
+  --candidate-price=0.005 `
+  --proof-reserve-usd=0.005 `
+  --max-total-usd=0.015
 ```
 
 Add `--include-autonomous-live` only after budgeting for a second downstream
@@ -288,6 +289,8 @@ paid call. The runner never prints the operator key, never sends payment headers
 itself, and only records public-safe hashes/evidence refs. If live policy and
 receipts are valid, it suggests the `TRUST402_*_EVIDENCE_REF` environment
 values that can be reviewed before adding them to production.
+For the Proof402 candidate, the downstream procurement request contains only a
+generated `contentHash`, `label`, `idempotencyKey`, and public-safe metadata.
 
 Before any live request, the runner also reads
 `.local/trust402-agentcash-wallet.json`. Live mode is blocked unless that local
@@ -314,9 +317,10 @@ read-only staging plan:
 
 ```powershell
 npm run live:window-plan -- https://trust402.vercel.app `
-  --candidate-endpoint=https://approved.example/paid `
-  --candidate-price=0.01 `
-  --max-total-usd=0.03 `
+  --candidate-endpoint=https://proof402.vercel.app/api/proof/notarize `
+  --candidate-price=0.005 `
+  --proof-reserve-usd=0.005 `
+  --max-total-usd=0.015 `
   --live-spent-today-usd=0
 ```
 
@@ -338,9 +342,10 @@ $env:TRUST402_LIVE_SMOKE_WINDOW_APPROVED="true"
 npm run live:smoke-window -- https://trust402.vercel.app `
   --live `
   --apply-local-policy `
-  --candidate-endpoint=https://approved.example/paid `
-  --candidate-price=0.01 `
-  --max-total-usd=0.03
+  --candidate-endpoint=https://proof402.vercel.app/api/proof/notarize `
+  --candidate-price=0.005 `
+  --proof-reserve-usd=0.005 `
+  --max-total-usd=0.015
 ```
 
 It stages the local policy patch, runs the bounded evidence smoke, and restores

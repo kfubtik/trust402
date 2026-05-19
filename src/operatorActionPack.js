@@ -4,15 +4,17 @@ import { liveWindowPlan } from "./liveWindowPlan.js";
 import { operatorUnblockReport } from "./operatorUnblockReport.js";
 
 const DEFAULT_BASE_URL = "https://trust402.vercel.app";
-const DEFAULT_CANDIDATE_ENDPOINT = "https://approved.example/paid";
+const DEFAULT_CANDIDATE_ENDPOINT = "https://proof402.vercel.app/api/proof/notarize";
+const DEFAULT_CANDIDATE_PRICE_USD = 0.005;
+const DEFAULT_PROOF402_RESERVE_USD = 0.005;
 
 export function operatorActionPack(input = {}, options = {}) {
   const cfg = options.config || config;
   const baseUrl = normalizeBaseUrl(input.baseUrl || cfg.publicBaseUrl || DEFAULT_BASE_URL);
   const candidateEndpoint = input.candidateEndpoint || DEFAULT_CANDIDATE_ENDPOINT;
-  const candidatePriceUsd = numberOr(input.candidatePriceUsd ?? input.priceUsd, 0.01);
-  const maxTotalUsd = numberOr(input.maxTotalUsd, input.includeAutonomous === true ? 0.04 : 0.03);
-  const proofReserveUsd = numberOr(input.proofReserveUsd, 0.01);
+  const candidatePriceUsd = numberOr(input.candidatePriceUsd ?? input.priceUsd, DEFAULT_CANDIDATE_PRICE_USD);
+  const maxTotalUsd = numberOr(input.maxTotalUsd, input.includeAutonomous === true ? 0.02 : 0.015);
+  const proofReserveUsd = numberOr(input.proofReserveUsd, DEFAULT_PROOF402_RESERVE_USD);
   const includeProof = input.includeProof !== false;
   const includeAutonomous = input.includeAutonomous === true;
   const includeAutoRefill = input.includeAutoRefill === true;
@@ -106,6 +108,7 @@ export function operatorActionPack(input = {}, options = {}) {
       estimatedMaxSpendUsd: livePlan.estimatedMaxSpendUsd,
       command: livePlan.command,
       blockers: livePlan.blockers,
+      downstreamRequestPolicy: livePlan.downstreamRequestPolicy,
       vercelEnvPlan: livePlan.vercelEnvPlan,
       localPolicyPatch: livePlan.localPolicyPatch,
       safety: livePlan.safety
@@ -251,6 +254,7 @@ function liveProcurementAction(livePlan) {
     ]),
     requiredSecretNames: livePlan.vercelEnvPlan.requiredSecretsAlreadyExistOrMustBeAddedManually,
     localPolicyPatch: livePlan.localPolicyPatch,
+    downstreamRequestPolicy: livePlan.downstreamRequestPolicy,
     runCommand: livePlan.command,
     evidenceEnv: {
       TRUST402_LIVE_PROCUREMENT_SMOKE_OBSERVED: "true",

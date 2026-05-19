@@ -213,8 +213,10 @@ function quoteInput(input, candidate) {
 
 function candidateFrom(input) {
   const endpoint = input.candidateEndpoint || "";
+  const requestBody = candidateRequestBody({ input, endpoint });
+  const proof402Candidate = isProof402NotarizeEndpoint(endpoint);
   return {
-    id: input.candidateId || "trust402-live-smoke-candidate",
+    id: input.candidateId || (proof402Candidate ? "proof402.notarize" : "trust402-live-smoke-candidate"),
     endpoint: endpoint || "https://example.com/trust402-live-smoke-resource",
     method: input.candidateMethod || "POST",
     priceUsd: numberOr(input.candidatePriceUsd, 0.01),
@@ -225,11 +227,37 @@ function candidateFrom(input) {
     payTo: input.candidatePayTo || "0x1111111111111111111111111111111111111111",
     network: input.candidateNetwork || "eip155:8453",
     asset: input.candidateAsset || "USDC",
-    description: input.candidateDescription || "Approved x402 resource for a bounded Trust402 evidence smoke.",
+    description: input.candidateDescription || (proof402Candidate
+      ? "Approved Proof402 paid notarization endpoint for bounded Trust402 evidence smoke."
+      : "Approved x402 resource for a bounded Trust402 evidence smoke."),
     receiptReady: true,
-    requestBody: input.candidateRequestBody || {
-      goal: input.goal || "Trust402 live evidence smoke"
-    }
+    requestBody
+  };
+}
+
+function candidateRequestBody({ input, endpoint }) {
+  if (input.candidateRequestBody) return input.candidateRequestBody;
+  if (isProof402NotarizeEndpoint(endpoint)) {
+    const contentHash = validSha256(input.candidateContentHash)
+      ? input.candidateContentHash
+      : sha256Json({
+          agent: "Trust402",
+          stage: "live-procurement-smoke",
+          goal: input.goal || "Trust402 live evidence smoke"
+        });
+    return {
+      contentHash,
+      label: input.candidateLabel || "Trust402 live procurement smoke",
+      idempotencyKey: input.candidateIdempotencyKey || `trust402-live-smoke-${contentHash.slice(7, 19)}`,
+      metadata: {
+        agent: "trust402",
+        stage: "live-procurement-smoke",
+        privatePayload: false
+      }
+    };
+  }
+  return {
+    goal: input.goal || "Trust402 live evidence smoke"
   };
 }
 
@@ -349,6 +377,19 @@ function isExampleEndpoint(value) {
   } catch {
     return true;
   }
+}
+
+function isProof402NotarizeEndpoint(value) {
+  try {
+    const url = new URL(value);
+    return url.hostname === "proof402.vercel.app" && url.pathname === "/api/proof/notarize";
+  } catch {
+    return false;
+  }
+}
+
+function validSha256(value) {
+  return typeof value === "string" && /^sha256:[a-f0-9]{64}$/i.test(value);
 }
 
 function numberOr(value, fallback) {

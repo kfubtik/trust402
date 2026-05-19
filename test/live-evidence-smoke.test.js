@@ -45,6 +45,30 @@ test("liveEvidenceSmoke can write a public-safe local evidence ledger", async ()
   assert.equal(JSON.stringify(record).includes("test-operator"), false);
 });
 
+test("liveEvidenceSmoke builds Proof402 candidate body without private payload", async () => {
+  const calls = [];
+  const result = await liveEvidenceSmoke({
+    baseUrl: "https://trust402.example",
+    candidateEndpoint: "https://proof402.vercel.app/api/proof/notarize",
+    candidatePriceUsd: 0.005,
+    proofReserveUsd: 0.005,
+    maxTotalUsd: 0.015,
+    includeAutonomous: false
+  }, {
+    fetchImpl: fakeFetch(calls)
+  });
+
+  assert.equal(result.mode, "dry-run");
+  const executeCall = calls.find((call) => new URL(call.url).pathname === "/api/procurement/execute");
+  const resource = executeCall.body.quote.quote.selectedResources[0];
+  assert.equal(resource.id, "proof402.notarize");
+  assert.equal(resource.requestBody.label, "Trust402 live procurement smoke");
+  assert.match(resource.requestBody.contentHash, /^sha256:[a-f0-9]{64}$/);
+  assert.match(resource.requestBody.idempotencyKey, /^trust402-live-smoke-/);
+  assert.equal(resource.requestBody.metadata.privatePayload, false);
+  assert.equal(JSON.stringify(resource.requestBody).includes("private payload"), false);
+});
+
 test("liveEvidenceSmoke blocks live mode without runner approval gates", async () => {
   await assert.rejects(
     liveEvidenceSmoke({

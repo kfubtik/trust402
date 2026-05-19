@@ -95,6 +95,30 @@ test("operatorActionPack can become ready except final evidence when runtime fla
   assert.equal(pack.actions.find((action) => action.id === "final_verification").status, "blocked-evidence");
 });
 
+test("operatorActionPack defaults bounded live window to Proof402 paid smoke", () => {
+  const pack = operatorActionPack({
+    baseUrl: "https://trust402.vercel.app",
+    githubActionsFallbackPresent: true,
+    vercelProjectLinked: true
+  }, {
+    config: baseConfig(),
+    localAgentcashPolicyResult: localPolicy({
+      manualSmokeRemainingBudgetUsd: 0,
+      trust402LiveProcurement: "disabled-until-separate-approval",
+      proof402Delegation: "disabled-until-separate-approval"
+    })
+  });
+
+  assert.equal(pack.candidateEndpoint, "https://proof402.vercel.app/api/proof/notarize");
+  assert.equal(pack.liveWindowPlan.estimatedMaxSpendUsd, 0.01);
+  assert.equal(pack.liveWindowPlan.vercelEnvPlan.production.LIVE_ALLOWED_REGISTRIES, "https://proof402.vercel.app");
+  assert.equal(pack.liveWindowPlan.vercelEnvPlan.production.PROOF402_MAX_SPEND_USD, "0.005");
+  assert.equal(pack.liveWindowPlan.downstreamRequestPolicy.schema, "proof402.notarize");
+  assert.equal(pack.actions.find((action) => action.id === "live_procurement").downstreamRequestPolicy.privatePayloadAllowed, false);
+  assert.match(pack.liveWindowPlan.command, /--candidate-endpoint=https:\/\/proof402\.vercel\.app\/api\/proof\/notarize/);
+  assert.match(pack.liveWindowPlan.command, /--candidate-price=0\.005/);
+});
+
 function baseConfig() {
   return {
     publicBaseUrl: "https://trust402.vercel.app",

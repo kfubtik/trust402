@@ -358,9 +358,10 @@ budget, and provider:
 
 ```powershell
 npm run live:window-plan -- https://trust402.vercel.app `
-  --candidate-endpoint=https://approved.example/paid `
-  --candidate-price=0.01 `
-  --max-total-usd=0.03 `
+  --candidate-endpoint=https://proof402.vercel.app/api/proof/notarize `
+  --candidate-price=0.005 `
+  --proof-reserve-usd=0.005 `
+  --max-total-usd=0.015 `
   --live-spent-today-usd=0
 ```
 
@@ -379,15 +380,18 @@ $env:TRUST402_LIVE_SMOKE_WINDOW_APPROVED="true"
 npm run live:smoke-window -- https://trust402.vercel.app `
   --live `
   --apply-local-policy `
-  --candidate-endpoint=https://approved.example/paid `
-  --candidate-price=0.01 `
-  --max-total-usd=0.03
+  --candidate-endpoint=https://proof402.vercel.app/api/proof/notarize `
+  --candidate-price=0.005 `
+  --proof-reserve-usd=0.005 `
+  --max-total-usd=0.015
 ```
 
 It stages the approved local AgentCash policy patch, runs the bounded evidence
 smoke, and restores the previous local policy in `finally` so the manual smoke
 budget returns to its prior state after the run. Without `--live` and
 `--apply-local-policy`, it is preview-only and writes nothing.
+For the Proof402 candidate, the runner generates only `contentHash`, `label`,
+`idempotencyKey`, and public-safe metadata; private payloads are not sent.
 
 During approved evidence collection, append `--write-evidence` to write a
 local public-safe JSONL ledger under `.local/evidence-ledger/`. This ledger is
@@ -400,9 +404,10 @@ action pack:
 
 ```powershell
 npm run completion:actions -- https://trust402.vercel.app `
-  --candidate-endpoint=https://approved.example/paid `
-  --candidate-price=0.01 `
-  --max-total-usd=0.03
+  --candidate-endpoint=https://proof402.vercel.app/api/proof/notarize `
+  --candidate-price=0.005 `
+  --proof-reserve-usd=0.005 `
+  --max-total-usd=0.015
 ```
 
 Agents can request the same action pack through `POST /api/operator/action-pack`.
