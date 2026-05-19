@@ -160,6 +160,7 @@ assert(proof402ClientSource.includes("links?.proof"), "Proof402 client must capt
 assert(proof402ClientSource.includes("proof402_hash_mismatch"), "Proof402 client must reject paid responses with mismatched content hashes");
 assert(liveWindowPlanSource.includes("writesLocalPolicy: false"), "live window plan must stay read-only");
 assert(liveWindowPlanSource.includes("LIVE_SPENT_TODAY_USD"), "live window plan must include spent-today tracking");
+assert(liveWindowPlanSource.includes("proof402PreflightCommand"), "live window plan must include Proof402 paid preflight command");
 assert(configSource.includes("liveSpentTodayUsd"), "config must expose LIVE_SPENT_TODAY_USD");
 assert(policySource.includes("dailyRemainingUsd"), "spend policy must expose remaining daily capacity");
 assert(existsSync("scripts/launch-monitor.js"), "production launch monitor script must exist");
@@ -197,6 +198,7 @@ assert(operatorActionPackScript.includes("/api/operator/action-pack"), "operator
 assert(operatorActionPackScript.includes("args.local"), "operator action pack CLI must preserve explicit local mode");
 assert(readFileSync("src/operatorActionPack.js", "utf8").includes("evidenceCollectionPlan"), "operator action pack must aggregate final evidence collection steps");
 assert(readFileSync("src/operatorActionPack.js", "utf8").includes("nextBlockingActionId"), "operator action pack must expose the next blocking action");
+assert(readFileSync("src/operatorActionPack.js", "utf8").includes("proof402PreflightCommand"), "operator action pack must include Proof402 preflight in evidence collection");
 assert(operatorUnblockCheckScript.includes("/api/operator/unblock-report"), "operator unblock CLI must support production API mode");
 assert(operatorUnblockCheckScript.includes("args.local"), "operator unblock CLI must preserve explicit local mode");
 assert(operatorUnblockCheckScript.includes("localAgentcashPolicyProbe"), "operator unblock CLI must include local AgentCash policy probe context");

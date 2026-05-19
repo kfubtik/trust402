@@ -33,6 +33,7 @@ test("operatorActionPack turns blockers into public-safe operator actions", () =
   assert.equal(pack.evidenceCollection.evidenceEnvPlan.TRUST402_EXTERNAL_DIRECTORY_STATUS, "visible");
   assert.ok(pack.evidenceCollection.verifyCommands.includes("npm test"));
   assert.ok(pack.evidenceCollection.localEvidenceRequired.some((item) => item.includes("agentcash:policy")));
+  assert.ok(pack.evidenceCollection.localEvidenceRequired.some((item) => item.includes("proof402:preflight")));
   assert.equal(pack.evidenceCollection.safety.includesSecretValues, false);
   assert.equal(pack.liveWindowPlan.localPolicyPatch.limits.lastVerifiedBalanceUsd, "1.2");
   assert.equal(pack.liveWindowPlan.localPolicyPatch.limits.minimumReserveUsd, "0.5");
@@ -143,9 +144,12 @@ test("operatorActionPack defaults bounded live window to Proof402 paid smoke", (
   assert.equal(pack.liveWindowPlan.paymentAdapterContract.provider, "agentcash-mcp");
   assert.equal(pack.liveWindowPlan.paymentAdapterContract.safety.bridgeMustEnforceMaxAmountUsd, true);
   assert.match(pack.liveWindowPlan.paymentBridgePreflightCommand, /npm run payment:bridge-check/);
+  assert.match(pack.liveWindowPlan.proof402PreflightCommand, /npm run proof402:preflight/);
   assert.equal(pack.actions.find((action) => action.id === "live_procurement").downstreamRequestPolicy.privatePayloadAllowed, false);
   assert.equal(pack.actions.find((action) => action.id === "live_procurement").paymentAdapterContract.endpointEnv, "LIVE_PAYMENT_ADAPTER_URL");
   assert.match(pack.actions.find((action) => action.id === "live_procurement").paymentBridgePreflightCommand, /--strict/);
+  assert.match(pack.actions.find((action) => action.id === "live_procurement").proof402PreflightCommand, /--strict/);
+  assert.match(pack.actions.find((action) => action.id === "paid_proof402_delegation").preflightCommand, /--approved-hash=sha256:<approved-result-hash>/);
   assert.match(pack.liveWindowPlan.command, /--candidate-endpoint=https:\/\/proof402\.vercel\.app\/api\/proof\/notarize/);
   assert.match(pack.liveWindowPlan.command, /--candidate-price=0\.005/);
 });

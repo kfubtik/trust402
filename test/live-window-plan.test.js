@@ -39,6 +39,8 @@ test("live window plan stays read-only and produces a bounded staging profile", 
   assert.equal(result.paymentAdapterContract.safety.trust402StripsSecretHeaders, true);
   assert.match(result.paymentBridgePreflightCommand, /npm run payment:bridge-check/);
   assert.match(result.paymentBridgePreflightCommand, /--provider=agentcash-mcp/);
+  assert.match(result.proof402PreflightCommand, /npm run proof402:preflight/);
+  assert.match(result.proof402PreflightCommand, /--approved-hash=sha256:<approved-result-hash>/);
   assert.equal(result.localPolicyPatch.restrictions.trust402LiveProcurement, "approved-for-manual-smoke");
   assert.equal(result.localPolicyPatch.restrictions.proof402Delegation, "approved-for-manual-smoke");
   assert.equal(result.localPolicyPatch.limits.agentcashGlobalMaxAmountUsd, "0.03");
@@ -73,6 +75,7 @@ test("live window plan describes Proof402 notarize payload safety", () => {
   ]);
   assert.match(result.command, /--candidate-price=0\.005/);
   assert.match(result.command, /--proof-reserve-usd=0\.005/);
+  assert.match(result.proof402PreflightCommand, /--price-usd=0\.005/);
 });
 
 test("live window plan lists x402-fetch buyer secrets without bridge contract", () => {
@@ -176,6 +179,7 @@ test("live window plan emits skip-proof for procurement-only smoke windows", () 
   assert.equal(result.vercelEnvPlan.production.PROOF402_DELEGATION_MODE, "disabled");
   assert.equal(result.localPolicyPatch.restrictions.proof402Delegation, "disabled-until-separate-approval");
   assert.deepEqual(result.localPolicyPatch.restrictions.allowedOrigins, ["https://trust402.vercel.app"]);
+  assert.equal(result.proof402PreflightCommand, null);
   assert.match(result.command, /--skip-proof/);
   assert.doesNotMatch(result.command, /--include-autonomous-live/);
 });

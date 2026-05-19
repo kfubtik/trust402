@@ -120,6 +120,7 @@ export function operatorActionPack(input = {}, options = {}) {
       downstreamRequestPolicy: livePlan.downstreamRequestPolicy,
       paymentAdapterContract: livePlan.paymentAdapterContract,
       paymentBridgePreflightCommand: livePlan.paymentBridgePreflightCommand,
+      proof402PreflightCommand: livePlan.proof402PreflightCommand,
       vercelEnvPlan: livePlan.vercelEnvPlan,
       localPolicyPatch: livePlan.localPolicyPatch,
       safety: livePlan.safety
@@ -269,6 +270,7 @@ function liveProcurementAction(livePlan, cfg) {
     downstreamRequestPolicy: livePlan.downstreamRequestPolicy,
     paymentAdapterContract: livePlan.paymentAdapterContract,
     paymentBridgePreflightCommand: livePlan.paymentBridgePreflightCommand,
+    proof402PreflightCommand: livePlan.proof402PreflightCommand,
     runCommand: livePlan.command,
     evidenceEnv: {
       TRUST402_LIVE_PROCUREMENT_SMOKE_OBSERVED: "true",
@@ -296,6 +298,7 @@ function proof402Action(livePlan, cfg) {
       "Do not send private payloads to Proof402.",
       "Keep proof spend inside PROOF402_MAX_SPEND_USD."
     ],
+    preflightCommand: livePlan.proof402PreflightCommand,
     evidenceEnv: {
       TRUST402_PROOF402_PAID_SMOKE_OBSERVED: "true",
       TRUST402_PROOF402_EVIDENCE_REF: "<public-safe proof receipt reference>"
@@ -404,6 +407,7 @@ function evidenceCollectionPlan(actions, livePlan) {
       return [
         ...(Array.isArray(action?.verifyCommands) ? action.verifyCommands : []),
         ...(Array.isArray(action?.commands) ? action.commands : []),
+        action?.preflightCommand || null,
         action?.runCommand || null
       ];
     }).filter(Boolean)
@@ -419,6 +423,7 @@ function evidenceCollectionPlan(actions, livePlan) {
     localEvidenceRequired: [
       "npm run agentcash:policy",
       livePlan.paymentBridgePreflightCommand,
+      livePlan.proof402PreflightCommand,
       "npm run live:evidence-smoke -- <base-url> --live --candidate-endpoint=<approved-x402-endpoint> --candidate-price=<price> --max-total-usd=<budget>"
     ].filter(Boolean),
     safety: {

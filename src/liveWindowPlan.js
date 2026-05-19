@@ -126,6 +126,15 @@ export function liveWindowPlan(input = {}, options = {}) {
         "--strict"
       ].join(" ")
     : null;
+  const proof402PreflightCommand = includeProof
+    ? [
+        "npm run proof402:preflight --",
+        "--result-hash=sha256:<approved-result-hash>",
+        "--approved-hash=sha256:<approved-result-hash>",
+        `--price-usd=${usd(proofReserveUsd)}`,
+        "--strict"
+      ].join(" ")
+    : null;
 
   const planCore = {
     baseUrl,
@@ -144,6 +153,7 @@ export function liveWindowPlan(input = {}, options = {}) {
     vercelEnvPlan,
     localPolicyPatch,
     paymentBridgePreflightCommand,
+    proof402PreflightCommand,
     command
   };
   const planHash = sha256Json(planCore);
@@ -168,6 +178,7 @@ export function liveWindowPlan(input = {}, options = {}) {
           "Review this plan hash and local policy patch.",
           "Apply Vercel env values manually or through an approved secret-management flow.",
           ...(paymentBridgePreflightCommand ? ["Run the payment bridge preflight before enabling the live spend window."] : []),
+          ...(proof402PreflightCommand ? ["Run the Proof402 paid-proof preflight for the exact approved result hash."] : []),
           "Update the ignored local AgentCash policy for the approved smoke window.",
           "Run the generated command only after the approval window is active."
         ]
