@@ -262,6 +262,13 @@ itself, and only records public-safe hashes/evidence refs. If live policy and
 receipts are valid, it suggests the `TRUST402_*_EVIDENCE_REF` environment
 values that can be reviewed before adding them to production.
 
+Before any live request, the runner also reads
+`.local/trust402-agentcash-wallet.json`. Live mode is blocked unless that local
+policy explicitly approves the manual smoke window and the estimated spend fits
+the local remaining budget, global cap, and minimum reserve. The current local
+policy intentionally has `manualSmokeRemainingBudgetUsd=0`, so live evidence
+smoke remains blocked until a new approved spend window is recorded locally.
+
 ## Live x402 Settlement
 
 The Express middleware bridge protects paid launch resources when

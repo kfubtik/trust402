@@ -97,6 +97,10 @@ Completion evidence:
 - use `npm run live:evidence-smoke -- --live ...` only during an approved
   bounded spend window; the runner refuses live mode without local approval,
   operator authorization, a real candidate endpoint, and a max-total cap.
+- live evidence smoke also reads `.local/trust402-agentcash-wallet.json` before
+  any live request and blocks if the Trust402 wallet policy is not explicitly
+  approved for manual smoke, if the remaining manual budget is zero, or if the
+  estimated spend would break the local cap/reserve.
 
 Tracking: https://github.com/kfubtik/trust402/issues/8
 
@@ -110,6 +114,8 @@ Acceptance:
 - the wallet is reserved for Trust402 and approved origins only;
 - the local policy never enters Git, API responses, or public logs;
 - a read-only policy check explains whether live operator spend is blocked.
+- `src/localAgentcashPolicy.js` is the shared local policy guard used by the
+  final live evidence runner.
 
 Tracking: https://github.com/kfubtik/trust402/issues/7
 

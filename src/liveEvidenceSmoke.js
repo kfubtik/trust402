@@ -1,5 +1,6 @@
 import { ApiError } from "./errors.js";
 import { sha256Json } from "./hash.js";
+import { evaluateLocalAgentcashPolicyForLive, readLocalAgentcashPolicy } from "./localAgentcashPolicy.js";
 import { procurementQuote } from "./procurement.js";
 
 const DEFAULT_BASE_URL = "https://trust402.vercel.app";
@@ -19,6 +20,17 @@ export async function liveEvidenceSmoke(input = {}, options = {}) {
     (mode === "live" ? candidate.priceUsd * (includeAutonomous ? 2 : 1) : 0) +
     (mode === "live" && includeProof ? proofReserveUsd : 0)
   );
+  const localAgentcashPolicy = mode === "live"
+    ? evaluateLocalAgentcashPolicyForLive({
+        policyResult: options.localAgentcashPolicyResult || readLocalAgentcashPolicy({ cwd: options.cwd }),
+        cwd: options.cwd,
+        baseUrl,
+        proof402BaseUrl: input.proof402BaseUrl,
+        estimatedMaxSpendUsd,
+        includeProof,
+        includeRefillLive: input.includeRefillLive === true && mode === "live"
+      })
+    : null;
 
   guardLive({
     mode,
@@ -26,7 +38,8 @@ export async function liveEvidenceSmoke(input = {}, options = {}) {
     operatorKey,
     candidate,
     maxTotalUsd,
-    estimatedMaxSpendUsd
+    estimatedMaxSpendUsd,
+    localAgentcashPolicy
   });
 
   const headers = {
@@ -143,13 +156,14 @@ export async function liveEvidenceSmoke(input = {}, options = {}) {
       storesPrivatePayload: false,
       sendsPaymentHeadersFromRunner: false,
       liveAutonomousIncluded: includeAutonomous && mode === "live",
-      liveRefillIncluded: input.includeRefillLive === true && mode === "live"
+      liveRefillIncluded: input.includeRefillLive === true && mode === "live",
+      localAgentcashPolicy: localAgentcashPolicy?.summary || null
     },
     nextActions: nextActions({ mode, evidenceRefs, policies, includeAutonomous })
   };
 }
 
-function guardLive({ mode, approved, operatorKey, candidate, maxTotalUsd, estimatedMaxSpendUsd }) {
+function guardLive({ mode, approved, operatorKey, candidate, maxTotalUsd, estimatedMaxSpendUsd, localAgentcashPolicy }) {
   if (mode !== "live") return;
   const blockers = [];
   if (!approved) blockers.push("Set TRUST402_LIVE_EVIDENCE_SMOKE_APPROVED=true and pass --live.");
@@ -160,11 +174,15 @@ function guardLive({ mode, approved, operatorKey, candidate, maxTotalUsd, estima
   if (maxTotalUsd > 0 && estimatedMaxSpendUsd > maxTotalUsd) {
     blockers.push(`Estimated max spend ${estimatedMaxSpendUsd} exceeds --max-total-usd ${maxTotalUsd}.`);
   }
+  for (const blocker of localAgentcashPolicy?.blockers || []) {
+    blockers.push(`${blocker.id}: ${blocker.message}`);
+  }
   if (blockers.length > 0) {
     throw new ApiError(403, "live_evidence_smoke_blocked", "Live evidence smoke is blocked by local runner policy.", {
       blockers,
       estimatedMaxSpendUsd,
-      maxTotalUsd
+      maxTotalUsd,
+      localAgentcashPolicy: localAgentcashPolicy?.summary || null
     });
   }
 }

@@ -21,7 +21,7 @@ test("liveEvidenceSmoke dry-run produces staged evidence without approval", asyn
   assert.equal(calls.some((call) => call.headers?.["x-trust402-operator-key"]), false);
 });
 
-test("liveEvidenceSmoke blocks live mode without local approval gates", async () => {
+test("liveEvidenceSmoke blocks live mode without runner approval gates", async () => {
   await assert.rejects(
     liveEvidenceSmoke({
       baseUrl: "https://trust402.example",
@@ -30,9 +30,36 @@ test("liveEvidenceSmoke blocks live mode without local approval gates", async ()
       candidatePriceUsd: 0.01,
       maxTotalUsd: 0.05
     }, {
-      fetchImpl: fakeFetch([])
+      fetchImpl: fakeFetch([]),
+      localAgentcashPolicyResult: approvedLocalPolicyResult()
     }),
-    /Live evidence smoke is blocked/
+    (error) => {
+      assert.equal(error.code, "live_evidence_smoke_blocked");
+      assert.ok(error.details.blockers.some((item) => item.includes("TRUST402_LIVE_EVIDENCE_SMOKE_APPROVED")));
+      return true;
+    }
+  );
+});
+
+test("liveEvidenceSmoke blocks live mode when local AgentCash policy has no smoke budget", async () => {
+  await assert.rejects(
+    liveEvidenceSmoke({
+      baseUrl: "https://trust402.example",
+      mode: "live",
+      approved: true,
+      operatorKey: "test-operator",
+      candidateEndpoint: "https://resource.example/paid",
+      candidatePriceUsd: 0.01,
+      maxTotalUsd: 0.05
+    }, {
+      fetchImpl: fakeFetch([]),
+      localAgentcashPolicyResult: approvedLocalPolicyResult({ manualSmokeRemainingBudgetUsd: 0 })
+    }),
+    (error) => {
+      assert.equal(error.code, "live_evidence_smoke_blocked");
+      assert.ok(error.details.blockers.some((item) => item.includes("local_manual_smoke_budget_exhausted")));
+      return true;
+    }
   );
 });
 
@@ -48,7 +75,8 @@ test("liveEvidenceSmoke live mode returns suggested evidence env refs", async ()
     maxTotalUsd: 0.05,
     includeAutonomous: true
   }, {
-    fetchImpl: fakeFetch(calls)
+    fetchImpl: fakeFetch(calls),
+    localAgentcashPolicyResult: approvedLocalPolicyResult()
   });
 
   assert.equal(result.mode, "live");
@@ -136,6 +164,43 @@ function fakeFetch(calls) {
       });
     }
     return json({ ok: false }, 404);
+  };
+}
+
+function approvedLocalPolicyResult(overrides = {}) {
+  const manualSmokeRemainingBudgetUsd = overrides.manualSmokeRemainingBudgetUsd ?? 0.10;
+  return {
+    present: true,
+    policyPath: ".local/trust402-agentcash-wallet.json",
+    failures: [],
+    policy: {
+      service: "Trust402",
+      status: "dedicated-for-trust402-operator-spend",
+      wallet: {
+        provider: "AgentCash",
+        network: "base",
+        address: "0x1111111111111111111111111111111111111111"
+      },
+      restrictions: {
+        allowedProjectRoot: process.cwd(),
+        allowedOrigins: [
+          "https://trust402.example",
+          "https://proof402.vercel.app"
+        ],
+        trust402LiveProcurement: "approved-for-manual-smoke",
+        proof402Delegation: "approved-for-manual-smoke"
+      },
+      limits: {
+        agentcashGlobalMaxAmountUsd: 0.10,
+        manualSmokeRemainingBudgetUsd,
+        lastVerifiedBalanceUsd: 1.20,
+        minimumReserveUsd: 0.50,
+        autoRefill: {
+          enabled: false,
+          futureThresholdUsd: 0.50
+        }
+      }
+    }
   };
 }
 
