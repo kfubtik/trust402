@@ -21,7 +21,7 @@ const CDP_DISCOVERY_BASE = "https://api.cdp.coinbase.com/platform/v2/x402/discov
 async function main() {
   const searchResults = await mapLimit(queries, concurrency, checkSearch);
   const catalog = await checkCatalog();
-  const routeVisibility = allResources ? await checkRouteVisibility() : [];
+  const routeVisibility = allResources ? await checkRouteVisibility([...searchResults, catalog]) : [];
   const matched = [...searchResults, catalog].some((item) => item.matched === true);
   const routeMatched = routeVisibility.some((item) => item.indexed === true);
   const allRoutesMatched = routeVisibility.length > 0 && routeVisibility.every((item) => item.indexed === true);
@@ -91,9 +91,10 @@ async function checkCatalog() {
   };
 }
 
-async function checkRouteVisibility() {
+async function checkRouteVisibility(globalResults = []) {
   const catalog = loadCatalog();
   const paidResources = catalog.paidLaunchResources || [];
+  const globallyMatchedResources = new Set(globalResults.flatMap((result) => result.matchedResources || []));
   const jobs = paidResources.flatMap((resource) => {
     const resourceUrl = `${baseUrl}${resource.path}`;
     return routeQueries(resource, resourceUrl).map((query) => ({
@@ -117,7 +118,11 @@ async function checkRouteVisibility() {
   for (const resource of paidResources) {
     const resourceUrl = `${baseUrl}${resource.path}`;
     const queryResults = byResource.get(resource.id) || [];
-    const matchedResources = Array.from(new Set(queryResults.flatMap((result) => result.matchedResources || [])));
+    const matchedByGlobalSearch = globallyMatchedResources.has(resourceUrl);
+    const matchedResources = Array.from(new Set([
+      ...queryResults.flatMap((result) => result.matchedResources || []),
+      ...(matchedByGlobalSearch ? [resourceUrl] : [])
+    ]));
     const matches = queryResults.flatMap((result) => result.matches || []);
     const indexed = matchedResources.includes(resourceUrl);
     results.push({
@@ -126,6 +131,7 @@ async function checkRouteVisibility() {
       resource: resourceUrl,
       priceUsd: resource.priceUsd,
       indexed,
+      matchedByGlobalSearch,
       checkedQueries: queryResults.map((result) => ({
         query: result.query,
         ok: result.ok,
