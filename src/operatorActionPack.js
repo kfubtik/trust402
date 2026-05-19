@@ -77,6 +77,9 @@ export function operatorActionPack(input = {}, options = {}) {
     candidateEndpoint,
     unblockStatus: unblock.status,
     livePlanStatus: livePlan.status,
+    liveWindowPlanHash: livePlan.planHash,
+    paymentProvider: livePlan.paymentProvider,
+    requiredPaymentSecretNames: livePlan.vercelEnvPlan.requiredSecretsAlreadyExistOrMustBeAddedManually,
     evidenceCollectionStatus: evidenceCollection.status,
     actions: actions.map((action) => ({
       id: action.id,

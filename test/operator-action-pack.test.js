@@ -202,6 +202,32 @@ test("operatorActionPack can stage a CDP x402 buyer path without bridge adapter"
   );
 });
 
+test("operatorActionPack hash changes when the selected payment provider changes", () => {
+  const sharedInput = {
+    baseUrl: "https://trust402.vercel.app",
+    candidateEndpoint: "https://proof402.vercel.app/api/proof/notarize",
+    candidatePriceUsd: 0.005,
+    maxTotalUsd: 0.015,
+    githubActionsFallbackPresent: true,
+    vercelProjectLinked: true
+  };
+  const options = {
+    config: baseConfig(),
+    localAgentcashPolicyResult: localPolicy({
+      manualSmokeRemainingBudgetUsd: 0.015,
+      agentcashGlobalMaxAmountUsd: 0.015,
+      trust402LiveProcurement: "approved-for-manual-smoke",
+      proof402Delegation: "approved-for-manual-smoke"
+    })
+  };
+
+  const bridge = operatorActionPack({ ...sharedInput, paymentProvider: "agentcash-mcp" }, options);
+  const cdp = operatorActionPack({ ...sharedInput, paymentProvider: "cdp-x402" }, options);
+
+  assert.notEqual(bridge.liveWindowPlan.planHash, cdp.liveWindowPlan.planHash);
+  assert.notEqual(bridge.actionPackHash, cdp.actionPackHash);
+});
+
 function baseConfig() {
   return {
     publicBaseUrl: "https://trust402.vercel.app",
