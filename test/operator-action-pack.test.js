@@ -43,6 +43,11 @@ test("operatorActionPack turns blockers into public-safe operator actions", () =
   assert.ok(pack.actions.some((action) => action.id === "custom_domain"));
   assert.ok(pack.actions.some((action) => action.id === "live_procurement"));
   assert.ok(pack.actions.some((action) => action.id === "final_verification"));
+  const directoryAction = pack.actions.find((action) => action.id === "external_x402_directories");
+  assert.ok(directoryAction.listingInputs.directoryProfile.endsWith("/directory"));
+  assert.ok(directoryAction.listingInputs.directoryProfileJson.endsWith("/directory.json"));
+  assert.ok(directoryAction.listingInputs.apiDirectoryProfile.endsWith("/api/directories/profile"));
+  assert.ok(directoryAction.verifyCommands.some((command) => command.includes("/directory.json")));
   assert.deepEqual(
     pack.actions.find((action) => action.id === "git_vercel_auto_deploy").fallbackPath.requiredGitHubSecrets,
     ["VERCEL_TOKEN", "VERCEL_ORG_ID", "VERCEL_PROJECT_ID"]

@@ -235,12 +235,16 @@ function externalDirectoryAction(cfg, baseUrl) {
     listingInputs: {
       serviceName: "Trust402",
       baseUrl,
+      directoryProfile: `${baseUrl}/directory`,
+      directoryProfileJson: `${baseUrl}/directory.json`,
+      apiDirectoryProfile: `${baseUrl}/api/directories/profile`,
       openapi: `${baseUrl}/openapi.json`,
       x402Discovery: `${baseUrl}/.well-known/x402`,
       marketplaceBundle: `${baseUrl}/api/marketplace/bundle`,
       listingCopy: "docs/external-marketplace-listing.md"
     },
     verifyCommands: [
+      "curl.exe -s https://trust402.vercel.app/directory.json",
       "npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000",
       "npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000 --strict"
     ],
