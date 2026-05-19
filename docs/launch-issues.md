@@ -30,25 +30,29 @@ The full final Definition of Done is pinned in
   commit matches the current repository HEAD; push-triggered Git/Vercel
   auto-deploy evidence is still not verified.
 - Recent manual production deployment evidence snapshot:
-  `dpl_FY3nhEXZHQ4cee6sk4MHLRbm37PZ` from commit
-  `04f0f73c251ed81db5d35099f367eff8573d56db`; preflight confirmed it matched
-  repository HEAD as of 2026-05-20 00:11:32 +07:00. Treat the latest
+  `dpl_BpPzYqpZToX1cuyK3k4fVzWVxwDH` from commit
+  `4b77712b88ee73d9f4466f400fb9311cd8e62b90`; preflight confirmed it matched
+  repository HEAD as of 2026-05-20 04:44:09 +07:00. Treat the latest
   `deployment:preflight` output as the source of truth after any later deploy.
 - CDP Bazaar indexing: 10/10 paid launch resources verified as of
-  2026-05-20 00:09:03 +07:00. The checker now uses bounded concurrency so
+  2026-05-20 04:41:54 +07:00. The checker now uses bounded concurrency so
   CDP discovery latency does not create false launch-monitor timeouts.
 - External directory visibility: monitored read-only; latest check found 0/8
-  visible, 5 reachable, and 3 timeout/unreachable directories as of
-  2026-05-20 00:14:54 +07:00; one directory requires a custom domain before
+  visible, 6 reachable, and 2 timeout/unreachable directories as of
+  2026-05-20 04:48:43 +07:00; one directory requires a custom domain before
   submission.
-- Production gates: `npm test` (121/121), `npm run release:check`, smoke,
+- Production gates: `npm test` (156/156), `npm run release:check`, smoke,
   x402 smoke, Docker build, launch monitor, deployment preflight, AgentCash
   refill dry-run, and external directory read-only check passed as of
-  2026-05-20 00:14:56 +07:00. Recent final verification hash:
-  `sha256:138d70754768114b2c3127fcf6b03a336d3a16eafedb9d33d9fc4443b5ba5478`.
+  2026-05-20 04:48:43 +07:00. Recent final verification hash:
+  `sha256:301ce6f31b220fc1b53900a177b1bd24a94a43debb215f097769b34887bd3273`.
   `final:verify` remains blocked because Git/Vercel auto-deploy,
   external-directory visibility, live procurement, paid Proof402 delegation,
   AgentCash auto-refill, and autonomous live job evidence are still unresolved.
+- AgentCash MCP observation: AgentCash settings currently cap requests at
+  `$0.01`; the local Trust402 policy still keeps manual smoke budget at `$0`
+  and leaves live procurement, paid Proof402 delegation, and auto-refill
+  disabled until a bounded operator window is explicitly approved.
 - Live evidence staging: production action pack now defaults the bounded
   downstream smoke to `https://proof402.vercel.app/api/proof/notarize` at
   `$0.005`, caps the combined procurement/proof window at `$0.015`, and marks

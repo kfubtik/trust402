@@ -14,8 +14,8 @@ npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10
 
 ## Current Production State
 
-Last checked on 2026-05-20 at 00:09:03 +07:00 after production commit
-`04f0f73`.
+Last checked on 2026-05-20 at 04:41:54 +07:00 after production commit
+`4b77712`.
 
 Production alias:
 
@@ -51,9 +51,10 @@ Indexed right now:
 
 ## Resolved Indexing Blocker
 
-`trust.compare_resources` temporarily dropped from CDP Bazaar search results,
-but the current production checker verifies that it is indexed again. The
-production route itself remains healthy:
+`trust.compare_resources` and later `procurement.quote` temporarily dropped
+from CDP Bazaar search results during asynchronous refresh windows, but the
+current production checker verifies that all launch routes are indexed again.
+The production routes themselves remain healthy:
 
 - `POST /api/trust/compare-resources` returns an unpaid HTTP 402 challenge;
 - the challenge contains top-level `extensions.bazaar`;
