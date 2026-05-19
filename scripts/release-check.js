@@ -144,6 +144,8 @@ assert(smokeScript.includes("/api/live/window-plan"), "smoke script must cover l
 assert(smokeScript.includes("/api/operator/unblock-report"), "smoke script must cover operator unblock report");
 assert(smokeScript.includes("/api/operator/action-pack"), "smoke script must cover operator action pack");
 assert(launchMonitorScript.includes("/api/policies/spend"), "launch monitor must check spend policy");
+assert(launchMonitorScript.includes("childTimeoutMs"), "launch monitor must cap child directory/indexing checks");
+assert(launchMonitorScript.includes('status: "script-timeout"'), "launch monitor must report child script timeouts");
 assert(workflow.includes("npm audit --omit=dev --audit-level=high"), "CI must run high-severity npm audit");
 assert(workflow.includes("docker build -t trust402:test ."), "CI must build the Docker image");
 assert(workflow.includes("docker compose config"), "CI must validate docker compose config");

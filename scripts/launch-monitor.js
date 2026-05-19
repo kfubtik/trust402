@@ -3,6 +3,7 @@ import { config } from "../src/config.js";
 
 const baseUrl = (process.argv.find((arg) => /^https?:\/\//.test(arg)) || config.publicBaseUrl).replace(/\/+$/, "");
 const timeoutMs = numberArg("--timeout-ms", 10_000);
+const childTimeoutMs = numberArg("--child-timeout-ms", 120_000);
 const strict = process.argv.includes("--strict");
 const skipBazaar = process.argv.includes("--skip-bazaar");
 const skipDirectories = process.argv.includes("--skip-directories");
@@ -250,8 +251,22 @@ function runJsonScript(id, args) {
     encoding: "utf8",
     shell: false,
     env: process.env,
-    maxBuffer: 20 * 1024 * 1024
+    maxBuffer: 20 * 1024 * 1024,
+    timeout: childTimeoutMs
   });
+
+  if (result.error?.code === "ETIMEDOUT") {
+    return {
+      ok: false,
+      tool: id,
+      summary: {
+        status: "script-timeout",
+        timeoutMs: childTimeoutMs
+      },
+      stdout: trim(result.stdout),
+      stderr: trim(result.stderr)
+    };
+  }
 
   if (result.status !== 0) {
     return {
