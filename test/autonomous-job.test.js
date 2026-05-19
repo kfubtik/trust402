@@ -45,6 +45,8 @@ test("autonomousRun creates a dry-run quote, execution audit, receipt, and proof
   assert.equal(result.ok, true);
   assert.equal(result.tool, "jobs.autonomous_run");
   assert.equal(result.mode, "dry-run");
+  assert.equal(result.quote.quote.selectedResources.length, 1);
+  assert.equal(result.quote.quote.selectedResources[0].id, "good");
   assert.equal(result.execution.paidSubcallsMade, 0);
   assert.match(result.resultHash, /^sha256:[a-f0-9]{64}$/);
   assert.equal(result.proof.delegation.paidProofCallMade, false);

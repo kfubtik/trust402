@@ -69,6 +69,10 @@ async function main() {
         hasInputSchema: true,
         hasOpenApi: true,
         hasWellKnown: true,
+        payTo: "0x1111111111111111111111111111111111111111",
+        network: "eip155:8453",
+        asset: "USDC",
+        description: "Good structured endpoint for x402 buyers.",
         receiptReady: true
       },
       {
@@ -79,6 +83,7 @@ async function main() {
     ]
   });
   assert(autonomous.mode === "dry-run", "/api/jobs/autonomous-run must default to dry-run");
+  assert(autonomous.quote?.quote?.selectedResources?.length === 1, "/api/jobs/autonomous-run must select a qualified dry-run resource");
   assert(autonomous.execution?.paidSubcallsMade === 0, "/api/jobs/autonomous-run dry-run must not make paid subcalls");
 
   const realProtectedRoutes = settlement.readiness.realSettlementReady === true;
