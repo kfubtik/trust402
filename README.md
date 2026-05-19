@@ -360,6 +360,11 @@ Invoke-RestMethod -Method Get -Uri http://127.0.0.1:4032/api/completion/audit
 `goalComplete=true` is reserved for the state where every requirement is
 `verified`; implemented-but-blocked paths do not count as completion.
 
+Manual or external requirements become `verified` only when public-safe
+evidence env vars are set, such as `TRUST402_GIT_AUTO_DEPLOY_VERIFIED=true` with
+a deployment evidence URL, or `TRUST402_EXTERNAL_DIRECTORY_STATUS=visible` with
+a directory evidence URL.
+
 Check the local Trust402-only AgentCash policy without spending:
 
 ```powershell

@@ -47,6 +47,12 @@ export const config = {
   proof402BaseUrl: process.env.PROOF402_BASE_URL || "",
   proof402DelegationMode: process.env.PROOF402_DELEGATION_MODE || "disabled",
   proof402MaxSpendUsd: Number.parseFloat(process.env.PROOF402_MAX_SPEND_USD || "0"),
+  gitAutoDeployVerified: process.env.TRUST402_GIT_AUTO_DEPLOY_VERIFIED === "true",
+  gitAutoDeployEvidenceUrl: process.env.TRUST402_GIT_AUTO_DEPLOY_EVIDENCE_URL || "",
+  gitAutoDeployCommitSha: process.env.TRUST402_GIT_AUTO_DEPLOY_COMMIT_SHA || "",
+  externalDirectoryStatus: process.env.TRUST402_EXTERNAL_DIRECTORY_STATUS || "not-visible-yet",
+  externalDirectoryEvidenceUrl: process.env.TRUST402_EXTERNAL_DIRECTORY_EVIDENCE_URL || "",
+  externalDirectoryName: process.env.TRUST402_EXTERNAL_DIRECTORY_NAME || "",
   requestTimeoutMs: Number.parseInt(process.env.TRUST402_REQUEST_TIMEOUT_MS || "6000", 10),
   maxJsonBytes: Number.parseInt(process.env.TRUST402_MAX_JSON_BYTES || "131072", 10)
 };

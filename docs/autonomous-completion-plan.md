@@ -19,6 +19,15 @@ Acceptance:
 - `npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000 --strict`
   passes after a Git-backed deploy.
 
+Completion evidence:
+
+- set `TRUST402_GIT_AUTO_DEPLOY_VERIFIED=true` only after a push-triggered
+  production deployment is observed;
+- set `TRUST402_GIT_AUTO_DEPLOY_EVIDENCE_URL` to the Vercel deployment or
+  GitHub check URL;
+- set `TRUST402_GIT_AUTO_DEPLOY_COMMIT_SHA` to the commit that triggered that
+  deployment.
+
 Tracking: https://github.com/kfubtik/trust402/issues/5
 
 ## 2. External x402 Directories
@@ -32,6 +41,13 @@ Acceptance:
   review;
 - no private keys, CDP secrets, AgentCash internals, payment headers, or paid
   receipts are submitted.
+
+Completion evidence:
+
+- set `TRUST402_EXTERNAL_DIRECTORY_STATUS=visible` or `pending-review`;
+- set `TRUST402_EXTERNAL_DIRECTORY_EVIDENCE_URL` to a public listing, search
+  result, or curated-review confirmation;
+- set `TRUST402_EXTERNAL_DIRECTORY_NAME` to the non-CDP directory name.
 
 Tracking: https://github.com/kfubtik/trust402/issues/6
 

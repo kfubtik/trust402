@@ -10,8 +10,8 @@ export function completionAudit(runtimeConfig = config) {
   const settlement = settlementStatus({ config: runtimeConfig, catalog });
   const checklist = launchChecklist(runtimeConfig);
   const requirements = [
-    gitVercelAutoDeploy(),
-    externalDirectories(),
+    gitVercelAutoDeploy(runtimeConfig),
+    externalDirectories(runtimeConfig),
     unifiedSpendPolicy(spend),
     liveProcurement(spend),
     agentcashWalletBinding(),
@@ -50,33 +50,48 @@ export function isGoalComplete(requirements) {
   return requirements.length > 0 && requirements.every((item) => item.status === "verified");
 }
 
-function gitVercelAutoDeploy() {
+function gitVercelAutoDeploy(runtimeConfig) {
+  const hasEvidence = Boolean(runtimeConfig.gitAutoDeployEvidenceUrl || runtimeConfig.gitAutoDeployCommitSha);
+  const verified = runtimeConfig.gitAutoDeployVerified && hasEvidence;
   return requirement({
     id: "git_vercel_auto_deploy",
     title: "Git/Vercel Auto-Deploy",
-    status: "blocked-manual",
+    status: verified ? "verified" : "blocked-manual",
     issue: launchIssues.vercelGitAutoDeploy,
     evidence: [
-      "Repository pushes to GitHub are working.",
-      "Production deploy currently uses Vercel CLI.",
-      "Vercel GitHub App access to the private repo is required before Git-backed deploys can prove this requirement."
+      `gitAutoDeployVerified=${runtimeConfig.gitAutoDeployVerified}`,
+      `evidenceUrl=${runtimeConfig.gitAutoDeployEvidenceUrl || "not-configured"}`,
+      `commitSha=${runtimeConfig.gitAutoDeployCommitSha || "not-configured"}`,
+      verified
+        ? "A Git-backed production deployment has explicit evidence."
+        : "Vercel GitHub App access to the private repo is required before Git-backed deploys can prove this requirement."
     ],
-    nextAction: "Grant the Vercel GitHub App access to kfubtik/trust402, then verify a push-triggered production deployment."
+    nextAction: verified
+      ? "Keep Git-backed deploy evidence updated after the next push-triggered production deployment."
+      : "Grant the Vercel GitHub App access to kfubtik/trust402, then set TRUST402_GIT_AUTO_DEPLOY_VERIFIED=true with evidence from a push-triggered production deployment."
   });
 }
 
-function externalDirectories() {
+function externalDirectories(runtimeConfig) {
+  const accepted = new Set(["visible", "pending-review"]);
+  const verified = accepted.has(runtimeConfig.externalDirectoryStatus) && Boolean(runtimeConfig.externalDirectoryEvidenceUrl);
   return requirement({
     id: "external_x402_directories",
     title: "External x402 Directories",
-    status: "blocked-external",
+    status: verified ? "verified" : "blocked-external",
     issue: launchIssues.externalDirectories,
     evidence: [
       "Public-safe listing copy and directory visibility checker exist.",
-      "CDP Bazaar visibility is external and must be verified with npm run launch:monitor.",
-      "At least one non-CDP directory must show Trust402 or record a curated review before this is complete."
+      `externalDirectoryStatus=${runtimeConfig.externalDirectoryStatus}`,
+      `externalDirectoryName=${runtimeConfig.externalDirectoryName || "not-configured"}`,
+      `evidenceUrl=${runtimeConfig.externalDirectoryEvidenceUrl || "not-configured"}`,
+      verified
+        ? "A non-CDP directory is visible or has a recorded curated-review submission."
+        : "At least one non-CDP directory must show Trust402 or record a pending curated review before this is complete."
     ],
-    nextAction: "Run directory checks and submit the public-safe listing pack only where manual submission is allowed."
+    nextAction: verified
+      ? "Keep directory evidence fresh with read-only monitoring."
+      : "Run directory checks and submit the public-safe listing pack only where manual submission is allowed."
   });
 }
 

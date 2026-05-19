@@ -167,6 +167,19 @@ Fix in Vercel/GitHub UI:
 - grant access to `kfubtik/trust402`;
 - rerun the `vercel git connect` command above.
 
+After a push-triggered production deployment is observed, record only
+public-safe evidence in Vercel production env:
+
+```text
+TRUST402_GIT_AUTO_DEPLOY_VERIFIED=true
+TRUST402_GIT_AUTO_DEPLOY_EVIDENCE_URL=https://vercel.com/.../deployments/...
+TRUST402_GIT_AUTO_DEPLOY_COMMIT_SHA=<commit-sha>
+```
+
+Those flags do not enable deployment by themselves. They only let
+`/api/completion/audit` verify the Git/Vercel requirement after the real
+integration has been proven.
+
 ## Live x402 Settlement
 
 The Express middleware bridge protects paid launch resources when
