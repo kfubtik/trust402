@@ -473,6 +473,33 @@ command for the approved smoke window.
 
 Agents can request the same read-only plan through `POST /api/live/window-plan`.
 
+If CDP Bazaar is missing one paid route while the server-side live payment
+adapter is still blocked, the live-window plan also emits
+`agentcashDirectSmoke`. This is a public-safe MCP action pack, not an executed
+payment. It contains:
+
+- `schemaCheck.input` for `mcp__agentcash__check_endpoint_schema`;
+- `fetch.input` for `mcp__agentcash__fetch`, including the exact reviewed JSON
+  body, `maxAmount`, Base network, and x402 protocol;
+- the local AgentCash policy window that must be approved before execution;
+- the Bazaar and completion commands to rerun after a successful paid receipt.
+
+For the currently blocked CDP Bazaar route, generate the pack with:
+
+```powershell
+npm run live:window-plan -- https://trust402.vercel.app `
+  --candidate-endpoint=https://trust402.vercel.app/api/trust/compare-resources `
+  --candidate-price=0.03 `
+  --max-total-usd=0.03 `
+  --live-max-per-call=0.03 `
+  --skip-proof
+```
+
+The `fetch.input` in that output may help produce indexing evidence for
+`trust.compare_resources`, but it remains out-of-band. It does not prove the
+Trust402 runtime payment adapter and must not be used to mark
+`live_procurement` verified by itself.
+
 During the approved smoke window, prefer the one-shot local wrapper:
 
 ```powershell

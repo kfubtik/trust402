@@ -157,6 +157,11 @@ test("operatorActionPack defaults bounded live window to Proof402 paid smoke", (
     "LIVE_PAYMENT_ADAPTER_URL"
   ]);
   assert.equal(pack.liveWindowPlan.downstreamRequestPolicy.schema, "proof402.notarize");
+  assert.equal(pack.liveWindowPlan.agentcashDirectSmoke.status, "operator-approval-required");
+  assert.equal(pack.liveWindowPlan.agentcashDirectSmoke.fetch.input.url, "https://proof402.vercel.app/api/proof/notarize");
+  assert.equal(pack.liveWindowPlan.agentcashDirectSmoke.fetch.input.maxAmount, 0.005);
+  assert.equal(pack.liveWindowPlan.agentcashDirectSmoke.safety.readOnlyPlan, true);
+  assert.equal(pack.liveWindowPlan.agentcashDirectSmoke.safety.doesNotProveRuntimePaymentAdapter, true);
   assert.equal(pack.liveWindowPlan.paymentAdapterContract.provider, "agentcash-mcp");
   assert.equal(pack.liveWindowPlan.paymentAdapterContract.safety.bridgeMustEnforceMaxAmountUsd, true);
   assert.equal(pack.liveWindowPlan.paymentProviderPreflightCommand, pack.liveWindowPlan.paymentBridgePreflightCommand);
@@ -171,6 +176,8 @@ test("operatorActionPack defaults bounded live window to Proof402 paid smoke", (
   );
   assert.match(pack.actions.find((action) => action.id === "live_procurement").paymentBridgePreflightCommand, /--strict/);
   assert.match(pack.actions.find((action) => action.id === "live_procurement").proof402PreflightCommand, /--strict/);
+  assert.equal(pack.actions.find((action) => action.id === "live_procurement").agentcashDirectSmoke.fetch.input.paymentProtocol, "x402");
+  assert.ok(pack.evidenceCollection.localEvidenceRequired.some((item) => item.includes("agentcashDirectSmoke")));
   assert.match(pack.actions.find((action) => action.id === "paid_proof402_delegation").preflightCommand, /--approved-hash=sha256:<approved-result-hash>/);
   assert.match(pack.liveWindowPlan.command, /--candidate-endpoint=https:\/\/proof402\.vercel\.app\/api\/proof\/notarize/);
   assert.match(pack.liveWindowPlan.command, /--candidate-price=0\.005/);

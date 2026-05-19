@@ -78,6 +78,14 @@ test("live window plan describes Proof402 notarize payload safety", () => {
   assert.equal(result.downstreamRequestPolicy.schema, "proof402.notarize");
   assert.deepEqual(result.downstreamRequestPolicy.sendsOnly, ["contentHash", "label", "idempotencyKey", "metadata"]);
   assert.equal(result.downstreamRequestPolicy.privatePayloadAllowed, false);
+  assert.equal(result.agentcashDirectSmoke.status, "operator-approval-required");
+  assert.equal(result.agentcashDirectSmoke.fetch.input.url, "https://proof402.vercel.app/api/proof/notarize");
+  assert.match(result.agentcashDirectSmoke.fetch.input.body.contentHash, /^sha256:[a-f0-9]{64}$/);
+  assert.equal(result.agentcashDirectSmoke.fetch.input.body.metadata.privatePayload, false);
+  assert.equal(result.agentcashDirectSmoke.fetch.input.maxAmount, 0.005);
+  assert.equal(result.agentcashDirectSmoke.fetch.input.paymentNetwork, "base");
+  assert.equal(result.agentcashDirectSmoke.safety.readOnlyPlan, true);
+  assert.equal(result.agentcashDirectSmoke.safety.doesNotProveRuntimePaymentAdapter, true);
   assert.deepEqual(result.vercelEnvPlan.requiredSecretsAlreadyExistOrMustBeAddedManually, [
     "TRUST402_OPERATOR_API_KEY",
     "LIVE_PAYMENT_ADAPTER_URL"
@@ -196,6 +204,18 @@ test("live window plan emits skip-proof for procurement-only smoke windows", () 
   assert.equal(result.downstreamRequestPolicy.schema, "trust402.compare_resources");
   assert.deepEqual(result.downstreamRequestPolicy.sendsOnly, ["goal", "budgetUsd", "candidates"]);
   assert.equal(result.downstreamRequestPolicy.privatePayloadAllowed, false);
+  assert.equal(result.agentcashDirectSmoke.status, "operator-approval-required");
+  assert.equal(result.agentcashDirectSmoke.fetch.input.url, "https://trust402.vercel.app/api/trust/compare-resources");
+  assert.equal(result.agentcashDirectSmoke.fetch.input.method, "POST");
+  assert.equal(result.agentcashDirectSmoke.fetch.input.maxAmount, 0.03);
+  assert.equal(result.agentcashDirectSmoke.fetch.input.paymentNetwork, "base");
+  assert.equal(result.agentcashDirectSmoke.fetch.input.paymentProtocol, "x402");
+  assert.equal(result.agentcashDirectSmoke.fetch.input.body.candidates.length, 2);
+  assert.equal(result.agentcashDirectSmoke.schemaCheck.input.body.candidates.length, 2);
+  assert.equal(result.agentcashDirectSmoke.safety.readOnlyPlan, true);
+  assert.equal(result.agentcashDirectSmoke.safety.directFetchPaysIfExecuted, true);
+  assert.equal(result.agentcashDirectSmoke.safety.doesNotProveRuntimePaymentAdapter, true);
+  assert.equal(result.agentcashDirectSmoke.evidenceAfterSuccess.vercelEnvIfCdpBazaarReportsAllIndexed.TRUST402_CDP_BAZAAR_INDEXED_RESOURCES, "10");
   assert.equal(result.proof402PreflightCommand, null);
   assert.match(result.command, /--skip-proof/);
   assert.doesNotMatch(result.command, /--include-autonomous-live/);

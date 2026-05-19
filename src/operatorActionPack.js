@@ -129,6 +129,7 @@ export function operatorActionPack(input = {}, options = {}) {
       paymentBuyerPreflightCommand: livePlan.paymentBuyerPreflightCommand,
       paymentProviderPreflightCommand: livePlan.paymentProviderPreflightCommand,
       proof402PreflightCommand: livePlan.proof402PreflightCommand,
+      agentcashDirectSmoke: livePlan.agentcashDirectSmoke,
       vercelEnvPlan: livePlan.vercelEnvPlan,
       localPolicyPatch: livePlan.localPolicyPatch,
       safety: livePlan.safety
@@ -297,6 +298,7 @@ function liveProcurementAction(livePlan, cfg) {
     paymentBuyerPreflightCommand: livePlan.paymentBuyerPreflightCommand,
     paymentProviderPreflightCommand: livePlan.paymentProviderPreflightCommand,
     proof402PreflightCommand: livePlan.proof402PreflightCommand,
+    agentcashDirectSmoke: livePlan.agentcashDirectSmoke,
     runCommand: livePlan.command,
     evidenceEnv: {
       TRUST402_LIVE_PROCUREMENT_SMOKE_OBSERVED: "true",
@@ -450,6 +452,9 @@ function evidenceCollectionPlan(actions, livePlan) {
       "npm run agentcash:policy",
       livePlan.paymentProviderPreflightCommand,
       livePlan.proof402PreflightCommand,
+      livePlan.agentcashDirectSmoke?.status === "operator-approval-required"
+        ? "Review liveWindowPlan.agentcashDirectSmoke; execute its paid fetch input only after explicit approval and a matching local AgentCash policy window."
+        : null,
       "npm run live:evidence-smoke -- <base-url> --live --candidate-endpoint=<approved-x402-endpoint> --candidate-price=<price> --max-total-usd=<budget>"
     ].filter(Boolean),
     safety: {

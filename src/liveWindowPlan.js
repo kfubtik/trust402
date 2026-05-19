@@ -139,6 +139,13 @@ export function liveWindowPlan(input = {}, options = {}) {
         "--strict"
       ].join(" ")
     : null;
+  const agentcashDirectSmoke = agentcashDirectSmokePlan({
+    baseUrl,
+    candidateEndpoint,
+    candidatePriceUsd,
+    liveMaxPerCallUsd,
+    downstreamRequestPolicy
+  });
 
   const planCore = {
     baseUrl,
@@ -166,6 +173,7 @@ export function liveWindowPlan(input = {}, options = {}) {
     paymentBuyerPreflightCommand,
     paymentProviderPreflightCommand,
     proof402PreflightCommand,
+    agentcashDirectSmoke,
     command
   };
   const planHash = sha256Json(planCore);
@@ -197,6 +205,165 @@ export function liveWindowPlan(input = {}, options = {}) {
         ]
       : blockers
   };
+}
+
+function agentcashDirectSmokePlan({
+  baseUrl,
+  candidateEndpoint,
+  candidatePriceUsd,
+  liveMaxPerCallUsd,
+  downstreamRequestPolicy
+}) {
+  const requestBody = agentcashDirectSmokeBody(candidateEndpoint);
+  const maxAmount = roundUsd(candidatePriceUsd || liveMaxPerCallUsd || 0.01);
+  const targetId = downstreamRequestPolicy.schema;
+
+  const common = {
+    purpose: "Operator-reviewed AgentCash MCP direct smoke for marketplace indexing evidence when the server-side live payment adapter is not configured yet.",
+    targetResource: {
+      id: targetId,
+      endpoint: candidateEndpoint || "",
+      method: "POST",
+      expectedPriceUsd: roundUsd(candidatePriceUsd || 0)
+    },
+    mcpTools: {
+      schemaCheck: "mcp__agentcash__check_endpoint_schema",
+      paidFetch: "mcp__agentcash__fetch"
+    },
+    prerequisites: [
+      "Read .local/trust402-agentcash-wallet.json and confirm the AgentCash Base wallet is the Trust402-reserved wallet.",
+      `Open a one-shot local AgentCash policy window with manualSmokeRemainingBudgetUsd >= ${usd(maxAmount)} and agentcashGlobalMaxAmountUsd >= ${usd(maxAmount)}.`,
+      "Get explicit operator approval for this exact paid AgentCash fetch before executing it."
+    ],
+    safety: {
+      readOnlyPlan: true,
+      executesPayment: false,
+      directFetchPaysIfExecuted: true,
+      outOfBandAgentcashMcpCall: true,
+      doesNotProveRuntimePaymentAdapter: true,
+      privatePayloadAllowed: false,
+      includesPrivateKeyMaterial: false,
+      network: "base",
+      maxAmountUsd: maxAmount
+    }
+  };
+
+  if (!candidateEndpoint) {
+    return {
+      ...common,
+      status: "missing-candidate-endpoint",
+      blocker: "Provide the exact allowlisted x402 endpoint before building an AgentCash direct smoke input."
+    };
+  }
+
+  if (!requestBody) {
+    return {
+      ...common,
+      status: "unsupported-candidate",
+      blocker: "AgentCash direct smoke bodies are only generated for Trust402 compare-resources and Proof402 notarize candidates.",
+      evidenceAfterSuccess: {
+        note: "For generic resources, use the runtime live evidence smoke path so the request body can be reviewed for that resource first."
+      }
+    };
+  }
+
+  return {
+    ...common,
+    status: "operator-approval-required",
+    schemaCheck: {
+      description: "Safe schema observation. This should not pay because it only asks AgentCash to inspect the endpoint contract.",
+      input: {
+        url: candidateEndpoint,
+        method: "POST",
+        body: requestBody
+      }
+    },
+    fetch: {
+      description: "Paid AgentCash MCP call. Execute only after the local policy window and explicit operator approval are in place.",
+      input: {
+        url: candidateEndpoint,
+        method: "POST",
+        body: requestBody,
+        maxAmount,
+        paymentNetwork: "base",
+        paymentProtocol: "x402",
+        timeout: 30000
+      }
+    },
+    evidenceAfterSuccess: {
+      commands: [
+        `npm run bazaar:indexing:check:all -- ${baseUrl} --timeout-ms=10000 --limit=20`,
+        `npm run completion:audit -- ${baseUrl}`,
+        `npm run launch:monitor -- ${baseUrl} --timeout-ms=10000 --strict`
+      ],
+      vercelEnvIfCdpBazaarReportsAllIndexed: {
+        TRUST402_CDP_BAZAAR_ALL_RESOURCES_INDEXED: "true",
+        TRUST402_CDP_BAZAAR_CHECK_STATUS: "all-indexed",
+        TRUST402_CDP_BAZAAR_EXPECTED_RESOURCES: "10",
+        TRUST402_CDP_BAZAAR_INDEXED_RESOURCES: "10",
+        TRUST402_CDP_BAZAAR_MISSING_RESOURCES: "",
+        TRUST402_CDP_BAZAAR_EVIDENCE_REF: "<public-safe CDP Bazaar 10/10 check hash or run URL>"
+      },
+      caveat: "This can help marketplace indexing evidence, but final live procurement still requires Trust402 runtime payment-adapter evidence."
+    },
+    safety: {
+      ...common.safety,
+      sendsOnly: downstreamRequestPolicy.sendsOnly
+    }
+  };
+}
+
+function agentcashDirectSmokeBody(candidateEndpoint) {
+  if (isProof402NotarizeEndpoint(candidateEndpoint)) {
+    const contentHash = sha256Json({
+      agent: "Trust402",
+      stage: "agentcash-direct-smoke",
+      goal: "Hash-only Proof402 paid smoke"
+    });
+    return {
+      contentHash,
+      label: "Trust402 AgentCash direct Proof402 smoke",
+      idempotencyKey: `trust402-agentcash-direct-${contentHash.slice(7, 19)}`,
+      metadata: {
+        agent: "trust402",
+        stage: "agentcash-direct-smoke",
+        privatePayload: false
+      }
+    };
+  }
+
+  if (isTrust402CompareResourcesEndpoint(candidateEndpoint)) {
+    return {
+      goal: "Rank candidate x402 resources by trust and budget fit.",
+      budgetUsd: 0.05,
+      candidates: [
+        {
+          id: "proof402.notarize",
+          endpoint: "https://proof402.vercel.app/api/proof/notarize",
+          priceUsd: 0.005,
+          has402: true,
+          hasInputSchema: true,
+          hasOpenApi: true,
+          hasWellKnown: true,
+          receiptReady: true,
+          description: "Proof402 paid notarization endpoint for hash-only proof receipts."
+        },
+        {
+          id: "trust.check_x402",
+          endpoint: "https://trust402.vercel.app/api/trust/check-x402",
+          priceUsd: 0.005,
+          has402: true,
+          hasInputSchema: true,
+          hasOpenApi: true,
+          hasWellKnown: true,
+          receiptReady: true,
+          description: "Trust402 x402 challenge probe for payment-flow readiness."
+        }
+      ]
+    };
+  }
+
+  return null;
 }
 
 function planBlockers(input) {
