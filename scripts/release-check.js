@@ -224,6 +224,14 @@ assert(openapi.paths?.["/api/operator/action-pack"]?.post, "operator action pack
 assert(JSON.stringify(openapi.paths["/api/live/window-plan"]).includes("liveSpentTodayUsd"), "live window plan OpenAPI must expose spent-today input");
 assert(openapi.paths?.["/api/jobs/autonomous-run"]?.post, "autonomous job flow must be present in OpenAPI");
 assert(openapi.paths?.["/api/agentcash/refill-check"]?.post, "AgentCash refill check must be present in OpenAPI");
+assert(
+  openapi.paths["/api/trust/compare-resources"].post.requestBody.content["application/json"].schema.properties.candidates.items.properties.endpoint.format === "uri",
+  "compare-resources OpenAPI must expose structured candidate endpoint schema"
+);
+assert(
+  openapi.paths["/api/trust/compare-resources"].post.requestBody.content["application/json"].schema.properties.candidates.items.properties.receiptReady.type === "boolean",
+  "compare-resources OpenAPI must expose candidate receipt readiness schema"
+);
 assert(checklist.readiness.dryRunLaunchReady === true, "dry-run launch checklist must pass");
 assert(checklist.readiness.publicMarketplaceReady === false, "public marketplace readiness must remain false for localhost/no-settlement defaults");
 assert(checklist.settlement.realSettlementReady === false, "real settlement must remain disabled by default");

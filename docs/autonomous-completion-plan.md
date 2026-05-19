@@ -8,6 +8,18 @@ state. Third-party/manual blockers must stay visible, but they are not success;
 do not close the plan by weakening spend safety or by treating blocked live
 paths as done.
 
+## Pinned Source Of Truth
+
+This file is the canonical Trust402 completion checklist. A requirement is done
+only when its acceptance criteria and evidence fields are true in the current
+production runtime. The completion audit must stay red if any required live
+smoke, marketplace proof, external directory proof, wallet/refill proof, or
+Git-backed deployment proof is missing.
+
+Do not replace this plan with a weaker interpretation. If the implementation
+changes, update this document, the machine-readable completion audit, and the
+final verifier together.
+
 ## 1. Git/Vercel Auto-Deploy
 
 Goal: connect the private repository `kfubtik/trust402` to the Vercel project.

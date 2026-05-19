@@ -304,7 +304,7 @@ function bazaarInputSchema(id) {
         budgetUsd: { type: "number", description: "Maximum spend budget for the plan or quote." },
         maxPaidCalls: { type: "integer", default: 3 },
         riskTolerance: { type: "string", enum: ["low", "medium", "high"], default: "low" },
-        candidates: { type: "array", minItems: 2, maxItems: 10, items: { type: "object" } }
+        candidates: { type: "array", minItems: 2, maxItems: 10, items: candidateResourceSchema() }
       }
     };
   }
@@ -316,7 +316,7 @@ function bazaarInputSchema(id) {
       properties: {
         goal: { type: "string" },
         budgetUsd: { type: "number" },
-        candidates: { type: "array", minItems: 2, maxItems: 10, items: { type: "object" } }
+        candidates: { type: "array", minItems: 2, maxItems: 10, items: candidateResourceSchema() }
       }
     };
   }
@@ -360,8 +360,21 @@ function bazaarInputExample(id) {
       maxPaidCalls: 2,
       riskTolerance: "low",
       candidates: [
-        { endpoint: "https://api.example.com/a", priceUsd: 0.01, has402: true },
-        { endpoint: "https://api.example.com/b", priceUsd: 0.03, has402: true }
+        {
+          endpoint: "https://api.example.com/a",
+          priceUsd: 0.01,
+          has402: true,
+          hasInputSchema: true,
+          hasOpenApi: true,
+          hasWellKnown: true,
+          receiptReady: true
+        },
+        {
+          endpoint: "https://api.example.com/b",
+          priceUsd: 0.03,
+          has402: true,
+          hasInputSchema: false
+        }
       ]
     };
   }
@@ -370,8 +383,21 @@ function bazaarInputExample(id) {
       goal: "Rank candidate x402 resources by trust and budget fit.",
       budgetUsd: 0.05,
       candidates: [
-        { endpoint: "https://api.example.com/a", priceUsd: 0.01, has402: true },
-        { endpoint: "https://api.example.com/b", priceUsd: 0.03, has402: true }
+        {
+          endpoint: "https://api.example.com/a",
+          priceUsd: 0.01,
+          has402: true,
+          hasInputSchema: true,
+          hasOpenApi: true,
+          hasWellKnown: true,
+          receiptReady: true
+        },
+        {
+          endpoint: "https://api.example.com/b",
+          priceUsd: 0.03,
+          has402: true,
+          hasInputSchema: false
+        }
       ]
     };
   }
@@ -395,6 +421,48 @@ function bazaarOutputExample(id) {
     ok: true,
     tool: id,
     recommendation: id.includes("procurement") ? "approve-after-review" : "test-first"
+  };
+}
+
+function candidateResourceSchema() {
+  return {
+    type: "object",
+    additionalProperties: true,
+    properties: {
+      id: { type: "string", description: "Stable candidate identifier used in rankings and receipts." },
+      name: { type: "string", description: "Human-readable resource name." },
+      endpoint: { type: "string", format: "uri", description: "HTTPS x402 resource endpoint." },
+      url: { type: "string", format: "uri", description: "Alternate field for the x402 resource endpoint." },
+      priceUsd: {
+        oneOf: [{ type: "number", minimum: 0 }, { type: "string" }],
+        description: "Advertised resource price in USD."
+      },
+      price: {
+        oneOf: [{ type: "number", minimum: 0 }, { type: "string" }],
+        description: "Alternate price field accepted by Trust402."
+      },
+      has402: { type: "boolean", description: "Whether the endpoint is known to return an x402 challenge." },
+      hasInputSchema: { type: "boolean", description: "Whether structured input schema metadata is available." },
+      hasOpenApi: { type: "boolean", description: "Whether the origin publishes OpenAPI metadata." },
+      hasWellKnown: { type: "boolean", description: "Whether the origin publishes /.well-known/x402 discovery." },
+      inputSchema: { type: "object", description: "Optional embedded input schema for the candidate." },
+      openapiUrl: { type: "string", format: "uri" },
+      wellKnownUrl: { type: "string", format: "uri" },
+      payTo: { type: "string", pattern: "^0x[a-fA-F0-9]{40}$" },
+      network: { type: "string", description: "x402 payment network, for example eip155:8453." },
+      asset: { type: "string", description: "Payment asset address or symbol." },
+      description: { type: "string", description: "Buyer-facing explanation of the resource." },
+      receiptReady: { type: "boolean", description: "Whether the candidate can return receipt/proof-ready output." },
+      proofReady: { type: "boolean", description: "Alternate receipt/proof readiness signal." },
+      observed: { type: "object", description: "Optional probe observations such as status or latency." },
+      x402: { type: "object", description: "Optional parsed x402 challenge metadata." },
+      accept: { type: "object", description: "Optional single x402 accept object." },
+      metadata: { type: "object", description: "Additional public-safe metadata used during scoring." }
+    },
+    anyOf: [
+      { required: ["endpoint"] },
+      { required: ["url"] }
+    ]
   };
 }
 

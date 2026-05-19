@@ -125,6 +125,11 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/api/receipts/hash-result"].post);
     assert.ok(openapi.body.paths["/api/receipts/notarize-result"].post);
     assert.ok(openapi.body.paths["/api/procurement/quote"].post["x-payment-info"]);
+    const compareSchema = openapi.body.paths["/api/trust/compare-resources"].post.requestBody.content["application/json"].schema;
+    const compareCandidateSchema = compareSchema.properties.candidates.items;
+    assert.equal(compareCandidateSchema.properties.endpoint.format, "uri");
+    assert.ok(compareCandidateSchema.properties.hasInputSchema);
+    assert.ok(compareCandidateSchema.properties.receiptReady);
     assert.ok(openapi.body.paths["/api/procurement/execute"].post);
     assert.ok(openapi.body.paths["/api/monitor/snapshot"].post["x-payment-info"]);
     assert.ok(openapi.body.paths["/api/monitor/badge"].post["x-payment-info"]);

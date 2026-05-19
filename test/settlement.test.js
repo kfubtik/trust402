@@ -129,6 +129,26 @@ test("routeConfigFor and paymentChallengeFor expose x402-compatible route metada
   assert.equal(challenge.accepts[0].resource, "https://trust402.example/api/trust/score-resource");
 });
 
+test("compare-resources Bazaar metadata exposes structured candidate schema", () => {
+  const cfg = testConfig({
+    publicBaseUrl: "https://trust402.example",
+    payTo: "0x1111111111111111111111111111111111111111"
+  });
+  const routeConfig = routeConfigFor({
+    id: "trust.compare_resources",
+    method: "POST",
+    path: "/api/trust/compare-resources",
+    priceUsd: 0.03,
+    purpose: "Rank candidate x402 resources."
+  }, cfg);
+
+  const candidateSchema = routeConfig.extensions.bazaar.schema.properties.input.properties.body.properties.candidates.items;
+  assert.equal(candidateSchema.properties.endpoint.format, "uri");
+  assert.ok(candidateSchema.properties.hasInputSchema);
+  assert.ok(candidateSchema.properties.receiptReady);
+  assert.equal(routeConfig.extensions.bazaar.info.input.body.candidates[0].receiptReady, true);
+});
+
 function testConfig(overrides = {}) {
   return {
     serviceName: "Trust402",
