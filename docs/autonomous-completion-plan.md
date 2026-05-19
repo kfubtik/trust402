@@ -308,6 +308,18 @@ The pack includes listing copy, directory targets, custom-domain blockers, CDP
 Bazaar readiness, evidence env names, and verification commands. It does not
 submit forms, mutate wallets, set env vars, or send payment headers.
 
+For the custom-domain step, generate the read-only activation plan:
+
+```text
+GET /api/domains/activation-pack
+POST /api/domains/activation-pack
+```
+
+The pack checks whether the current host still blocks external directories,
+prepares `PUBLIC_BASE_URL`, Vercel verification commands, and directory
+evidence fields, but it does not buy a domain, mutate Vercel, set env vars, or
+claim availability/pricing without a fresh registrar/Vercel check.
+
 For the Git/Vercel and custom-domain portion specifically, run:
 
 ```powershell

@@ -5,6 +5,7 @@ import { agentcashRefillCheck } from "./agentcashRefill.js";
 import { paidResourceByPath, publicResources } from "./catalog.js";
 import { ApiError, errorBody } from "./errors.js";
 import { autonomousRun } from "./autonomousJob.js";
+import { domainActivationPack } from "./domainActivationPack.js";
 import { marketplaceBundle } from "./marketplace.js";
 import { monitorBadge, monitorSnapshot } from "./monitor.js";
 import { capabilities, openApiSpec, x402WellKnown } from "./openapi.js";
@@ -34,6 +35,7 @@ const routes = new Map([
   ["POST /api/receipts/notarize-result", notarizeResult],
   ["POST /api/procurement/quote", procurementQuote],
   ["POST /api/procurement/execute", procurementExecute],
+  ["POST /api/domains/activation-pack", domainActivationPack],
   ["POST /api/live/window-plan", liveWindowPlan],
   ["POST /api/directories/submission-pack", directorySubmissionPack],
   ["POST /api/operator/unblock-report", operatorUnblockReport],
@@ -77,6 +79,7 @@ export async function handleTrust402Request(req, res) {
           settlementPreflight: "/api/settlement/preflight",
           spendPolicy: "/api/policies/spend",
           completionAudit: "/api/completion/audit",
+          domainActivationPack: "/api/domains/activation-pack",
           directorySubmissionPack: "/api/directories/submission-pack",
           liveWindowPlan: "/api/live/window-plan",
           operatorUnblockReport: "/api/operator/unblock-report",
@@ -143,6 +146,10 @@ export async function handleTrust402Request(req, res) {
 
     if (req.method === "GET" && path === "/api/completion/audit") {
       return sendJson(res, 200, completionAudit());
+    }
+
+    if (req.method === "GET" && path === "/api/domains/activation-pack") {
+      return sendJson(res, 200, domainActivationPack());
     }
 
     if (req.method === "GET" && path === "/api/directories/submission-pack") {
@@ -222,6 +229,7 @@ function statusSummary() {
       settlementPreflight: "/api/settlement/preflight",
       spendPolicy: "/api/policies/spend",
       completionAudit: "/api/completion/audit",
+      domainActivationPack: "/api/domains/activation-pack",
       directorySubmissionPack: "/api/directories/submission-pack",
       liveWindowPlan: "/api/live/window-plan",
       operatorUnblockReport: "/api/operator/unblock-report",

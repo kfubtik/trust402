@@ -69,6 +69,12 @@ async function main() {
     "/api/directories/submission-pack must include x402 List target"
   );
 
+  const domainPackGet = await getJson("/api/domains/activation-pack");
+  assert(domainPackGet.tool === "domains.activation_pack", "/api/domains/activation-pack GET tool mismatch");
+  assert(domainPackGet.safety?.readOnly === true, "/api/domains/activation-pack must be read-only");
+  assert(domainPackGet.safety?.buysDomain === false, "/api/domains/activation-pack must not buy domains");
+  assert(domainPackGet.availability?.checked === false, "/api/domains/activation-pack must not claim domain availability");
+
   const unblockGet = await getJson("/api/operator/unblock-report");
   assert(unblockGet.tool === "operator.unblock_report", "/api/operator/unblock-report GET tool mismatch");
   assert(unblockGet.safety?.readOnly === true, "/api/operator/unblock-report must be read-only");
@@ -97,6 +103,14 @@ async function main() {
   assert(directoryPackPost.tool === "directories.submission_pack", "/api/directories/submission-pack POST tool mismatch");
   assert(directoryPackPost.safety?.includesSecrets === false, "/api/directories/submission-pack POST must not include secrets");
   assert(directoryPackPost.evidenceEnv?.TRUST402_EXTERNAL_DIRECTORY_STATUS === "visible", "/api/directories/submission-pack must expose evidence env");
+
+  const domainPackPost = await postJson("/api/domains/activation-pack", {
+    baseUrl,
+    selectedDomain: "trust402.dev"
+  });
+  assert(domainPackPost.tool === "domains.activation_pack", "/api/domains/activation-pack POST tool mismatch");
+  assert(domainPackPost.vercelPlan?.envPlan?.PUBLIC_BASE_URL === "https://trust402.dev", "/api/domains/activation-pack must plan PUBLIC_BASE_URL");
+  assert(domainPackPost.safety?.mutatesVercel === false, "/api/domains/activation-pack must not mutate Vercel");
 
   const unblockPost = await postJson("/api/operator/unblock-report", {
     baseUrl,
@@ -130,6 +144,8 @@ async function main() {
   assert(openapi.paths?.["/api/settlement/preflight"]?.get, "/openapi missing settlement preflight");
   assert(openapi.paths?.["/api/policies/spend"]?.get, "/openapi missing spend policy");
   assert(openapi.paths?.["/api/completion/audit"]?.get, "/openapi missing completion audit");
+  assert(openapi.paths?.["/api/domains/activation-pack"]?.get, "/openapi missing domain activation pack GET");
+  assert(openapi.paths?.["/api/domains/activation-pack"]?.post, "/openapi missing domain activation pack POST");
   assert(openapi.paths?.["/api/directories/submission-pack"]?.get, "/openapi missing directory submission pack GET");
   assert(openapi.paths?.["/api/directories/submission-pack"]?.post, "/openapi missing directory submission pack POST");
   assert(openapi.paths?.["/api/live/window-plan"]?.post, "/openapi missing live window plan");

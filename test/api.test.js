@@ -39,6 +39,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/settlement/preflight"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/policies/spend"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/completion/audit"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/domains/activation-pack"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/directories/submission-pack"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/procurement/execute"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/live/window-plan"));
@@ -102,6 +103,13 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(directoryPackGet.body.listingCopy.openapi.endsWith("/openapi.json"));
     assert.ok(directoryPackGet.body.directoryTargets.some((item) => item.id === "x402_list_com"));
 
+    const domainPackGet = await request(baseUrl, "/api/domains/activation-pack");
+    assert.equal(domainPackGet.response.status, 200);
+    assert.equal(domainPackGet.body.tool, "domains.activation_pack");
+    assert.equal(domainPackGet.body.safety.readOnly, true);
+    assert.equal(domainPackGet.body.safety.buysDomain, false);
+    assert.equal(domainPackGet.body.availability.checked, false);
+
     const unblockGet = await request(baseUrl, "/api/operator/unblock-report");
     assert.equal(unblockGet.response.status, 200);
     assert.equal(unblockGet.body.tool, "operator.unblock_report");
@@ -135,6 +143,8 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/api/settlement/preflight"].get);
     assert.ok(openapi.body.paths["/api/policies/spend"].get);
     assert.ok(openapi.body.paths["/api/completion/audit"].get);
+    assert.ok(openapi.body.paths["/api/domains/activation-pack"].get);
+    assert.ok(openapi.body.paths["/api/domains/activation-pack"].post);
     assert.ok(openapi.body.paths["/api/directories/submission-pack"].get);
     assert.ok(openapi.body.paths["/api/directories/submission-pack"].post);
     assert.ok(openapi.body.paths["/api/live/window-plan"].post);
@@ -190,6 +200,19 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(directoryPackPost.body.tool, "directories.submission_pack");
     assert.equal(directoryPackPost.body.safety.includesSecrets, false);
     assert.equal(directoryPackPost.body.evidenceEnv.TRUST402_EXTERNAL_DIRECTORY_STATUS, "visible");
+
+    const domainPackPost = await request(baseUrl, "/api/domains/activation-pack", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        baseUrl,
+        selectedDomain: "trust402.dev"
+      })
+    });
+    assert.equal(domainPackPost.response.status, 200);
+    assert.equal(domainPackPost.body.tool, "domains.activation_pack");
+    assert.equal(domainPackPost.body.vercelPlan.envPlan.PUBLIC_BASE_URL, "https://trust402.dev");
+    assert.equal(domainPackPost.body.safety.mutatesVercel, false);
 
     const unblockPost = await request(baseUrl, "/api/operator/unblock-report", {
       method: "POST",

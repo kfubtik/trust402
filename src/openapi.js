@@ -46,6 +46,34 @@ export function openApiSpec() {
     "/api/settlement/preflight": getPath("Operator preflight for one paid settlement smoke"),
     "/api/policies/spend": getPath("Spend policy gates for live procurement, Proof402 delegation, and AgentCash auto-refill"),
     "/api/completion/audit": getPath("Requirement-by-requirement audit of Trust402 autonomous buyer-agent completion"),
+    "/api/domains/activation-pack": {
+      get: {
+        operationId: "domains_activation_pack_get",
+        summary: "Read custom-domain activation plan for external directory readiness",
+        tags: ["Trust402"],
+        responses: {
+          "200": jsonResponse
+        }
+      },
+      post: {
+        operationId: "domains_activation_pack",
+        summary: "Generate a custom-domain activation plan for a selected Trust402 domain",
+        tags: ["Trust402"],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: requestSchemaFor("domains.activation_pack"),
+              example: exampleFor("domains.activation_pack")
+            }
+          }
+        },
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse
+        }
+      }
+    },
     "/api/directories/submission-pack": {
       get: {
         operationId: "directories_submission_pack_get",
@@ -335,6 +363,7 @@ export function capabilities() {
       settlementPreflight: "/api/settlement/preflight",
       spendPolicy: "/api/policies/spend",
       completionAudit: "/api/completion/audit",
+      domainActivationPack: "/api/domains/activation-pack",
       directorySubmissionPack: "/api/directories/submission-pack",
       liveWindowPlan: "/api/live/window-plan",
       operatorUnblockReport: "/api/operator/unblock-report",
@@ -524,6 +553,23 @@ function requestSchemaFor(id) {
       properties: {
         baseUrl: { type: "string", format: "uri" },
         userApprovedOutreach: { type: "boolean", default: false }
+      }
+    };
+  }
+
+  if (id === "domains.activation_pack") {
+    return {
+      type: "object",
+      properties: {
+        baseUrl: { type: "string", format: "uri" },
+        selectedDomain: { type: "string" },
+        candidateDomains: {
+          oneOf: [
+            { type: "string" },
+            { type: "array", items: { type: "string" } }
+          ]
+        },
+        vercelProjectName: { type: "string", default: "trust402" }
       }
     };
   }
@@ -774,6 +820,13 @@ function exampleFor(id) {
     return {
       baseUrl: "https://trust402.vercel.app",
       userApprovedOutreach: false
+    };
+  }
+  if (id === "domains.activation_pack") {
+    return {
+      baseUrl: "https://trust402.vercel.app",
+      selectedDomain: "trust402.dev",
+      candidateDomains: ["trust402.dev", "trust402.xyz", "trust402.org"]
     };
   }
   if (id === "operator.action_pack") {

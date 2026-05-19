@@ -82,6 +82,7 @@ http://127.0.0.1:4032/api/marketplace/bundle
 http://127.0.0.1:4032/api/settlement/status
 http://127.0.0.1:4032/api/policies/spend
 http://127.0.0.1:4032/api/completion/audit
+http://127.0.0.1:4032/api/domains/activation-pack
 http://127.0.0.1:4032/api/directories/submission-pack
 http://127.0.0.1:4032/api/jobs/autonomous-run
 http://127.0.0.1:4032/api/agentcash/refill-check
@@ -134,6 +135,15 @@ env names without submitting forms:
 
 ```powershell
 Invoke-RestMethod -Method Get -Uri https://trust402.vercel.app/api/directories/submission-pack
+```
+
+Generate the custom-domain activation plan without buying a domain or changing
+Vercel:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri https://trust402.vercel.app/api/domains/activation-pack `
+  -ContentType application/json `
+  -Body '{"selectedDomain":"trust402.dev"}'
 ```
 
 See [docs/external-marketplace-listing.md](docs/external-marketplace-listing.md)
@@ -222,6 +232,8 @@ GET /api/settlement/status
 GET /api/settlement/preflight
 GET /api/policies/spend
 GET /api/completion/audit
+GET /api/domains/activation-pack
+POST /api/domains/activation-pack
 GET /api/directories/submission-pack
 POST /api/directories/submission-pack
 GET /api/resources
@@ -489,6 +501,8 @@ MVP guarantees:
 - `/api/settlement/preflight` can plan one paid smoke but never sends payment;
 - `/api/completion/audit` keeps final success criteria machine-readable and
   marks live/manual/external blockers as unresolved until real evidence exists;
+- `/api/domains/activation-pack` plans custom-domain activation but never buys a
+  domain, mutates Vercel, sets env vars, or claims availability/pricing;
 - `/api/directories/submission-pack` builds public-safe listing payloads and
   directory blockers but never submits forms or sets evidence env;
 - `bazaar:indexing:check` only reads public CDP discovery endpoints and never sends payment;
@@ -528,6 +542,7 @@ Future live procurement must require:
 - `src/evidenceLedger.js` - local public-safe JSONL ledger for evidence hashes and refs.
 - `src/liveWindowPlan.js` - read-only live evidence window planner.
 - `src/operatorActionPack.js` - public-safe action pack for remaining completion blockers.
+- `src/domainActivationPack.js` - public-safe custom-domain activation pack.
 - `src/directorySubmissionPack.js` - public-safe external directory submission pack.
 - `src/monitor.js` - one-shot monitor snapshot and badge logic.
 - `src/proof402Client.js` - Proof402 request preview/probe logic with adapter-gated live calls.

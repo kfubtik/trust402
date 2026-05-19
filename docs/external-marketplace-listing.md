@@ -78,9 +78,19 @@ Generate the machine-readable public-safe submission pack:
 Invoke-RestMethod -Method Get -Uri https://trust402.vercel.app/api/directories/submission-pack
 ```
 
+Generate the machine-readable custom-domain activation pack:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri https://trust402.vercel.app/api/domains/activation-pack `
+  -ContentType application/json `
+  -Body '{"selectedDomain":"trust402.dev"}'
+```
+
 Use `POST /api/directories/submission-pack` with `baseUrl` and
 `userApprovedOutreach` when planning a custom-domain submission window. The
 endpoint is read-only; it does not submit directory forms or set evidence env.
+The domain activation pack is also read-only: it does not buy domains, mutate
+Vercel, set env vars, or claim availability/pricing without a fresh check.
 
 ### CDP Bazaar
 

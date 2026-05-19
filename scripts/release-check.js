@@ -92,6 +92,7 @@ assert(existsSync("src/operatorActionPack.js"), "operator action pack module mus
 assert(existsSync("src/operatorUnblockReport.js"), "operator unblock report module must exist");
 assert(existsSync("src/deploymentPreflight.js"), "deployment preflight module must exist");
 assert(existsSync("src/completionAudit.js"), "completion audit module must exist");
+assert(existsSync("src/domainActivationPack.js"), "domain activation pack module must exist");
 assert(existsSync("src/directorySubmissionPack.js"), "directory submission pack module must exist");
 assert(existsSync("src/paymentAdapters.js"), "payment adapter module must exist");
 assert(existsSync("src/policies.js"), "spend policy status module must exist");
@@ -137,6 +138,7 @@ assert(liveEvidenceSmokeScript.includes("writeEvidenceLedger"), "live evidence s
 assert(smokeScript.includes("/api/jobs/autonomous-run"), "smoke script must cover autonomous job dry-run");
 assert(smokeScript.includes("/api/agentcash/refill-check"), "smoke script must cover AgentCash refill dry-run");
 assert(smokeScript.includes("/api/completion/audit"), "smoke script must cover completion audit");
+assert(smokeScript.includes("/api/domains/activation-pack"), "smoke script must cover domain activation pack");
 assert(smokeScript.includes("/api/directories/submission-pack"), "smoke script must cover directory submission pack");
 assert(smokeScript.includes("/api/live/window-plan"), "smoke script must cover live window plan");
 assert(smokeScript.includes("/api/operator/unblock-report"), "smoke script must cover operator unblock report");
@@ -213,6 +215,10 @@ assert(
   "free completion audit helper must exist"
 );
 assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/domains/activation-pack" && resource.priceUsd === 0),
+  "free domain activation pack helper must exist"
+);
+assert(
   catalog.freeResources.some((resource) => resource.path === "/api/directories/submission-pack" && resource.priceUsd === 0),
   "free directory submission pack helper must exist"
 );
@@ -244,6 +250,8 @@ assert(openapi.paths?.["/api/settlement/status"]?.get, "settlement status must b
 assert(openapi.paths?.["/api/settlement/preflight"]?.get, "settlement preflight must be present in OpenAPI");
 assert(openapi.paths?.["/api/policies/spend"]?.get, "spend policy status must be present in OpenAPI");
 assert(openapi.paths?.["/api/completion/audit"]?.get, "completion audit must be present in OpenAPI");
+assert(openapi.paths?.["/api/domains/activation-pack"]?.get, "domain activation pack GET must be present in OpenAPI");
+assert(openapi.paths?.["/api/domains/activation-pack"]?.post, "domain activation pack POST must be present in OpenAPI");
 assert(openapi.paths?.["/api/directories/submission-pack"]?.get, "directory submission pack GET must be present in OpenAPI");
 assert(openapi.paths?.["/api/directories/submission-pack"]?.post, "directory submission pack POST must be present in OpenAPI");
 assert(openapi.paths?.["/api/live/window-plan"]?.post, "live window plan must be present in OpenAPI");
@@ -319,6 +327,10 @@ assert(
 assert(
   !openapi.paths["/api/live/window-plan"].post["x-payment-info"],
   "live window plan helper must not require payment"
+);
+assert(
+  !openapi.paths["/api/domains/activation-pack"].post["x-payment-info"],
+  "domain activation pack helper must not require payment"
 );
 assert(
   !openapi.paths["/api/directories/submission-pack"].post["x-payment-info"],
