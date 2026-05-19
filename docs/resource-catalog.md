@@ -86,7 +86,9 @@ Price: free.
 Reason: final readiness should be machine-readable. This endpoint returns
 `goalComplete=true` only when every requirement is verified; implemented but
 blocked live paths, Git/Vercel auto-deploy blockers, or external directory
-evidence gaps remain explicit blockers.
+evidence gaps remain explicit blockers. Live procurement, paid Proof402,
+AgentCash refill, autonomous job, and final verification requirements also need
+public-safe smoke evidence refs before they can become verified.
 
 ### `GET /api/resources`
 

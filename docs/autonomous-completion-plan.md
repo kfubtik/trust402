@@ -79,6 +79,13 @@ Acceptance:
 - total planned spend is within job and daily caps;
 - every execution returns an audit/receipt bundle.
 
+Completion evidence:
+
+- set `TRUST402_LIVE_PROCUREMENT_SMOKE_OBSERVED=true` only after a bounded
+  live procurement smoke succeeds under the approved policy;
+- set `TRUST402_LIVE_PROCUREMENT_EVIDENCE_REF` to a public-safe receipt hash,
+  run URL, or reviewed evidence reference.
+
 Tracking: https://github.com/kfubtik/trust402/issues/8
 
 ## 5. AgentCash Wallet Binding
@@ -110,6 +117,13 @@ Acceptance:
 - live refill is impossible unless `AGENTCASH_AUTO_REFILL_APPROVED=true` and
   `AGENTCASH_AUTO_REFILL_ENABLED=true`.
 
+Completion evidence:
+
+- set `TRUST402_AGENTCASH_AUTO_REFILL_EVIDENCE_OBSERVED=true` only after the
+  approved refill policy has produced a reviewed dry-run/live decision;
+- set `TRUST402_AGENTCASH_AUTO_REFILL_EVIDENCE_REF` to the public-safe decision
+  hash or reviewed evidence reference.
+
 Tracking: https://github.com/kfubtik/trust402/issues/7
 
 ## 7. Paid Proof402 Delegation
@@ -124,6 +138,13 @@ Acceptance:
 - paid proof requires operator authorization;
 - proof result is included in the receipt/audit bundle.
 
+Completion evidence:
+
+- set `TRUST402_PROOF402_PAID_SMOKE_OBSERVED=true` only after an approved paid
+  Proof402 smoke succeeds for an approved hash;
+- set `TRUST402_PROOF402_EVIDENCE_REF` to the public-safe proof/receipt
+  reference.
+
 Tracking: https://github.com/kfubtik/trust402/issues/9
 
 ## 8. Autonomous Job Flow
@@ -137,6 +158,13 @@ Acceptance:
 - live mode delegates to the same spend policy as procurement;
 - result hashes and receipt bundles are returned;
 - failures explain which gate blocked the run.
+
+Completion evidence:
+
+- set `TRUST402_AUTONOMOUS_JOB_SMOKE_OBSERVED=true` only after a bounded live
+  autonomous job succeeds under the approved policy;
+- set `TRUST402_AUTONOMOUS_JOB_EVIDENCE_REF` to a public-safe run or receipt
+  reference.
 
 ## 9. Monitoring And Protection
 
@@ -166,6 +194,13 @@ Trust402 is complete when it can:
 - pass local tests, release checks, Docker build, production smoke, x402 smoke,
   bounded live paid smoke, Proof402 paid smoke, refill check, and
   Bazaar/external-directory checks.
+
+After the full command set above passes, set:
+
+```text
+TRUST402_FINAL_VERIFICATION_OBSERVED=true
+TRUST402_FINAL_VERIFICATION_EVIDENCE_REF=<public-safe final verification ref>
+```
 
 ## Current Safety Blockers
 

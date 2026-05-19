@@ -13,13 +13,13 @@ export function completionAudit(runtimeConfig = config) {
     gitVercelAutoDeploy(runtimeConfig),
     externalDirectories(runtimeConfig),
     unifiedSpendPolicy(spend),
-    liveProcurement(spend),
+    liveProcurement(spend, runtimeConfig),
     agentcashWalletBinding(),
-    agentcashAutoRefill(spend),
-    paidProof402Delegation(spend),
-    autonomousJobFlow(catalog, spend),
+    agentcashAutoRefill(spend, runtimeConfig),
+    paidProof402Delegation(spend, runtimeConfig),
+    autonomousJobFlow(catalog, spend, runtimeConfig),
     monitoringAndProtection(spend),
-    finalVerification({ settlement, checklist, spend })
+    finalVerification({ settlement, checklist, spend, runtimeConfig })
   ];
   const summary = summarize(requirements);
 
@@ -115,21 +115,28 @@ function unifiedSpendPolicy(spend) {
   });
 }
 
-function liveProcurement(spend) {
+function liveProcurement(spend, runtimeConfig) {
   const policy = spend.policies.liveProcurement;
+  const liveEvidenceReady = runtimeConfig.liveProcurementSmokeObserved &&
+    Boolean(runtimeConfig.liveProcurementEvidenceRef);
+  const verified = policy.ready && liveEvidenceReady;
   return requirement({
     id: "live_procurement",
     title: "Live Procurement",
-    status: policy.ready ? "verified" : "implemented-blocked",
+    status: verified ? "verified" : "implemented-blocked",
     issue: launchIssues.liveProcurement,
     evidence: [
       "/api/procurement/execute has dry-run and policy-gated live paths.",
       `liveProcurementReady=${policy.ready}`,
+      `liveProcurementSmokeObserved=${runtimeConfig.liveProcurementSmokeObserved}`,
+      `evidenceRef=${runtimeConfig.liveProcurementEvidenceRef || "not-configured"}`,
       `blockers=${policy.blockers.map((item) => item.id).join(",") || "none"}`
     ],
-    nextAction: policy.ready
-      ? "Run a bounded live procurement smoke with approved allowlist and receipt review."
-      : "Approve live spend, operator key, payment provider, registry allowlist, caps, and receipt storage before live execution."
+    nextAction: verified
+      ? "Keep bounded live procurement smoke evidence updated after future policy changes."
+      : policy.ready
+        ? "Run a bounded live procurement smoke, review receipts, then set TRUST402_LIVE_PROCUREMENT_SMOKE_OBSERVED with a public-safe evidence ref."
+        : "Approve live spend, operator key, payment provider, registry allowlist, caps, and receipt storage before live execution."
   });
 }
 
@@ -148,60 +155,80 @@ function agentcashWalletBinding() {
   });
 }
 
-function agentcashAutoRefill(spend) {
+function agentcashAutoRefill(spend, runtimeConfig) {
   const policy = spend.policies.agentcashAutoRefill;
   const hasDryRunMonitor = true;
+  const refillEvidenceReady = runtimeConfig.agentcashAutoRefillEvidenceObserved &&
+    Boolean(runtimeConfig.agentcashAutoRefillEvidenceRef);
+  const verified = policy.ready && refillEvidenceReady;
   return requirement({
     id: "agentcash_auto_refill",
     title: "AgentCash Auto-Refill",
-    status: policy.ready ? "verified" : hasDryRunMonitor ? "implemented-blocked" : "missing",
+    status: verified ? "verified" : hasDryRunMonitor ? "implemented-blocked" : "missing",
     issue: launchIssues.agentcashAutoRefill,
     evidence: [
       "/api/agentcash/refill-check returns threshold, cap, decision hash, and dry-run receipt.",
       "Live refill remains behind approval, provider, operator key, caps, adapter/manual action, and emergency stop.",
       `agentcashAutoRefillReady=${policy.ready}`,
+      `agentcashAutoRefillEvidenceObserved=${runtimeConfig.agentcashAutoRefillEvidenceObserved}`,
+      `evidenceRef=${runtimeConfig.agentcashAutoRefillEvidenceRef || "not-configured"}`,
       `blockers=${policy.blockers.map((item) => item.id).join(",") || "none"}`
     ],
-    nextAction: policy.ready
-      ? "Run refill dry-run and then one approved live/manual refill action if balance is below threshold."
-      : "Approve provider, refill amount, daily cap, operator key, and audit policy before enabling live refill."
+    nextAction: verified
+      ? "Keep refill evidence updated after future provider or cap changes."
+      : policy.ready
+        ? "Run refill dry-run and one approved live/manual refill action when threshold conditions apply, then set evidence refs."
+        : "Approve provider, refill amount, daily cap, operator key, and audit policy before enabling live refill."
   });
 }
 
-function paidProof402Delegation(spend) {
+function paidProof402Delegation(spend, runtimeConfig) {
   const policy = spend.policies.proof402Delegation;
+  const proofEvidenceReady = runtimeConfig.proof402PaidSmokeObserved &&
+    Boolean(runtimeConfig.proof402EvidenceRef);
+  const verified = policy.ready && proofEvidenceReady;
   return requirement({
     id: "paid_proof402_delegation",
     title: "Paid Proof402 Delegation",
-    status: policy.ready ? "verified" : "implemented-blocked",
+    status: verified ? "verified" : "implemented-blocked",
     issue: launchIssues.proof402Delegation,
     evidence: [
       "/api/receipts/notarize-result accepts only proof-safe hashes/metadata and can preview/probe.",
       "Paid live path is implemented behind spend policy and operator authorization.",
       `proof402DelegationReady=${policy.ready}`,
+      `proof402PaidSmokeObserved=${runtimeConfig.proof402PaidSmokeObserved}`,
+      `evidenceRef=${runtimeConfig.proof402EvidenceRef || "not-configured"}`,
       `blockers=${policy.blockers.map((item) => item.id).join(",") || "none"}`
     ],
-    nextAction: policy.ready
-      ? "Run one approved paid Proof402 smoke and review the receipt."
-      : "Approve eligible hashes, proof spend cap, payment provider, and operator key before paid proof delegation."
+    nextAction: verified
+      ? "Keep paid Proof402 smoke evidence updated after proof policy changes."
+      : policy.ready
+        ? "Run one approved paid Proof402 smoke, review the receipt, then set TRUST402_PROOF402_PAID_SMOKE_OBSERVED with an evidence ref."
+        : "Approve eligible hashes, proof spend cap, payment provider, and operator key before paid proof delegation."
   });
 }
 
-function autonomousJobFlow(catalog, spend) {
+function autonomousJobFlow(catalog, spend, runtimeConfig) {
   const hasRoute = catalog.freeResources.some((resource) => resource.path === "/api/jobs/autonomous-run");
   const liveReady = spend.policies.liveProcurement.ready;
+  const liveEvidenceReady = runtimeConfig.autonomousJobSmokeObserved &&
+    Boolean(runtimeConfig.autonomousJobEvidenceRef);
   return requirement({
     id: "autonomous_job_flow",
     title: "Autonomous Job Flow",
-    status: hasRoute && liveReady ? "verified" : hasRoute ? "implemented-blocked" : "missing",
+    status: hasRoute && liveReady && liveEvidenceReady ? "verified" : hasRoute ? "implemented-blocked" : "missing",
     evidence: [
       "/api/jobs/autonomous-run runs goal -> quote -> execute -> receipt -> optional proof preview.",
       "Dry-run production smoke covers resource selection and zero paid subcalls.",
-      `liveProcurementReady=${liveReady}`
+      `liveProcurementReady=${liveReady}`,
+      `autonomousJobSmokeObserved=${runtimeConfig.autonomousJobSmokeObserved}`,
+      `evidenceRef=${runtimeConfig.autonomousJobEvidenceRef || "not-configured"}`
     ],
-    nextAction: liveReady
-      ? "Run a bounded live autonomous job with an allowlisted resource and approved budget."
-      : "Keep dry-run active until live procurement policy is ready."
+    nextAction: hasRoute && liveReady && liveEvidenceReady
+      ? "Keep autonomous job smoke evidence updated after policy or workflow changes."
+      : liveReady
+        ? "Run a bounded live autonomous job with an allowlisted resource and approved budget, then set evidence refs."
+        : "Keep dry-run active until live procurement policy is ready."
   });
 }
 
@@ -221,10 +248,12 @@ function monitoringAndProtection(spend) {
   });
 }
 
-function finalVerification({ settlement, checklist, spend }) {
+function finalVerification({ settlement, checklist, spend, runtimeConfig }) {
   const allRuntimeReady = settlement.readiness.marketplaceIndexingReady &&
     checklist.readiness.publicMarketplaceReady &&
-    spend.readiness.anyLiveSpendReady;
+    spend.readiness.anyLiveSpendReady &&
+    runtimeConfig.finalVerificationObserved &&
+    Boolean(runtimeConfig.finalVerificationEvidenceRef);
   return requirement({
     id: "final_verification",
     title: "Final Verification",
@@ -233,9 +262,13 @@ function finalVerification({ settlement, checklist, spend }) {
       `marketplaceIndexingReady=${settlement.readiness.marketplaceIndexingReady}`,
       `publicMarketplaceReady=${checklist.readiness.publicMarketplaceReady}`,
       `anyLiveSpendReady=${spend.readiness.anyLiveSpendReady}`,
+      `finalVerificationObserved=${runtimeConfig.finalVerificationObserved}`,
+      `evidenceRef=${runtimeConfig.finalVerificationEvidenceRef || "not-configured"}`,
       "Local tests, release check, Docker build, production smoke, x402 smoke, live paid smoke, Proof402 smoke, refill check, and directory checks must all be current."
     ],
-    nextAction: "Run the full final command set after manual blockers and live-spend approvals are resolved."
+    nextAction: allRuntimeReady
+      ? "Keep final verification evidence current after future deploys."
+      : "Run the full final command set after manual blockers and live-spend approvals are resolved, then set final verification evidence refs."
   });
 }
 

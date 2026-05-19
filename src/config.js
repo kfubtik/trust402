@@ -53,6 +53,16 @@ export const config = {
   externalDirectoryStatus: process.env.TRUST402_EXTERNAL_DIRECTORY_STATUS || "not-visible-yet",
   externalDirectoryEvidenceUrl: process.env.TRUST402_EXTERNAL_DIRECTORY_EVIDENCE_URL || "",
   externalDirectoryName: process.env.TRUST402_EXTERNAL_DIRECTORY_NAME || "",
+  liveProcurementSmokeObserved: process.env.TRUST402_LIVE_PROCUREMENT_SMOKE_OBSERVED === "true",
+  liveProcurementEvidenceRef: process.env.TRUST402_LIVE_PROCUREMENT_EVIDENCE_REF || "",
+  proof402PaidSmokeObserved: process.env.TRUST402_PROOF402_PAID_SMOKE_OBSERVED === "true",
+  proof402EvidenceRef: process.env.TRUST402_PROOF402_EVIDENCE_REF || "",
+  agentcashAutoRefillEvidenceObserved: process.env.TRUST402_AGENTCASH_AUTO_REFILL_EVIDENCE_OBSERVED === "true",
+  agentcashAutoRefillEvidenceRef: process.env.TRUST402_AGENTCASH_AUTO_REFILL_EVIDENCE_REF || "",
+  autonomousJobSmokeObserved: process.env.TRUST402_AUTONOMOUS_JOB_SMOKE_OBSERVED === "true",
+  autonomousJobEvidenceRef: process.env.TRUST402_AUTONOMOUS_JOB_EVIDENCE_REF || "",
+  finalVerificationObserved: process.env.TRUST402_FINAL_VERIFICATION_OBSERVED === "true",
+  finalVerificationEvidenceRef: process.env.TRUST402_FINAL_VERIFICATION_EVIDENCE_REF || "",
   requestTimeoutMs: Number.parseInt(process.env.TRUST402_REQUEST_TIMEOUT_MS || "6000", 10),
   maxJsonBytes: Number.parseInt(process.env.TRUST402_MAX_JSON_BYTES || "131072", 10)
 };

@@ -365,6 +365,13 @@ evidence env vars are set, such as `TRUST402_GIT_AUTO_DEPLOY_VERIFIED=true` with
 a deployment evidence URL, or `TRUST402_EXTERNAL_DIRECTORY_STATUS=visible` with
 a directory evidence URL.
 
+Live buyer-agent requirements also require public-safe evidence refs:
+`TRUST402_LIVE_PROCUREMENT_SMOKE_OBSERVED`,
+`TRUST402_PROOF402_PAID_SMOKE_OBSERVED`,
+`TRUST402_AGENTCASH_AUTO_REFILL_EVIDENCE_OBSERVED`,
+`TRUST402_AUTONOMOUS_JOB_SMOKE_OBSERVED`, and
+`TRUST402_FINAL_VERIFICATION_OBSERVED`.
+
 Check the local Trust402-only AgentCash policy without spending:
 
 ```powershell
