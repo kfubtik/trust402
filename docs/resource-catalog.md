@@ -90,6 +90,18 @@ evidence gaps remain explicit blockers. Live procurement, paid Proof402,
 AgentCash refill, autonomous job, and final verification requirements also need
 public-safe smoke evidence refs before they can become verified.
 
+### `GET/POST /api/directories/submission-pack`
+
+Public-safe external directory submission payload for Trust402. It returns
+listing copy, target directories, custom-domain blockers, CDP Bazaar readiness,
+evidence env names, and verification commands.
+
+Price: free.
+
+Reason: directory submission should be agent-readable without leaking secrets or
+accidentally submitting forms. This endpoint is read-only and never sends
+payment headers, mutates wallets, sets env vars, or submits external forms.
+
 ### `GET /api/resources`
 
 Public catalog of Trust402 resources, prices, input schemas, and safety notes.

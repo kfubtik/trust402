@@ -296,6 +296,18 @@ budget fields to preview blockers for a proposed live evidence window. Both
 forms are read-only and do not submit directory forms, mutate wallets, set env
 vars, or send payment headers.
 
+For external directory work, generate the read-only submission payload from the
+production runtime:
+
+```text
+GET /api/directories/submission-pack
+POST /api/directories/submission-pack
+```
+
+The pack includes listing copy, directory targets, custom-domain blockers, CDP
+Bazaar readiness, evidence env names, and verification commands. It does not
+submit forms, mutate wallets, set env vars, or send payment headers.
+
 For the Git/Vercel and custom-domain portion specifically, run:
 
 ```powershell

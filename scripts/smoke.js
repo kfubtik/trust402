@@ -59,6 +59,16 @@ async function main() {
     "/api/completion/audit must expose Git/Vercel blocker"
   );
 
+  const directoryPackGet = await getJson("/api/directories/submission-pack");
+  assert(directoryPackGet.tool === "directories.submission_pack", "/api/directories/submission-pack GET tool mismatch");
+  assert(directoryPackGet.safety?.readOnly === true, "/api/directories/submission-pack must be read-only");
+  assert(directoryPackGet.safety?.submitsDirectoryForms === false, "/api/directories/submission-pack must not submit forms");
+  assert(directoryPackGet.listingCopy?.openapi?.endsWith("/openapi.json"), "/api/directories/submission-pack must include OpenAPI URL");
+  assert(
+    directoryPackGet.directoryTargets?.some((item) => item.id === "x402_list_com"),
+    "/api/directories/submission-pack must include x402 List target"
+  );
+
   const unblockGet = await getJson("/api/operator/unblock-report");
   assert(unblockGet.tool === "operator.unblock_report", "/api/operator/unblock-report GET tool mismatch");
   assert(unblockGet.safety?.readOnly === true, "/api/operator/unblock-report must be read-only");
@@ -79,6 +89,14 @@ async function main() {
   assert(liveWindow.vercelEnvPlan?.production?.LIVE_SPENT_TODAY_USD === "0", "/api/live/window-plan must include spent-today env");
   assert(liveWindow.safety?.readOnly === true, "/api/live/window-plan must be read-only");
   assert(liveWindow.safety?.sendsPaymentHeaders === false, "/api/live/window-plan must not send payment headers");
+
+  const directoryPackPost = await postJson("/api/directories/submission-pack", {
+    baseUrl,
+    userApprovedOutreach: false
+  });
+  assert(directoryPackPost.tool === "directories.submission_pack", "/api/directories/submission-pack POST tool mismatch");
+  assert(directoryPackPost.safety?.includesSecrets === false, "/api/directories/submission-pack POST must not include secrets");
+  assert(directoryPackPost.evidenceEnv?.TRUST402_EXTERNAL_DIRECTORY_STATUS === "visible", "/api/directories/submission-pack must expose evidence env");
 
   const unblockPost = await postJson("/api/operator/unblock-report", {
     baseUrl,
@@ -112,6 +130,8 @@ async function main() {
   assert(openapi.paths?.["/api/settlement/preflight"]?.get, "/openapi missing settlement preflight");
   assert(openapi.paths?.["/api/policies/spend"]?.get, "/openapi missing spend policy");
   assert(openapi.paths?.["/api/completion/audit"]?.get, "/openapi missing completion audit");
+  assert(openapi.paths?.["/api/directories/submission-pack"]?.get, "/openapi missing directory submission pack GET");
+  assert(openapi.paths?.["/api/directories/submission-pack"]?.post, "/openapi missing directory submission pack POST");
   assert(openapi.paths?.["/api/live/window-plan"]?.post, "/openapi missing live window plan");
   assert(openapi.paths?.["/api/operator/unblock-report"]?.get, "/openapi missing operator unblock report GET");
   assert(openapi.paths?.["/api/operator/unblock-report"]?.post, "/openapi missing operator unblock report POST");

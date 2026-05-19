@@ -15,6 +15,7 @@ import { notarizeResult } from "./proof402Client.js";
 import { launchChecklist } from "./readiness.js";
 import { hashResult } from "./receipts.js";
 import { paymentChallengeFor, settlementPreflight, settlementStatus } from "./settlement.js";
+import { directorySubmissionPack } from "./directorySubmissionPack.js";
 import { liveWindowPlan } from "./liveWindowPlan.js";
 import { operatorActionPack } from "./operatorActionPack.js";
 import { operatorUnblockReport } from "./operatorUnblockReport.js";
@@ -34,6 +35,7 @@ const routes = new Map([
   ["POST /api/procurement/quote", procurementQuote],
   ["POST /api/procurement/execute", procurementExecute],
   ["POST /api/live/window-plan", liveWindowPlan],
+  ["POST /api/directories/submission-pack", directorySubmissionPack],
   ["POST /api/operator/unblock-report", operatorUnblockReport],
   ["POST /api/operator/action-pack", operatorActionPack],
   ["POST /api/jobs/autonomous-run", autonomousRun],
@@ -75,6 +77,7 @@ export async function handleTrust402Request(req, res) {
           settlementPreflight: "/api/settlement/preflight",
           spendPolicy: "/api/policies/spend",
           completionAudit: "/api/completion/audit",
+          directorySubmissionPack: "/api/directories/submission-pack",
           liveWindowPlan: "/api/live/window-plan",
           operatorUnblockReport: "/api/operator/unblock-report",
           operatorActionPack: "/api/operator/action-pack",
@@ -140,6 +143,10 @@ export async function handleTrust402Request(req, res) {
 
     if (req.method === "GET" && path === "/api/completion/audit") {
       return sendJson(res, 200, completionAudit());
+    }
+
+    if (req.method === "GET" && path === "/api/directories/submission-pack") {
+      return sendJson(res, 200, directorySubmissionPack());
     }
 
     if (req.method === "GET" && path === "/api/operator/unblock-report") {
@@ -215,6 +222,7 @@ function statusSummary() {
       settlementPreflight: "/api/settlement/preflight",
       spendPolicy: "/api/policies/spend",
       completionAudit: "/api/completion/audit",
+      directorySubmissionPack: "/api/directories/submission-pack",
       liveWindowPlan: "/api/live/window-plan",
       operatorUnblockReport: "/api/operator/unblock-report",
       operatorActionPack: "/api/operator/action-pack",

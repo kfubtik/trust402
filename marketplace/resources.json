@@ -63,6 +63,14 @@
       "purpose": "Requirement-by-requirement completion audit for the autonomous buyer-agent plan."
     },
     {
+      "id": "directories.submission_pack",
+      "method": "GET/POST",
+      "path": "/api/directories/submission-pack",
+      "priceUsd": 0,
+      "status": "dry-run-helper",
+      "purpose": "Generate public-safe external directory submission copy, target blockers, and evidence env without submitting forms."
+    },
+    {
       "method": "GET",
       "path": "/api/resources",
       "purpose": "Public resource catalog."

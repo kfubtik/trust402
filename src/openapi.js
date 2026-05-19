@@ -46,6 +46,34 @@ export function openApiSpec() {
     "/api/settlement/preflight": getPath("Operator preflight for one paid settlement smoke"),
     "/api/policies/spend": getPath("Spend policy gates for live procurement, Proof402 delegation, and AgentCash auto-refill"),
     "/api/completion/audit": getPath("Requirement-by-requirement audit of Trust402 autonomous buyer-agent completion"),
+    "/api/directories/submission-pack": {
+      get: {
+        operationId: "directories_submission_pack_get",
+        summary: "Read public-safe external directory submission payload and blockers",
+        tags: ["Trust402"],
+        responses: {
+          "200": jsonResponse
+        }
+      },
+      post: {
+        operationId: "directories_submission_pack",
+        summary: "Generate a public-safe external directory submission pack for a proposed base URL",
+        tags: ["Trust402"],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: requestSchemaFor("directories.submission_pack"),
+              example: exampleFor("directories.submission_pack")
+            }
+          }
+        },
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse
+        }
+      }
+    },
     "/api/operator/unblock-report": {
       get: {
         operationId: "operator_unblock_report_get",
@@ -307,6 +335,7 @@ export function capabilities() {
       settlementPreflight: "/api/settlement/preflight",
       spendPolicy: "/api/policies/spend",
       completionAudit: "/api/completion/audit",
+      directorySubmissionPack: "/api/directories/submission-pack",
       liveWindowPlan: "/api/live/window-plan",
       operatorUnblockReport: "/api/operator/unblock-report",
       operatorActionPack: "/api/operator/action-pack",
@@ -485,6 +514,16 @@ function requestSchemaFor(id) {
         liveSpentTodayUsd: { type: "number", default: 0 },
         lastVerifiedBalanceUsd: { type: "number" },
         minimumReserveUsd: { type: "number" }
+      }
+    };
+  }
+
+  if (id === "directories.submission_pack") {
+    return {
+      type: "object",
+      properties: {
+        baseUrl: { type: "string", format: "uri" },
+        userApprovedOutreach: { type: "boolean", default: false }
       }
     };
   }
@@ -729,6 +768,12 @@ function exampleFor(id) {
       maxTotalUsd: 0.03,
       paymentProvider: "agentcash-mcp",
       includeProof: true
+    };
+  }
+  if (id === "directories.submission_pack") {
+    return {
+      baseUrl: "https://trust402.vercel.app",
+      userApprovedOutreach: false
     };
   }
   if (id === "operator.action_pack") {

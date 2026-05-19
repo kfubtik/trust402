@@ -20,15 +20,15 @@ v0.1.0
 CDP Bazaar state:
 
 ```text
-9 of 10 paid launch resources indexed
-status = partially-indexed
-missing = trust.compare_resources
+10 of 10 paid launch resources indexed
+status = indexed
+evidence = sha256:523857cf9d44c0bb01b6e993d92c7329b118df95f11e229359a5d616a663a608
 ```
 
-Trust402 is live as a production x402 service, but CDP Bazaar currently misses
-`trust.compare_resources` even though its unpaid x402 challenge is healthy.
-Live Trust402 procurement, paid Proof402 delegation, and AgentCash auto-refill
-remain disabled until separately approved.
+Trust402 is live as a production x402 service and CDP Bazaar indexing evidence
+is recorded in production env. Live Trust402 procurement, paid Proof402
+delegation, and AgentCash auto-refill remain disabled until separately
+approved.
 
 ## Current External Directory Visibility
 
@@ -71,6 +71,16 @@ npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
 Use `--strict` only for a gate that should fail until at least one external
 directory page contains Trust402. The script checks public pages only; it does
 not submit forms, send payment headers, or use secrets.
+
+Generate the machine-readable public-safe submission pack:
+
+```powershell
+Invoke-RestMethod -Method Get -Uri https://trust402.vercel.app/api/directories/submission-pack
+```
+
+Use `POST /api/directories/submission-pack` with `baseUrl` and
+`userApprovedOutreach` when planning a custom-domain submission window. The
+endpoint is read-only; it does not submit directory forms or set evidence env.
 
 ### CDP Bazaar
 

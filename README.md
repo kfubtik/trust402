@@ -82,6 +82,7 @@ http://127.0.0.1:4032/api/marketplace/bundle
 http://127.0.0.1:4032/api/settlement/status
 http://127.0.0.1:4032/api/policies/spend
 http://127.0.0.1:4032/api/completion/audit
+http://127.0.0.1:4032/api/directories/submission-pack
 http://127.0.0.1:4032/api/jobs/autonomous-run
 http://127.0.0.1:4032/api/agentcash/refill-check
 http://127.0.0.1:4032/api/resources
@@ -126,6 +127,13 @@ Check external directory visibility without submitting forms:
 
 ```powershell
 npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
+```
+
+Generate public-safe directory submission copy, target blockers, and evidence
+env names without submitting forms:
+
+```powershell
+Invoke-RestMethod -Method Get -Uri https://trust402.vercel.app/api/directories/submission-pack
 ```
 
 See [docs/external-marketplace-listing.md](docs/external-marketplace-listing.md)
@@ -214,6 +222,8 @@ GET /api/settlement/status
 GET /api/settlement/preflight
 GET /api/policies/spend
 GET /api/completion/audit
+GET /api/directories/submission-pack
+POST /api/directories/submission-pack
 GET /api/resources
 POST /api/receipts/hash-result
 POST /api/receipts/notarize-result
@@ -479,6 +489,8 @@ MVP guarantees:
 - `/api/settlement/preflight` can plan one paid smoke but never sends payment;
 - `/api/completion/audit` keeps final success criteria machine-readable and
   marks live/manual/external blockers as unresolved until real evidence exists;
+- `/api/directories/submission-pack` builds public-safe listing payloads and
+  directory blockers but never submits forms or sets evidence env;
 - `bazaar:indexing:check` only reads public CDP discovery endpoints and never sends payment;
 - real paywall mode fails closed for protected routes when settlement guards are incomplete;
 - unpaid probes strip `PAYMENT-SIGNATURE`, `X-Payment`, `Authorization`, cookie, and proxy authorization headers;
@@ -516,6 +528,7 @@ Future live procurement must require:
 - `src/evidenceLedger.js` - local public-safe JSONL ledger for evidence hashes and refs.
 - `src/liveWindowPlan.js` - read-only live evidence window planner.
 - `src/operatorActionPack.js` - public-safe action pack for remaining completion blockers.
+- `src/directorySubmissionPack.js` - public-safe external directory submission pack.
 - `src/monitor.js` - one-shot monitor snapshot and badge logic.
 - `src/proof402Client.js` - Proof402 request preview/probe logic with adapter-gated live calls.
 - `src/settlement.js` - real x402 settlement readiness and unpaid challenge metadata.
