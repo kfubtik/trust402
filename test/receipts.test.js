@@ -144,7 +144,21 @@ test("notarizeResult can complete live Proof402 delegation through injected paid
         calls.push({ url, options });
         return jsonResponse(200, {
           ok: true,
-          proofLink: "https://proof402.vercel.app/proof/mock-proof"
+          mode: "x402",
+          idempotentReplay: false,
+          proof: {
+            id: "mock-proof",
+            verified: true,
+            timestamp: "2026-05-19T12:00:00.000Z",
+            contentHash: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            label: "Trust402 result",
+            metadataHash: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            signature: "mock-signature"
+          },
+          links: {
+            proof: "/proof/mock-proof",
+            verify: "/api/verify/proofs/mock-proof"
+          }
         }, {
           "payment-response": "mock-paid-proof"
         });
@@ -156,8 +170,47 @@ test("notarizeResult can complete live Proof402 delegation through injected paid
   assert.equal(result.delegation.paidProofCallMade, true);
   assert.equal(result.delegation.paymentResponseObserved, true);
   assert.equal(result.proofLink, "https://proof402.vercel.app/proof/mock-proof");
+  assert.equal(result.delegation.verifyLink, "https://proof402.vercel.app/api/verify/proofs/mock-proof");
+  assert.equal(result.delegation.proof.id, "mock-proof");
+  assert.equal(result.delegation.proof.verified, true);
+  assert.equal(result.delegation.proof.signatureObserved, true);
   assert.equal(calls.length, 1);
   assert.equal(calls[0].options.headers["x-trust402-max-amount-usd"], "0.01");
+});
+
+test("notarizeResult rejects a paid Proof402 response with the wrong content hash", async () => {
+  await assert.rejects(
+    () => notarizeResult(
+      {
+        resultHash: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        proof402Mode: "live"
+      },
+      {
+        operatorAuthorized: true,
+        config: testConfig({
+          proof402BaseUrl: "https://proof402.vercel.app",
+          proof402DelegationMode: "live",
+          liveSpendEnabled: true,
+          proof402MaxSpendUsd: 0.01,
+          livePaymentProvider: "external-adapter",
+          livePaymentAdapterUrl: "https://pay.example/bridge",
+          operatorApiKey: "test-operator"
+        }),
+        paidFetchImpl: async () => jsonResponse(200, {
+          ok: true,
+          proof: {
+            contentHash: "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          },
+          links: {
+            proof: "/proof/wrong"
+          }
+        }, {
+          "payment-response": "mock-paid-proof"
+        })
+      }
+    ),
+    /Proof402 returned a proof for a different content hash/
+  );
 });
 
 function testConfig(overrides = {}) {

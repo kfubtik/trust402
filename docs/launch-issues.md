@@ -16,7 +16,7 @@ The full final Definition of Done is pinned in
 | Issue | Track | Why it matters | Safe next step |
 | --- | --- | --- | --- |
 | [#5](https://github.com/kfubtik/trust402/issues/5) | Vercel Git auto-deploy | Production currently deploys through manual Vercel CLI runs. Git-backed deploys need the Vercel GitHub App to access the private repo. | Update the Vercel GitHub App installation, then verify a harmless Git-backed production deploy. |
-| [#6](https://github.com/kfubtik/trust402/issues/6) | External x402 directories | CDP Bazaar is currently 9/10 after `trust.compare_resources` dropped from search results again, and non-CDP directories are curated, delayed, or client-rendered and do not visibly list Trust402 yet. | Run one explicitly approved bounded paid settle for `trust.compare_resources`, then attach a custom domain, rerun x402/directory checks, and submit the public-safe listing pack only where manual listing is allowed. |
+| [#6](https://github.com/kfubtik/trust402/issues/6) | External x402 directories | CDP Bazaar is currently 10/10, but non-CDP directories are curated, delayed, client-rendered, or custom-domain gated and do not visibly list Trust402 yet. | Attach a custom domain, rerun x402/directory checks, and submit the public-safe listing pack only where manual listing is allowed. |
 | [#7](https://github.com/kfubtik/trust402/issues/7) | AgentCash auto-refill policy | The Trust402-reserved AgentCash wallet is funded and dry-run refill checks exist, but live auto-refill needs provider, caps, audit, and emergency-stop rules. | Approve the refill source, threshold, amount, cap, and log format before enabling live refill. |
 | [#8](https://github.com/kfubtik/trust402/issues/8) | Live procurement policy | Trust402 can plan and quote, but should not autonomously buy downstream resources without spend controls. | Approve allowlists, per-call/job/day caps, receipt storage, and approval thresholds. |
 | [#9](https://github.com/kfubtik/trust402/issues/9) | Paid Proof402 delegation policy | Trust402 can prepare Proof402-ready hashes, but paid delegation is intentionally disabled. | Approve which hashes can be notarized, proof spend caps, retry policy, and receipt fields. |
@@ -25,16 +25,22 @@ The full final Definition of Done is pinned in
 ## Current Safe State
 
 - Production URL: `https://trust402.vercel.app`.
-- CDP Bazaar indexing: 9/10 paid launch resources verified; missing
-  `trust.compare_resources` as of 2026-05-19 17:33:27 +07:00.
+- CDP Bazaar indexing: 10/10 paid launch resources verified as of
+  2026-05-19 19:53:03 +07:00.
 - External directory visibility: monitored read-only; latest check found 0/8
   visible, 5 reachable, and 3 timeout/unreachable directories as of
-  2026-05-19 17:36:24 +07:00; one directory requires a custom domain before
+  2026-05-19 19:48:22 +07:00; one directory requires a custom domain before
   submission.
-- Final verification: blocked as of 2026-05-19 17:38:58 +07:00 only after the
-  launch monitor failed on CDP Bazaar 9/10 and external directories remained
-  not visible; verification hash
-  `sha256:3349957abf236fcc9f7c28cb088d86e096537d22ee3d44f0e17cc2ee918b58a7`.
+- Final verification: commands passed but goal remains blocked as of
+  2026-05-19 19:48:22 +07:00 because Git/Vercel auto-deploy,
+  external-directory visibility, live procurement, paid Proof402 delegation,
+  AgentCash auto-refill, and autonomous live job evidence are still unresolved;
+  verification hash
+  `sha256:2f0bca721a779b38e10ae6610f62968116dbf33d0457c3c4d0de4ae0b2bbbde5`.
+- Proof402 paid endpoint contract: `/api/proof/notarize` requires
+  `contentHash`, `label`, and `idempotencyKey`; price observed through
+  AgentCash schema discovery is `$0.005` on Base USDC. Trust402 sends only
+  hashes and public-safe metadata.
 - Trust402 live procurement: disabled.
 - Paid Proof402 delegation: disabled.
 - AgentCash auto-refill: disabled; dry-run monitor is available through

@@ -200,6 +200,9 @@ async function paidProof402Call({ baseUrl, proofRequest, cfg, fetchImpl }) {
   }
 
   const proofLink = extractProofLink(body, baseUrl);
+  const verifyLink = extractVerifyLink(body, baseUrl);
+  const proof = publicProofSummary(body);
+  validateProof402Response({ body, proof, requestedHash: proofRequest.body.contentHash });
   return {
     configured: true,
     mode: "live",
@@ -212,18 +215,59 @@ async function paidProof402Call({ baseUrl, proofRequest, cfg, fetchImpl }) {
     reason: "Paid Proof402 delegation completed through the configured payment adapter.",
     maxProofSpendUsd: cfg.proof402MaxSpendUsd,
     paymentResponseObserved: Boolean(paymentResponse),
+    proof,
+    verifyLink,
+    idempotentReplay: Boolean(body?.idempotentReplay),
     responseHash: sha256Json(body || {})
   };
 }
 
 function extractProofLink(body, baseUrl) {
   if (!body || typeof body !== "object") return null;
-  const value = body.proofLink || body.url || body.proof?.url || body.proof?.link;
+  const value = body.proofLink || body.url || body.links?.proof || body.proof?.url || body.proof?.link;
+  return absoluteUrl(value, baseUrl);
+}
+
+function extractVerifyLink(body, baseUrl) {
+  if (!body || typeof body !== "object") return null;
+  return absoluteUrl(body.verifyLink || body.links?.verify || body.proof?.verifyLink, baseUrl);
+}
+
+function absoluteUrl(value, baseUrl) {
   if (typeof value !== "string" || !value) return null;
   try {
     return new URL(value, baseUrl).href;
   } catch {
     return null;
+  }
+}
+
+function publicProofSummary(body) {
+  const proof = body?.proof && typeof body.proof === "object" ? body.proof : {};
+  return {
+    id: stringOrNull(proof.id),
+    verified: typeof proof.verified === "boolean" ? proof.verified : null,
+    timestamp: stringOrNull(proof.timestamp),
+    contentHash: stringOrNull(proof.contentHash),
+    metadataHash: stringOrNull(proof.metadataHash),
+    label: stringOrNull(proof.label),
+    signatureObserved: typeof proof.signature === "string" && proof.signature.length > 0
+  };
+}
+
+function validateProof402Response({ body, proof, requestedHash }) {
+  if (body && typeof body === "object" && body.ok === false) {
+    throw new ApiError(502, "proof402_paid_call_not_ok", "Proof402 returned ok=false after a paid call.", {
+      paidProofCallMade: false,
+      bodySummary: summarizeProof402Body(body)
+    });
+  }
+  if (proof.contentHash && proof.contentHash !== requestedHash) {
+    throw new ApiError(502, "proof402_hash_mismatch", "Proof402 returned a proof for a different content hash.", {
+      requestedHash,
+      returnedHash: proof.contentHash,
+      paidProofCallMade: false
+    });
   }
 }
 
@@ -428,4 +472,10 @@ function stringOrDefault(value, fallback) {
   if (typeof value !== "string") return fallback;
   const trimmed = value.trim();
   return trimmed || fallback;
+}
+
+function stringOrNull(value) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed || null;
 }

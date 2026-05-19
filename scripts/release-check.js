@@ -25,6 +25,7 @@ const smokeScript = readFileSync("scripts/smoke.js", "utf8");
 const liveEvidenceSmokeScript = readFileSync("scripts/live-evidence-smoke.js", "utf8");
 const configSource = readFileSync("src/config.js", "utf8");
 const policySource = readFileSync("src/policies.js", "utf8");
+const proof402ClientSource = readFileSync("src/proof402Client.js", "utf8");
 const liveWindowPlanSource = readFileSync("src/liveWindowPlan.js", "utf8");
 const launchMonitorScript = readFileSync("scripts/launch-monitor.js", "utf8");
 const finalVerificationScript = readFileSync("scripts/final-verification.js", "utf8");
@@ -132,6 +133,8 @@ assert(existsSync("scripts/live-window-plan.js"), "live window plan script must 
 assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("evaluateLocalAgentcashPolicyForLive"), "live evidence smoke must enforce local AgentCash policy before live mode");
 assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("appendEvidenceLedger"), "live evidence smoke must support local public-safe evidence ledger writes");
 assert(readFileSync("src/liveSmokeWindow.js", "utf8").includes("restoredAfterRun"), "live smoke window must restore local policy after approved runs");
+assert(proof402ClientSource.includes("links?.proof"), "Proof402 client must capture Proof402 links.proof from paid responses");
+assert(proof402ClientSource.includes("proof402_hash_mismatch"), "Proof402 client must reject paid responses with mismatched content hashes");
 assert(liveWindowPlanSource.includes("writesLocalPolicy: false"), "live window plan must stay read-only");
 assert(liveWindowPlanSource.includes("LIVE_SPENT_TODAY_USD"), "live window plan must include spent-today tracking");
 assert(configSource.includes("liveSpentTodayUsd"), "config must expose LIVE_SPENT_TODAY_USD");

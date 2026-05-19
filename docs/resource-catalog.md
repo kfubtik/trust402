@@ -167,6 +167,13 @@ Reason: this is a trust bridge, not the paid proof product itself. It lets
 buyers verify what would be sent to Proof402 while preserving live paid
 delegation for a later approved profile.
 
+Current Proof402 contract observed through AgentCash schema discovery:
+`POST https://proof402.vercel.app/api/proof/notarize` costs `$0.005` and
+requires `contentHash`, `label`, and `idempotencyKey`. Trust402 maps
+`resultHash` to `contentHash`, sends only public-safe metadata, records
+`links.proof` / `links.verify` when returned, and rejects paid proof responses
+whose returned `proof.contentHash` does not match the requested hash.
+
 ### `POST /api/procurement/execute`
 
 Dry-run helper that simulates controlled procurement execution and returns an
