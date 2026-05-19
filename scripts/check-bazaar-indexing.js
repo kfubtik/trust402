@@ -6,6 +6,7 @@ const strict = process.argv.includes("--strict");
 const allResources = process.argv.includes("--all-resources");
 const timeoutMs = numberArg("--timeout-ms", 12_000);
 const limit = numberArg("--limit", 25);
+const concurrency = numberArg("--concurrency", 8);
 const searchLimit = Math.min(limit, 20);
 const catalogLimit = Math.min(limit, 30);
 const host = safeHost(baseUrl);
@@ -18,11 +19,7 @@ const queries = Array.from(new Set([
 const CDP_DISCOVERY_BASE = "https://api.cdp.coinbase.com/platform/v2/x402/discovery";
 
 async function main() {
-  const searchResults = [];
-  for (const query of queries) {
-    searchResults.push(await checkSearch(query));
-  }
-
+  const searchResults = await mapLimit(queries, concurrency, checkSearch);
   const catalog = await checkCatalog();
   const routeVisibility = allResources ? await checkRouteVisibility() : [];
   const matched = [...searchResults, catalog].some((item) => item.matched === true);
@@ -35,7 +32,8 @@ async function main() {
     generatedAt: new Date().toISOString(),
     target: {
       baseUrl,
-      host
+      host,
+      concurrency
     },
     indexed: allResources ? allRoutesMatched : matched,
     status: allResources
@@ -69,7 +67,7 @@ async function main() {
   };
 
   console.log(JSON.stringify(result, null, 2));
-  if (strict && !matched) process.exit(1);
+  if (strict && !(allResources ? allRoutesMatched : matched)) process.exit(1);
 }
 
 async function checkSearch(query) {
@@ -96,13 +94,29 @@ async function checkCatalog() {
 async function checkRouteVisibility() {
   const catalog = loadCatalog();
   const paidResources = catalog.paidLaunchResources || [];
+  const jobs = paidResources.flatMap((resource) => {
+    const resourceUrl = `${baseUrl}${resource.path}`;
+    return routeQueries(resource, resourceUrl).map((query) => ({
+      resource,
+      resourceUrl,
+      query
+    }));
+  });
+  const routeChecks = await mapLimit(jobs, concurrency, async (job) => ({
+    ...job,
+    result: await checkSearch(job.query)
+  }));
+  const byResource = new Map();
+  for (const check of routeChecks) {
+    const entries = byResource.get(check.resource.id) || [];
+    entries.push(check.result);
+    byResource.set(check.resource.id, entries);
+  }
+
   const results = [];
   for (const resource of paidResources) {
     const resourceUrl = `${baseUrl}${resource.path}`;
-    const queryResults = [];
-    for (const query of routeQueries(resource, resourceUrl)) {
-      queryResults.push(await checkSearch(query));
-    }
+    const queryResults = byResource.get(resource.id) || [];
     const matchedResources = Array.from(new Set(queryResults.flatMap((result) => result.matchedResources || [])));
     const matches = queryResults.flatMap((result) => result.matches || []);
     const indexed = matchedResources.includes(resourceUrl);
@@ -207,6 +221,23 @@ function numberArg(name, fallback) {
   if (!match) return fallback;
   const value = Number.parseInt(match.slice(prefix.length), 10);
   return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+async function mapLimit(items, limit, worker) {
+  const safeLimit = Math.max(1, Math.min(limit, items.length || 1));
+  const results = new Array(items.length);
+  let nextIndex = 0;
+
+  async function runWorker() {
+    while (nextIndex < items.length) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      results[currentIndex] = await worker(items[currentIndex], currentIndex);
+    }
+  }
+
+  await Promise.all(Array.from({ length: safeLimit }, runWorker));
+  return results;
 }
 
 function safeHost(value) {
