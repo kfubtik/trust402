@@ -15,6 +15,7 @@ import { notarizeResult } from "./proof402Client.js";
 import { launchChecklist } from "./readiness.js";
 import { hashResult } from "./receipts.js";
 import { paymentChallengeFor, settlementPreflight, settlementStatus } from "./settlement.js";
+import { liveWindowPlan } from "./liveWindowPlan.js";
 import {
   checkX402,
   compareResources,
@@ -30,6 +31,7 @@ const routes = new Map([
   ["POST /api/receipts/notarize-result", notarizeResult],
   ["POST /api/procurement/quote", procurementQuote],
   ["POST /api/procurement/execute", procurementExecute],
+  ["POST /api/live/window-plan", liveWindowPlan],
   ["POST /api/jobs/autonomous-run", autonomousRun],
   ["POST /api/agentcash/refill-check", agentcashRefillCheck],
   ["POST /api/monitor/snapshot", monitorSnapshot],
@@ -69,6 +71,7 @@ export async function handleTrust402Request(req, res) {
           settlementPreflight: "/api/settlement/preflight",
           spendPolicy: "/api/policies/spend",
           completionAudit: "/api/completion/audit",
+          liveWindowPlan: "/api/live/window-plan",
           agentcashRefillCheck: "/api/agentcash/refill-check",
           autonomousRun: "/api/jobs/autonomous-run",
           resources: "/api/resources",
@@ -202,6 +205,7 @@ function statusSummary() {
       settlementPreflight: "/api/settlement/preflight",
       spendPolicy: "/api/policies/spend",
       completionAudit: "/api/completion/audit",
+      liveWindowPlan: "/api/live/window-plan",
       agentcashRefillCheck: "/api/agentcash/refill-check",
       autonomousRun: "/api/jobs/autonomous-run",
       openapi: "/openapi.json",

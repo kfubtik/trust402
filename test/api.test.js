@@ -40,6 +40,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/policies/spend"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/completion/audit"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/procurement/execute"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/live/window-plan"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/jobs/autonomous-run"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/agentcash/refill-check"));
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/trust/check-x402"));
@@ -115,6 +116,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/api/settlement/preflight"].get);
     assert.ok(openapi.body.paths["/api/policies/spend"].get);
     assert.ok(openapi.body.paths["/api/completion/audit"].get);
+    assert.ok(openapi.body.paths["/api/live/window-plan"].post);
     assert.ok(openapi.body.paths["/api/jobs/autonomous-run"].post);
     assert.ok(openapi.body.paths["/api/agentcash/refill-check"].post);
     assert.ok(openapi.body.paths["/api/receipts/hash-result"].post);
@@ -128,6 +130,23 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     const wellKnown = await request(baseUrl, "/.well-known/x402");
     assert.equal(wellKnown.response.status, 200);
     assert.ok(wellKnown.body.resources.some((resource) => resource.includes("/api/trust/score-resource")));
+
+    const liveWindow = await request(baseUrl, "/api/live/window-plan", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        candidateEndpoint: "https://trusted.example/api/paid",
+        candidatePriceUsd: 0.01,
+        maxTotalUsd: 0.03,
+        includeProof: true
+      })
+    });
+    assert.equal(liveWindow.response.status, 200);
+    assert.equal(liveWindow.body.tool, "live.window_plan");
+    assert.equal(liveWindow.body.status, "ready-to-stage");
+    assert.equal(liveWindow.body.safety.readOnly, true);
+    assert.equal(liveWindow.body.safety.writesLocalPolicy, false);
+    assert.equal(liveWindow.body.safety.sendsPaymentHeaders, false);
   });
 });
 

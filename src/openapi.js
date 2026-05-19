@@ -47,6 +47,26 @@ export function openApiSpec() {
     "/api/policies/spend": getPath("Spend policy gates for live procurement, Proof402 delegation, and AgentCash auto-refill"),
     "/api/completion/audit": getPath("Requirement-by-requirement audit of Trust402 autonomous buyer-agent completion"),
     "/api/resources": getPath("Public Trust402 resource catalog"),
+    "/api/live/window-plan": {
+      post: {
+        operationId: "live_window_plan",
+        summary: "Generate a read-only live evidence window plan without spending or mutating policy",
+        tags: ["Trust402"],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: requestSchemaFor("live.window_plan"),
+              example: exampleFor("live.window_plan")
+            }
+          }
+        },
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse
+        }
+      }
+    },
     "/api/agentcash/refill-check": {
       post: {
         operationId: "agentcash_refill_check",
@@ -239,6 +259,7 @@ export function capabilities() {
       settlementPreflight: "/api/settlement/preflight",
       spendPolicy: "/api/policies/spend",
       completionAudit: "/api/completion/audit",
+      liveWindowPlan: "/api/live/window-plan",
       agentcashRefillCheck: "/api/agentcash/refill-check",
       openapi: "/openapi.json",
       x402WellKnown: "/.well-known/x402"
@@ -383,6 +404,33 @@ function requestSchemaFor(id) {
         mode: { type: "string", enum: ["dry-run", "live"], default: "dry-run" },
         currentBalanceUsd: { type: "number" },
         amountRefilledTodayUsd: { type: "number", default: 0 }
+      }
+    };
+  }
+
+  if (id === "live.window_plan") {
+    return {
+      type: "object",
+      required: ["candidateEndpoint", "candidatePriceUsd", "maxTotalUsd"],
+      properties: {
+        baseUrl: { type: "string", format: "uri" },
+        candidateEndpoint: { type: "string", format: "uri" },
+        candidatePriceUsd: { type: "number" },
+        maxTotalUsd: { type: "number" },
+        manualSmokeBudgetUsd: { type: "number" },
+        paymentProvider: { type: "string", enum: ["agentcash-mcp", "x402-fetch", "external-adapter"] },
+        allowedRegistries: {
+          oneOf: [
+            { type: "string" },
+            { type: "array", items: { type: "string" } }
+          ]
+        },
+        proofReserveUsd: { type: "number" },
+        includeProof: { type: "boolean", default: true },
+        includeAutonomous: { type: "boolean", default: false },
+        includeAutoRefill: { type: "boolean", default: false },
+        lastVerifiedBalanceUsd: { type: "number" },
+        minimumReserveUsd: { type: "number" }
       }
     };
   }
@@ -548,6 +596,16 @@ function exampleFor(id) {
       mode: "dry-run",
       currentBalanceUsd: 0.42,
       amountRefilledTodayUsd: 0
+    };
+  }
+  if (id === "live.window_plan") {
+    return {
+      baseUrl: "https://trust402.vercel.app",
+      candidateEndpoint: "https://approved.example/paid",
+      candidatePriceUsd: 0.01,
+      maxTotalUsd: 0.03,
+      paymentProvider: "agentcash-mcp",
+      includeProof: true
     };
   }
   if (id === "monitor.snapshot") {

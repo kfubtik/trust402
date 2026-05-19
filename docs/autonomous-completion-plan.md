@@ -258,6 +258,8 @@ mutate the wallet. It returns a plan hash, public-safe Vercel env names/values,
 the local policy patch to review, and the final `npm run live:evidence-smoke`
 command for the approved smoke window.
 
+Agents can request the same read-only plan through `POST /api/live/window-plan`.
+
 On this workstation the verifier auto-detects Docker Desktop at
 `D:\Programs\Docker\resources\bin\docker.exe`. If Docker is installed elsewhere,
 pass `--docker-bin=<path-to-docker.exe>` or set `TRUST402_DOCKER_BIN`.

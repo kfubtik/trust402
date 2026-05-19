@@ -92,6 +92,14 @@
       "purpose": "Simulate controlled procurement execution and return an audit bundle without live spend."
     },
     {
+      "id": "live.window_plan",
+      "method": "POST",
+      "path": "/api/live/window-plan",
+      "priceUsd": 0,
+      "status": "dry-run-helper",
+      "purpose": "Generate a read-only live evidence window plan without mutating local policy, Vercel env, or wallet balance."
+    },
+    {
       "id": "jobs.autonomous_run",
       "method": "POST",
       "path": "/api/jobs/autonomous-run",

@@ -218,6 +218,7 @@ GET /api/resources
 POST /api/receipts/hash-result
 POST /api/receipts/notarize-result
 POST /api/procurement/execute
+POST /api/live/window-plan
 POST /api/jobs/autonomous-run
 POST /api/agentcash/refill-check
 ```
@@ -457,6 +458,7 @@ Future live procurement must require:
 - `src/paymentAdapters.js` - buyer-side payment adapter readiness and bridge logic.
 - `src/autonomousJob.js` - dry-run-first autonomous job orchestration.
 - `src/agentcashRefill.js` - AgentCash refill policy decision and adapter-gated live action.
+- `src/liveWindowPlan.js` - read-only live evidence window planner.
 - `src/monitor.js` - one-shot monitor snapshot and badge logic.
 - `src/proof402Client.js` - Proof402 request preview/probe logic with adapter-gated live calls.
 - `src/settlement.js` - real x402 settlement readiness and unpaid challenge metadata.

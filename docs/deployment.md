@@ -305,6 +305,12 @@ The planner proposes:
 It is intentionally read-only: no wallet mutation, no env writes, no payment
 headers, and no secret output.
 
+The same planner is exposed as a free API helper for agents:
+
+```text
+POST /api/live/window-plan
+```
+
 ## Live x402 Settlement
 
 The Express middleware bridge protects paid launch resources when

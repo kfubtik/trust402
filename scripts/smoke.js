@@ -55,6 +55,17 @@ async function main() {
     "/api/completion/audit must expose Git/Vercel blocker"
   );
 
+  const liveWindow = await postJson("/api/live/window-plan", {
+    candidateEndpoint: "https://trusted.example/api/paid",
+    candidatePriceUsd: 0.01,
+    maxTotalUsd: 0.03,
+    includeProof: true
+  });
+  assert(liveWindow.tool === "live.window_plan", "/api/live/window-plan tool mismatch");
+  assert(liveWindow.status === "ready-to-stage", "/api/live/window-plan should produce a safe staging plan");
+  assert(liveWindow.safety?.readOnly === true, "/api/live/window-plan must be read-only");
+  assert(liveWindow.safety?.sendsPaymentHeaders === false, "/api/live/window-plan must not send payment headers");
+
   const openapi = await getJson("/openapi.json");
   assert(openapi.openapi === "3.1.0", "/openapi.json version mismatch");
   assert(openapi.paths?.["/api/trust/check-x402"]?.post, "/openapi missing check-x402");
@@ -63,6 +74,7 @@ async function main() {
   assert(openapi.paths?.["/api/settlement/preflight"]?.get, "/openapi missing settlement preflight");
   assert(openapi.paths?.["/api/policies/spend"]?.get, "/openapi missing spend policy");
   assert(openapi.paths?.["/api/completion/audit"]?.get, "/openapi missing completion audit");
+  assert(openapi.paths?.["/api/live/window-plan"]?.post, "/openapi missing live window plan");
   assert(openapi.paths?.["/api/jobs/autonomous-run"]?.post, "/openapi missing autonomous run");
   assert(openapi.paths?.["/api/monitor/snapshot"]?.post, "/openapi missing monitor snapshot");
 

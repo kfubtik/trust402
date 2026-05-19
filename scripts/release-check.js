@@ -113,6 +113,7 @@ assert(existsSync("scripts/launch-monitor.js"), "production launch monitor scrip
 assert(smokeScript.includes("/api/jobs/autonomous-run"), "smoke script must cover autonomous job dry-run");
 assert(smokeScript.includes("/api/agentcash/refill-check"), "smoke script must cover AgentCash refill dry-run");
 assert(smokeScript.includes("/api/completion/audit"), "smoke script must cover completion audit");
+assert(smokeScript.includes("/api/live/window-plan"), "smoke script must cover live window plan");
 assert(launchMonitorScript.includes("/api/policies/spend"), "launch monitor must check spend policy");
 assert(workflow.includes("npm audit --omit=dev --audit-level=high"), "CI must run high-severity npm audit");
 assert(workflow.includes("docker build -t trust402:test ."), "CI must build the Docker image");
@@ -181,6 +182,10 @@ assert(
   "free dry-run execute helper must exist"
 );
 assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/live/window-plan" && resource.priceUsd === 0),
+  "free live window plan helper must exist"
+);
+assert(
   catalog.freeResources.some((resource) => resource.path === "/api/jobs/autonomous-run" && resource.priceUsd === 0),
   "free autonomous dry-run helper must exist"
 );
@@ -192,6 +197,7 @@ assert(openapi.paths?.["/api/settlement/status"]?.get, "settlement status must b
 assert(openapi.paths?.["/api/settlement/preflight"]?.get, "settlement preflight must be present in OpenAPI");
 assert(openapi.paths?.["/api/policies/spend"]?.get, "spend policy status must be present in OpenAPI");
 assert(openapi.paths?.["/api/completion/audit"]?.get, "completion audit must be present in OpenAPI");
+assert(openapi.paths?.["/api/live/window-plan"]?.post, "live window plan must be present in OpenAPI");
 assert(openapi.paths?.["/api/jobs/autonomous-run"]?.post, "autonomous job flow must be present in OpenAPI");
 assert(openapi.paths?.["/api/agentcash/refill-check"]?.post, "AgentCash refill check must be present in OpenAPI");
 assert(checklist.readiness.dryRunLaunchReady === true, "dry-run launch checklist must pass");
@@ -244,6 +250,10 @@ assert(openapi.paths?.["/api/procurement/execute"]?.post, "dry-run execute helpe
 assert(
   !openapi.paths["/api/procurement/execute"].post["x-payment-info"],
   "dry-run execute helper must not require payment"
+);
+assert(
+  !openapi.paths["/api/live/window-plan"].post["x-payment-info"],
+  "live window plan helper must not require payment"
 );
 assert(
   !openapi.paths["/api/jobs/autonomous-run"].post["x-payment-info"],
