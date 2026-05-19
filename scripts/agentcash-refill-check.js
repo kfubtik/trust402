@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { evaluateAgentcashPolicyGuard } from "../src/agentcashPolicyGuard.js";
 import { agentcashRefillCheck } from "../src/agentcashRefill.js";
 import { config } from "../src/config.js";
 
@@ -15,7 +16,12 @@ const currentBalanceUsd = args.balance !== undefined
 const amountRefilledTodayUsd = args.refilledToday !== undefined
   ? Number.parseFloat(args.refilledToday)
   : 0;
-const failures = localPolicyFailures(policy);
+const guard = evaluateAgentcashPolicyGuard(policy, {
+  cwd: process.cwd(),
+  mode: args.policyMode || (args.mode === "live" ? "auto-refill" : "locked"),
+  includeRefillLive: args.mode === "live" || args.includeRefillLive === "true"
+});
+const failures = guard.failures;
 
 const result = await agentcashRefillCheck({
   mode: args.mode || "dry-run",
@@ -39,6 +45,13 @@ const output = {
         allowedProjectRootMatches: resolve(policy.restrictions?.allowedProjectRoot || "").toLowerCase() === resolve(process.cwd()).toLowerCase(),
         manualSmokeRemainingBudgetUsd: policy.limits?.manualSmokeRemainingBudgetUsd ?? null,
         minimumReserveUsd: policy.limits?.minimumReserveUsd ?? null,
+        guard: {
+          mode: guard.mode,
+          liveSpendAllowed: guard.liveSpendAllowed,
+          autoRefillAllowed: guard.autoRefillAllowed,
+          paidProofDelegationAllowed: guard.paidProofDelegationAllowed,
+          warnings: guard.warnings
+        },
         failures
       }
     : {
@@ -65,17 +78,6 @@ function parseArgs(values) {
     }
   }
   return parsed;
-}
-
-function localPolicyFailures(policy) {
-  if (!policy) return [];
-  const failures = [];
-  if (policy.service !== "Trust402") failures.push("service must be Trust402");
-  if (policy.wallet?.provider !== "AgentCash") failures.push("wallet provider must be AgentCash");
-  if (policy.wallet?.network !== config.agentcashNetwork) failures.push("wallet network must match AGENTCASH_NETWORK");
-  if (policy.limits?.autoRefill?.enabled !== false) failures.push("local policy auto-refill must remain disabled until explicit approval");
-  if ((policy.limits?.manualSmokeRemainingBudgetUsd || 0) > 0) failures.push("manual smoke budget must be separately approved before paid calls");
-  return failures;
 }
 
 function maskAddress(value) {

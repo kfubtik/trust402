@@ -90,6 +90,7 @@ assert(existsSync("api/index.js"), "Vercel API handler must exist");
 assert(existsSync("src/expressApp.js"), "Express x402 entrypoint bridge must exist");
 assert(existsSync("src/autonomousJob.js"), "autonomous job flow module must exist");
 assert(existsSync("src/agentcashRefill.js"), "AgentCash refill workflow module must exist");
+assert(existsSync("src/agentcashPolicyGuard.js"), "AgentCash policy guard module must exist");
 assert(existsSync("src/evidenceLedger.js"), "evidence ledger module must exist");
 assert(existsSync("src/localAgentcashPolicy.js"), "local AgentCash policy guard module must exist");
 assert(existsSync("src/liveSmokeWindow.js"), "live smoke window module must exist");
@@ -139,6 +140,9 @@ assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("evaluateLocalA
 assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("appendEvidenceLedger"), "live evidence smoke must support local public-safe evidence ledger writes");
 assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("payment_bridge_preflight"), "live evidence smoke must require payment bridge preflight before bridge-backed live spend");
 assert(localAgentcashPolicySource.includes("local_candidate_origin_not_allowed"), "local AgentCash policy must block downstream paid origins that are not allowlisted");
+assert(readFileSync("src/agentcashPolicyGuard.js", "utf8").includes("live-window"), "AgentCash policy guard must validate approved live smoke windows");
+assert(readFileSync("scripts/check-agentcash-policy.js", "utf8").includes("evaluateAgentcashPolicyGuard"), "AgentCash policy check CLI must use the reusable guard");
+assert(readFileSync("scripts/agentcash-refill-check.js", "utf8").includes("policyMode"), "AgentCash refill check CLI must support explicit local policy guard modes");
 assert(liveEvidenceSmokeSource.includes("candidateEndpoint: candidate.endpoint"), "live evidence smoke must pass downstream paid endpoint origin into local AgentCash policy evaluation");
 assert(readFileSync("src/operatorUnblockReport.js", "utf8").includes("candidateEndpoint,"), "operator unblock report must include downstream paid endpoint in local AgentCash readiness checks");
 assert(readFileSync("src/liveSmokeWindow.js", "utf8").includes("restoredAfterRun"), "live smoke window must restore local policy after approved runs");

@@ -466,6 +466,18 @@ as `npm run agentcash:policy`. Do not set any `TRUST402_*_OBSERVED=true` value
 until the corresponding action reports `ready` and the verification command has
 produced a reviewed public-safe evidence reference.
 
+`npm run agentcash:policy` defaults to the locked posture and fails if a local
+manual spend budget or auto-refill is left enabled. For a reviewed temporary
+window, pass an explicit guard mode instead:
+
+```powershell
+npm run agentcash:policy -- --mode=live-window --include-proof --estimated-spend=0.02
+npm run agentcash:policy -- --mode=auto-refill
+```
+
+Those modes are validation-only. They do not send payment headers, mutate
+AgentCash, or change the ignored local policy.
+
 ## Live x402 Settlement
 
 The Express middleware bridge protects paid launch resources when

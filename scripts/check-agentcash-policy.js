@@ -1,7 +1,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { evaluateAgentcashPolicyGuard } from "../src/agentcashPolicyGuard.js";
 
 const policyPath = ".local/trust402-agentcash-wallet.json";
+const args = parseArgs(process.argv.slice(2));
 const requiredRoot = resolve(process.cwd());
 
 if (!existsSync(policyPath)) {
@@ -20,25 +22,20 @@ if (!existsSync(policyPath)) {
 
 const policy = JSON.parse(readFileSync(policyPath, "utf8"));
 const allowedRoot = resolve(policy.restrictions?.allowedProjectRoot || "");
-const failures = [];
+const guard = evaluateAgentcashPolicyGuard(policy, {
+  cwd: process.cwd(),
+  mode: args.mode || "locked",
+  includeProof: args.includeProof === "true",
+  includeRefillLive: args.includeRefillLive === "true",
+  estimatedMaxSpendUsd: args.estimatedSpend || args.estimatedMaxSpendUsd
+});
 
-if (policy.service !== "Trust402") failures.push("service must be Trust402");
-if (policy.status !== "dedicated-for-trust402-operator-spend") failures.push("wallet status must reserve this wallet for Trust402");
-if (allowedRoot.toLowerCase() !== requiredRoot.toLowerCase()) failures.push("allowedProjectRoot must match current Trust402 root");
-if (policy.wallet?.provider !== "AgentCash") failures.push("wallet provider must be AgentCash");
-if (policy.wallet?.network !== "base") failures.push("wallet network must be base");
-if (!includes(policy.restrictions?.allowedOrigins, "https://trust402.vercel.app")) failures.push("allowedOrigins must include Trust402 production");
-if (!includes(policy.restrictions?.allowedOrigins, "https://proof402.vercel.app")) failures.push("allowedOrigins must include Proof402 production");
-if (policy.restrictions?.trust402LiveProcurement !== "disabled-until-separate-approval") failures.push("Trust402 live procurement must remain disabled until approval");
-if (policy.restrictions?.proof402Delegation !== "disabled-until-separate-approval") failures.push("Proof402 delegation must remain disabled until approval");
-if (policy.limits?.autoRefill?.enabled !== false) failures.push("auto-refill must remain disabled");
-if ((policy.limits?.manualSmokeRemainingBudgetUsd || 0) > 0) failures.push("manual smoke budget must be separately approved before paid calls");
-
-const ok = failures.length === 0;
+const ok = guard.ok;
 console.log(JSON.stringify({
   ok,
   tool: "agentcash.policy_check",
-  status: ok ? "bound-to-trust402" : "blocked",
+  status: guard.status,
+  mode: guard.mode,
   policyPath,
   wallet: {
     provider: policy.wallet?.provider || null,
@@ -56,19 +53,44 @@ console.log(JSON.stringify({
     autoRefillEnabled: policy.limits?.autoRefill?.enabled ?? null,
     futureThresholdUsd: policy.limits?.autoRefill?.futureThresholdUsd ?? null
   },
-  liveSpendAllowed: false,
-  autoRefillAllowed: false,
-  paidProofDelegationAllowed: false,
-  failures
+  approvals: guard.approvals,
+  liveSpendAllowed: guard.liveSpendAllowed,
+  autoRefillAllowed: guard.autoRefillAllowed,
+  paidProofDelegationAllowed: guard.paidProofDelegationAllowed,
+  warnings: guard.warnings,
+  failures: guard.failures
 }, null, 2));
 
 if (!ok) process.exit(1);
 
-function includes(list, value) {
-  return Array.isArray(list) && list.includes(value);
-}
-
 function maskAddress(value) {
   if (typeof value !== "string" || value.length < 12) return null;
   return `${value.slice(0, 6)}...${value.slice(-4)}`;
+}
+
+function parseArgs(values) {
+  const parsed = {};
+  for (let index = 0; index < values.length; index += 1) {
+    const item = values[index];
+    if (!item.startsWith("--")) continue;
+    const raw = item.slice(2);
+    const eq = raw.indexOf("=");
+    if (eq !== -1) {
+      parsed[toCamel(raw.slice(0, eq))] = raw.slice(eq + 1);
+      continue;
+    }
+    const key = toCamel(raw);
+    const next = values[index + 1];
+    if (next && !next.startsWith("--")) {
+      parsed[key] = next;
+      index += 1;
+    } else {
+      parsed[key] = "true";
+    }
+  }
+  return parsed;
+}
+
+function toCamel(value) {
+  return String(value).replace(/-([a-z])/g, (_, char) => char.toUpperCase());
 }

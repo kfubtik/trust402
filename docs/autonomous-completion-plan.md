@@ -421,6 +421,29 @@ ignored by Git and stores hashes, stage statuses, and evidence refs only; it
 does not store operator keys, private payloads, payment signatures, or wallet
 secrets.
 
+Before a live window, validate the ignored AgentCash policy in the matching
+mode. The default check still requires the wallet to be locked down:
+
+```powershell
+npm run agentcash:policy
+```
+
+For an explicitly approved smoke window, use `live-window` with the expected
+maximum spend and proof flag:
+
+```powershell
+npm run agentcash:policy -- --mode=live-window --include-proof --estimated-spend=0.02
+```
+
+For an approved refill policy, use `auto-refill`:
+
+```powershell
+npm run agentcash:policy -- --mode=auto-refill
+```
+
+These modes do not spend funds. They only prove whether the local policy shape
+matches the requested live/refill window.
+
 For the full remaining-blocker checklist, export the public-safe operator
 action pack:
 
@@ -446,4 +469,6 @@ pass `--docker-bin=<path-to-docker.exe>` or set `TRUST402_DOCKER_BIN`.
 As of 2026-05-19, the local AgentCash policy has zero remaining manual smoke
 budget and marks live procurement, Proof402 delegation, and auto-refill as
 disabled until separate approval. Code may implement and test gates, but real
-paid calls must remain blocked until that policy changes.
+paid calls must remain blocked until that policy changes. The policy checker
+now supports separate locked, live-window, and auto-refill modes so an approved
+window can be validated without weakening the default locked posture.

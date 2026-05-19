@@ -62,6 +62,10 @@ The full final Definition of Done is pinned in
   `candidateEndpoint` into the local AgentCash policy check, so a live smoke
   window is blocked unless the Trust402 wallet allowlist includes the resource
   origin that would be purchased.
+- Local AgentCash policy checks now have explicit guard modes: default locked
+  mode, `live-window` for approved bounded smoke windows, and `auto-refill` for
+  approved refill policies. This keeps the default zero-budget posture strict
+  while allowing a reviewed window to be validated before any paid call.
 - Proof402 paid endpoint contract: `/api/proof/notarize` requires
   `contentHash`, `label`, and `idempotencyKey`; price observed through
   AgentCash schema discovery is `$0.005` on Base USDC. Trust402 sends only
