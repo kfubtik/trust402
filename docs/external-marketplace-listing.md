@@ -32,7 +32,7 @@ approved.
 
 ## Current External Directory Visibility
 
-Last checked on 2026-05-19 at 23:43:27 +07:00 with:
+Last checked on 2026-05-19 at 23:51:36 +07:00 with:
 
 ```powershell
 npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
@@ -43,10 +43,10 @@ Result:
 ```text
 status = not-visible-yet
 checked = 8
-reachable = 6
+reachable = 5
 visible = 0
-notVisibleYet = 6
-unreachable = 2
+notVisibleYet = 5
+unreachable = 3
 customDomainBlocked = 1
 ```
 
