@@ -2,6 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { agentcashDirectSmokePlan } from "../src/agentcashDirectSmokePlan.js";
 
+const TEST_AGENTCASH_BASE_ADDRESS = "0x1111111111111111111111111111111111111111";
+const TEST_AGENTCASH_ADDRESS_PREVIEW = "0x1111...1111";
+
 test("agentcashDirectSmokePlan blocks the current locked policy without calling AgentCash", () => {
   const result = agentcashDirectSmokePlan({}, {
     config: baseConfig(),
@@ -33,7 +36,7 @@ test("agentcashDirectSmokePlan blocks the current locked policy without calling 
   assert.ok(result.localPolicy.blockers.some((item) => item.id === "local_live_procurement_not_approved"));
   assert.ok(result.localPolicy.blockers.some((item) => item.id === "local_manual_smoke_budget_exhausted"));
   assert.match(result.approval.oneLineApproval, /maxAmount \$0\.03/);
-  assert.equal(JSON.stringify(result).includes("0xf2aB09D8146f453CA86486afEA15D6747B72D0D7"), false);
+  assert.equal(JSON.stringify(result).includes(TEST_AGENTCASH_BASE_ADDRESS), false);
 });
 
 test("agentcashDirectSmokePlan becomes ready only after local policy window is open", () => {
@@ -76,7 +79,7 @@ function localPolicy(overrides = {}) {
       wallet: {
         provider: "AgentCash",
         network: "base",
-        addressPreview: "0xf2aB...D0D7"
+        addressPreview: TEST_AGENTCASH_ADDRESS_PREVIEW
       },
       limits: {
         lastVerifiedBalanceUsd: 1.283,
@@ -89,7 +92,7 @@ function localPolicy(overrides = {}) {
       wallet: {
         provider: "AgentCash",
         network: "base",
-        address: "0xf2aB09D8146f453CA86486afEA15D6747B72D0D7"
+        address: TEST_AGENTCASH_BASE_ADDRESS
       },
       restrictions: {
         allowedProjectRoot: process.cwd(),

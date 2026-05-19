@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { agentcashDirectSmokeWindow } from "../src/agentcashDirectSmokeWindow.js";
 
 const approvalText = "Разрешаю одноразовый AgentCash paid fetch для https://trust402.vercel.app/api/trust/compare-resources с maxAmount $0.03, временно открыть local policy window на $0.03 и после проверки снова закрыть бюджет.";
+const TEST_AGENTCASH_BASE_ADDRESS = "0x1111111111111111111111111111111111111111";
 
 test("agentcashDirectSmokeWindow status is read-only and reports a closed window", () => {
   const cwd = makePolicyWorkspace();
@@ -102,7 +103,7 @@ function basePolicy(cwd) {
     wallet: {
       provider: "AgentCash",
       network: "base",
-      address: "0xf2aB09D8146f453CA86486afEA15D6747B72D0D7"
+      address: TEST_AGENTCASH_BASE_ADDRESS
     },
     restrictions: {
       allowedProjectRoot: cwd,

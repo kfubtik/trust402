@@ -288,7 +288,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(directoryJson.body.discovery.openapi.endsWith("/openapi.json"));
     assert.ok(directoryJson.body.listingStatus.directoryTargets.some((target) => target.id === "x402scan"));
     const directoryJsonText = JSON.stringify(directoryJson.body);
-    assert.doesNotMatch(directoryJsonText, /CDP_API_KEY|CDP_WALLET_SECRET|0xf2aB09D8146f453CA86486afEA15D6747B72D0D7/i);
+    assert.doesNotMatch(directoryJsonText, /CDP_API_KEY|CDP_WALLET_SECRET|0x1111111111111111111111111111111111111111/i);
 
     const directoryApi = await request(baseUrl, "/api/directories/profile");
     assert.equal(directoryApi.response.status, 200);
@@ -298,7 +298,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(directoryHtml.response.status, 200);
     assert.match(directoryHtml.body, /<script type="application\/ld\+json">/);
     assert.match(directoryHtml.body, /Paid x402 Resources/);
-    assert.doesNotMatch(directoryHtml.body, /CDP_API_KEY|CDP_WALLET_SECRET|0xf2aB09D8146f453CA86486afEA15D6747B72D0D7/i);
+    assert.doesNotMatch(directoryHtml.body, /CDP_API_KEY|CDP_WALLET_SECRET|0x1111111111111111111111111111111111111111/i);
 
     const llms = await request(baseUrl, "/llms.txt");
     assert.equal(llms.response.status, 200);

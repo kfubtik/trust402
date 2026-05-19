@@ -552,7 +552,7 @@ Trust402 before using it as live-spend evidence:
 
 ```powershell
 npm run agentcash:mcp-observation -- `
-  --accounts-json='[{"network":"base","address":"0xf2aB09D8146f453CA86486afEA15D6747B72D0D7","balance":1.283}]' `
+  --accounts-json='[{"network":"base","address":"0x1111111111111111111111111111111111111111","balance":1.283}]' `
   --settings-json='{"maxAmount":0.01}'
 ```
 
