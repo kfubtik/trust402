@@ -15,7 +15,8 @@ const githubCliAuthenticated = commandOk("gh", ["auth", "status"]);
 const payload = {
   baseUrl,
   candidateEndpoint: args.candidateEndpoint,
-  candidatePriceUsd: args.candidatePrice,
+  candidatePriceUsd: args.candidatePrice || args.candidatePriceUsd,
+  paymentProvider: args.paymentProvider,
   proofReserveUsd: args.proofReserveUsd,
   includeProof: args.skipProof !== true,
   includeAutonomous: args.includeAutonomous === true,
