@@ -19,6 +19,7 @@ test("completionAudit exposes blockers without treating implemented paths as com
   assert.ok(audit.blockers.some((item) => item.status === "implemented-blocked"));
   assert.equal(audit.goalComplete, audit.requirements.every((item) => item.status === "verified"));
   assert.equal(audit.planSource.document, "docs/autonomous-completion-plan.md");
+  assert.equal(audit.planSource.pinnedAt, "2026-05-20");
   assert.equal(audit.planSource.mustAllBeVerified, true);
   assert.deepEqual(
     audit.planSource.requirementIds,

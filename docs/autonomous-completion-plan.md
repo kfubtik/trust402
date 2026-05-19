@@ -20,7 +20,27 @@ Do not replace this plan with a weaker interpretation. If the implementation
 changes, update this document, the machine-readable completion audit, and the
 final verifier together.
 
-## Pinned 2026-05-19 Execution Ledger
+## Operator-Locked Success Contract
+
+The operator-approved definition of success is exactly the sum of the ten items
+below. `/api/completion/plan` exposes the same list as `operatorChecklist`, and
+`/api/completion/audit` must keep `goalComplete=false` until every linked
+requirement is verified in the current production runtime.
+
+| Operator item | Requirement | Success condition |
+| --- | --- | --- |
+| Git/Vercel auto-deploy | `git_vercel_auto_deploy` | Push to `main` creates production deploy and production monitor passes without manual `vercel --prod`. |
+| External directories | `external_x402_directories` | CDP Bazaar stays 10/10 indexed and at least one non-CDP x402 directory visibly lists Trust402. |
+| Unified spend policy | `unified_spend_policy` | Per-call, per-job, daily cap, allowlist, denylist, approval threshold, emergency stop, and dry-run live profile are machine-readable before any spend. |
+| Live procurement | `live_procurement` | Trust402 buys an allowlisted x402 resource through the configured payment adapter, inside limits, with receipts/audit evidence. |
+| AgentCash wallet binding | `agentcash_wallet_binding` | The ignored local AgentCash wallet policy is checked before any paid operation and reserves the wallet for Trust402-approved origins only. |
+| AgentCash auto-refill | `agentcash_auto_refill` | Refill uses the approved provider, `$0.50` threshold, amount, daily cap, emergency stop, dry-run decision, and live approval gates. |
+| Paid Proof402 delegation | `paid_proof402_delegation` | Approved hashes are paid-notarized without private payloads, inside proof spend caps, with receipt evidence. |
+| Autonomous job flow | `autonomous_job_flow` | Goal -> resource selection -> quote -> approval/dry-run -> live execution -> receipts -> proof -> final report works under policy. |
+| Monitoring and protection | `monitoring_and_protection` | Production checks expose live spend gates, balance policy, receipts, failed payments, and emergency stop state. |
+| Final verification | `final_verification` | Tests, release check, Docker build, production smoke, x402 smoke, live paid smoke, Proof402 smoke, refill check, and directory checks are current. |
+
+## Pinned 2026-05-20 Execution Ledger
 
 These are the exact work items pinned from the operator request. Each item maps
 to one machine-readable completion audit requirement. The final success state is

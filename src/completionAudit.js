@@ -30,7 +30,7 @@ export function completionAudit(runtimeConfig = config) {
     objective: "Trust402 autonomous buyer-agent success criteria",
     planSource: {
       document: "docs/autonomous-completion-plan.md",
-      pinnedAt: "2026-05-19",
+      pinnedAt: "2026-05-20",
       mustAllBeVerified: true,
       requirementIds: requirements.map((item) => item.id)
     },

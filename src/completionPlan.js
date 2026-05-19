@@ -144,13 +144,67 @@ export const COMPLETION_REQUIREMENTS = [
   }
 ];
 
+const OPERATOR_PINNED_CHECKLIST = [
+  {
+    id: "git_vercel_auto_deploy",
+    item: "Git/Vercel auto-deploy",
+    success: "Private repo kfubtik/trust402 is connected so a push to main creates the production deployment and production monitor passes without manual vercel --prod."
+  },
+  {
+    id: "external_x402_directories",
+    item: "External directories",
+    success: "CDP Bazaar stays 10/10 indexed and at least one non-CDP x402 directory visibly lists Trust402 with public-safe listing copy."
+  },
+  {
+    id: "unified_spend_policy",
+    item: "Unified spend policy",
+    success: "Per-call cap, per-job cap, daily cap, allowlist, denylist, approval threshold, emergency stop, and dry-run live profile are machine-readable before any spend."
+  },
+  {
+    id: "live_procurement",
+    item: "Live procurement",
+    success: "Trust402 can buy an allowlisted x402 resource through the configured payment adapter, inside limits, and return receipts/audit evidence."
+  },
+  {
+    id: "agentcash_wallet_binding",
+    item: "AgentCash wallet binding",
+    success: "The ignored local AgentCash wallet policy is checked before any paid operation and keeps the wallet reserved for Trust402-approved origins only."
+  },
+  {
+    id: "agentcash_auto_refill",
+    item: "AgentCash auto-refill",
+    success: "Refill uses the approved provider, 0.50 USD threshold, amount, daily cap, emergency stop, dry-run decision, and live approval gates."
+  },
+  {
+    id: "paid_proof402_delegation",
+    item: "Paid Proof402 delegation",
+    success: "Approved hashes are paid-notarized without private payloads, inside proof spend caps, and with receipt evidence."
+  },
+  {
+    id: "autonomous_job_flow",
+    item: "Autonomous job flow",
+    success: "Goal to resource selection, quote, approval or dry-run, live execution, receipts, proof, and final report all work under policy."
+  },
+  {
+    id: "monitoring_and_protection",
+    item: "Monitoring and protection",
+    success: "Production checks expose live spend gates, balance policy, receipts, failed payments, and emergency stop state."
+  },
+  {
+    id: "final_verification",
+    item: "Final verification",
+    success: "Tests, release check, Docker build, production smoke, x402 smoke, live paid smoke, Proof402 smoke, refill check, and directory checks are current."
+  }
+];
+
 export function completionPlan() {
   const planCore = {
     document: "docs/autonomous-completion-plan.md",
-    pinnedAt: "2026-05-19",
+    pinnedAt: "2026-05-20",
     objective: "Trust402 autonomous buyer-agent success criteria",
     requirementIds: COMPLETION_REQUIREMENTS.map((item) => item.id),
     requirements: COMPLETION_REQUIREMENTS,
+    operatorChecklist: OPERATOR_PINNED_CHECKLIST,
     successCriteria: [
       "Trust402 chooses x402 resources for a goal.",
       "Trust402 buys only approved resources.",
@@ -174,7 +228,8 @@ export function completionPlan() {
       sourceOfTruth: "/api/completion/audit",
       allAuditRequirementsMustBeVerified: true,
       manualExternalOrLiveEvidenceCannotBeInferred: true,
-      implementedButBlockedDoesNotCountAsDone: true
+      implementedButBlockedDoesNotCountAsDone: true,
+      operatorChecklistCannotBeWeakenedByImplementation: true
     },
     safety: {
       readOnly: true,
