@@ -25,21 +25,25 @@ The full final Definition of Done is pinned in
 ## Current Safe State
 
 - Production URL: `https://trust402.vercel.app`.
-- Latest manual production deployment: commit `5866c5b` deployed through
-  Vercel CLI on 2026-05-19 19:59:29 +07:00; push-triggered Git/Vercel
+- Latest manual production deployment: commit `626e1e4` deployed through
+  Vercel CLI on 2026-05-19 20:23:37 +07:00; push-triggered Git/Vercel
   auto-deploy evidence is still not verified.
 - CDP Bazaar indexing: 10/10 paid launch resources verified as of
-  2026-05-19 20:06:33 +07:00.
+  2026-05-19 20:30:08 +07:00.
 - External directory visibility: monitored read-only; latest check found 0/8
   visible, 5 reachable, and 3 timeout/unreachable directories as of
-  2026-05-19 20:06:33 +07:00; one directory requires a custom domain before
+  2026-05-19 20:30:08 +07:00; one directory requires a custom domain before
   submission.
 - Final verification: commands passed but goal remains blocked as of
-  2026-05-19 20:06:33 +07:00 because Git/Vercel auto-deploy,
+  2026-05-19 20:30:08 +07:00 because Git/Vercel auto-deploy,
   external-directory visibility, live procurement, paid Proof402 delegation,
   AgentCash auto-refill, and autonomous live job evidence are still unresolved;
   verification hash
-  `sha256:3829f78f8dd8a8742d43de905a368cfac12ea8219570ebf21b5abd263cc55979`.
+  `sha256:717dd5f03458a46e1fd192246b6d89c08121655aac6e31ebf7c5f64cfd50cb09`.
+- Live evidence staging: production action pack now defaults the bounded
+  downstream smoke to `https://proof402.vercel.app/api/proof/notarize` at
+  `$0.005`, caps the combined procurement/proof window at `$0.015`, and marks
+  the generated downstream request as hash-only/public-safe.
 - Proof402 paid endpoint contract: `/api/proof/notarize` requires
   `contentHash`, `label`, and `idempotencyKey`; price observed through
   AgentCash schema discovery is `$0.005` on Base USDC. Trust402 sends only
