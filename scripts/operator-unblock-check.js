@@ -2,6 +2,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { config } from "../src/config.js";
+import { evaluateLocalAgentcashPolicyForLive, readLocalAgentcashPolicy } from "../src/localAgentcashPolicy.js";
 import { operatorUnblockReport } from "../src/operatorUnblockReport.js";
 
 const args = parseArgs(process.argv.slice(2));
@@ -31,7 +32,7 @@ if (targetUrl && args.local !== true) {
       baseUrl: targetUrl.replace(/\/$/, ""),
       source: "/api/operator/unblock-report"
     },
-    localProbeContext: localContext({ vercelProjectLinked, githubCliAuthenticated })
+    localProbeContext: localContext({ vercelProjectLinked, githubCliAuthenticated, payload })
   }, null, 2));
   if (args.strict === true && report.status !== "ready-for-final-window") process.exit(1);
   process.exit(0);
@@ -41,7 +42,7 @@ const report = operatorUnblockReport(payload, { config });
 
 console.log(JSON.stringify({
   ...report,
-  localContext: localContext({ vercelProjectLinked, githubCliAuthenticated })
+  localContext: localContext({ vercelProjectLinked, githubCliAuthenticated, payload })
 }, null, 2));
 
 if (args.strict === true && report.status !== "ready-for-final-window") process.exit(1);
@@ -61,13 +62,46 @@ async function postRemoteJson(base, path, body) {
   return JSON.parse(text);
 }
 
-function localContext({ vercelProjectLinked, githubCliAuthenticated }) {
+function localContext({ vercelProjectLinked, githubCliAuthenticated, payload }) {
   return {
     gitRemote: commandText("git", ["config", "--get", "remote.origin.url"]),
     gitHead: commandText("git", ["rev-parse", "--short", "HEAD"]),
     vercelProject: vercelProjectLinked ? safeProjectSummary(".vercel/project.json") : null,
-    githubCliAuthenticated
+    githubCliAuthenticated,
+    agentcashPolicy: localAgentcashPolicyProbe(payload)
   };
+}
+
+function localAgentcashPolicyProbe(payload) {
+  const estimatedMaxSpendUsd = estimatedSpendUsd(payload);
+  const result = evaluateLocalAgentcashPolicyForLive({
+    policyResult: readLocalAgentcashPolicy(),
+    baseUrl: payload.baseUrl,
+    proof402BaseUrl: config.proof402BaseUrl || "https://proof402.vercel.app",
+    estimatedMaxSpendUsd,
+    includeProof: payload.includeProof !== false,
+    includeRefillLive: payload.includeRefillLive === true
+  });
+
+  return {
+    source: ".local/trust402-agentcash-wallet.json",
+    trustLevel: "local-read-only",
+    ok: result.ok,
+    estimatedMaxSpendUsd,
+    summary: result.summary,
+    blockers: result.blockers.map((item) => ({
+      id: item.id,
+      message: item.message
+    }))
+  };
+}
+
+function estimatedSpendUsd(payload) {
+  const candidate = numberOr(payload.candidatePriceUsd, 0.01);
+  const proof = payload.includeProof === false
+    ? 0
+    : numberOr(payload.proofReserveUsd, Math.max(config.proof402MaxSpendUsd || 0, 0.01));
+  return roundUsd(candidate * (payload.includeAutonomous === true ? 2 : 1) + proof);
 }
 
 function parseArgs(values) {
@@ -123,6 +157,15 @@ function safeProjectSummary(path) {
   } catch {
     return null;
   }
+}
+
+function numberOr(value, fallback) {
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function roundUsd(value) {
+  return Math.round(value * 1_000_000) / 1_000_000;
 }
 
 function toCamel(value) {

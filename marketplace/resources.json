@@ -59,6 +59,11 @@
     },
     {
       "method": "GET",
+      "path": "/api/completion/plan",
+      "purpose": "Pinned autonomous buyer-agent completion plan, success criteria, and required evidence env."
+    },
+    {
+      "method": "GET",
       "path": "/api/completion/audit",
       "purpose": "Requirement-by-requirement completion audit for the autonomous buyer-agent plan."
     },

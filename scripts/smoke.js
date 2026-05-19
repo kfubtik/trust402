@@ -48,6 +48,15 @@ async function main() {
     "/api/policies/spend must expose remaining daily capacity"
   );
 
+  const completionPlan = await getJson("/api/completion/plan");
+  assert(completionPlan.tool === "completion.plan", "/api/completion/plan tool mismatch");
+  assert(completionPlan.requirements?.length === 10, "/api/completion/plan must pin 10 requirements");
+  assert(
+    completionPlan.evidenceRules?.allAuditRequirementsMustBeVerified === true,
+    "/api/completion/plan must require every audit requirement"
+  );
+  assert(completionPlan.safety?.readOnly === true, "/api/completion/plan must be read-only");
+
   const completion = await getJson("/api/completion/audit");
   assert(completion.goalComplete === false, "/api/completion/audit must not claim full completion while live/manual blockers remain");
   assert(
@@ -165,6 +174,7 @@ async function main() {
   assert(openapi.paths?.["/api/settlement/status"]?.get, "/openapi missing settlement status");
   assert(openapi.paths?.["/api/settlement/preflight"]?.get, "/openapi missing settlement preflight");
   assert(openapi.paths?.["/api/policies/spend"]?.get, "/openapi missing spend policy");
+  assert(openapi.paths?.["/api/completion/plan"]?.get, "/openapi missing completion plan");
   assert(openapi.paths?.["/api/completion/audit"]?.get, "/openapi missing completion audit");
   assert(openapi.paths?.["/api/deployments/preflight"]?.get, "/openapi missing deployment preflight GET");
   assert(openapi.paths?.["/api/deployments/preflight"]?.post, "/openapi missing deployment preflight POST");

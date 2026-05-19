@@ -11,6 +11,7 @@ import { marketplaceBundle } from "./marketplace.js";
 import { monitorBadge, monitorSnapshot } from "./monitor.js";
 import { capabilities, openApiSpec, x402WellKnown } from "./openapi.js";
 import { completionAudit } from "./completionAudit.js";
+import { completionPlan } from "./completionPlan.js";
 import { spendPolicyStatus } from "./policies.js";
 import { procurementExecute, procurementQuote } from "./procurement.js";
 import { notarizeResult } from "./proof402Client.js";
@@ -80,6 +81,7 @@ export async function handleTrust402Request(req, res) {
           settlementStatus: "/api/settlement/status",
           settlementPreflight: "/api/settlement/preflight",
           spendPolicy: "/api/policies/spend",
+          completionPlan: "/api/completion/plan",
           completionAudit: "/api/completion/audit",
           deploymentPreflight: "/api/deployments/preflight",
           domainActivationPack: "/api/domains/activation-pack",
@@ -145,6 +147,10 @@ export async function handleTrust402Request(req, res) {
 
     if (req.method === "GET" && path === "/api/policies/spend") {
       return sendJson(res, 200, spendPolicyStatus());
+    }
+
+    if (req.method === "GET" && path === "/api/completion/plan") {
+      return sendJson(res, 200, completionPlan());
     }
 
     if (req.method === "GET" && path === "/api/completion/audit") {
@@ -235,6 +241,7 @@ function statusSummary() {
       settlementStatus: "/api/settlement/status",
       settlementPreflight: "/api/settlement/preflight",
       spendPolicy: "/api/policies/spend",
+      completionPlan: "/api/completion/plan",
       completionAudit: "/api/completion/audit",
       deploymentPreflight: "/api/deployments/preflight",
       domainActivationPack: "/api/domains/activation-pack",

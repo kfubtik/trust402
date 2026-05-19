@@ -75,6 +75,18 @@ Price: free.
 Reason: future autonomous spend should be enabled from a policy checklist, not
 from scattered env flags.
 
+### `GET /api/completion/plan`
+
+Pinned autonomous buyer-agent completion contract. It lists the ten required
+work items, their audit ids, acceptance criteria, evidence env names, final
+success criteria, and read-only safety rules.
+
+Price: free.
+
+Reason: the final goal should not live only in chat or prose docs. Agents need
+a stable machine-readable contract before they can decide whether Trust402 is
+actually complete.
+
 ### `GET /api/completion/audit`
 
 Requirement-by-requirement audit for the final autonomous buyer-agent plan. It

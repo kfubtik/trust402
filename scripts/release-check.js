@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { openApiSpec, x402WellKnown } from "../src/openapi.js";
 import { spendPolicyStatus } from "../src/policies.js";
 import { completionAudit } from "../src/completionAudit.js";
+import { completionPlan } from "../src/completionPlan.js";
 import { launchChecklist } from "../src/readiness.js";
 import { marketplaceBundle } from "../src/marketplace.js";
 
@@ -34,6 +35,7 @@ const wellKnown = x402WellKnown();
 const checklist = launchChecklist();
 const bundle = marketplaceBundle();
 const spendPolicy = spendPolicyStatus();
+const plan = completionPlan();
 const completion = completionAudit();
 
 assert(packageJson.name === "trust402", "package name must be trust402");
@@ -92,6 +94,7 @@ assert(existsSync("src/operatorActionPack.js"), "operator action pack module mus
 assert(existsSync("src/operatorUnblockReport.js"), "operator unblock report module must exist");
 assert(existsSync("src/deploymentPreflight.js"), "deployment preflight module must exist");
 assert(existsSync("src/completionAudit.js"), "completion audit module must exist");
+assert(existsSync("src/completionPlan.js"), "completion plan module must exist");
 assert(existsSync("src/domainActivationPack.js"), "domain activation pack module must exist");
 assert(existsSync("src/directorySubmissionPack.js"), "directory submission pack module must exist");
 assert(existsSync("src/paymentAdapters.js"), "payment adapter module must exist");
@@ -137,6 +140,7 @@ assert(existsSync("scripts/launch-monitor.js"), "production launch monitor scrip
 assert(liveEvidenceSmokeScript.includes("writeEvidenceLedger"), "live evidence smoke CLI must expose evidence ledger write option");
 assert(smokeScript.includes("/api/jobs/autonomous-run"), "smoke script must cover autonomous job dry-run");
 assert(smokeScript.includes("/api/agentcash/refill-check"), "smoke script must cover AgentCash refill dry-run");
+assert(smokeScript.includes("/api/completion/plan"), "smoke script must cover completion plan");
 assert(smokeScript.includes("/api/completion/audit"), "smoke script must cover completion audit");
 assert(smokeScript.includes("/api/deployments/preflight"), "smoke script must cover deployment preflight API");
 assert(smokeScript.includes("/api/domains/activation-pack"), "smoke script must cover domain activation pack");
@@ -160,6 +164,7 @@ assert(operatorActionPackScript.includes("/api/operator/action-pack"), "operator
 assert(operatorActionPackScript.includes("args.local"), "operator action pack CLI must preserve explicit local mode");
 assert(operatorUnblockCheckScript.includes("/api/operator/unblock-report"), "operator unblock CLI must support production API mode");
 assert(operatorUnblockCheckScript.includes("args.local"), "operator unblock CLI must preserve explicit local mode");
+assert(operatorUnblockCheckScript.includes("localAgentcashPolicyProbe"), "operator unblock CLI must include local AgentCash policy probe context");
 assert(productionDeployWorkflow.includes("branches: [main]"), "production deploy workflow must run on main pushes");
 assert(productionDeployWorkflow.includes("VERCEL_TOKEN"), "production deploy workflow must require VERCEL_TOKEN");
 assert(productionDeployWorkflow.includes("VERCEL_ORG_ID"), "production deploy workflow must require VERCEL_ORG_ID");
@@ -214,6 +219,10 @@ assert(
   "free spend policy status helper must exist"
 );
 assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/completion/plan"),
+  "free completion plan helper must exist"
+);
+assert(
   catalog.freeResources.some((resource) => resource.path === "/api/completion/audit"),
   "free completion audit helper must exist"
 );
@@ -256,6 +265,7 @@ assert(openapi.paths?.["/api/marketplace/bundle"]?.get, "marketplace bundle must
 assert(openapi.paths?.["/api/settlement/status"]?.get, "settlement status must be present in OpenAPI");
 assert(openapi.paths?.["/api/settlement/preflight"]?.get, "settlement preflight must be present in OpenAPI");
 assert(openapi.paths?.["/api/policies/spend"]?.get, "spend policy status must be present in OpenAPI");
+assert(openapi.paths?.["/api/completion/plan"]?.get, "completion plan must be present in OpenAPI");
 assert(openapi.paths?.["/api/completion/audit"]?.get, "completion audit must be present in OpenAPI");
 assert(openapi.paths?.["/api/deployments/preflight"]?.get, "deployment preflight GET must be present in OpenAPI");
 assert(openapi.paths?.["/api/deployments/preflight"]?.post, "deployment preflight POST must be present in OpenAPI");
@@ -291,6 +301,9 @@ assert(spendPolicy.policies.liveProcurement.controls.paymentAdapter, "live procu
 assert(spendPolicy.policies.agentcashAutoRefill.ready === false, "AgentCash auto-refill must not be ready by default");
 assert(spendPolicy.policies.liveProcurement.ready === false, "live procurement must not be ready by default");
 assert(spendPolicy.policies.proof402Delegation.ready === false, "Proof402 delegation must not be ready by default");
+assert(plan.requirements.length === 10, "completion plan must pin 10 requirements");
+assert(plan.evidenceRules.allAuditRequirementsMustBeVerified === true, "completion plan must require all audit requirements");
+assert(plan.safety.readOnly === true, "completion plan must stay read-only");
 assert(completion.goalComplete === false, "completion audit must not claim full completion by default");
 assert(
   completion.goalComplete === completion.requirements.every((item) => item.status === "verified"),

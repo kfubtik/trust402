@@ -283,6 +283,17 @@ It consolidates Git/Vercel, custom-domain, external-directory, live spend,
 Proof402, AgentCash refill, autonomous-job, and final-evidence blockers without
 mutating wallets or sending payment headers.
 
+The pinned plan and current audit are available from the production runtime:
+
+```text
+GET /api/completion/plan
+GET /api/completion/audit
+```
+
+`/api/completion/plan` is the pinned machine-readable contract for every item
+above. `/api/completion/audit` is the current production verdict against that
+contract.
+
 The same public-safe blocker view is also available from the production
 runtime:
 

@@ -81,6 +81,7 @@ http://127.0.0.1:4032/api/launch/checklist
 http://127.0.0.1:4032/api/marketplace/bundle
 http://127.0.0.1:4032/api/settlement/status
 http://127.0.0.1:4032/api/policies/spend
+http://127.0.0.1:4032/api/completion/plan
 http://127.0.0.1:4032/api/completion/audit
 http://127.0.0.1:4032/api/deployments/preflight
 http://127.0.0.1:4032/api/domains/activation-pack
@@ -241,6 +242,7 @@ GET /api/marketplace/bundle
 GET /api/settlement/status
 GET /api/settlement/preflight
 GET /api/policies/spend
+GET /api/completion/plan
 GET /api/completion/audit
 GET /api/deployments/preflight
 POST /api/deployments/preflight
@@ -392,8 +394,13 @@ Run the completion audit without pretending blocked live/manual items are done:
 
 ```powershell
 npm run completion:audit
+Invoke-RestMethod -Method Get -Uri http://127.0.0.1:4032/api/completion/plan
 Invoke-RestMethod -Method Get -Uri http://127.0.0.1:4032/api/completion/audit
 ```
+
+`/api/completion/plan` is the pinned machine-readable contract for the final
+Trust402 build. `/api/completion/audit` is the current runtime verdict against
+that contract.
 
 `goalComplete=true` is reserved for the state where every requirement is
 `verified`; implemented-but-blocked paths do not count as completion.
@@ -513,6 +520,8 @@ MVP guarantees:
 - `/api/settlement/preflight` can plan one paid smoke but never sends payment;
 - `/api/completion/audit` keeps final success criteria machine-readable and
   marks live/manual/external blockers as unresolved until real evidence exists;
+- `/api/completion/plan` pins the autonomous buyer-agent success contract and
+  evidence env requirements without sending payment headers or mutating state;
 - `/api/deployments/preflight` makes Git/Vercel/custom-domain deployment
   blockers machine-readable without reading secret values or mutating GitHub or
   Vercel;
@@ -566,6 +575,7 @@ Future live procurement must require:
 - `src/x402SdkAdapter.js` - disabled-by-default x402 SDK adapter used by the Express bridge.
 - `src/policies.js` - machine-readable spend policy gates and launch issue links.
 - `src/completionAudit.js` - final buyer-agent requirement audit and blockers.
+- `src/completionPlan.js` - pinned autonomous buyer-agent success contract.
 - `src/marketplace.js` - marketplace submission bundle and Bazaar extension drafts.
 - `src/openapi.js` - OpenAPI, capabilities, and `.well-known/x402`.
 - `src/readiness.js` - dry-run launch and public marketplace readiness checks.
