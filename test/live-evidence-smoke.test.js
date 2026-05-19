@@ -69,6 +69,33 @@ test("liveEvidenceSmoke builds Proof402 candidate body without private payload",
   assert.equal(JSON.stringify(resource.requestBody).includes("private payload"), false);
 });
 
+test("liveEvidenceSmoke builds Trust402 compare-resources body with public candidates", async () => {
+  const calls = [];
+  const result = await liveEvidenceSmoke({
+    baseUrl: "https://trust402.example",
+    candidateEndpoint: "https://trust402.vercel.app/api/trust/compare-resources",
+    candidatePriceUsd: 0.03,
+    maxTotalUsd: 0.035,
+    includeProof: false,
+    includeAutonomous: false
+  }, {
+    fetchImpl: fakeFetch(calls)
+  });
+
+  assert.equal(result.mode, "dry-run");
+  const executeCall = calls.find((call) => new URL(call.url).pathname === "/api/procurement/execute");
+  const resource = executeCall.body.quote.quote.selectedResources[0];
+  assert.equal(resource.id, "trust.compare_resources");
+  assert.equal(resource.requestBody.goal, "Rank candidate x402 resources by trust and budget fit.");
+  assert.equal(resource.requestBody.budgetUsd, 0.05);
+  assert.equal(resource.requestBody.candidates.length, 2);
+  assert.deepEqual(resource.requestBody.candidates.map((candidate) => candidate.id), [
+    "proof402.notarize",
+    "trust.check_x402"
+  ]);
+  assert.equal(JSON.stringify(resource.requestBody).includes("private"), false);
+});
+
 test("liveEvidenceSmoke blocks live mode without runner approval gates", async () => {
   await assert.rejects(
     liveEvidenceSmoke({

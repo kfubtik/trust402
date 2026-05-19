@@ -193,6 +193,9 @@ test("live window plan emits skip-proof for procurement-only smoke windows", () 
   assert.equal(result.vercelEnvPlan.production.PROOF402_DELEGATION_MODE, "disabled");
   assert.equal(result.localPolicyPatch.restrictions.proof402Delegation, "disabled-until-separate-approval");
   assert.deepEqual(result.localPolicyPatch.restrictions.allowedOrigins, ["https://trust402.vercel.app"]);
+  assert.equal(result.downstreamRequestPolicy.schema, "trust402.compare_resources");
+  assert.deepEqual(result.downstreamRequestPolicy.sendsOnly, ["goal", "budgetUsd", "candidates"]);
+  assert.equal(result.downstreamRequestPolicy.privatePayloadAllowed, false);
   assert.equal(result.proof402PreflightCommand, null);
   assert.match(result.command, /--skip-proof/);
   assert.doesNotMatch(result.command, /--include-autonomous-live/);

@@ -235,6 +235,15 @@ function requestPolicyForCandidate(candidateEndpoint) {
       note: "The live evidence runner generates a sha256 contentHash and public-safe metadata for this endpoint."
     };
   }
+  if (isTrust402CompareResourcesEndpoint(candidateEndpoint)) {
+    return {
+      schema: "trust402.compare_resources",
+      sendsOnly: ["goal", "budgetUsd", "candidates"],
+      privatePayloadAllowed: false,
+      generatedBy: "scripts/live-evidence-smoke.js",
+      note: "The live evidence runner sends two public-safe candidate resource summaries so compare-resources receives a valid body."
+    };
+  }
   return {
     schema: "generic-json",
     sendsOnly: ["goal"],
@@ -336,6 +345,15 @@ function isProof402NotarizeEndpoint(value) {
   try {
     const url = new URL(value);
     return url.hostname === "proof402.vercel.app" && url.pathname === "/api/proof/notarize";
+  } catch {
+    return false;
+  }
+}
+
+function isTrust402CompareResourcesEndpoint(value) {
+  try {
+    const url = new URL(value);
+    return url.hostname === "trust402.vercel.app" && url.pathname === "/api/trust/compare-resources";
   } catch {
     return false;
   }

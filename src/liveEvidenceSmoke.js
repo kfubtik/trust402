@@ -247,8 +247,13 @@ function candidateFrom(input) {
   const endpoint = input.candidateEndpoint || "";
   const requestBody = candidateRequestBody({ input, endpoint });
   const proof402Candidate = isProof402NotarizeEndpoint(endpoint);
+  const compareResourcesCandidate = isTrust402CompareResourcesEndpoint(endpoint);
   return {
-    id: input.candidateId || (proof402Candidate ? "proof402.notarize" : "trust402-live-smoke-candidate"),
+    id: input.candidateId || (proof402Candidate
+      ? "proof402.notarize"
+      : compareResourcesCandidate
+        ? "trust.compare_resources"
+        : "trust402-live-smoke-candidate"),
     endpoint: endpoint || "https://example.com/trust402-live-smoke-resource",
     method: input.candidateMethod || "POST",
     priceUsd: numberOr(input.candidatePriceUsd, 0.01),
@@ -261,6 +266,8 @@ function candidateFrom(input) {
     asset: input.candidateAsset || "USDC",
     description: input.candidateDescription || (proof402Candidate
       ? "Approved Proof402 paid notarization endpoint for bounded Trust402 evidence smoke."
+      : compareResourcesCandidate
+        ? "Approved Trust402 compare-resources endpoint for bounded marketplace indexing smoke."
       : "Approved x402 resource for a bounded Trust402 evidence smoke."),
     receiptReady: true,
     requestBody
@@ -286,6 +293,36 @@ function candidateRequestBody({ input, endpoint }) {
         stage: "live-procurement-smoke",
         privatePayload: false
       }
+    };
+  }
+  if (isTrust402CompareResourcesEndpoint(endpoint)) {
+    return {
+      goal: input.goal || "Rank candidate x402 resources by trust and budget fit.",
+      budgetUsd: numberOr(input.budgetUsd, 0.05),
+      candidates: [
+        {
+          id: "proof402.notarize",
+          endpoint: "https://proof402.vercel.app/api/proof/notarize",
+          priceUsd: 0.005,
+          has402: true,
+          hasInputSchema: true,
+          hasOpenApi: true,
+          hasWellKnown: true,
+          receiptReady: true,
+          description: "Proof402 paid notarization endpoint for hash-only proof receipts."
+        },
+        {
+          id: "trust.check_x402",
+          endpoint: "https://trust402.vercel.app/api/trust/check-x402",
+          priceUsd: 0.005,
+          has402: true,
+          hasInputSchema: true,
+          hasOpenApi: true,
+          hasWellKnown: true,
+          receiptReady: true,
+          description: "Trust402 x402 challenge probe for payment-flow readiness."
+        }
+      ]
     };
   }
   return {
@@ -466,6 +503,15 @@ function isProof402NotarizeEndpoint(value) {
   try {
     const url = new URL(value);
     return url.hostname === "proof402.vercel.app" && url.pathname === "/api/proof/notarize";
+  } catch {
+    return false;
+  }
+}
+
+function isTrust402CompareResourcesEndpoint(value) {
+  try {
+    const url = new URL(value);
+    return url.hostname === "trust402.vercel.app" && url.pathname === "/api/trust/compare-resources";
   } catch {
     return false;
   }
