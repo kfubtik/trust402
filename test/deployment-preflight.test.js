@@ -88,6 +88,97 @@ test("deploymentPreflight verifies when evidence, secrets, Git link, and domain 
   assert.equal(result.evidenceEnv.TRUST402_GIT_AUTO_DEPLOY_COMMIT_SHA, "abc1234");
 });
 
+test("deploymentPreflight can verify from GitHub CLI probe evidence without secret values", () => {
+  const result = deploymentPreflight({
+    baseUrl: "https://trust402.example",
+    gitRemote: "https://github.com/kfubtik/trust402.git",
+    gitHead: "abc1234",
+    vercelProject: {
+      projectName: "trust402",
+      projectId: "prj_123",
+      orgId: "team_123"
+    },
+    productionDeployWorkflowText: productionWorkflow,
+    launchMonitorWorkflowText: launchWorkflow,
+    vercelGitConnected: false,
+    githubCli: {
+      probed: true,
+      available: true,
+      authenticated: true,
+      secretsConfigured: true,
+      workflowsVisible: true,
+      latestSuccessfulDeployRunForHead: true,
+      autoDeployEvidenceUrl: "https://github.com/kfubtik/trust402/actions/runs/42",
+      autoDeployCommitSha: "abc1234deadbeef",
+      latestDeployRun: {
+        status: "completed",
+        conclusion: "success",
+        event: "push",
+        headSha: "abc1234deadbeef",
+        url: "https://github.com/kfubtik/trust402/actions/runs/42",
+        createdAt: "2026-05-19T09:00:00Z"
+      }
+    },
+    vercelDeployment: {
+      probed: true,
+      ok: true,
+      projectId: "prj_123",
+      projectName: "trust402",
+      envKeysPresent: ["PUBLIC_BASE_URL", "TRUST402_PAYWALL_MODE"],
+      latestProductionDeployment: {
+        id: "dpl_123",
+        url: "https://trust402.example",
+        readyState: "READY",
+        target: "production",
+        commitSha: "abc1234deadbeef",
+        commitRepo: "trust402",
+        commitOrg: "kfubtik",
+        commitRef: "main",
+        actor: "github-actions",
+        githubDeployment: "1"
+      }
+    }
+  }, {
+    config: baseConfig()
+  });
+
+  assert.equal(result.status, "verified");
+  assert.equal(result.summary.githubCliAuthenticated, true);
+  assert.equal(result.summary.latestVercelDeploymentCommitSha, "abc1234deadbeef");
+  assert.equal(result.githubCli.safety.readsSecretValues, false);
+  assert.equal(result.vercelDeployment.safety.printsSecretValues, false);
+  assert.equal(JSON.stringify(result).includes("secret-value"), false);
+});
+
+test("deploymentPreflight blocks stale recorded auto-deploy evidence", () => {
+  const result = deploymentPreflight({
+    baseUrl: "https://trust402.example",
+    gitRemote: "https://github.com/kfubtik/trust402.git",
+    gitHead: "abc1234",
+    vercelProject: {
+      projectName: "trust402",
+      projectId: "prj_123",
+      orgId: "team_123"
+    },
+    productionDeployWorkflowText: productionWorkflow,
+    launchMonitorWorkflowText: launchWorkflow,
+    githubActionsSecretsConfigured: true,
+    gitAutoDeployVerified: true,
+    gitAutoDeployEvidenceUrl: "https://github.com/kfubtik/trust402/actions/runs/1",
+    gitAutoDeployCommitSha: "fffffff"
+  }, {
+    config: {
+      ...baseConfig(),
+      gitAutoDeployVerified: true,
+      gitAutoDeployEvidenceUrl: "https://github.com/kfubtik/trust402/actions/runs/1",
+      gitAutoDeployCommitSha: "fffffff"
+    }
+  });
+
+  assert.equal(result.status, "blocked-manual-evidence");
+  assert.ok(result.blockers.some((item) => item.id === "git_auto_deploy_commit_stale"));
+});
+
 function baseConfig() {
   return {
     publicBaseUrl: "https://trust402.vercel.app",

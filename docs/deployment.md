@@ -368,6 +368,19 @@ workflow, launch-monitor workflow, expected Vercel secret names, and whether
 the current host is a custom production domain. It does not read secret values,
 connect GitHub, mutate Vercel, or submit directory forms.
 
+Optional read-only probes can make that check stronger when the local CLIs are
+authenticated:
+
+```powershell
+npm run deployment:preflight -- https://trust402.vercel.app --probe-github-cli
+npm run deployment:preflight -- https://trust402.vercel.app --probe-vercel-api --vercel-scope sergo565456-2815s-projects
+```
+
+The GitHub probe checks CLI auth, secret names, workflow visibility, and recent
+deploy workflow runs. The Vercel probe checks only sanitized project metadata:
+env key names, latest production deployment id/url, ready state, and Git commit
+metadata. Neither probe prints secret values or mutates GitHub/Vercel.
+
 It returns public-safe action groups for Git/Vercel auto-deploy, custom domain,
 external directory evidence, live procurement, paid Proof402, AgentCash refill,
 autonomous job evidence, and final verification evidence. It does not set env

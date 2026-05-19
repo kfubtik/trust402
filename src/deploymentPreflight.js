@@ -24,10 +24,18 @@ export function deploymentPreflight(input = {}, options = {}) {
   const git = gitEvidence(input.gitRemote || "", input.gitHead || "");
   const vercelProject = vercelProjectEvidence(input.vercelProject || null);
   const domain = domainEvidence(baseUrl, input.customDomain || "");
+  const githubCli = githubCliEvidence(input.githubCli || null);
+  const vercelDeployment = vercelDeploymentEvidence(input.vercelDeployment || null, git.head);
   const autoDeployEvidence = {
-    verified: Boolean(cfg.gitAutoDeployVerified || input.gitAutoDeployVerified),
-    evidenceUrl: cfg.gitAutoDeployEvidenceUrl || input.gitAutoDeployEvidenceUrl || "",
-    commitSha: cfg.gitAutoDeployCommitSha || input.gitAutoDeployCommitSha || ""
+    verified: Boolean(cfg.gitAutoDeployVerified || input.gitAutoDeployVerified || githubCli.autoDeployVerified),
+    evidenceUrl: cfg.gitAutoDeployEvidenceUrl ||
+      input.gitAutoDeployEvidenceUrl ||
+      githubCli.autoDeployEvidenceUrl ||
+      "",
+    commitSha: cfg.gitAutoDeployCommitSha ||
+      input.gitAutoDeployCommitSha ||
+      githubCli.autoDeployCommitSha ||
+      ""
   };
   const fallback = {
     readyToConfigure: productionWorkflow.present &&
@@ -36,7 +44,7 @@ export function deploymentPreflight(input = {}, options = {}) {
       productionWorkflow.deploysPrebuiltProd &&
       vercelProject.linked &&
       git.remoteLooksLikeTrust402,
-    secretsConfigured: input.githubActionsSecretsConfigured ?? null,
+    secretsConfigured: input.githubActionsSecretsConfigured ?? githubCli.secretsConfigured,
     requiredSecretNames: REQUIRED_VERCEL_SECRETS,
     manualReason:
       "GitHub Actions secret values cannot be read from the repo; configure them in GitHub Settings -> Secrets and variables -> Actions."
@@ -55,7 +63,8 @@ export function deploymentPreflight(input = {}, options = {}) {
     productionWorkflow,
     launchWorkflow,
     git,
-    vercelProject
+    vercelProject,
+    vercelDeployment
   });
   const status = autoDeployEvidence.verified && blockers.length === 0
     ? "verified"
@@ -74,6 +83,8 @@ export function deploymentPreflight(input = {}, options = {}) {
       fallbackReadyToConfigure: fallback.readyToConfigure,
       githubActionsSecretsConfigured: fallback.secretsConfigured,
       vercelGitConnected: gitHubApp.connected,
+      githubCliAuthenticated: githubCli.authenticated,
+      latestVercelDeploymentCommitSha: vercelDeployment.latestProductionDeployment?.commitSha || null,
       customDomainReady: domain.ready,
       blockers: blockers.length
     },
@@ -83,6 +94,8 @@ export function deploymentPreflight(input = {}, options = {}) {
     launchWorkflow,
     gitHubApp,
     fallback,
+    githubCli,
+    vercelDeployment,
     domain,
     autoDeployEvidence,
     blockers,
@@ -146,6 +159,71 @@ function vercelProjectEvidence(project) {
   };
 }
 
+function githubCliEvidence(probe) {
+  const value = probe || {};
+  const latestRun = value.latestDeployRun || null;
+  const autoDeployVerified = Boolean(value.autoDeployVerified || value.latestSuccessfulDeployRunForHead);
+  return {
+    probed: Boolean(value.probed),
+    available: value.available ?? null,
+    authenticated: value.authenticated ?? null,
+    secretsConfigured: value.secretsConfigured ?? null,
+    requiredSecretNames: REQUIRED_VERCEL_SECRETS,
+    workflowsVisible: value.workflowsVisible ?? null,
+    latestDeployRun: latestRun ? {
+      status: latestRun.status || null,
+      conclusion: latestRun.conclusion || null,
+      event: latestRun.event || null,
+      headSha: latestRun.headSha || null,
+      url: latestRun.url || null,
+      createdAt: latestRun.createdAt || null
+    } : null,
+    autoDeployVerified,
+    autoDeployEvidenceUrl: value.autoDeployEvidenceUrl || latestRun?.url || "",
+    autoDeployCommitSha: value.autoDeployCommitSha || latestRun?.headSha || "",
+    error: value.error || null,
+    safety: {
+      readsSecretValues: false,
+      printsSecretValues: false,
+      mutatesGitHub: false
+    }
+  };
+}
+
+function vercelDeploymentEvidence(probe, gitHead) {
+  const value = probe || {};
+  const latest = value.latestProductionDeployment || null;
+  const commitSha = latest?.commitSha || "";
+  return {
+    probed: Boolean(value.probed),
+    ok: value.ok ?? null,
+    projectId: value.projectId || null,
+    projectName: value.projectName || null,
+    envKeysPresent: Array.isArray(value.envKeysPresent) ? value.envKeysPresent : [],
+    latestProductionDeployment: latest ? {
+      id: latest.id || null,
+      url: latest.url || null,
+      readyState: latest.readyState || null,
+      target: latest.target || null,
+      commitSha,
+      commitRepo: latest.commitRepo || null,
+      commitOrg: latest.commitOrg || null,
+      commitRef: latest.commitRef || null,
+      actor: latest.actor || null,
+      githubDeployment: latest.githubDeployment ?? null,
+      createdAt: latest.createdAt || null,
+      readyAt: latest.readyAt || null
+    } : null,
+    latestCommitMatchesHead: Boolean(commitSha && sameCommit(commitSha, gitHead)),
+    error: value.error || null,
+    safety: {
+      readsSecretValues: false,
+      printsSecretValues: false,
+      mutatesVercel: false
+    }
+  };
+}
+
 function domainEvidence(baseUrl, customDomain) {
   const host = safeHost(customDomain || baseUrl);
   const suffix = FREE_HOST_SUFFIXES.find((item) => host === item || host.endsWith(`.${item}`)) || null;
@@ -165,6 +243,24 @@ function blockersFor(input) {
     blockers.push(blocker(
       "git_auto_deploy_evidence_missing",
       "Push-triggered production deployment evidence has not been recorded."
+    ));
+  }
+  if (input.autoDeployEvidence.verified &&
+    input.autoDeployEvidence.commitSha &&
+    input.git.head &&
+    !sameCommit(input.autoDeployEvidence.commitSha, input.git.head)) {
+    blockers.push(blocker(
+      "git_auto_deploy_commit_stale",
+      "Recorded Git auto-deploy evidence does not match the current HEAD commit."
+    ));
+  }
+  if (input.vercelDeployment.probed &&
+    input.vercelDeployment.latestProductionDeployment?.commitSha &&
+    input.git.head &&
+    !input.vercelDeployment.latestCommitMatchesHead) {
+    blockers.push(blocker(
+      "latest_vercel_deploy_commit_mismatch",
+      "Latest observed Vercel production deployment does not match the current HEAD commit."
     ));
   }
   if (!input.gitHubApp.connected && !input.fallback.readyToConfigure) {
@@ -226,6 +322,12 @@ function nextActions({ blockers, fallback, gitHubApp, domain }) {
 
 function blocker(id, message) {
   return { id, message };
+}
+
+function sameCommit(left, right) {
+  const a = String(left || "").trim().toLowerCase();
+  const b = String(right || "").trim().toLowerCase();
+  return Boolean(a && b && (a === b || a.startsWith(b) || b.startsWith(a)));
 }
 
 function normalizeBaseUrl(value) {

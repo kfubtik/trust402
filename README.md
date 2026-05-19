@@ -438,7 +438,12 @@ service:
 
 ```powershell
 npm run deployment:preflight -- https://trust402.vercel.app
+npm run deployment:preflight -- https://trust402.vercel.app --probe-github-cli
+npm run deployment:preflight -- https://trust402.vercel.app --probe-vercel-api --vercel-scope sergo565456-2815s-projects
 ```
+
+The optional probes check GitHub CLI auth/workflow evidence and sanitized Vercel
+deployment metadata. They never print secret values or mutate either service.
 
 Check the local Trust402-only AgentCash policy without spending:
 
