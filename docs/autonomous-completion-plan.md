@@ -283,6 +283,19 @@ It consolidates Git/Vercel, custom-domain, external-directory, live spend,
 Proof402, AgentCash refill, autonomous-job, and final-evidence blockers without
 mutating wallets or sending payment headers.
 
+The same public-safe blocker view is also available from the production
+runtime:
+
+```text
+GET /api/operator/unblock-report
+POST /api/operator/unblock-report
+```
+
+Use `GET` for the current production policy state, or `POST` with candidate
+budget fields to preview blockers for a proposed live evidence window. Both
+forms are read-only and do not submit directory forms, mutate wallets, set env
+vars, or send payment headers.
+
 For the Git/Vercel and custom-domain portion specifically, run:
 
 ```powershell

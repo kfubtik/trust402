@@ -219,6 +219,8 @@ POST /api/receipts/hash-result
 POST /api/receipts/notarize-result
 POST /api/procurement/execute
 POST /api/live/window-plan
+GET /api/operator/unblock-report
+POST /api/operator/unblock-report
 POST /api/operator/action-pack
 POST /api/jobs/autonomous-run
 POST /api/agentcash/refill-check

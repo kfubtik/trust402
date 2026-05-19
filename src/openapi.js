@@ -46,6 +46,34 @@ export function openApiSpec() {
     "/api/settlement/preflight": getPath("Operator preflight for one paid settlement smoke"),
     "/api/policies/spend": getPath("Spend policy gates for live procurement, Proof402 delegation, and AgentCash auto-refill"),
     "/api/completion/audit": getPath("Requirement-by-requirement audit of Trust402 autonomous buyer-agent completion"),
+    "/api/operator/unblock-report": {
+      get: {
+        operationId: "operator_unblock_report_get",
+        summary: "Read current public-safe operator blockers for final Trust402 completion",
+        tags: ["Trust402"],
+        responses: {
+          "200": jsonResponse
+        }
+      },
+      post: {
+        operationId: "operator_unblock_report",
+        summary: "Generate a public-safe operator unblock report for a proposed live evidence window",
+        tags: ["Trust402"],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: requestSchemaFor("operator.unblock_report"),
+              example: exampleFor("operator.unblock_report")
+            }
+          }
+        },
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse
+        }
+      }
+    },
     "/api/resources": getPath("Public Trust402 resource catalog"),
     "/api/live/window-plan": {
       post: {
@@ -280,6 +308,7 @@ export function capabilities() {
       spendPolicy: "/api/policies/spend",
       completionAudit: "/api/completion/audit",
       liveWindowPlan: "/api/live/window-plan",
+      operatorUnblockReport: "/api/operator/unblock-report",
       operatorActionPack: "/api/operator/action-pack",
       agentcashRefillCheck: "/api/agentcash/refill-check",
       openapi: "/openapi.json",
@@ -461,20 +490,11 @@ function requestSchemaFor(id) {
   }
 
   if (id === "operator.action_pack") {
-    return {
-      type: "object",
-      properties: {
-        baseUrl: { type: "string", format: "uri" },
-        candidateEndpoint: { type: "string", format: "uri" },
-        candidatePriceUsd: { type: "number" },
-        maxTotalUsd: { type: "number" },
-        paymentProvider: { type: "string", enum: ["agentcash-mcp", "x402-fetch", "external-adapter"] },
-        includeProof: { type: "boolean", default: true },
-        includeAutonomous: { type: "boolean", default: false },
-        includeAutoRefill: { type: "boolean", default: false },
-        liveSpentTodayUsd: { type: "number", default: 0 }
-      }
-    };
+    return operatorPlanningSchema();
+  }
+
+  if (id === "operator.unblock_report") {
+    return operatorPlanningSchema();
   }
 
   if (id === "monitor.snapshot") {
@@ -577,6 +597,25 @@ function requestSchemaFor(id) {
       hasInputSchema: { type: "boolean" },
       hasOpenApi: { type: "boolean" },
       hasWellKnown: { type: "boolean" }
+    }
+  };
+}
+
+function operatorPlanningSchema() {
+  return {
+    type: "object",
+    properties: {
+      baseUrl: { type: "string", format: "uri" },
+      candidateEndpoint: { type: "string", format: "uri" },
+      candidatePriceUsd: { type: "number" },
+      proofReserveUsd: { type: "number" },
+      maxTotalUsd: { type: "number" },
+      paymentProvider: { type: "string", enum: ["agentcash-mcp", "x402-fetch", "external-adapter"] },
+      includeProof: { type: "boolean", default: true },
+      includeAutonomous: { type: "boolean", default: false },
+      includeAutoRefill: { type: "boolean", default: false },
+      includeRefillLive: { type: "boolean", default: false },
+      liveSpentTodayUsd: { type: "number", default: 0 }
     }
   };
 }
@@ -699,6 +738,15 @@ function exampleFor(id) {
       candidatePriceUsd: 0.01,
       maxTotalUsd: 0.03,
       includeProof: true
+    };
+  }
+  if (id === "operator.unblock_report") {
+    return {
+      baseUrl: "https://trust402.vercel.app",
+      candidatePriceUsd: 0.01,
+      proofReserveUsd: 0.01,
+      includeProof: true,
+      includeAutonomous: false
     };
   }
   if (id === "monitor.snapshot") {

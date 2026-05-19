@@ -108,6 +108,14 @@
       "purpose": "Generate a public-safe action pack for closing Git/Vercel, domain, directory, live-spend, Proof402, AgentCash refill, autonomous, and final evidence blockers."
     },
     {
+      "id": "operator.unblock_report",
+      "method": "GET/POST",
+      "path": "/api/operator/unblock-report",
+      "priceUsd": 0,
+      "status": "dry-run-helper",
+      "purpose": "Expose the current public-safe completion blockers and next actions directly from the production runtime."
+    },
+    {
       "id": "jobs.autonomous_run",
       "method": "POST",
       "path": "/api/jobs/autonomous-run",

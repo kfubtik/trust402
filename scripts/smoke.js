@@ -59,6 +59,15 @@ async function main() {
     "/api/completion/audit must expose Git/Vercel blocker"
   );
 
+  const unblockGet = await getJson("/api/operator/unblock-report");
+  assert(unblockGet.tool === "operator.unblock_report", "/api/operator/unblock-report GET tool mismatch");
+  assert(unblockGet.safety?.readOnly === true, "/api/operator/unblock-report must be read-only");
+  assert(unblockGet.safety?.sendsPaymentHeaders === false, "/api/operator/unblock-report must not send payment headers");
+  assert(
+    unblockGet.checks?.some((item) => item.id === "external_x402_directories"),
+    "/api/operator/unblock-report must include external directory check"
+  );
+
   const liveWindow = await postJson("/api/live/window-plan", {
     candidateEndpoint: "https://trusted.example/api/paid",
     candidatePriceUsd: 0.01,
@@ -70,6 +79,16 @@ async function main() {
   assert(liveWindow.vercelEnvPlan?.production?.LIVE_SPENT_TODAY_USD === "0", "/api/live/window-plan must include spent-today env");
   assert(liveWindow.safety?.readOnly === true, "/api/live/window-plan must be read-only");
   assert(liveWindow.safety?.sendsPaymentHeaders === false, "/api/live/window-plan must not send payment headers");
+
+  const unblockPost = await postJson("/api/operator/unblock-report", {
+    baseUrl,
+    candidatePriceUsd: 0.01,
+    proofReserveUsd: 0.01,
+    includeProof: true
+  });
+  assert(unblockPost.tool === "operator.unblock_report", "/api/operator/unblock-report POST tool mismatch");
+  assert(unblockPost.safety?.readOnly === true, "/api/operator/unblock-report POST must be read-only");
+  assert(unblockPost.safety?.mutatesWallet === false, "/api/operator/unblock-report POST must not mutate wallet");
 
   const actionPack = await postJson("/api/operator/action-pack", {
     candidateEndpoint: "https://trusted.example/api/paid",
@@ -94,6 +113,8 @@ async function main() {
   assert(openapi.paths?.["/api/policies/spend"]?.get, "/openapi missing spend policy");
   assert(openapi.paths?.["/api/completion/audit"]?.get, "/openapi missing completion audit");
   assert(openapi.paths?.["/api/live/window-plan"]?.post, "/openapi missing live window plan");
+  assert(openapi.paths?.["/api/operator/unblock-report"]?.get, "/openapi missing operator unblock report GET");
+  assert(openapi.paths?.["/api/operator/unblock-report"]?.post, "/openapi missing operator unblock report POST");
   assert(openapi.paths?.["/api/operator/action-pack"]?.post, "/openapi missing operator action pack");
   assert(openapi.paths?.["/api/jobs/autonomous-run"]?.post, "/openapi missing autonomous run");
   assert(openapi.paths?.["/api/monitor/snapshot"]?.post, "/openapi missing monitor snapshot");

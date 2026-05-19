@@ -135,6 +135,7 @@ assert(smokeScript.includes("/api/jobs/autonomous-run"), "smoke script must cove
 assert(smokeScript.includes("/api/agentcash/refill-check"), "smoke script must cover AgentCash refill dry-run");
 assert(smokeScript.includes("/api/completion/audit"), "smoke script must cover completion audit");
 assert(smokeScript.includes("/api/live/window-plan"), "smoke script must cover live window plan");
+assert(smokeScript.includes("/api/operator/unblock-report"), "smoke script must cover operator unblock report");
 assert(smokeScript.includes("/api/operator/action-pack"), "smoke script must cover operator action pack");
 assert(launchMonitorScript.includes("/api/policies/spend"), "launch monitor must check spend policy");
 assert(workflow.includes("npm audit --omit=dev --audit-level=high"), "CI must run high-severity npm audit");
@@ -212,6 +213,10 @@ assert(
   "free live window plan helper must exist"
 );
 assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/operator/unblock-report" && resource.priceUsd === 0),
+  "free operator unblock report helper must exist"
+);
+assert(
   catalog.freeResources.some((resource) => resource.path === "/api/operator/action-pack" && resource.priceUsd === 0),
   "free operator action pack helper must exist"
 );
@@ -228,6 +233,8 @@ assert(openapi.paths?.["/api/settlement/preflight"]?.get, "settlement preflight 
 assert(openapi.paths?.["/api/policies/spend"]?.get, "spend policy status must be present in OpenAPI");
 assert(openapi.paths?.["/api/completion/audit"]?.get, "completion audit must be present in OpenAPI");
 assert(openapi.paths?.["/api/live/window-plan"]?.post, "live window plan must be present in OpenAPI");
+assert(openapi.paths?.["/api/operator/unblock-report"]?.get, "operator unblock report GET must be present in OpenAPI");
+assert(openapi.paths?.["/api/operator/unblock-report"]?.post, "operator unblock report POST must be present in OpenAPI");
 assert(openapi.paths?.["/api/operator/action-pack"]?.post, "operator action pack must be present in OpenAPI");
 assert(JSON.stringify(openapi.paths["/api/live/window-plan"]).includes("liveSpentTodayUsd"), "live window plan OpenAPI must expose spent-today input");
 assert(openapi.paths?.["/api/jobs/autonomous-run"]?.post, "autonomous job flow must be present in OpenAPI");
@@ -298,6 +305,10 @@ assert(
 assert(
   !openapi.paths["/api/live/window-plan"].post["x-payment-info"],
   "live window plan helper must not require payment"
+);
+assert(
+  !openapi.paths["/api/operator/unblock-report"].post["x-payment-info"],
+  "operator unblock report helper must not require payment"
 );
 assert(
   !openapi.paths["/api/operator/action-pack"].post["x-payment-info"],

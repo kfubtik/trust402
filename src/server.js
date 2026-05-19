@@ -17,6 +17,7 @@ import { hashResult } from "./receipts.js";
 import { paymentChallengeFor, settlementPreflight, settlementStatus } from "./settlement.js";
 import { liveWindowPlan } from "./liveWindowPlan.js";
 import { operatorActionPack } from "./operatorActionPack.js";
+import { operatorUnblockReport } from "./operatorUnblockReport.js";
 import {
   checkX402,
   compareResources,
@@ -33,6 +34,7 @@ const routes = new Map([
   ["POST /api/procurement/quote", procurementQuote],
   ["POST /api/procurement/execute", procurementExecute],
   ["POST /api/live/window-plan", liveWindowPlan],
+  ["POST /api/operator/unblock-report", operatorUnblockReport],
   ["POST /api/operator/action-pack", operatorActionPack],
   ["POST /api/jobs/autonomous-run", autonomousRun],
   ["POST /api/agentcash/refill-check", agentcashRefillCheck],
@@ -74,6 +76,7 @@ export async function handleTrust402Request(req, res) {
           spendPolicy: "/api/policies/spend",
           completionAudit: "/api/completion/audit",
           liveWindowPlan: "/api/live/window-plan",
+          operatorUnblockReport: "/api/operator/unblock-report",
           operatorActionPack: "/api/operator/action-pack",
           agentcashRefillCheck: "/api/agentcash/refill-check",
           autonomousRun: "/api/jobs/autonomous-run",
@@ -137,6 +140,10 @@ export async function handleTrust402Request(req, res) {
 
     if (req.method === "GET" && path === "/api/completion/audit") {
       return sendJson(res, 200, completionAudit());
+    }
+
+    if (req.method === "GET" && path === "/api/operator/unblock-report") {
+      return sendJson(res, 200, operatorUnblockReport());
     }
 
     if (req.method === "GET" && path === "/openapi.json") {
@@ -209,6 +216,7 @@ function statusSummary() {
       spendPolicy: "/api/policies/spend",
       completionAudit: "/api/completion/audit",
       liveWindowPlan: "/api/live/window-plan",
+      operatorUnblockReport: "/api/operator/unblock-report",
       operatorActionPack: "/api/operator/action-pack",
       agentcashRefillCheck: "/api/agentcash/refill-check",
       autonomousRun: "/api/jobs/autonomous-run",
