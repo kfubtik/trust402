@@ -14,6 +14,7 @@ const githubCliAuthenticated = commandOk("gh", ["auth", "status"]);
 
 const payload = {
   baseUrl,
+  candidateEndpoint: args.candidateEndpoint,
   candidatePriceUsd: args.candidatePrice,
   proofReserveUsd: args.proofReserveUsd,
   includeProof: args.skipProof !== true,
@@ -78,6 +79,7 @@ function localAgentcashPolicyProbe(payload) {
     policyResult: readLocalAgentcashPolicy(),
     baseUrl: payload.baseUrl,
     proof402BaseUrl: config.proof402BaseUrl || "https://proof402.vercel.app",
+    candidateEndpoint: payload.candidateEndpoint,
     estimatedMaxSpendUsd,
     includeProof: payload.includeProof !== false,
     includeRefillLive: payload.includeRefillLive === true

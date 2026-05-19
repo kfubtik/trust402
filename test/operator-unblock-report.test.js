@@ -27,6 +27,7 @@ test("operatorUnblockReport exposes manual blockers without secrets", () => {
 test("operatorUnblockReport becomes ready when every gate has evidence", () => {
   const report = operatorUnblockReport({
     baseUrl: "https://trust402.example",
+    candidateEndpoint: "https://resource.example/paid",
     githubActionsFallbackPresent: true,
     githubCliAuthenticated: true,
     vercelProjectLinked: true
@@ -68,6 +69,57 @@ test("operatorUnblockReport becomes ready when every gate has evidence", () => {
 
   assert.equal(report.status, "ready-for-final-window");
   assert.equal(report.blockers.length, 0);
+  assert.equal(report.summary.candidateOrigin, "https://resource.example");
+});
+
+test("operatorUnblockReport includes downstream origin in local AgentCash readiness", () => {
+  const report = operatorUnblockReport({
+    baseUrl: "https://trust402.example",
+    candidateEndpoint: "https://not-allowed.example/paid",
+    githubActionsFallbackPresent: true,
+    githubCliAuthenticated: true,
+    vercelProjectLinked: true
+  }, {
+    config: {
+      ...baseConfig(),
+      gitAutoDeployVerified: true,
+      gitAutoDeployEvidenceUrl: "https://github.com/kfubtik/trust402/actions/runs/1",
+      gitAutoDeployCommitSha: "abc1234",
+      cdpBazaarAllResourcesIndexed: true,
+      cdpBazaarEvidenceRef: "sha256:cdp-bazaar-10-of-10",
+      externalDirectoryStatus: "visible",
+      externalDirectoryEvidenceUrl: "https://directory.example/trust402",
+      externalDirectoryName: "Example Directory",
+      liveSpendEnabled: true,
+      livePaymentProvider: "external-adapter",
+      liveAllowedRegistries: ["https://not-allowed.example"],
+      operatorApiKey: "configured",
+      proof402DelegationMode: "live",
+      proof402BaseUrl: "https://proof402.vercel.app",
+      proof402MaxSpendUsd: 0.01,
+      agentcashAutoRefillApproved: true,
+      agentcashAutoRefillEnabled: true,
+      agentcashAutoRefillProvider: "manual-action",
+      liveProcurementSmokeObserved: true,
+      liveProcurementEvidenceRef: "sha256:procurement",
+      autonomousJobSmokeObserved: true,
+      autonomousJobEvidenceRef: "sha256:autonomous",
+      finalVerificationObserved: true,
+      finalVerificationEvidenceRef: "sha256:final"
+    },
+    localAgentcashPolicyResult: localPolicy({
+      manualSmokeRemainingBudgetUsd: 0.10,
+      agentcashGlobalMaxAmountUsd: 0.10,
+      trust402LiveProcurement: "approved-for-manual-smoke",
+      proof402Delegation: "approved-for-manual-smoke"
+    })
+  });
+
+  const live = report.checks.find((item) => item.id === "live_procurement");
+
+  assert.equal(report.status, "blocked");
+  assert.equal(report.summary.candidateOrigin, "https://not-allowed.example");
+  assert.ok(live.evidence.blockers.some((item) => item.includes("local_candidate_origin_not_allowed")));
 });
 
 test("operatorUnblockReport keeps external directories blocked without CDP Bazaar 10/10 evidence", () => {
@@ -145,7 +197,8 @@ function localPolicy(overrides = {}) {
         allowedOrigins: [
           "https://trust402.vercel.app",
           "https://trust402.example",
-          "https://proof402.vercel.app"
+          "https://proof402.vercel.app",
+          "https://resource.example"
         ],
         trust402LiveProcurement: overrides.trust402LiveProcurement,
         proof402Delegation: overrides.proof402Delegation

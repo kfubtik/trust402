@@ -11,6 +11,7 @@ const FREE_HOST_SUFFIXES = [
 export function operatorUnblockReport(input = {}, options = {}) {
   const cfg = options.config || config;
   const baseUrl = normalizeBaseUrl(input.baseUrl || cfg.publicBaseUrl || "https://trust402.vercel.app");
+  const candidateEndpoint = input.candidateEndpoint || input.endpoint || "";
   const candidatePriceUsd = numberOr(input.candidatePriceUsd, 0.01);
   const proofReserveUsd = numberOr(input.proofReserveUsd, Math.max(cfg.proof402MaxSpendUsd || 0, 0.01));
   const includeProof = input.includeProof !== false;
@@ -24,6 +25,7 @@ export function operatorUnblockReport(input = {}, options = {}) {
     cwd: options.cwd,
     baseUrl,
     proof402BaseUrl: cfg.proof402BaseUrl || "https://proof402.vercel.app",
+    candidateEndpoint,
     estimatedMaxSpendUsd,
     includeProof,
     includeRefillLive: input.includeRefillLive === true
@@ -60,6 +62,7 @@ export function operatorUnblockReport(input = {}, options = {}) {
       totalChecks: checks.length,
       ready: checks.filter((item) => item.status === "ready").length,
       blocked: blockers.length,
+      candidateOrigin: originOf(candidateEndpoint),
       hostRequiresCustomDomain: hostPolicy.requiresCustomDomain,
       localAgentcashPolicyReady: localAgentcashPolicy.ok,
       gitAutoDeployVerified: cfg.gitAutoDeployVerified,
@@ -317,6 +320,14 @@ function nextActions(blockers) {
 
 function normalizeBaseUrl(value) {
   return String(value || "https://trust402.vercel.app").replace(/\/+$/, "");
+}
+
+function originOf(value) {
+  try {
+    return new URL(value).origin;
+  } catch {
+    return "";
+  }
 }
 
 function numberOr(value, fallback) {

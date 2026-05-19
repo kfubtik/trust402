@@ -22,6 +22,7 @@ export function operatorActionPack(input = {}, options = {}) {
 
   const unblock = operatorUnblockReport({
     baseUrl,
+    candidateEndpoint,
     candidatePriceUsd,
     proofReserveUsd,
     includeProof,
