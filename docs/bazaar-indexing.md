@@ -14,13 +14,13 @@ npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10
 
 ## Current Production State
 
-Last checked on 2026-05-19 at 15:31:17 +07:00.
+Last checked on 2026-05-19 at 15:58:13 +07:00.
 
 Latest production deployment:
 
 ```text
-dpl_5B26c99sy75nWMnhitpf5woQzTTv
-https://trust402-asd1ol2pi-sergo565456-2815s-projects.vercel.app
+dpl_6C9jR4vPJ479U62LHsWGtvDAY431
+https://trust402-ou3cuwjl8-sergo565456-2815s-projects.vercel.app
 ```
 
 - indexed resources: 9 of 10;
@@ -53,8 +53,9 @@ search results. The current production route is healthy:
 - the Bazaar input schema now has explicit candidate fields such as
   `endpoint`, `priceUsd`, `hasInputSchema`, `hasOpenApi`, `hasWellKnown`, and
   `receiptReady`;
-- `npm test`, `npm run release:check`, `npm audit --omit=dev --audit-level=high`,
-  and Docker build passed after the schema fix.
+- `node --test test`, `node scripts/release-check.js`,
+  `npm audit --omit=dev --audit-level=high`, and Docker build passed after the
+  schema fix.
 
 CDP Bazaar discovery is settle-driven for resource visibility. The safe next
 step is one bounded paid settle against

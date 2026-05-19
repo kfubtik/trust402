@@ -73,16 +73,16 @@ public directory pages.
 
 ## Latest Verified Baseline
 
-Last checked on 2026-05-19 at 11:04:19 +07:00 with:
+Last checked on 2026-05-19 at 15:58:13 +07:00 with:
 
 ```powershell
-npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000 --skip-directories
+npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000 --strict
 ```
 
 Trust402's verified launch-monitor state is:
 
 ```text
-status = healthy-cdp-indexed
+status = needs-attention
 api.status = healthy
 api.catalogStatus = production-mvp
 api.paidLaunchResources = 10
@@ -90,16 +90,17 @@ api.anyLiveSpendReady = false
 api.autoRefillReady = false
 x402Challenge.status = challenge-ready
 x402Challenge.httpStatus = 402
-cdpBazaar.status = all-indexed
+cdpBazaar.status = partially-indexed
 cdpBazaar.routeSummary.expected = 10
-cdpBazaar.routeSummary.indexed = 10
-cdpBazaar.routeSummary.missing = []
-externalDirectories.status = skipped
+cdpBazaar.routeSummary.indexed = 9
+cdpBazaar.routeSummary.missing = [trust.compare_resources]
+externalDirectories.status = not-visible-yet
+externalDirectories.visible = 0
 ```
 
-That state is production-healthy for API/x402/spend safety and CDP Bazaar
-indexing. Launch attention is still required for non-CDP external directory
-visibility and for intentionally closed live-spend gates.
+That state is production-healthy for API/x402/spend safety, but final launch
+attention is still required for CDP Bazaar 10/10 visibility, non-CDP external
+directory visibility, and intentionally closed live-spend gates.
 
 ## AgentCash Refill Check
 

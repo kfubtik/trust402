@@ -26,7 +26,7 @@ The full final Definition of Done is pinned in
 
 - Production URL: `https://trust402.vercel.app`.
 - CDP Bazaar indexing: 9/10 paid launch resources verified; missing
-  `trust.compare_resources` as of 2026-05-19 15:31:17 +07:00.
+  `trust.compare_resources` as of 2026-05-19 15:58:13 +07:00.
 - External directory visibility: monitored read-only; latest check found 0/7
   visible, 5 reachable, and 2 timeout/unreachable directories; one directory
   requires a custom domain before submission.

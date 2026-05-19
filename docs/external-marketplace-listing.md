@@ -32,7 +32,7 @@ disabled until separately approved.
 
 ## Current External Directory Visibility
 
-Last checked on 2026-05-19 at 15:35:54 +07:00 with:
+Last checked on 2026-05-19 at 15:58:13 +07:00 with:
 
 ```powershell
 npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
