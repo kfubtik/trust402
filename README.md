@@ -553,9 +553,14 @@ Check the local Trust402-only AgentCash policy without spending:
 
 ```powershell
 npm run agentcash:policy
+npm run agentcash:direct-smoke-plan -- https://trust402.vercel.app
 npm run agentcash:refill-check
 npm run agentcash:refill-check -- --balance 0.42
 ```
+
+`agentcash:direct-smoke-plan` emits the exact one-shot AgentCash MCP schema
+check and paid fetch inputs for the current Bazaar missing route. It is
+read-only: it does not call AgentCash, write `.local`, or spend.
 
 ## Safety
 
@@ -630,6 +635,7 @@ Future live procurement must require:
 - `src/paymentAdapters.js` - buyer-side payment adapter readiness and bridge logic.
 - `src/paymentBridgeCheck.js` - operator-gated dry-run preflight for payment bridge safety.
 - `src/autonomousJob.js` - dry-run-first autonomous job orchestration.
+- `src/agentcashDirectSmokePlan.js` - read-only AgentCash MCP one-shot smoke approval packet.
 - `src/agentcashRefill.js` - AgentCash refill policy decision and adapter-gated live action.
 - `src/evidenceLedger.js` - local public-safe JSONL ledger for evidence hashes and refs.
 - `src/liveWindowPlan.js` - read-only live evidence window planner.
@@ -664,6 +670,7 @@ Future live procurement must require:
 - `scripts/check-bazaar-indexing.js` - read-only CDP Bazaar visibility check.
 - `scripts/check-external-directories.js` - read-only external directory visibility check.
 - `scripts/check-agentcash-policy.js` - local Trust402-only AgentCash policy check.
+- `scripts/agentcash-direct-smoke-plan.js` - local approval packet for a bounded AgentCash direct smoke.
 - `scripts/agentcash-refill-check.js` - local AgentCash refill dry-run monitor.
 - `scripts/completion-audit.js` - local or production completion audit runner.
 - `scripts/final-verification.js` - final evidence collector for tests, Docker,

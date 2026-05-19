@@ -495,6 +495,17 @@ npm run live:window-plan -- https://trust402.vercel.app `
   --skip-proof
 ```
 
+For the shorter local approval packet, use:
+
+```powershell
+npm run agentcash:direct-smoke-plan -- https://trust402.vercel.app
+```
+
+This prints the exact one-line approval text, the temporary local policy patch,
+the unpaid AgentCash schema-check input, the paid AgentCash fetch input, stable
+input hashes, and the restore-after-run policy values. It does not call
+AgentCash, does not write `.local`, and does not spend.
+
 The `fetch.input` in that output may help produce indexing evidence for
 `trust.compare_resources`, but it remains out-of-band. It does not prove the
 Trust402 runtime payment adapter and must not be used to mark
