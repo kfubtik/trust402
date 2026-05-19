@@ -29,6 +29,7 @@ import { paymentBuyerPreflight } from "./paymentBuyerPreflight.js";
 import { paymentBridgeCheck } from "./paymentBridgeCheck.js";
 import { procurementExecute, procurementQuote } from "./procurement.js";
 import { notarizeResult } from "./proof402Client.js";
+import { proof402Preflight } from "./proof402Preflight.js";
 import { launchChecklist } from "./readiness.js";
 import { hashResult } from "./receipts.js";
 import { paymentChallengeFor, settlementPreflight, settlementStatus } from "./settlement.js";
@@ -53,6 +54,7 @@ const routes = new Map([
   ["POST /api/procurement/execute", procurementExecute],
   ["POST /api/payments/buyer-preflight", paymentBuyerPreflight],
   ["POST /api/payments/bridge-check", paymentBridgeCheck],
+  ["POST /api/proof402/preflight", proof402Preflight],
   ["POST /api/deployments/preflight", deploymentPreflight],
   ["POST /api/domains/activation-pack", domainActivationPack],
   ["POST /api/live/window-plan", liveWindowPlan],
@@ -100,6 +102,7 @@ export async function handleTrust402Request(req, res) {
           spendPolicy: "/api/policies/spend",
           paymentBuyerPreflight: "/api/payments/buyer-preflight",
           paymentBridgeCheck: "/api/payments/bridge-check",
+          proof402Preflight: "/api/proof402/preflight",
           completionPlan: "/api/completion/plan",
           completionAudit: "/api/completion/audit",
           deploymentPreflight: "/api/deployments/preflight",
@@ -275,6 +278,7 @@ function statusSummary() {
       readyForAutonomousDryRun: true,
       readyForOneShotMonitoring: true,
       readyForProof402Preview: Boolean(config.proof402BaseUrl),
+      readyForProof402Preflight: true,
       readyForLiveSpend: false,
       readyForProof402Delegation: false,
       readyForAgentCashAutoRefill: false,
@@ -304,6 +308,7 @@ function statusSummary() {
       spendPolicy: "/api/policies/spend",
       paymentBridgeCheck: "/api/payments/bridge-check",
       paymentBuyerPreflight: "/api/payments/buyer-preflight",
+      proof402Preflight: "/api/proof402/preflight",
       completionPlan: "/api/completion/plan",
       completionAudit: "/api/completion/audit",
       deploymentPreflight: "/api/deployments/preflight",

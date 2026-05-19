@@ -58,6 +58,7 @@ assert(packageJson.scripts?.["marketplace:bundle"], "package must expose npm run
 assert(packageJson.scripts?.["agentcash:mcp-observation"], "package must expose npm run agentcash:mcp-observation");
 assert(packageJson.scripts?.["payment:bridge-check"], "package must expose npm run payment:bridge-check");
 assert(packageJson.scripts?.["payment:buyer-preflight"], "package must expose npm run payment:buyer-preflight");
+assert(packageJson.scripts?.["proof402:preflight"], "package must expose npm run proof402:preflight");
 assert(packageJson.scripts?.["agentcash:policy"], "package must expose npm run agentcash:policy");
 assert(packageJson.scripts?.["agentcash:refill-check"], "package must expose npm run agentcash:refill-check");
 assert(packageJson.scripts?.["completion:audit"], "package must expose npm run completion:audit");
@@ -108,6 +109,7 @@ assert(existsSync("src/directorySubmissionPack.js"), "directory submission pack 
 assert(existsSync("src/paymentAdapters.js"), "payment adapter module must exist");
 assert(existsSync("src/paymentBridgeCheck.js"), "payment bridge check module must exist");
 assert(existsSync("src/paymentBuyerPreflight.js"), "CDP buyer preflight module must exist");
+assert(existsSync("src/proof402Preflight.js"), "Proof402 paid preflight module must exist");
 assert(existsSync("src/policies.js"), "spend policy status module must exist");
 assert(existsSync("compose.yaml"), "compose.yaml must exist");
 assert(existsSync("docs/deployment.md"), "deployment docs must exist");
@@ -117,6 +119,7 @@ assert(existsSync("docs/github-release-checklist.md"), "GitHub release checklist
 assert(existsSync("docs/launch-issues.md"), "launch issue mirror must exist");
 assert(existsSync("docs/autonomous-completion-plan.md"), "autonomous completion plan must exist");
 assert(existsSync("examples/x402-diligence.json"), "x402 diligence example must exist");
+assert(existsSync("examples/proof402-preflight.json"), "Proof402 preflight example must exist");
 assert(dockerfile.includes("HEALTHCHECK"), "Dockerfile must expose a healthcheck");
 assert(dockerfile.includes("npm ci --omit=dev"), "Dockerfile must install production dependencies");
 assert(compose.includes("TRUST402_MODE: dry-run"), "compose must keep Trust402 in dry-run mode");
@@ -142,6 +145,7 @@ assert(existsSync("scripts/live-smoke-window.js"), "live smoke window script mus
 assert(existsSync("scripts/live-window-plan.js"), "live window plan script must exist");
 assert(existsSync("scripts/payment-bridge-check.js"), "payment bridge check script must exist");
 assert(existsSync("scripts/payment-buyer-preflight.js"), "CDP buyer preflight script must exist");
+assert(existsSync("scripts/proof402-preflight.js"), "Proof402 paid preflight script must exist");
 assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("evaluateLocalAgentcashPolicyForLive"), "live evidence smoke must enforce local AgentCash policy before live mode");
 assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("appendEvidenceLedger"), "live evidence smoke must support local public-safe evidence ledger writes");
 assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("payment_bridge_preflight"), "live evidence smoke must require payment bridge preflight before bridge-backed live spend");
@@ -165,6 +169,7 @@ assert(smokeScript.includes("/api/agentcash/refill-check"), "smoke script must c
 assert(smokeScript.includes("/api/agentcash/mcp-observation"), "smoke script must cover AgentCash MCP observation guard");
 assert(smokeScript.includes("/api/payments/bridge-check"), "smoke script must cover payment bridge authorization gate");
 assert(smokeScript.includes("/api/payments/buyer-preflight"), "smoke script must cover CDP buyer preflight");
+assert(smokeScript.includes("/api/proof402/preflight"), "smoke script must cover Proof402 paid preflight");
 assert(smokeScript.includes("/api/completion/plan"), "smoke script must cover completion plan");
 assert(smokeScript.includes("/api/completion/audit"), "smoke script must cover completion audit");
 assert(smokeScript.includes("/api/deployments/preflight"), "smoke script must cover deployment preflight API");
@@ -300,6 +305,10 @@ assert(
   catalog.freeResources.some((resource) => resource.path === "/api/payments/buyer-preflight" && resource.priceUsd === 0),
   "free CDP buyer preflight helper must exist"
 );
+assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/proof402/preflight" && resource.priceUsd === 0),
+  "free Proof402 paid preflight helper must exist"
+);
 for (const path of [
   "/.well-known/x402.json",
   "/.well-known/agent.json",
@@ -340,6 +349,7 @@ assert(openapi.paths?.["/api/agentcash/refill-check"]?.post, "AgentCash refill c
 assert(openapi.paths?.["/api/agentcash/mcp-observation"]?.post, "AgentCash MCP observation guard must be present in OpenAPI");
 assert(openapi.paths?.["/api/payments/bridge-check"]?.post, "payment bridge check must be present in OpenAPI");
 assert(openapi.paths?.["/api/payments/buyer-preflight"]?.post, "CDP buyer preflight must be present in OpenAPI");
+assert(openapi.paths?.["/api/proof402/preflight"]?.post, "Proof402 paid preflight must be present in OpenAPI");
 assert(openapi.paths?.["/.well-known/x402.json"]?.get, "x402 JSON alias must be present in OpenAPI");
 assert(openapi.paths?.["/.well-known/agent.json"]?.get, "agent manifest must be present in OpenAPI");
 assert(openapi.paths?.["/.well-known/agent-services.json"]?.get, "agent services manifest must be present in OpenAPI");
@@ -458,6 +468,10 @@ assert(
   !openapi.paths["/api/payments/buyer-preflight"].post["x-payment-info"],
   "CDP buyer preflight helper must not require payment"
 );
+assert(
+  !openapi.paths["/api/proof402/preflight"].post["x-payment-info"],
+  "Proof402 paid preflight helper must not require payment"
+);
 
 const ids = new Set();
 const paths = new Set();
@@ -493,6 +507,7 @@ run("node", ["scripts/agentcash-refill-check.js", "--balance", "1.00"]);
 run("node", ["scripts/agentcash-mcp-observation.js"]);
 run("node", ["scripts/payment-bridge-check.js"]);
 run("node", ["scripts/payment-buyer-preflight.js"]);
+run("node", ["scripts/proof402-preflight.js", "--result-hash", "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "--approved-hash", "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "--price-usd", "0.005"]);
 run("node", ["scripts/completion-audit.js"]);
 run("node", ["scripts/settlement-check.js"]);
 run("node", ["--test", "test"]);

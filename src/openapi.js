@@ -95,6 +95,26 @@ export function openApiSpec() {
         }
       }
     },
+    "/api/proof402/preflight": {
+      post: {
+        operationId: "proof402_preflight",
+        summary: "Read-only paid Proof402 delegation preflight for approved hashes, quote caps, and live policy",
+        tags: ["Trust402"],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: requestSchemaFor("proof402.preflight"),
+              example: exampleFor("proof402.preflight")
+            }
+          }
+        },
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse
+        }
+      }
+    },
     "/api/completion/plan": getPath("Pinned autonomous buyer-agent completion plan and success criteria"),
     "/api/completion/audit": getPath("Requirement-by-requirement audit of Trust402 autonomous buyer-agent completion"),
     "/api/deployments/preflight": {
@@ -477,6 +497,7 @@ export function agentManifest() {
       "bounded procurement planning",
       "hash-ready diligence reports",
       "Proof402 preview and paid-delegation gating",
+      "Proof402 paid-proof preflight for approved hashes and quote caps",
       "AgentCash balance/refill policy checks"
     ],
     discovery: discoveryLinks(),
@@ -614,6 +635,7 @@ export function sitemapXml() {
     "/api/status",
     "/api/marketplace/bundle",
     "/api/directories/submission-pack",
+    "/api/proof402/preflight",
     ...loadCatalog().paidLaunchResources.map((resource) => resource.path)
   ];
   const body = urls.map((path) => `  <url><loc>${xmlEscape(`${config.publicBaseUrl}${path}`)}</loc></url>`).join("\n");
@@ -644,6 +666,7 @@ export function capabilities() {
       settlementPreflight: "/api/settlement/preflight",
       spendPolicy: "/api/policies/spend",
       paymentBridgeCheck: "/api/payments/bridge-check",
+      proof402Preflight: "/api/proof402/preflight",
       completionPlan: "/api/completion/plan",
       completionAudit: "/api/completion/audit",
       deploymentPreflight: "/api/deployments/preflight",
@@ -927,6 +950,43 @@ function requestSchemaFor(id) {
         cdpEvmAccountAddress: { type: "string", pattern: "^0x[a-fA-F0-9]{40}$" },
         cdpEvmAccountName: { type: "string" }
       }
+    };
+  }
+
+  if (id === "proof402.preflight") {
+    return {
+      type: "object",
+      properties: {
+        subject: { type: "string" },
+        label: { type: "string" },
+        payload: {},
+        result: {},
+        resultHash: { type: "string", pattern: "^sha256:[a-f0-9]{64}$" },
+        approvedHash: { type: "string", pattern: "^sha256:[a-f0-9]{64}$" },
+        approvedHashes: {
+          type: "array",
+          items: { type: "string", pattern: "^sha256:[a-f0-9]{64}$" }
+        },
+        quotedPriceUsd: { type: "number" },
+        paymentQuote: {
+          type: "object",
+          properties: {
+            amount: { type: "string" },
+            maxAmountRequired: { type: "string" },
+            assetDecimals: { type: "integer", default: 6 },
+            network: { type: "string", default: "eip155:8453" },
+            asset: { type: "string" },
+            payTo: { type: "string", pattern: "^0x[a-fA-F0-9]{40}$" }
+          }
+        },
+        metadata: { type: "object" },
+        idempotencyKey: { type: "string" }
+      },
+      anyOf: [
+        { required: ["payload"] },
+        { required: ["result"] },
+        { required: ["resultHash"] }
+      ]
     };
   }
 
@@ -1269,6 +1329,24 @@ function exampleFor(id) {
       provider: "cdp-x402",
       probeCdp: false,
       cdpEvmAccountName: "trust402-buyer"
+    };
+  }
+  if (id === "proof402.preflight") {
+    return {
+      subject: "example diligence result",
+      resultHash: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      approvedHash: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      paymentQuote: {
+        amount: "5000",
+        assetDecimals: 6,
+        network: "eip155:8453",
+        asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        payTo: "0x0E525428d66C111672cE58B1bf649A6d167f36b1"
+      },
+      metadata: {
+        agent: "trust402",
+        taskId: "task_123"
+      }
     };
   }
   if (id === "live.window_plan") {

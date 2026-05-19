@@ -247,6 +247,14 @@
       "priceUsd": 0,
       "status": "operator-gated-dry-run-helper",
       "purpose": "Verify CDP-backed x402 buyer signer readiness and optionally probe an existing CDP account without creating accounts or sending payment headers."
+    },
+    {
+      "id": "proof402.preflight",
+      "method": "POST",
+      "path": "/api/proof402/preflight",
+      "priceUsd": 0,
+      "status": "dry-run-helper",
+      "purpose": "Verify approved result hashes, Proof402 quote price, proof spend cap, and live delegation policy before any paid Proof402 proof."
     }
   ],
   "paidLaunchResources": [

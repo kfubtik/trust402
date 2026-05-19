@@ -225,6 +225,10 @@ Acceptance:
   `sha256:` hash;
 - `/api/receipts/notarize-result` returns a public-safe `receiptBundle` for
   preview, probe, and live Proof402 outcomes.
+- `/api/proof402/preflight` and `npm run proof402:preflight` can prove before
+  any paid proof that the exact `sha256:` hash is approved, the Proof402 quote
+  is within cap, live policy is ready, and no private payload fields will be
+  sent.
 
 Completion evidence:
 
@@ -423,6 +427,20 @@ budget returns to its prior state after the run. Without `--live` and
 `--apply-local-policy`, it is preview-only and writes nothing.
 For the Proof402 candidate, the runner generates only `contentHash`, `label`,
 `idempotencyKey`, and public-safe metadata; private payloads are not sent.
+
+Before a paid Proof402 smoke, run the dedicated read-only preflight against the
+approved hash and the current Proof402 quote:
+
+```powershell
+npm run proof402:preflight -- `
+  --result-hash=sha256:<approved-result-hash> `
+  --approved-hash=sha256:<approved-result-hash> `
+  --price-usd=0.005 `
+  --strict
+```
+
+The API equivalent is `POST /api/proof402/preflight`. It does not call
+Proof402, does not send payment headers, and does not mutate the wallet.
 
 During approved evidence collection, append `--write-evidence` to write a
 local public-safe JSONL ledger under `.local/evidence-ledger/`. This ledger is

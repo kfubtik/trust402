@@ -1,0 +1,16 @@
+{
+  "subject": "example diligence result",
+  "resultHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "approvedHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "paymentQuote": {
+    "amount": "5000",
+    "assetDecimals": 6,
+    "network": "eip155:8453",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "payTo": "0x0E525428d66C111672cE58B1bf649A6d167f36b1"
+  },
+  "metadata": {
+    "agent": "trust402",
+    "taskId": "task_123"
+  }
+}

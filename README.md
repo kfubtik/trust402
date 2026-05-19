@@ -362,6 +362,12 @@ $body = Get-Content .\examples\notarize-result.json -Raw
 Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/receipts/notarize-result -ContentType application/json -Body $body
 ```
 
+Preflight a paid Proof402 proof before any live call:
+
+```powershell
+npm run proof402:preflight -- --result-hash=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --approved-hash=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --price-usd=0.005
+```
+
 Create an x402 diligence report:
 
 ```powershell

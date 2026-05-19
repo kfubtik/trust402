@@ -25,6 +25,10 @@ async function main() {
     resources.freeResources?.some((item) => item.path === "/api/payments/buyer-preflight"),
     "/api/resources must expose CDP buyer preflight"
   );
+  assert(
+    resources.freeResources?.some((item) => item.path === "/api/proof402/preflight"),
+    "/api/resources must expose Proof402 paid preflight"
+  );
 
   const wellKnown = await getJson("/.well-known/x402");
   assert(wellKnown.resources?.length === 10, "/.well-known/x402 expected 10 paid resources");
@@ -123,6 +127,18 @@ async function main() {
   });
   assert(buyerProbeBlocked.response.status === 403, "/api/payments/buyer-preflight probe must require operator authorization");
   assert(buyerProbeBlocked.body.error?.code === "operator_not_authorized", "/api/payments/buyer-preflight probe must block without operator key");
+
+  const proof402Preflight = await postJson("/api/proof402/preflight", {
+    subject: "smoke result",
+    resultHash: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    approvedHash: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    quotedPriceUsd: 0.005,
+    metadata: { taskId: "smoke" }
+  });
+  assert(proof402Preflight.tool === "proof402.preflight", "/api/proof402/preflight tool mismatch");
+  assert(proof402Preflight.safety?.callsProof402 === false, "/api/proof402/preflight must not call Proof402");
+  assert(proof402Preflight.safety?.sendsPaymentHeaders === false, "/api/proof402/preflight must not send payment headers");
+  assert(proof402Preflight.request?.sendsOnlyHashAndPublicMetadata === true, "/api/proof402/preflight must send only hash and public metadata");
 
   const completionPlan = await getJson("/api/completion/plan");
   assert(completionPlan.tool === "completion.plan", "/api/completion/plan tool mismatch");
@@ -252,6 +268,7 @@ async function main() {
   assert(openapi.paths?.["/api/policies/spend"]?.get, "/openapi missing spend policy");
   assert(openapi.paths?.["/api/payments/bridge-check"]?.post, "/openapi missing payment bridge check");
   assert(openapi.paths?.["/api/payments/buyer-preflight"]?.post, "/openapi missing CDP buyer preflight");
+  assert(openapi.paths?.["/api/proof402/preflight"]?.post, "/openapi missing Proof402 paid preflight");
   assert(openapi.paths?.["/api/completion/plan"]?.get, "/openapi missing completion plan");
   assert(openapi.paths?.["/api/completion/audit"]?.get, "/openapi missing completion audit");
   assert(openapi.paths?.["/api/deployments/preflight"]?.get, "/openapi missing deployment preflight GET");

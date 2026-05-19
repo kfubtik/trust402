@@ -365,6 +365,20 @@ values that can be reviewed before adding them to production.
 For the Proof402 candidate, the downstream procurement request contains only a
 generated `contentHash`, `label`, `idempotencyKey`, and public-safe metadata.
 
+Before the live window, verify the exact approved proof candidate in read-only
+mode:
+
+```powershell
+npm run proof402:preflight -- `
+  --result-hash=sha256:<approved-result-hash> `
+  --approved-hash=sha256:<approved-result-hash> `
+  --price-usd=0.005 `
+  --strict
+```
+
+The matching API is `POST /api/proof402/preflight`. It does not call Proof402,
+does not send payment headers, and does not mutate the AgentCash wallet.
+
 When the configured live payment provider uses a bridge, such as `agentcash-mcp`
 or `external-adapter`, the runner calls `/api/payments/bridge-check` before any
 live procurement or paid Proof402 call. The live run stops unless that dry-run

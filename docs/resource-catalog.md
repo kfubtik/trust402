@@ -186,6 +186,18 @@ requires `contentHash`, `label`, and `idempotencyKey`. Trust402 maps
 `links.proof` / `links.verify` when returned, and rejects paid proof responses
 whose returned `proof.contentHash` does not match the requested hash.
 
+### `POST /api/proof402/preflight`
+
+Free helper that checks the paid Proof402 path before any live proof: exact
+approved `sha256:` hash, current quote/price, proof spend cap, live policy
+readiness, and the final public-safe request body shape.
+
+Price: free.
+
+Reason: the paid proof should be boring when it happens. This endpoint turns
+the risky parts into a read-only, machine-checkable preflight: no Proof402 call,
+no payment headers, no wallet mutation, no private payload.
+
 ### `POST /api/procurement/execute`
 
 Dry-run helper that simulates controlled procurement execution and returns an
