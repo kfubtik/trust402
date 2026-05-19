@@ -450,6 +450,10 @@ function requestSchemaFor(id) {
         includeProof: { type: "boolean", default: true },
         includeAutonomous: { type: "boolean", default: false },
         includeAutoRefill: { type: "boolean", default: false },
+        liveMaxPerCallUsd: { type: "number" },
+        liveMaxPerJobUsd: { type: "number" },
+        liveDailyLimitUsd: { type: "number" },
+        liveSpentTodayUsd: { type: "number", default: 0 },
         lastVerifiedBalanceUsd: { type: "number" },
         minimumReserveUsd: { type: "number" }
       }
@@ -467,7 +471,8 @@ function requestSchemaFor(id) {
         paymentProvider: { type: "string", enum: ["agentcash-mcp", "x402-fetch", "external-adapter"] },
         includeProof: { type: "boolean", default: true },
         includeAutonomous: { type: "boolean", default: false },
-        includeAutoRefill: { type: "boolean", default: false }
+        includeAutoRefill: { type: "boolean", default: false },
+        liveSpentTodayUsd: { type: "number", default: 0 }
       }
     };
   }

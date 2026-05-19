@@ -44,6 +44,10 @@ export function operatorActionPack(input = {}, options = {}) {
     refillProvider: input.refillProvider,
     refillAmountUsd: input.refillAmountUsd,
     refillDailyCapUsd: input.refillDailyCapUsd,
+    liveMaxPerCallUsd: input.liveMaxPerCallUsd,
+    liveMaxPerJobUsd: input.liveMaxPerJobUsd,
+    liveDailyLimitUsd: input.liveDailyLimitUsd,
+    liveSpentTodayUsd: input.liveSpentTodayUsd,
     lastVerifiedBalanceUsd: input.lastVerifiedBalanceUsd,
     minimumReserveUsd: input.minimumReserveUsd
   }, options);
@@ -239,6 +243,7 @@ function liveProcurementAction(livePlan) {
       "LIVE_MAX_PER_CALL_USD",
       "LIVE_MAX_PER_JOB_USD",
       "LIVE_DAILY_LIMIT_USD",
+      "LIVE_SPENT_TODAY_USD",
       "LIVE_APPROVAL_THRESHOLD_USD",
       "LIVE_ALLOWED_REGISTRIES"
     ]),

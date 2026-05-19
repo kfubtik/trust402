@@ -28,6 +28,7 @@ test("live window plan stays read-only and produces a bounded staging profile", 
   assert.equal(result.safety.includesPrivateKeyMaterial, false);
   assert.equal(result.vercelEnvPlan.production.LIVE_SPEND_ENABLED, "true");
   assert.equal(result.vercelEnvPlan.production.LIVE_ALLOWED_REGISTRIES, "https://trusted.example");
+  assert.equal(result.vercelEnvPlan.production.LIVE_SPENT_TODAY_USD, "0");
   assert.equal(result.vercelEnvPlan.production.PROOF402_DELEGATION_MODE, "live");
   assert.deepEqual(result.vercelEnvPlan.requiredSecretsAlreadyExistOrMustBeAddedManually, [
     "TRUST402_OPERATOR_API_KEY"
@@ -58,6 +59,24 @@ test("live window plan blocks unsafe or underfunded staging profiles", () => {
   assert(result.blockers.some((item) => item.includes("Estimated max spend")));
   assert(result.blockers.some((item) => item.includes("manual smoke budget")));
   assert(result.blockers.some((item) => item.includes("minimum reserve")));
+});
+
+test("live window plan blocks when daily remaining spend capacity is too low", () => {
+  const result = liveWindowPlan({
+    candidateEndpoint: "https://trusted.example/api/paid",
+    candidatePriceUsd: 0.01,
+    maxTotalUsd: 0.03,
+    liveDailyLimitUsd: 0.03,
+    liveSpentTodayUsd: 0.025,
+    manualSmokeBudgetUsd: 0.03,
+    lastVerifiedBalanceUsd: 1.25,
+    minimumReserveUsd: 0.5,
+    includeProof: true
+  }, { config: baseConfig });
+
+  assert.equal(result.status, "blocked");
+  assert.equal(result.liveDailyRemainingUsd, 0.005);
+  assert(result.blockers.some((item) => item.includes("remaining daily spend capacity")));
 });
 
 test("live window plan can include autonomous and auto-refill staging without enabling mutation", () => {

@@ -84,6 +84,9 @@ window, when a non-zero exit should block the smoke.
   mark `LIVE_SPEND_ENABLED=true` ready with plain `fetch`; use an
   `external-adapter`, an AgentCash bridge URL, or `@x402/fetch` with secret
   buyer key and RPC URL.
+- Set `LIVE_SPENT_TODAY_USD` before any approved live buyer window. Trust402
+  subtracts that from `LIVE_DAILY_LIMIT_USD` and blocks purchases that would
+  exceed the remaining daily capacity.
 - Use `TRUST402_PAYWALL_MODE=mock` only for local 402 contract testing.
 - Use `npm run smoke:x402 -- <base-url>` against mock mode or approved real mode to verify unpaid `402 Payment Required` challenges without settling a payment.
 - Put the API behind HTTPS before submitting to x402 marketplaces.
@@ -302,7 +305,8 @@ read-only staging plan:
 npm run live:window-plan -- https://trust402.vercel.app `
   --candidate-endpoint=https://approved.example/paid `
   --candidate-price=0.01 `
-  --max-total-usd=0.03
+  --max-total-usd=0.03 `
+  --live-spent-today-usd=0
 ```
 
 The planner proposes:

@@ -43,6 +43,10 @@ async function main() {
   const spendPolicy = await getJson("/api/policies/spend");
   assert(spendPolicy.readiness?.anyLiveSpendReady === false, "/api/policies/spend must not make live spend ready by default");
   assert(spendPolicy.policies?.agentcashAutoRefill?.ready === false, "/api/policies/spend must keep auto-refill gated");
+  assert(
+    typeof spendPolicy.policies?.liveProcurement?.controls?.dailyRemainingUsd === "number",
+    "/api/policies/spend must expose remaining daily capacity"
+  );
 
   const completion = await getJson("/api/completion/audit");
   assert(completion.goalComplete === false, "/api/completion/audit must not claim full completion while live/manual blockers remain");
@@ -63,6 +67,7 @@ async function main() {
   });
   assert(liveWindow.tool === "live.window_plan", "/api/live/window-plan tool mismatch");
   assert(liveWindow.status === "ready-to-stage", "/api/live/window-plan should produce a safe staging plan");
+  assert(liveWindow.vercelEnvPlan?.production?.LIVE_SPENT_TODAY_USD === "0", "/api/live/window-plan must include spent-today env");
   assert(liveWindow.safety?.readOnly === true, "/api/live/window-plan must be read-only");
   assert(liveWindow.safety?.sendsPaymentHeaders === false, "/api/live/window-plan must not send payment headers");
 

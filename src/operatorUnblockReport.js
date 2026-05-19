@@ -142,6 +142,7 @@ function customDomainCheck(hostPolicy) {
 
 function liveProcurementCheck(cfg, localAgentcashPolicy) {
   const blockers = [];
+  const dailyRemainingUsd = dailyRemaining(cfg);
   if (!cfg.liveSpendEnabled) blockers.push("LIVE_SPEND_ENABLED is false.");
   if (!cfg.operatorApiKey) blockers.push("TRUST402_OPERATOR_API_KEY is not configured locally for the evidence runner.");
   if (!["agentcash-mcp", "x402-fetch", "external-adapter"].includes(cfg.livePaymentProvider)) {
@@ -149,6 +150,9 @@ function liveProcurementCheck(cfg, localAgentcashPolicy) {
   }
   if (!Array.isArray(cfg.liveAllowedRegistries) || cfg.liveAllowedRegistries.length === 0) {
     blockers.push("LIVE_ALLOWED_REGISTRIES is empty.");
+  }
+  if (cfg.liveDailyLimitUsd > 0 && cfg.liveSpentTodayUsd >= cfg.liveDailyLimitUsd) {
+    blockers.push("LIVE_SPENT_TODAY_USD has reached LIVE_DAILY_LIMIT_USD.");
   }
   blockers.push(...localAgentcashPolicy.blockers.map((item) => `${item.id}: ${item.message}`));
   return {
@@ -161,6 +165,11 @@ function liveProcurementCheck(cfg, localAgentcashPolicy) {
       paymentProvider: cfg.livePaymentProvider,
       operatorKeyConfigured: Boolean(cfg.operatorApiKey),
       allowedRegistriesCount: Array.isArray(cfg.liveAllowedRegistries) ? cfg.liveAllowedRegistries.length : 0,
+      maxPerCallUsd: cfg.liveMaxPerCallUsd,
+      maxPerJobUsd: cfg.liveMaxPerJobUsd,
+      dailyLimitUsd: cfg.liveDailyLimitUsd,
+      spentTodayUsd: cfg.liveSpentTodayUsd,
+      dailyRemainingUsd,
       localAgentcashPolicy: localAgentcashPolicy.summary,
       blockers
     },
@@ -302,4 +311,9 @@ function numberOr(value, fallback) {
 
 function roundUsd(value) {
   return Math.round(value * 1_000_000) / 1_000_000;
+}
+
+function dailyRemaining(cfg) {
+  if (!(cfg.liveDailyLimitUsd > 0)) return 0;
+  return roundUsd(Math.max(0, cfg.liveDailyLimitUsd - Math.max(0, cfg.liveSpentTodayUsd || 0)));
 }

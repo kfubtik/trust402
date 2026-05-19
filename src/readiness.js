@@ -129,6 +129,7 @@ export function launchChecklist(runtimeConfig = config) {
       liveMaxPerCallUsd: runtimeConfig.liveMaxPerCallUsd,
       liveMaxPerJobUsd: runtimeConfig.liveMaxPerJobUsd,
       liveDailyLimitUsd: runtimeConfig.liveDailyLimitUsd,
+      liveSpentTodayUsd: runtimeConfig.liveSpentTodayUsd,
       liveAllowedRegistriesCount: runtimeConfig.liveAllowedRegistries.length,
       proof402DelegationMode: runtimeConfig.proof402DelegationMode,
       proof402MaxSpendUsd: runtimeConfig.proof402MaxSpendUsd

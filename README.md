@@ -463,6 +463,8 @@ Future live procurement must require:
 - per-call limit;
 - per-job limit;
 - daily limit;
+- current spent-today value (`LIVE_SPENT_TODAY_USD`) so remaining daily
+  capacity is enforced before each approved live job;
 - registry allowlist;
 - endpoint denylist;
 - receipt log;

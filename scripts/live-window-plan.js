@@ -18,6 +18,7 @@ const result = liveWindowPlan({
   liveMaxPerCallUsd: args.liveMaxPerCall || "",
   liveMaxPerJobUsd: args.liveMaxPerJob || "",
   liveDailyLimitUsd: args.liveDailyLimit || "",
+  liveSpentTodayUsd: args.liveSpentTodayUsd || args.liveSpentToday || process.env.LIVE_SPENT_TODAY_USD || "",
   includeProof: args.skipProof !== true,
   includeAutonomous: args.includeAutonomous === true,
   includeAutoRefill: args.includeAutoRefill === true,

@@ -38,6 +38,10 @@ test("operatorActionPack turns blockers into public-safe operator actions", () =
     pack.actions.find((action) => action.id === "live_procurement").envPlan.LIVE_ALLOWED_REGISTRIES,
     "https://trusted.example"
   );
+  assert.equal(
+    pack.actions.find((action) => action.id === "live_procurement").envPlan.LIVE_SPENT_TODAY_USD,
+    "0"
+  );
   assert.equal(JSON.stringify(pack).includes("TRUST402_OPERATOR_API_KEY\":\"configured"), false);
 });
 

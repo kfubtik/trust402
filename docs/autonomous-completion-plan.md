@@ -64,6 +64,8 @@ Goal: one policy model decides whether Trust402 may spend before any paid call.
 Acceptance:
 
 - per-call, per-job, and daily caps are enforced;
+- `LIVE_SPENT_TODAY_USD` is included in the live policy profile so the agent
+  can prove remaining daily spend capacity before a paid call;
 - registry allowlist and endpoint denylist are enforced;
 - approval thresholds are enforced;
 - emergency stop overrides every live path;
@@ -249,7 +251,8 @@ budget, and provider:
 npm run live:window-plan -- https://trust402.vercel.app `
   --candidate-endpoint=https://approved.example/paid `
   --candidate-price=0.01 `
-  --max-total-usd=0.03
+  --max-total-usd=0.03 `
+  --live-spent-today-usd=0
 ```
 
 This command does not change `.local/trust402-agentcash-wallet.json`, does not

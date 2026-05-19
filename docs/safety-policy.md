@@ -48,6 +48,8 @@ Live spend can only exist in a separate operator profile with all of these:
 - max spend per job;
 - max spend per call;
 - daily max spend;
+- current daily spend input (`LIVE_SPENT_TODAY_USD`) so the remaining daily
+  capacity is checked before each live job;
 - registry allowlist;
 - endpoint denylist;
 - receipt log;

@@ -137,6 +137,7 @@ test("procurementExecute can run live through an injected paid fetch inside poli
       liveMaxPerCallUsd: 0.05,
       liveMaxPerJobUsd: 0.25,
       liveDailyLimitUsd: 1,
+      liveSpentTodayUsd: 0,
       liveApprovalThresholdUsd: 0,
       liveAllowedRegistries: ["https://example.com"],
       liveEndpointDenylist: [],
@@ -148,5 +149,50 @@ test("procurementExecute can run live through an injected paid fetch inside poli
   assert.equal(result.paidSubcallsMade, 1);
   assert.equal(result.result.status, "executed");
   assert.equal(result.result.calls[0].paymentResponseObserved, true);
+  assert.equal(result.audit.limits.dailyRemainingBeforeUsd, 1);
+  assert.equal(result.audit.limits.dailyRemainingAfterEstimatedUsd, 0.99);
   assert.match(result.executionHash, /^sha256:[a-f0-9]{64}$/);
+});
+
+test("procurementExecute blocks live spend when daily remaining cap is exhausted", async () => {
+  const quote = procurementQuote({
+    goal: "Buy one safe x402 data resource.",
+    budgetUsd: 0.5,
+    maxPaidCalls: 1,
+    riskTolerance: "low",
+    candidates: [goodCandidate]
+  });
+
+  await assert.rejects(
+    procurementExecute({
+      mode: "live",
+      quote,
+      approval: {
+        approved: true,
+        quoteHash: quote.quoteHash
+      }
+    }, {
+      operatorAuthorized: true,
+      paidFetchImpl: async () => new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      }),
+      config: {
+        ...config,
+        liveSpendEnabled: true,
+        livePaymentProvider: "external-adapter",
+        livePaymentAdapterUrl: "https://pay.example/bridge",
+        operatorApiKey: "test-operator",
+        liveMaxPerCallUsd: 0.05,
+        liveMaxPerJobUsd: 0.25,
+        liveDailyLimitUsd: 1,
+        liveSpentTodayUsd: 0.995,
+        liveApprovalThresholdUsd: 0,
+        liveAllowedRegistries: ["https://example.com"],
+        liveEndpointDenylist: [],
+        liveReceiptLogMode: "response-only"
+      }
+    }),
+    (error) => error.details?.blockers?.some((item) => item.id === "pass_through_exceeds_daily_remaining")
+  );
 });

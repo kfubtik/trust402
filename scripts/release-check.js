@@ -22,6 +22,9 @@ const apiIndex = readFileSync("api/index.js", "utf8");
 const serverSource = readFileSync("src/server.js", "utf8");
 const smokeScript = readFileSync("scripts/smoke.js", "utf8");
 const liveEvidenceSmokeScript = readFileSync("scripts/live-evidence-smoke.js", "utf8");
+const configSource = readFileSync("src/config.js", "utf8");
+const policySource = readFileSync("src/policies.js", "utf8");
+const liveWindowPlanSource = readFileSync("src/liveWindowPlan.js", "utf8");
 const launchMonitorScript = readFileSync("scripts/launch-monitor.js", "utf8");
 const openapi = openApiSpec();
 const wellKnown = x402WellKnown();
@@ -114,7 +117,10 @@ assert(existsSync("scripts/live-evidence-smoke.js"), "live evidence smoke script
 assert(existsSync("scripts/live-window-plan.js"), "live window plan script must exist");
 assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("evaluateLocalAgentcashPolicyForLive"), "live evidence smoke must enforce local AgentCash policy before live mode");
 assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("appendEvidenceLedger"), "live evidence smoke must support local public-safe evidence ledger writes");
-assert(readFileSync("src/liveWindowPlan.js", "utf8").includes("writesLocalPolicy: false"), "live window plan must stay read-only");
+assert(liveWindowPlanSource.includes("writesLocalPolicy: false"), "live window plan must stay read-only");
+assert(liveWindowPlanSource.includes("LIVE_SPENT_TODAY_USD"), "live window plan must include spent-today tracking");
+assert(configSource.includes("liveSpentTodayUsd"), "config must expose LIVE_SPENT_TODAY_USD");
+assert(policySource.includes("dailyRemainingUsd"), "spend policy must expose remaining daily capacity");
 assert(existsSync("scripts/launch-monitor.js"), "production launch monitor script must exist");
 assert(liveEvidenceSmokeScript.includes("writeEvidenceLedger"), "live evidence smoke CLI must expose evidence ledger write option");
 assert(smokeScript.includes("/api/jobs/autonomous-run"), "smoke script must cover autonomous job dry-run");
@@ -137,6 +143,7 @@ assert(productionDeployWorkflow.includes("VERCEL_ORG_ID"), "production deploy wo
 assert(productionDeployWorkflow.includes("VERCEL_PROJECT_ID"), "production deploy workflow must require VERCEL_PROJECT_ID");
 assert(productionDeployWorkflow.includes("vercel@latest build --prod"), "production deploy workflow must build production output");
 assert(productionDeployWorkflow.includes("vercel@latest deploy --prebuilt --prod"), "production deploy workflow must deploy prebuilt production output");
+assert(productionDeployWorkflow.includes("npm run release:check"), "production deploy workflow must run release checks before deploying");
 assert(productionDeployWorkflow.includes("npm run smoke:x402 -- https://trust402.vercel.app"), "production deploy workflow must run production x402 smoke");
 assert(productionDeployWorkflow.includes("npm run launch:monitor -- https://trust402.vercel.app"), "production deploy workflow must run production launch monitor");
 assert(dependabot.includes("package-ecosystem: npm"), "Dependabot must monitor npm dependencies");
@@ -212,6 +219,7 @@ assert(openapi.paths?.["/api/policies/spend"]?.get, "spend policy status must be
 assert(openapi.paths?.["/api/completion/audit"]?.get, "completion audit must be present in OpenAPI");
 assert(openapi.paths?.["/api/live/window-plan"]?.post, "live window plan must be present in OpenAPI");
 assert(openapi.paths?.["/api/operator/action-pack"]?.post, "operator action pack must be present in OpenAPI");
+assert(JSON.stringify(openapi.paths["/api/live/window-plan"]).includes("liveSpentTodayUsd"), "live window plan OpenAPI must expose spent-today input");
 assert(openapi.paths?.["/api/jobs/autonomous-run"]?.post, "autonomous job flow must be present in OpenAPI");
 assert(openapi.paths?.["/api/agentcash/refill-check"]?.post, "AgentCash refill check must be present in OpenAPI");
 assert(checklist.readiness.dryRunLaunchReady === true, "dry-run launch checklist must pass");

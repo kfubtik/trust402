@@ -46,6 +46,7 @@ export function spendPolicyStatus(runtimeConfig = config) {
 
 export function liveProcurementPolicy(runtimeConfig) {
   const blockers = [];
+  const dailyRemainingUsd = dailyRemaining(runtimeConfig);
   if (runtimeConfig.emergencyStop) blockers.push(blocker("emergency_stop", "TRUST402_EMERGENCY_STOP or LIVE_EMERGENCY_STOP is true."));
   if (!runtimeConfig.liveSpendEnabled) blockers.push(blocker("live_spend_disabled", "LIVE_SPEND_ENABLED is false."));
   if (!runtimeConfig.operatorApiKey) blockers.push(blocker("missing_operator_key", "TRUST402_OPERATOR_API_KEY is not configured."));
@@ -57,12 +58,19 @@ export function liveProcurementPolicy(runtimeConfig) {
   if (!(runtimeConfig.liveMaxPerCallUsd > 0)) blockers.push(blocker("missing_per_call_cap", "LIVE_MAX_PER_CALL_USD must be greater than zero."));
   if (!(runtimeConfig.liveMaxPerJobUsd > 0)) blockers.push(blocker("missing_per_job_cap", "LIVE_MAX_PER_JOB_USD must be greater than zero."));
   if (!(runtimeConfig.liveDailyLimitUsd > 0)) blockers.push(blocker("missing_daily_cap", "LIVE_DAILY_LIMIT_USD must be greater than zero."));
+  if (runtimeConfig.liveSpentTodayUsd < 0) blockers.push(blocker("invalid_spent_today", "LIVE_SPENT_TODAY_USD cannot be negative."));
   if (runtimeConfig.liveAllowedRegistries.length === 0) blockers.push(blocker("missing_registry_allowlist", "LIVE_ALLOWED_REGISTRIES must contain at least one approved registry."));
   if (runtimeConfig.liveMaxPerCallUsd > runtimeConfig.liveMaxPerJobUsd && runtimeConfig.liveMaxPerJobUsd > 0) {
     blockers.push(blocker("per_call_exceeds_job_cap", "LIVE_MAX_PER_CALL_USD cannot exceed LIVE_MAX_PER_JOB_USD."));
   }
   if (runtimeConfig.liveMaxPerJobUsd > runtimeConfig.liveDailyLimitUsd && runtimeConfig.liveDailyLimitUsd > 0) {
     blockers.push(blocker("job_cap_exceeds_daily_cap", "LIVE_MAX_PER_JOB_USD cannot exceed LIVE_DAILY_LIMIT_USD."));
+  }
+  if (runtimeConfig.liveDailyLimitUsd > 0 && runtimeConfig.liveSpentTodayUsd >= runtimeConfig.liveDailyLimitUsd) {
+    blockers.push(blocker("daily_cap_exhausted", "LIVE_SPENT_TODAY_USD has reached LIVE_DAILY_LIMIT_USD."));
+  }
+  if (runtimeConfig.liveDailyLimitUsd > 0 && runtimeConfig.liveMaxPerJobUsd > dailyRemainingUsd) {
+    blockers.push(blocker("job_cap_exceeds_daily_remaining", "LIVE_MAX_PER_JOB_USD cannot exceed remaining daily spend capacity."));
   }
 
   return {
@@ -73,6 +81,8 @@ export function liveProcurementPolicy(runtimeConfig) {
       maxPerCallUsd: runtimeConfig.liveMaxPerCallUsd,
       maxPerJobUsd: runtimeConfig.liveMaxPerJobUsd,
       dailyLimitUsd: runtimeConfig.liveDailyLimitUsd,
+      spentTodayUsd: runtimeConfig.liveSpentTodayUsd,
+      dailyRemainingUsd,
       approvalThresholdUsd: runtimeConfig.liveApprovalThresholdUsd,
       allowedRegistriesCount: runtimeConfig.liveAllowedRegistries.length,
       endpointDenylistCount: runtimeConfig.liveEndpointDenylist.length,
@@ -185,4 +195,13 @@ function isSupportedRefillProvider(provider) {
 
 function publicProvider(provider) {
   return provider && provider !== "disabled" ? provider : "not-configured";
+}
+
+function dailyRemaining(runtimeConfig) {
+  if (!(runtimeConfig.liveDailyLimitUsd > 0)) return 0;
+  return roundUsd(Math.max(0, runtimeConfig.liveDailyLimitUsd - Math.max(0, runtimeConfig.liveSpentTodayUsd || 0)));
+}
+
+function roundUsd(value) {
+  return Math.round(value * 1_000_000) / 1_000_000;
 }

@@ -80,6 +80,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(policies.body.tool, "policies.spend_status");
     assert.equal(policies.body.readiness.anyLiveSpendReady, false);
     assert.equal(policies.body.policies.liveProcurement.enabled, false);
+    assert.equal(typeof policies.body.policies.liveProcurement.controls.dailyRemainingUsd, "number");
     assert.equal(policies.body.policies.agentcashAutoRefill.enabled, false);
     assert.equal(policies.body.policies.proof402Delegation.mode, "disabled");
     assert.ok(policies.body.issues.agentcashAutoRefill.includes("/issues/7"));
@@ -146,6 +147,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(liveWindow.response.status, 200);
     assert.equal(liveWindow.body.tool, "live.window_plan");
     assert.equal(liveWindow.body.status, "ready-to-stage");
+    assert.equal(liveWindow.body.vercelEnvPlan.production.LIVE_SPENT_TODAY_USD, "0");
     assert.equal(liveWindow.body.safety.readOnly, true);
     assert.equal(liveWindow.body.safety.writesLocalPolicy, false);
     assert.equal(liveWindow.body.safety.sendsPaymentHeaders, false);

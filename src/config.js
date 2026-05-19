@@ -31,6 +31,7 @@ export const config = {
   liveMaxPerCallUsd: Number.parseFloat(process.env.LIVE_MAX_PER_CALL_USD || "0"),
   liveMaxPerJobUsd: Number.parseFloat(process.env.LIVE_MAX_PER_JOB_USD || "0"),
   liveDailyLimitUsd: Number.parseFloat(process.env.LIVE_DAILY_LIMIT_USD || "0"),
+  liveSpentTodayUsd: Number.parseFloat(process.env.LIVE_SPENT_TODAY_USD || "0"),
   liveApprovalThresholdUsd: Number.parseFloat(process.env.LIVE_APPROVAL_THRESHOLD_USD || "0"),
   liveAllowedRegistries: parseList(process.env.LIVE_ALLOWED_REGISTRIES || ""),
   liveEndpointDenylist: parseList(process.env.LIVE_ENDPOINT_DENYLIST || ""),

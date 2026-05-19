@@ -165,6 +165,13 @@ async function procurementExecuteLive(input = {}, options = {}) {
       message: "Selected resource pass-through estimate exceeds LIVE_MAX_PER_JOB_USD."
     });
   }
+  const dailyRemainingUsd = dailyRemaining(cfg);
+  if (cfg.liveDailyLimitUsd > 0 && quote.quote.passThroughEstimateUsd > dailyRemainingUsd) {
+    blockers.push({
+      id: "pass_through_exceeds_daily_remaining",
+      message: "Selected resource pass-through estimate exceeds remaining daily spend capacity."
+    });
+  }
   if (approvalRequired(quote, cfg) && !approvalMatchesQuote(approval, quote)) {
     blockers.push({
       id: "approval_required",
@@ -239,6 +246,9 @@ async function procurementExecuteLive(input = {}, options = {}) {
         maxPerCallUsd: cfg.liveMaxPerCallUsd,
         maxPerJobUsd: cfg.liveMaxPerJobUsd,
         dailyLimitUsd: cfg.liveDailyLimitUsd,
+        spentTodayUsd: cfg.liveSpentTodayUsd,
+        dailyRemainingBeforeUsd: dailyRemainingUsd,
+        dailyRemainingAfterEstimatedUsd: roundUsd(dailyRemainingUsd - estimatedPaidUsd),
         approvalThresholdUsd: cfg.liveApprovalThresholdUsd
       }
     },
@@ -495,4 +505,9 @@ function auditStage(id, paid, summary) {
 
 function roundUsd(value) {
   return Math.round(value * 1000000) / 1000000;
+}
+
+function dailyRemaining(cfg) {
+  if (!(cfg.liveDailyLimitUsd > 0)) return 0;
+  return roundUsd(Math.max(0, cfg.liveDailyLimitUsd - Math.max(0, cfg.liveSpentTodayUsd || 0)));
 }

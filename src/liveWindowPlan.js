@@ -25,6 +25,8 @@ export function liveWindowPlan(input = {}, options = {}) {
   const liveMaxPerCallUsd = numberOr(input.liveMaxPerCallUsd, Math.max(candidatePriceUsd, 0.01));
   const liveMaxPerJobUsd = numberOr(input.liveMaxPerJobUsd, maxTotalUsd);
   const liveDailyLimitUsd = numberOr(input.liveDailyLimitUsd, maxTotalUsd);
+  const liveSpentTodayUsd = numberOr(input.liveSpentTodayUsd, 0);
+  const liveDailyRemainingUsd = roundUsd(Math.max(0, liveDailyLimitUsd - Math.max(0, liveSpentTodayUsd)));
   const estimatedMaxSpendUsd = roundUsd(
     candidatePriceUsd * (includeAutonomous ? 2 : 1) +
     (includeProof ? proofReserveUsd : 0)
@@ -50,7 +52,8 @@ export function liveWindowPlan(input = {}, options = {}) {
     allowlist,
     includeProof,
     proof402BaseUrl,
-    proofReserveUsd
+    proofReserveUsd,
+    liveDailyRemainingUsd
   });
 
   const vercelEnvPlan = {
@@ -60,6 +63,7 @@ export function liveWindowPlan(input = {}, options = {}) {
       LIVE_MAX_PER_CALL_USD: usd(liveMaxPerCallUsd),
       LIVE_MAX_PER_JOB_USD: usd(liveMaxPerJobUsd),
       LIVE_DAILY_LIMIT_USD: usd(liveDailyLimitUsd),
+      LIVE_SPENT_TODAY_USD: usd(liveSpentTodayUsd),
       LIVE_APPROVAL_THRESHOLD_USD: "0",
       LIVE_ALLOWED_REGISTRIES: allowlist.join(","),
       PROOF402_BASE_URL: proof402BaseUrl,
@@ -106,6 +110,7 @@ export function liveWindowPlan(input = {}, options = {}) {
     `--candidate-endpoint=${candidateEndpoint || "<approved-x402-endpoint>"}`,
     `--candidate-price=${usd(candidatePriceUsd)}`,
     `--max-total-usd=${usd(maxTotalUsd)}`,
+    `--live-spent-today-usd=${usd(liveSpentTodayUsd)}`,
     includeAutonomous ? "--include-autonomous-live" : null
   ].filter(Boolean).join(" ");
 
@@ -115,6 +120,7 @@ export function liveWindowPlan(input = {}, options = {}) {
     estimatedMaxSpendUsd,
     maxTotalUsd,
     manualSmokeBudgetUsd,
+    liveDailyRemainingUsd,
     paymentProvider,
     includeProof,
     includeAutonomous,
@@ -162,6 +168,9 @@ function planBlockers(input) {
   }
   if (input.estimatedMaxSpendUsd > input.maxTotalUsd) {
     blockers.push(`Estimated max spend ${usd(input.estimatedMaxSpendUsd)} exceeds max total ${usd(input.maxTotalUsd)}.`);
+  }
+  if (input.estimatedMaxSpendUsd > input.liveDailyRemainingUsd) {
+    blockers.push(`Estimated max spend ${usd(input.estimatedMaxSpendUsd)} exceeds remaining daily spend capacity ${usd(input.liveDailyRemainingUsd)}.`);
   }
   if (input.estimatedMaxSpendUsd > input.manualSmokeBudgetUsd) {
     blockers.push(`Estimated max spend ${usd(input.estimatedMaxSpendUsd)} exceeds manual smoke budget ${usd(input.manualSmokeBudgetUsd)}.`);
