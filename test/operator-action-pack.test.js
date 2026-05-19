@@ -52,6 +52,14 @@ test("operatorActionPack turns blockers into public-safe operator actions", () =
     pack.actions.find((action) => action.id === "git_vercel_auto_deploy").fallbackPath.requiredGitHubSecrets,
     ["VERCEL_TOKEN", "VERCEL_ORG_ID", "VERCEL_PROJECT_ID"]
   );
+  assert.match(
+    pack.actions.find((action) => action.id === "git_vercel_auto_deploy").cliPath.connectCommand,
+    /vercel@latest git connect/
+  );
+  assert.match(
+    pack.actions.find((action) => action.id === "git_vercel_auto_deploy").cliPath.expectedFailureWithoutPrivateRepoAccess,
+    /private repository/
+  );
   assert.equal(
     pack.actions.find((action) => action.id === "live_procurement").envPlan.LIVE_ALLOWED_REGISTRIES,
     "https://trusted.example"

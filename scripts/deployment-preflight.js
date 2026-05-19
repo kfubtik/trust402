@@ -33,6 +33,8 @@ const result = deploymentPreflight({
   productionDeployWorkflowText: readTextIfPresent(".github/workflows/vercel-production-deploy.yml"),
   launchMonitorWorkflowText: readTextIfPresent(".github/workflows/launch-monitor.yml"),
   vercelGitConnected: args.vercelGitConnected === true,
+  vercelGitConnectAttempted: args.vercelGitConnectAttempted === true,
+  vercelGitConnectUrl: args.vercelGitConnectUrl || "",
   vercelGitConnectError: args.vercelGitConnectError || "",
   githubActionsSecretsConfigured: args.githubActionsSecretsConfigured === true
     ? true

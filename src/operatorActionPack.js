@@ -159,6 +159,13 @@ function gitVercelAction(cfg, input) {
       "Push a harmless commit to main and verify a production deployment appears without vercel --prod.",
       "Run production smoke, x402 smoke, and launch monitor against https://trust402.vercel.app."
     ],
+    cliPath: {
+      connectCommand: "npx vercel@latest git connect https://github.com/kfubtik/trust402.git",
+      expectedFailureWithoutPrivateRepoAccess:
+        "Failed to connect kfubtik/trust402 to project; grant the Vercel GitHub App access to the private repository.",
+      dashboardPath:
+        "Vercel project trust402 -> Settings -> Git -> Connect Git Repository / Manage GitHub App access"
+    },
     fallbackPath: {
       githubActionsWorkflow: ".github/workflows/vercel-production-deploy.yml",
       requiredGitHubSecrets: [

@@ -51,7 +51,11 @@ export function deploymentPreflight(input = {}, options = {}) {
   };
   const gitHubApp = {
     connected: input.vercelGitConnected === true,
+    connectAttempted: input.vercelGitConnectAttempted === true || Boolean(input.vercelGitConnectError),
+    connectUrl: input.vercelGitConnectUrl || "https://github.com/kfubtik/trust402.git",
+    connectCommand: "npx vercel@latest git connect https://github.com/kfubtik/trust402.git",
     lastConnectError: input.vercelGitConnectError || "",
+    connectFailureKind: classifyGitConnectError(input.vercelGitConnectError || ""),
     requiredAccess:
       "Install or update the Vercel GitHub App so it can access the private kfubtik/trust402 repository."
   };
@@ -246,6 +250,14 @@ function blockersFor(input) {
       "Push-triggered production deployment evidence has not been recorded."
     ));
   }
+  if (!input.gitHubApp.connected &&
+    input.gitHubApp.connectAttempted &&
+    input.gitHubApp.connectFailureKind === "private_repo_access_denied") {
+    blockers.push(blocker(
+      "vercel_git_connect_private_repo_access_denied",
+      "Vercel CLI could not connect kfubtik/trust402; the Vercel GitHub App needs access to the private repository."
+    ));
+  }
   if (input.autoDeployEvidence.verified &&
     input.autoDeployEvidence.commitSha &&
     input.git.head &&
@@ -318,7 +330,11 @@ function blockersFor(input) {
 function nextActions({ blockers, fallback, gitHubApp, domain }) {
   if (blockers.length === 0) return ["Push a harmless commit, confirm production deploy evidence, and record TRUST402_GIT_AUTO_DEPLOY_* env values."];
   const actions = [];
-  if (!gitHubApp.connected) actions.push(gitHubApp.requiredAccess);
+  if (!gitHubApp.connected && gitHubApp.connectFailureKind === "private_repo_access_denied") {
+    actions.push("Open Vercel project trust402 -> Settings -> Git, then grant the Vercel GitHub App access to the private repo kfubtik/trust402 and rerun vercel git connect.");
+  } else if (!gitHubApp.connected) {
+    actions.push(gitHubApp.requiredAccess);
+  }
   if (fallback.readyToConfigure && fallback.secretsConfigured !== true) {
     actions.push("Add VERCEL_TOKEN, VERCEL_ORG_ID, and VERCEL_PROJECT_ID to GitHub Actions secrets.");
   }
@@ -335,6 +351,16 @@ function sameCommit(left, right) {
   const a = String(left || "").trim().toLowerCase();
   const b = String(right || "").trim().toLowerCase();
   return Boolean(a && b && (a === b || a.startsWith(b) || b.startsWith(a)));
+}
+
+function classifyGitConnectError(value) {
+  const text = String(value || "").toLowerCase();
+  if (!text) return null;
+  if (text.includes("private") || text.includes("access") || text.includes("not authorized")) {
+    return "private_repo_access_denied";
+  }
+  if (text.includes("not found") || text.includes("typo")) return "repo_not_found_or_typo";
+  return "unknown";
 }
 
 function normalizeBaseUrl(value) {

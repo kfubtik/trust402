@@ -181,6 +181,32 @@ test("deploymentPreflight blocks stale recorded auto-deploy evidence", () => {
   assert.ok(result.blockers.some((item) => item.id === "git_auto_deploy_commit_stale"));
 });
 
+test("deploymentPreflight identifies Vercel Git private repo access failures", () => {
+  const result = deploymentPreflight({
+    baseUrl: "https://trust402.vercel.app",
+    gitRemote: "https://github.com/kfubtik/trust402.git",
+    gitHead: "abc1234",
+    vercelProject: {
+      projectName: "trust402",
+      projectId: "prj_123",
+      orgId: "team_123"
+    },
+    productionDeployWorkflowText: productionWorkflow,
+    launchMonitorWorkflowText: launchWorkflow,
+    vercelGitConnectAttempted: true,
+    vercelGitConnectError:
+      "Failed to connect kfubtik/trust402 to project. Make sure there aren't any typos and that you have access to the repository if it's private."
+  }, {
+    config: baseConfig()
+  });
+
+  assert.equal(result.gitHubApp.connectAttempted, true);
+  assert.equal(result.gitHubApp.connectFailureKind, "private_repo_access_denied");
+  assert.ok(result.blockers.some((item) => item.id === "vercel_git_connect_private_repo_access_denied"));
+  assert.ok(result.nextActions.some((item) => item.includes("grant the Vercel GitHub App access")));
+  assert.equal(result.safety.mutatesVercel, false);
+});
+
 test("deploymentPreflight blocks unsafe Vercel deploy pipeline capture", () => {
   const unsafeWorkflow = productionWorkflow + `
       - run: npx vercel@latest deploy --prebuilt --prod --token=\${{ secrets.VERCEL_TOKEN }} | tee deployment-output.txt
