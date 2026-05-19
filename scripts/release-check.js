@@ -51,7 +51,9 @@ assert(packageJson.scripts?.["smoke:x402"], "package must expose npm run smoke:x
 assert(packageJson.dependencies?.["@x402/express"], "package must include @x402/express dependency");
 assert(packageJson.dependencies?.["@x402/core"], "package must include @x402/core dependency");
 assert(packageJson.dependencies?.["@x402/evm"], "package must include @x402/evm dependency");
+assert(packageJson.dependencies?.["@x402/fetch"], "package must include @x402/fetch dependency for buyer-side live payment adapter");
 assert(packageJson.dependencies?.["@coinbase/x402"], "package must include @coinbase/x402 dependency");
+assert(packageJson.dependencies?.viem, "package must include viem dependency for x402 buyer signing adapter");
 assert(existsSync("package-lock.json"), "package-lock.json must exist for reproducible installs");
 assert(Array.isArray(packageJson.keywords) && packageJson.keywords.includes("x402"), "package keywords must include x402");
 assert(existsSync("README.md"), "README.md must exist");
@@ -68,6 +70,7 @@ assert(existsSync("src/expressApp.js"), "Express x402 entrypoint bridge must exi
 assert(existsSync("src/autonomousJob.js"), "autonomous job flow module must exist");
 assert(existsSync("src/agentcashRefill.js"), "AgentCash refill workflow module must exist");
 assert(existsSync("src/completionAudit.js"), "completion audit module must exist");
+assert(existsSync("src/paymentAdapters.js"), "payment adapter module must exist");
 assert(existsSync("src/policies.js"), "spend policy status module must exist");
 assert(existsSync("compose.yaml"), "compose.yaml must exist");
 assert(existsSync("docs/deployment.md"), "deployment docs must exist");
@@ -177,6 +180,7 @@ assert(bundle.listingState.realSettlementReady === false, "marketplace bundle mu
 assert(bundle.listingState.cdpBazaarIndexingReady === false, "marketplace bundle must not claim CDP Bazaar indexing readiness");
 assert(bundle.indexing?.cdpBazaar?.status === "blocked", "default marketplace bundle must mark CDP Bazaar indexing blocked");
 assert(spendPolicy.readiness.anyLiveSpendReady === false, "spend policy status must keep live spend unavailable by default");
+assert(spendPolicy.policies.liveProcurement.controls.paymentAdapter, "live procurement policy must expose payment adapter status");
 assert(spendPolicy.policies.agentcashAutoRefill.ready === false, "AgentCash auto-refill must not be ready by default");
 assert(spendPolicy.policies.liveProcurement.ready === false, "live procurement must not be ready by default");
 assert(spendPolicy.policies.proof402Delegation.ready === false, "Proof402 delegation must not be ready by default");

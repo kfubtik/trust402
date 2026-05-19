@@ -80,6 +80,10 @@ window, when a non-zero exit should block the smoke.
 - Do not mount `.env`, wallet files, or `.agentcash` into a public container.
 - Keep `compose.yaml` on dry-run defaults unless you are doing an approved local settlement test.
 - Keep `TRUST402_PAYWALL_MODE=demo` until CDP credentials and a paid smoke budget are approved. After production real mode is approved, keep Trust402 live procurement and Proof402 delegation disabled unless separately approved.
+- Live buyer mode needs a payment adapter in addition to spend caps. Do not
+  mark `LIVE_SPEND_ENABLED=true` ready with plain `fetch`; use an
+  `external-adapter`, an AgentCash bridge URL, or `@x402/fetch` with secret
+  buyer key and RPC URL.
 - Use `TRUST402_PAYWALL_MODE=mock` only for local 402 contract testing.
 - Use `npm run smoke:x402 -- <base-url>` against mock mode or approved real mode to verify unpaid `402 Payment Required` challenges without settling a payment.
 - Put the API behind HTTPS before submitting to x402 marketplaces.
@@ -128,6 +132,16 @@ PAY_TO=
 CDP_API_KEY_ID=
 CDP_API_KEY_SECRET=
 CDP_WALLET_SECRET=
+```
+
+Live procurement/proof buyer credentials are separate from seller settlement
+credentials. Keep these empty unless an approved buyer-spend window exists:
+
+```text
+LIVE_PAYMENT_PROVIDER=disabled
+LIVE_PAYMENT_ADAPTER_URL=
+X402_BUYER_PRIVATE_KEY=
+X402_BUYER_RPC_URL=
 ```
 
 ### Git-backed Deploys

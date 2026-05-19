@@ -389,7 +389,10 @@ Later price:
 - hard max supplied by buyer.
 
 Reason to wait: live spending needs hot-wallet policy, allowlists, receipts,
-and human approval thresholds.
+human approval thresholds, and a real buyer payment adapter. Supported runtime
+paths are an external payment adapter, an AgentCash bridge via
+`LIVE_PAYMENT_ADAPTER_URL`, or in-process `@x402/fetch` with secret buyer key
+and RPC URL.
 
 ### `POST /api/receipts/notarize-result` live mode
 
@@ -398,7 +401,8 @@ Creates a paid Proof402 proof receipt for a purchased result hash.
 Later price: pass-through proof cost plus `$0.005-$0.01`.
 
 Reason to wait: paid Proof402 calls require explicit live spend policy, receipt
-logging, and operator approval.
+logging, operator approval, and the same live payment adapter used by
+procurement.
 
 ## Pricing Anchors
 

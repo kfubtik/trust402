@@ -35,6 +35,8 @@ export const config = {
   liveAllowedRegistries: parseList(process.env.LIVE_ALLOWED_REGISTRIES || ""),
   liveEndpointDenylist: parseList(process.env.LIVE_ENDPOINT_DENYLIST || ""),
   liveReceiptLogMode: process.env.LIVE_RECEIPT_LOG_MODE || "response-only",
+  x402BuyerPrivateKeyConfigured: Boolean(process.env.X402_BUYER_PRIVATE_KEY),
+  x402BuyerRpcUrl: process.env.X402_BUYER_RPC_URL || "",
   agentcashAutoRefillApproved: process.env.AGENTCASH_AUTO_REFILL_APPROVED === "true",
   agentcashAutoRefillEnabled: process.env.AGENTCASH_AUTO_REFILL_ENABLED === "true",
   agentcashAutoRefillProvider: process.env.AGENTCASH_AUTO_REFILL_PROVIDER || "",

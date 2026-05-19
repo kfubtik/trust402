@@ -1,4 +1,5 @@
 import { config } from "./config.js";
+import { paymentProviderReadiness } from "./paymentAdapters.js";
 
 export const launchIssues = {
   vercelGitAutoDeploy: "https://github.com/kfubtik/trust402/issues/5",
@@ -49,8 +50,9 @@ export function liveProcurementPolicy(runtimeConfig) {
   if (!runtimeConfig.liveSpendEnabled) blockers.push(blocker("live_spend_disabled", "LIVE_SPEND_ENABLED is false."));
   if (!runtimeConfig.operatorApiKey) blockers.push(blocker("missing_operator_key", "TRUST402_OPERATOR_API_KEY is not configured."));
   if (!isSupportedPaymentProvider(runtimeConfig.livePaymentProvider)) blockers.push(blocker("missing_payment_provider", "LIVE_PAYMENT_PROVIDER must be agentcash-mcp, x402-fetch, or external-adapter."));
-  if (runtimeConfig.livePaymentProvider === "external-adapter" && !runtimeConfig.livePaymentAdapterUrl) {
-    blockers.push(blocker("missing_payment_adapter_url", "LIVE_PAYMENT_ADAPTER_URL is required for external-adapter provider."));
+  const paymentAdapter = paymentProviderReadiness(runtimeConfig);
+  if (isSupportedPaymentProvider(runtimeConfig.livePaymentProvider)) {
+    blockers.push(...paymentAdapter.blockers);
   }
   if (!(runtimeConfig.liveMaxPerCallUsd > 0)) blockers.push(blocker("missing_per_call_cap", "LIVE_MAX_PER_CALL_USD must be greater than zero."));
   if (!(runtimeConfig.liveMaxPerJobUsd > 0)) blockers.push(blocker("missing_per_job_cap", "LIVE_MAX_PER_JOB_USD must be greater than zero."));
@@ -76,7 +78,7 @@ export function liveProcurementPolicy(runtimeConfig) {
       endpointDenylistCount: runtimeConfig.liveEndpointDenylist.length,
       receiptLogMode: runtimeConfig.liveReceiptLogMode,
       paymentProvider: publicProvider(runtimeConfig.livePaymentProvider),
-      paymentAdapterConfigured: Boolean(runtimeConfig.livePaymentAdapterUrl),
+      paymentAdapter,
       operatorApiKeyConfigured: Boolean(runtimeConfig.operatorApiKey),
       emergencyStop: runtimeConfig.emergencyStop
     },
@@ -93,6 +95,10 @@ export function proof402DelegationPolicy(runtimeConfig) {
   if (!runtimeConfig.liveSpendEnabled) blockers.push(blocker("live_spend_disabled", "LIVE_SPEND_ENABLED is false."));
   if (!runtimeConfig.operatorApiKey) blockers.push(blocker("missing_operator_key", "TRUST402_OPERATOR_API_KEY is not configured."));
   if (!isSupportedPaymentProvider(runtimeConfig.livePaymentProvider)) blockers.push(blocker("missing_payment_provider", "LIVE_PAYMENT_PROVIDER must be agentcash-mcp, x402-fetch, or external-adapter."));
+  const paymentAdapter = paymentProviderReadiness(runtimeConfig);
+  if (isSupportedPaymentProvider(runtimeConfig.livePaymentProvider)) {
+    blockers.push(...paymentAdapter.blockers);
+  }
   if (!runtimeConfig.proof402BaseUrl) blockers.push(blocker("missing_proof402_base_url", "PROOF402_BASE_URL is not configured."));
   if (!(runtimeConfig.proof402MaxSpendUsd > 0)) blockers.push(blocker("missing_proof402_spend_cap", "PROOF402_MAX_SPEND_USD must be greater than zero."));
 
@@ -104,6 +110,7 @@ export function proof402DelegationPolicy(runtimeConfig) {
       proof402BaseUrlConfigured: Boolean(runtimeConfig.proof402BaseUrl),
       maxSpendUsd: runtimeConfig.proof402MaxSpendUsd,
       paymentProvider: publicProvider(runtimeConfig.livePaymentProvider),
+      paymentAdapter,
       operatorApiKeyConfigured: Boolean(runtimeConfig.operatorApiKey),
       emergencyStop: runtimeConfig.emergencyStop
     },

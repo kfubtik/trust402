@@ -61,6 +61,8 @@ Acceptance:
 - registry allowlist and endpoint denylist are enforced;
 - approval thresholds are enforced;
 - emergency stop overrides every live path;
+- payment-provider readiness proves that live mode uses `@x402/fetch` or an
+  approved payment bridge instead of plain `fetch`;
 - `/api/policies/spend` exposes the current non-secret policy state.
 
 Tracking: https://github.com/kfubtik/trust402/issues/8
@@ -75,6 +77,7 @@ Acceptance:
 - dry-run remains the default;
 - live execution requires operator authorization;
 - every selected endpoint is allowlisted and not denylisted;
+- every paid call goes through the configured payment adapter;
 - every paid call is within the per-call cap;
 - total planned spend is within job and daily caps;
 - every execution returns an audit/receipt bundle.

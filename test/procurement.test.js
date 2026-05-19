@@ -79,15 +79,26 @@ test("procurementExecute can run live through an injected paid fetch inside poli
     riskTolerance: "low",
     candidates: [goodCandidate, weakCandidate]
   });
-  const fakeFetch = async () => new Response(JSON.stringify({
+  const fakePaymentBridge = async (url, options = {}) => new Response(JSON.stringify({
     ok: true,
-    tool: "paid.example",
-    result: "done"
+    response: {
+      status: 200,
+      headers: {
+        "content-type": "application/json",
+        "payment-response": "mock-paid-receipt"
+      },
+      body: {
+        ok: true,
+        tool: "paid.example",
+        result: "done"
+      }
+    },
+    requestUrl: String(url),
+    requestKeys: Object.keys(JSON.parse(options.body || "{}").request || {})
   }), {
     status: 200,
     headers: {
-      "content-type": "application/json",
-      "payment-response": "mock-paid-receipt"
+      "content-type": "application/json"
     }
   });
 
@@ -100,11 +111,12 @@ test("procurementExecute can run live through an injected paid fetch inside poli
     }
   }, {
     operatorAuthorized: true,
-    fetchImpl: fakeFetch,
+    fetchImpl: fakePaymentBridge,
     config: {
       ...config,
       liveSpendEnabled: true,
-      livePaymentProvider: "x402-fetch",
+      livePaymentProvider: "external-adapter",
+      livePaymentAdapterUrl: "https://pay.example/bridge",
       operatorApiKey: "test-operator",
       liveMaxPerCallUsd: 0.05,
       liveMaxPerJobUsd: 0.25,

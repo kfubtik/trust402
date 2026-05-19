@@ -1,6 +1,7 @@
 import { config } from "./config.js";
 import { ApiError } from "./errors.js";
 import { sha256Json, sha256Text } from "./hash.js";
+import { createPaidFetch } from "./paymentAdapters.js";
 import { proof402DelegationPolicy } from "./policies.js";
 
 const SHA256_RE = /^sha256:[a-f0-9]{64}$/;
@@ -14,6 +15,7 @@ export async function notarizeResult(input = {}, options = {}) {
   const delegation = await proof402Delegation(prepared, {
     cfg,
     fetchImpl,
+    paidFetchImpl: options.paidFetchImpl || null,
     operatorAuthorized: options.operatorAuthorized === true
   });
 
@@ -93,7 +95,7 @@ export function prepareProof402Request(input = {}, cfg = config) {
   };
 }
 
-export async function proof402Delegation(prepared, { cfg = config, fetchImpl = globalThis.fetch, operatorAuthorized = false } = {}) {
+export async function proof402Delegation(prepared, { cfg = config, fetchImpl = globalThis.fetch, paidFetchImpl = null, operatorAuthorized = false } = {}) {
   const baseUrl = normalizeBaseUrl(cfg.proof402BaseUrl);
   const configuredMode = normalizeMode(cfg.proof402DelegationMode);
   const requestedMode = normalizeMode(prepared.requestedMode);
@@ -159,7 +161,8 @@ export async function proof402Delegation(prepared, { cfg = config, fetchImpl = g
       });
     }
 
-    return paidProof402Call({ baseUrl, proofRequest, cfg, fetchImpl });
+    const paidFetch = await createPaidFetch({ cfg, fetchImpl, paidFetchImpl });
+    return paidProof402Call({ baseUrl, proofRequest, cfg, fetchImpl: paidFetch });
   }
 
   throw new ApiError(400, "invalid_proof402_mode", "Unsupported Proof402 delegation mode.", { mode });

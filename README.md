@@ -403,7 +403,9 @@ MVP guarantees:
 - live spend is disabled;
 - no private keys are required;
 - no paid subcalls are made;
-- `/api/procurement/execute` is dry-run only and returns an audit instead of buying;
+- `/api/procurement/execute` is dry-run by default and cannot enter live mode
+  unless operator authorization, caps, allowlists, and a real payment adapter
+  are all configured;
 - `/api/jobs/autonomous-run` is dry-run by default and uses the same operator
   and spend-policy gates as live procurement;
 - `/api/agentcash/refill-check` can plan refill actions in dry-run mode but
@@ -433,6 +435,8 @@ Future live procurement must require:
 - registry allowlist;
 - endpoint denylist;
 - receipt log;
+- payment adapter: `external-adapter`, AgentCash bridge, or in-process
+  `@x402/fetch` with local/Vercel-secret buyer credentials;
 - human approval above threshold.
 
 ## Project Files
@@ -440,11 +444,12 @@ Future live procurement must require:
 - `src/server.js` - HTTP API, mock paywall, and real-mode startup switch.
 - `src/expressApp.js` - Express entrypoint bridge for Vercel and real x402 middleware.
 - `src/trustEngine.js` - checks, scoring, planning, and report logic.
-- `src/procurement.js` - quote and dry-run execution audit logic.
+- `src/procurement.js` - quote and policy-gated procurement execution logic.
+- `src/paymentAdapters.js` - buyer-side payment adapter readiness and bridge logic.
 - `src/autonomousJob.js` - dry-run-first autonomous job orchestration.
 - `src/agentcashRefill.js` - AgentCash refill policy decision and adapter-gated live action.
 - `src/monitor.js` - one-shot monitor snapshot and badge logic.
-- `src/proof402Client.js` - Proof402 request preview/probe logic with live calls blocked.
+- `src/proof402Client.js` - Proof402 request preview/probe logic with adapter-gated live calls.
 - `src/settlement.js` - real x402 settlement readiness and unpaid challenge metadata.
 - `src/x402SdkAdapter.js` - disabled-by-default x402 SDK adapter used by the Express bridge.
 - `src/policies.js` - machine-readable spend policy gates and launch issue links.

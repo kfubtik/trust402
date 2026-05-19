@@ -51,6 +51,9 @@ Live spend can only exist in a separate operator profile with all of these:
 - registry allowlist;
 - endpoint denylist;
 - receipt log;
+- a real payment adapter, not plain `fetch`:
+  `external-adapter`, AgentCash bridge through `LIVE_PAYMENT_ADAPTER_URL`, or
+  in-process `@x402/fetch` with secret buyer key and RPC URL;
 - proof receipt for final output;
 - human approval above threshold.
 

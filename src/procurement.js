@@ -1,6 +1,7 @@
 import { config } from "./config.js";
 import { ApiError } from "./errors.js";
 import { sha256Json } from "./hash.js";
+import { createPaidFetch } from "./paymentAdapters.js";
 import { liveProcurementPolicy } from "./policies.js";
 import { receiptBundle } from "./receipts.js";
 import { compareResources, procurementPlan } from "./trustEngine.js";
@@ -125,6 +126,7 @@ async function procurementExecuteLive(input = {}, options = {}) {
   const cfg = options.config || config;
   const operatorAuthorized = options.operatorAuthorized === true;
   const fetchImpl = options.fetchImpl || globalThis.fetch;
+  const paidFetchImpl = options.paidFetchImpl || null;
   const quote = input.quote?.quoteHash
     ? normalizeSubmittedQuote(input.quote)
     : input.quoteHash && input.quote
@@ -179,10 +181,11 @@ async function procurementExecuteLive(input = {}, options = {}) {
     });
   }
 
+  const paidFetch = await createPaidFetch({ cfg, fetchImpl, paidFetchImpl });
   const calls = [];
   let estimatedPaidUsd = 0;
   for (const resource of selectedResources) {
-    const call = await callPaidResource({ resource, input, fetchImpl, cfg });
+    const call = await callPaidResource({ resource, input, fetchImpl: paidFetch, cfg });
     calls.push(call);
     if (!call.ok) {
       const executionHash = sha256Json({ quoteHash: quote.quoteHash, calls });

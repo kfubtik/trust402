@@ -136,10 +136,11 @@ test("notarizeResult can complete live Proof402 delegation through injected paid
         proof402DelegationMode: "live",
         liveSpendEnabled: true,
         proof402MaxSpendUsd: 0.01,
-        livePaymentProvider: "x402-fetch",
+        livePaymentProvider: "external-adapter",
+        livePaymentAdapterUrl: "https://pay.example/bridge",
         operatorApiKey: "test-operator"
       }),
-      fetchImpl: async (url, options = {}) => {
+      paidFetchImpl: async (url, options = {}) => {
         calls.push({ url, options });
         return jsonResponse(200, {
           ok: true,
