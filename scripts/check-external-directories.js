@@ -4,6 +4,7 @@ const baseUrl = (process.argv.find((arg) => /^https?:\/\//.test(arg)) || config.
 const strict = process.argv.includes("--strict");
 const timeoutMs = numberArg("--timeout-ms", 10_000);
 const host = safeHost(baseUrl);
+const hostRequiresCustomDomain = isFreeHostingHost(host);
 const terms = Array.from(new Set([
   "trust402",
   host.toLowerCase(),
@@ -72,6 +73,19 @@ const directories = [
       "https://x402list.fun/?q=Trust402",
       `https://x402list.fun/?q=${encodeURIComponent(host)}`
     ]
+  },
+  {
+    id: "x402_list_com",
+    name: "x402 List",
+    status: "manual-review-custom-domain-required",
+    requiresCustomDomain: true,
+    urls: [
+      "https://x402-list.com/",
+      "https://x402-list.com/submit",
+      "https://x402-list.com/api",
+      `https://x402-list.com/api/v1/services?q=${encodeURIComponent("Trust402")}`,
+      `https://x402-list.com/api/v1/services?q=${encodeURIComponent(host)}`
+    ]
   }
 ];
 
@@ -90,6 +104,7 @@ async function main() {
     target: {
       baseUrl,
       host,
+      hostRequiresCustomDomain,
       terms
     },
     summary: {
@@ -97,7 +112,8 @@ async function main() {
       reachable: reachable.length,
       visible: visible.length,
       notVisibleYet: results.filter((item) => item.reachable && !item.visible).length,
-      unreachable: results.filter((item) => !item.reachable).length
+      unreachable: results.filter((item) => !item.reachable).length,
+      customDomainBlocked: results.filter((item) => item.submission?.blockedByHost).length
     },
     status: visible.length > 0
       ? "visible-in-some-directories"
@@ -123,16 +139,24 @@ async function checkDirectory(directory) {
   }
   const reachableChecks = checks.filter((item) => item.reachable);
   const matchedChecks = checks.filter((item) => item.matched);
+  const blockedByHost = Boolean(directory.requiresCustomDomain && hostRequiresCustomDomain);
   return {
     id: directory.id,
     name: directory.name,
     expectedMode: directory.status,
+    submission: {
+      requiresCustomDomain: Boolean(directory.requiresCustomDomain),
+      blockedByHost,
+      host
+    },
     reachable: reachableChecks.length > 0,
     visible: matchedChecks.length > 0,
     checkedUrls: checks,
     matchedUrls: matchedChecks.map((item) => item.url),
     nextAction: matchedChecks.length > 0
       ? "Record visibility evidence before making public listing claims."
+      : blockedByHost
+        ? "Configure a custom production domain before submitting; this directory rejects vercel.app, workers.dev, ngrok, trycloudflare, and similar free-hosting domains."
       : directory.status === "curated-manual-submission"
         ? "Submit public-safe listing copy only after the user approves outreach."
         : "Keep monitoring; submit manually only if the directory exposes a safe public form."
@@ -214,6 +238,21 @@ function safeHost(value) {
   } catch {
     return "";
   }
+}
+
+function isFreeHostingHost(value) {
+  const hostValue = String(value || "").toLowerCase();
+  return [
+    "vercel.app",
+    "workers.dev",
+    "ngrok-free.app",
+    "ngrok.io",
+    "trycloudflare.com",
+    "netlify.app",
+    "pages.dev",
+    "fly.dev",
+    "render.com"
+  ].some((suffix) => hostValue === suffix || hostValue.endsWith(`.${suffix}`));
 }
 
 main().catch((error) => {

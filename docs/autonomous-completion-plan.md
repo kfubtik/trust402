@@ -41,6 +41,8 @@ Acceptance:
   review;
 - no private keys, CDP secrets, AgentCash internals, payment headers, or paid
   receipts are submitted.
+- directories that require a custom domain, such as `x402-list.com`, stay
+  blocked until Trust402 runs on an accepted production domain.
 
 Completion evidence:
 

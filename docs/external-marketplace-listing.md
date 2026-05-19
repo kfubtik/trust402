@@ -30,7 +30,7 @@ and AgentCash auto-refill remain disabled until separately approved.
 
 ## Current External Directory Visibility
 
-Last checked on 2026-05-19 at 12:04:53 +07:00 with:
+Last checked on 2026-05-19 at 12:42:10 +07:00 with:
 
 ```powershell
 npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
@@ -40,20 +40,22 @@ Result:
 
 ```text
 status = not-visible-yet
-checked = 6
-reachable = 4
+checked = 7
+reachable = 6
 visible = 0
-notVisibleYet = 4
-unreachable = 2
+notVisibleYet = 6
+unreachable = 1
+customDomainBlocked = 1
 ```
 
 Interpretation:
 
 - CDP Bazaar remains the authoritative discovery signal for Trust402 right now;
-- Agentic.Market, x402Bazaar, RelAI market, and x402list were reachable but did
-  not expose Trust402 in the fetched public HTML/search pages;
-- x402scan and x402.org ecosystem were not reliably reachable within the
-  10-second read-only check window;
+- Agentic.Market, x402scan, x402Bazaar, RelAI market, x402list, and
+  x402-list.com were reachable but did not expose Trust402 in the fetched public
+  HTML/search/API pages;
+- x402.org ecosystem was not reliably reachable within the 10-second read-only
+  check window;
 - `not-visible-yet` is not proof of absence because several directories are
   client-rendered, asynchronously indexed, curated, or rate-limited.
 
@@ -134,6 +136,24 @@ Action:
 - if a submission form exists, submit only public metadata from this file;
 - never paste `.env`, CDP secrets, wallet policy files, private keys, payment
   headers, receipt files, or AgentCash internals.
+
+### x402 List (`x402-list.com`)
+
+Status: manual review, custom domain required.
+
+`x402-list.com` exposes a submit page and API, but its public requirements say
+that `vercel.app`, `workers.dev`, `ngrok`, `trycloudflare`, and similar
+free-hosting/dev-tunnel domains are not accepted. Trust402 currently runs on
+`trust402.vercel.app`, so this path is blocked until a custom production domain
+is attached.
+
+Action:
+
+- attach a custom domain to the Vercel project;
+- rerun `npm run smoke:x402 -- https://<custom-domain>`;
+- rerun `npm run directories:check -- https://<custom-domain> --timeout-ms=10000`;
+- submit only the public-safe listing fields from this file after the custom
+  domain passes x402 smoke.
 
 Useful public URLs:
 
