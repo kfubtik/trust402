@@ -219,6 +219,7 @@ POST /api/receipts/hash-result
 POST /api/receipts/notarize-result
 POST /api/procurement/execute
 POST /api/live/window-plan
+POST /api/operator/action-pack
 POST /api/jobs/autonomous-run
 POST /api/agentcash/refill-check
 ```
@@ -396,6 +397,15 @@ npm run live:window-plan -- https://trust402.vercel.app `
   --max-total-usd=0.03
 ```
 
+Export the public-safe operator action pack for all remaining blockers:
+
+```powershell
+npm run completion:actions -- https://trust402.vercel.app `
+  --candidate-endpoint=https://approved.example/paid `
+  --candidate-price=0.01 `
+  --max-total-usd=0.03
+```
+
 Check the local Trust402-only AgentCash policy without spending:
 
 ```powershell
@@ -459,6 +469,7 @@ Future live procurement must require:
 - `src/autonomousJob.js` - dry-run-first autonomous job orchestration.
 - `src/agentcashRefill.js` - AgentCash refill policy decision and adapter-gated live action.
 - `src/liveWindowPlan.js` - read-only live evidence window planner.
+- `src/operatorActionPack.js` - public-safe action pack for remaining completion blockers.
 - `src/monitor.js` - one-shot monitor snapshot and badge logic.
 - `src/proof402Client.js` - Proof402 request preview/probe logic with adapter-gated live calls.
 - `src/settlement.js` - real x402 settlement readiness and unpaid challenge metadata.
@@ -490,5 +501,6 @@ Future live procurement must require:
   production smoke, x402, launch monitor, directories, and completion audit.
 - `scripts/live-window-plan.js` - read-only live-window staging plan for
   approved x402 spend evidence.
+- `scripts/operator-action-pack.js` - public-safe operator action pack exporter.
 - `scripts/launch-monitor.js` - combined production API, x402, Bazaar, and directory monitor.
 - `test/` - API and engine tests.

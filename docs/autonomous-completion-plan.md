@@ -260,6 +260,18 @@ command for the approved smoke window.
 
 Agents can request the same read-only plan through `POST /api/live/window-plan`.
 
+For the full remaining-blocker checklist, export the public-safe operator
+action pack:
+
+```powershell
+npm run completion:actions -- https://trust402.vercel.app `
+  --candidate-endpoint=https://approved.example/paid `
+  --candidate-price=0.01 `
+  --max-total-usd=0.03
+```
+
+Agents can request the same action pack through `POST /api/operator/action-pack`.
+
 On this workstation the verifier auto-detects Docker Desktop at
 `D:\Programs\Docker\resources\bin\docker.exe`. If Docker is installed elsewhere,
 pass `--docker-bin=<path-to-docker.exe>` or set `TRUST402_DOCKER_BIN`.

@@ -100,6 +100,14 @@
       "purpose": "Generate a read-only live evidence window plan without mutating local policy, Vercel env, or wallet balance."
     },
     {
+      "id": "operator.action_pack",
+      "method": "POST",
+      "path": "/api/operator/action-pack",
+      "priceUsd": 0,
+      "status": "dry-run-helper",
+      "purpose": "Generate a public-safe action pack for closing Git/Vercel, domain, directory, live-spend, Proof402, AgentCash refill, autonomous, and final evidence blockers."
+    },
+    {
       "id": "jobs.autonomous_run",
       "method": "POST",
       "path": "/api/jobs/autonomous-run",

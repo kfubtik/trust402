@@ -46,6 +46,7 @@ assert(packageJson.scripts?.["agentcash:policy"], "package must expose npm run a
 assert(packageJson.scripts?.["agentcash:refill-check"], "package must expose npm run agentcash:refill-check");
 assert(packageJson.scripts?.["completion:audit"], "package must expose npm run completion:audit");
 assert(packageJson.scripts?.["completion:unblockers"], "package must expose npm run completion:unblockers");
+assert(packageJson.scripts?.["completion:actions"], "package must expose npm run completion:actions");
 assert(packageJson.scripts?.["final:verify"], "package must expose npm run final:verify");
 assert(packageJson.scripts?.["privacy:check"], "package must expose npm run privacy:check");
 assert(packageJson.scripts?.["release:check"], "package must expose npm run release:check");
@@ -76,6 +77,7 @@ assert(existsSync("src/autonomousJob.js"), "autonomous job flow module must exis
 assert(existsSync("src/agentcashRefill.js"), "AgentCash refill workflow module must exist");
 assert(existsSync("src/localAgentcashPolicy.js"), "local AgentCash policy guard module must exist");
 assert(existsSync("src/liveWindowPlan.js"), "live window planning module must exist");
+assert(existsSync("src/operatorActionPack.js"), "operator action pack module must exist");
 assert(existsSync("src/operatorUnblockReport.js"), "operator unblock report module must exist");
 assert(existsSync("src/completionAudit.js"), "completion audit module must exist");
 assert(existsSync("src/paymentAdapters.js"), "payment adapter module must exist");
@@ -104,6 +106,7 @@ assert(existsSync("scripts/check-agentcash-policy.js"), "AgentCash policy check 
 assert(existsSync("scripts/agentcash-refill-check.js"), "AgentCash refill check script must exist");
 assert(existsSync("scripts/completion-audit.js"), "completion audit script must exist");
 assert(existsSync("scripts/operator-unblock-check.js"), "operator unblock check script must exist");
+assert(existsSync("scripts/operator-action-pack.js"), "operator action pack script must exist");
 assert(existsSync("scripts/final-verification.js"), "final verification script must exist");
 assert(existsSync("scripts/live-evidence-smoke.js"), "live evidence smoke script must exist");
 assert(existsSync("scripts/live-window-plan.js"), "live window plan script must exist");
@@ -114,6 +117,7 @@ assert(smokeScript.includes("/api/jobs/autonomous-run"), "smoke script must cove
 assert(smokeScript.includes("/api/agentcash/refill-check"), "smoke script must cover AgentCash refill dry-run");
 assert(smokeScript.includes("/api/completion/audit"), "smoke script must cover completion audit");
 assert(smokeScript.includes("/api/live/window-plan"), "smoke script must cover live window plan");
+assert(smokeScript.includes("/api/operator/action-pack"), "smoke script must cover operator action pack");
 assert(launchMonitorScript.includes("/api/policies/spend"), "launch monitor must check spend policy");
 assert(workflow.includes("npm audit --omit=dev --audit-level=high"), "CI must run high-severity npm audit");
 assert(workflow.includes("docker build -t trust402:test ."), "CI must build the Docker image");
@@ -186,6 +190,10 @@ assert(
   "free live window plan helper must exist"
 );
 assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/operator/action-pack" && resource.priceUsd === 0),
+  "free operator action pack helper must exist"
+);
+assert(
   catalog.freeResources.some((resource) => resource.path === "/api/jobs/autonomous-run" && resource.priceUsd === 0),
   "free autonomous dry-run helper must exist"
 );
@@ -198,6 +206,7 @@ assert(openapi.paths?.["/api/settlement/preflight"]?.get, "settlement preflight 
 assert(openapi.paths?.["/api/policies/spend"]?.get, "spend policy status must be present in OpenAPI");
 assert(openapi.paths?.["/api/completion/audit"]?.get, "completion audit must be present in OpenAPI");
 assert(openapi.paths?.["/api/live/window-plan"]?.post, "live window plan must be present in OpenAPI");
+assert(openapi.paths?.["/api/operator/action-pack"]?.post, "operator action pack must be present in OpenAPI");
 assert(openapi.paths?.["/api/jobs/autonomous-run"]?.post, "autonomous job flow must be present in OpenAPI");
 assert(openapi.paths?.["/api/agentcash/refill-check"]?.post, "AgentCash refill check must be present in OpenAPI");
 assert(checklist.readiness.dryRunLaunchReady === true, "dry-run launch checklist must pass");
@@ -254,6 +263,10 @@ assert(
 assert(
   !openapi.paths["/api/live/window-plan"].post["x-payment-info"],
   "live window plan helper must not require payment"
+);
+assert(
+  !openapi.paths["/api/operator/action-pack"].post["x-payment-info"],
+  "operator action pack helper must not require payment"
 );
 assert(
   !openapi.paths["/api/jobs/autonomous-run"].post["x-payment-info"],

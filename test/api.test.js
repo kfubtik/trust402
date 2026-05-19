@@ -41,6 +41,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/completion/audit"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/procurement/execute"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/live/window-plan"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/operator/action-pack"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/jobs/autonomous-run"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/agentcash/refill-check"));
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/trust/check-x402"));
@@ -117,6 +118,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/api/policies/spend"].get);
     assert.ok(openapi.body.paths["/api/completion/audit"].get);
     assert.ok(openapi.body.paths["/api/live/window-plan"].post);
+    assert.ok(openapi.body.paths["/api/operator/action-pack"].post);
     assert.ok(openapi.body.paths["/api/jobs/autonomous-run"].post);
     assert.ok(openapi.body.paths["/api/agentcash/refill-check"].post);
     assert.ok(openapi.body.paths["/api/receipts/hash-result"].post);
@@ -147,6 +149,23 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(liveWindow.body.safety.readOnly, true);
     assert.equal(liveWindow.body.safety.writesLocalPolicy, false);
     assert.equal(liveWindow.body.safety.sendsPaymentHeaders, false);
+
+    const actionPack = await request(baseUrl, "/api/operator/action-pack", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        candidateEndpoint: "https://trusted.example/api/paid",
+        candidatePriceUsd: 0.01,
+        maxTotalUsd: 0.03,
+        includeProof: true
+      })
+    });
+    assert.equal(actionPack.response.status, 200);
+    assert.equal(actionPack.body.tool, "operator.action_pack");
+    assert.equal(actionPack.body.safety.readOnly, true);
+    assert.equal(actionPack.body.safety.includesSecretValues, false);
+    assert.ok(actionPack.body.actions.some((action) => action.id === "git_vercel_auto_deploy"));
+    assert.ok(actionPack.body.actions.some((action) => action.id === "live_procurement"));
   });
 });
 

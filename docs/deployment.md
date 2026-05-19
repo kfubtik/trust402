@@ -311,6 +311,24 @@ The same planner is exposed as a free API helper for agents:
 POST /api/live/window-plan
 ```
 
+For all remaining operator blockers at once, use:
+
+```powershell
+npm run completion:actions -- https://trust402.vercel.app
+```
+
+or call the free API helper:
+
+```text
+POST /api/operator/action-pack
+```
+
+It returns public-safe action groups for Git/Vercel auto-deploy, custom domain,
+external directory evidence, live procurement, paid Proof402, AgentCash refill,
+autonomous job evidence, and final verification evidence. It does not set env
+vars, submit directory forms, write local policy, mutate wallets, or include
+secret values.
+
 ## Live x402 Settlement
 
 The Express middleware bridge protects paid launch resources when

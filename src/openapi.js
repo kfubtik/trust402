@@ -67,6 +67,26 @@ export function openApiSpec() {
         }
       }
     },
+    "/api/operator/action-pack": {
+      post: {
+        operationId: "operator_action_pack",
+        summary: "Generate a public-safe action pack for closing remaining operator blockers",
+        tags: ["Trust402"],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: requestSchemaFor("operator.action_pack"),
+              example: exampleFor("operator.action_pack")
+            }
+          }
+        },
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse
+        }
+      }
+    },
     "/api/agentcash/refill-check": {
       post: {
         operationId: "agentcash_refill_check",
@@ -260,6 +280,7 @@ export function capabilities() {
       spendPolicy: "/api/policies/spend",
       completionAudit: "/api/completion/audit",
       liveWindowPlan: "/api/live/window-plan",
+      operatorActionPack: "/api/operator/action-pack",
       agentcashRefillCheck: "/api/agentcash/refill-check",
       openapi: "/openapi.json",
       x402WellKnown: "/.well-known/x402"
@@ -435,6 +456,22 @@ function requestSchemaFor(id) {
     };
   }
 
+  if (id === "operator.action_pack") {
+    return {
+      type: "object",
+      properties: {
+        baseUrl: { type: "string", format: "uri" },
+        candidateEndpoint: { type: "string", format: "uri" },
+        candidatePriceUsd: { type: "number" },
+        maxTotalUsd: { type: "number" },
+        paymentProvider: { type: "string", enum: ["agentcash-mcp", "x402-fetch", "external-adapter"] },
+        includeProof: { type: "boolean", default: true },
+        includeAutonomous: { type: "boolean", default: false },
+        includeAutoRefill: { type: "boolean", default: false }
+      }
+    };
+  }
+
   if (id === "monitor.snapshot") {
     return {
       type: "object",
@@ -605,6 +642,15 @@ function exampleFor(id) {
       candidatePriceUsd: 0.01,
       maxTotalUsd: 0.03,
       paymentProvider: "agentcash-mcp",
+      includeProof: true
+    };
+  }
+  if (id === "operator.action_pack") {
+    return {
+      baseUrl: "https://trust402.vercel.app",
+      candidateEndpoint: "https://approved.example/paid",
+      candidatePriceUsd: 0.01,
+      maxTotalUsd: 0.03,
       includeProof: true
     };
   }

@@ -66,6 +66,20 @@ async function main() {
   assert(liveWindow.safety?.readOnly === true, "/api/live/window-plan must be read-only");
   assert(liveWindow.safety?.sendsPaymentHeaders === false, "/api/live/window-plan must not send payment headers");
 
+  const actionPack = await postJson("/api/operator/action-pack", {
+    candidateEndpoint: "https://trusted.example/api/paid",
+    candidatePriceUsd: 0.01,
+    maxTotalUsd: 0.03,
+    includeProof: true
+  });
+  assert(actionPack.tool === "operator.action_pack", "/api/operator/action-pack tool mismatch");
+  assert(actionPack.safety?.readOnly === true, "/api/operator/action-pack must be read-only");
+  assert(actionPack.safety?.includesSecretValues === false, "/api/operator/action-pack must not include secret values");
+  assert(
+    actionPack.actions?.some((item) => item.id === "git_vercel_auto_deploy"),
+    "/api/operator/action-pack must include Git/Vercel action"
+  );
+
   const openapi = await getJson("/openapi.json");
   assert(openapi.openapi === "3.1.0", "/openapi.json version mismatch");
   assert(openapi.paths?.["/api/trust/check-x402"]?.post, "/openapi missing check-x402");
@@ -75,6 +89,7 @@ async function main() {
   assert(openapi.paths?.["/api/policies/spend"]?.get, "/openapi missing spend policy");
   assert(openapi.paths?.["/api/completion/audit"]?.get, "/openapi missing completion audit");
   assert(openapi.paths?.["/api/live/window-plan"]?.post, "/openapi missing live window plan");
+  assert(openapi.paths?.["/api/operator/action-pack"]?.post, "/openapi missing operator action pack");
   assert(openapi.paths?.["/api/jobs/autonomous-run"]?.post, "/openapi missing autonomous run");
   assert(openapi.paths?.["/api/monitor/snapshot"]?.post, "/openapi missing monitor snapshot");
 
