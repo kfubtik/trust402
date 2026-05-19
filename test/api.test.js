@@ -58,6 +58,8 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
       "/.well-known/agent-services.json",
       "/.well-known/ai-plugin.json",
       "/.well-known/mcp.json",
+      "/directory",
+      "/directory.json",
       "/llms.txt",
       "/robots.txt",
       "/sitemap.xml"
@@ -224,6 +226,9 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/.well-known/agent-services.json"].get);
     assert.ok(openapi.body.paths["/.well-known/ai-plugin.json"].get);
     assert.ok(openapi.body.paths["/.well-known/mcp.json"].get);
+    assert.ok(openapi.body.paths["/directory"].get);
+    assert.ok(openapi.body.paths["/directory.json"].get);
+    assert.ok(openapi.body.paths["/api/directories/profile"].get);
     assert.ok(openapi.body.paths["/llms.txt"].get);
     assert.ok(openapi.body.paths["/robots.txt"].get);
     assert.ok(openapi.body.paths["/sitemap.xml"].get);
@@ -272,10 +277,34 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(mcp.response.status, 200);
     assert.equal(mcp.body.safety.liveSpendEnabledByDefault, false);
 
+    const directoryJson = await request(baseUrl, "/directory.json");
+    assert.equal(directoryJson.response.status, 200);
+    assert.equal(directoryJson.body.tool, "directories.profile");
+    assert.match(directoryJson.body.profileHash, /^sha256:[a-f0-9]{64}$/);
+    assert.equal(directoryJson.body.safety.publicProfileIncludesSecrets, false);
+    assert.equal(directoryJson.body.safety.publicProfileIncludesPaymentHeaders, false);
+    assert.equal(directoryJson.body.safety.publicProfileIncludesLocalWalletPolicy, false);
+    assert.equal(directoryJson.body.paidResources.length, 10);
+    assert.ok(directoryJson.body.discovery.openapi.endsWith("/openapi.json"));
+    assert.ok(directoryJson.body.listingStatus.directoryTargets.some((target) => target.id === "x402scan"));
+    const directoryJsonText = JSON.stringify(directoryJson.body);
+    assert.doesNotMatch(directoryJsonText, /CDP_API_KEY|CDP_WALLET_SECRET|0xf2aB09D8146f453CA86486afEA15D6747B72D0D7/i);
+
+    const directoryApi = await request(baseUrl, "/api/directories/profile");
+    assert.equal(directoryApi.response.status, 200);
+    assert.equal(directoryApi.body.profileHash, directoryJson.body.profileHash);
+
+    const directoryHtml = await request(baseUrl, "/directory");
+    assert.equal(directoryHtml.response.status, 200);
+    assert.match(directoryHtml.body, /<script type="application\/ld\+json">/);
+    assert.match(directoryHtml.body, /Paid x402 Resources/);
+    assert.doesNotMatch(directoryHtml.body, /CDP_API_KEY|CDP_WALLET_SECRET|0xf2aB09D8146f453CA86486afEA15D6747B72D0D7/i);
+
     const llms = await request(baseUrl, "/llms.txt");
     assert.equal(llms.response.status, 200);
     assert.match(llms.body, /# Trust402/);
     assert.match(llms.body, /Paid x402 Resources/);
+    assert.match(llms.body, /Directory profile/);
 
     const robots = await request(baseUrl, "/robots.txt");
     assert.equal(robots.response.status, 200);
@@ -284,6 +313,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     const sitemap = await request(baseUrl, "/sitemap.xml");
     assert.equal(sitemap.response.status, 200);
     assert.match(sitemap.body, /<urlset/);
+    assert.match(sitemap.body, /\/directory/);
     assert.match(sitemap.body, /\/api\/trust\/score-resource/);
 
     const liveWindow = await request(baseUrl, "/api/live/window-plan", {

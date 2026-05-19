@@ -36,6 +36,7 @@ import { discoverResourceCandidates } from "./resourceDiscovery.js";
 import { hashResult } from "./receipts.js";
 import { paymentChallengeFor, settlementPreflight, settlementStatus } from "./settlement.js";
 import { directorySubmissionPack } from "./directorySubmissionPack.js";
+import { directoryProfile, directoryProfileHtml } from "./directoryProfile.js";
 import { liveWindowPlan } from "./liveWindowPlan.js";
 import { operatorActionPack } from "./operatorActionPack.js";
 import { operatorUnblockReport } from "./operatorUnblockReport.js";
@@ -112,6 +113,9 @@ export async function handleTrust402Request(req, res) {
           deploymentPreflight: "/api/deployments/preflight",
           githubActionsSetup: "/api/deployments/github-actions-setup",
           domainActivationPack: "/api/domains/activation-pack",
+          directoryProfile: "/directory",
+          directoryProfileJson: "/directory.json",
+          apiDirectoryProfile: "/api/directories/profile",
           directorySubmissionPack: "/api/directories/submission-pack",
           liveWindowPlan: "/api/live/window-plan",
           operatorUnblockReport: "/api/operator/unblock-report",
@@ -208,6 +212,14 @@ export async function handleTrust402Request(req, res) {
 
     if (req.method === "GET" && path === "/api/directories/submission-pack") {
       return sendJson(res, 200, directorySubmissionPack());
+    }
+
+    if (req.method === "GET" && path === "/directory") {
+      return sendText(res, 200, directoryProfileHtml(), "text/html; charset=utf-8");
+    }
+
+    if (req.method === "GET" && (path === "/directory.json" || path === "/api/directories/profile")) {
+      return sendJson(res, 200, directoryProfile());
     }
 
     if (req.method === "GET" && path === "/api/operator/unblock-report") {
@@ -328,6 +340,9 @@ function statusSummary() {
       deploymentPreflight: "/api/deployments/preflight",
       githubActionsSetup: "/api/deployments/github-actions-setup",
       domainActivationPack: "/api/domains/activation-pack",
+      directoryProfile: "/directory",
+      directoryProfileJson: "/directory.json",
+      apiDirectoryProfile: "/api/directories/profile",
       directorySubmissionPack: "/api/directories/submission-pack",
       liveWindowPlan: "/api/live/window-plan",
       operatorUnblockReport: "/api/operator/unblock-report",

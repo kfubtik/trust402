@@ -63,6 +63,22 @@
       "purpose": "MCP discovery placeholder that directs agents to OpenAPI and x402 resources."
     },
     {
+      "id": "discovery.directory_profile",
+      "method": "GET",
+      "path": "/directory",
+      "priceUsd": 0,
+      "status": "free-discovery",
+      "purpose": "Crawler-friendly public directory profile with safe listing, discovery, resources, pricing, and safety metadata."
+    },
+    {
+      "id": "discovery.directory_profile_json",
+      "method": "GET",
+      "path": "/directory.json",
+      "priceUsd": 0,
+      "status": "free-discovery",
+      "purpose": "Public-safe directory profile JSON for external listings and crawlers."
+    },
+    {
       "id": "discovery.llms",
       "method": "GET",
       "path": "/llms.txt",
@@ -138,6 +154,14 @@
       "priceUsd": 0,
       "status": "dry-run-helper",
       "purpose": "Generate public-safe external directory submission copy, target blockers, and evidence env without submitting forms."
+    },
+    {
+      "id": "directories.profile",
+      "method": "GET",
+      "path": "/api/directories/profile",
+      "priceUsd": 0,
+      "status": "free-discovery",
+      "purpose": "Return the public-safe directory profile JSON through an API route for indexers that avoid extension-style URLs."
     },
     {
       "id": "domains.activation_pack",

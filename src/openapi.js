@@ -43,6 +43,8 @@ export function openApiSpec() {
     "/.well-known/agent-services.json": getPath("Agent services manifest for crawler ingestion"),
     "/.well-known/ai-plugin.json": getPath("OpenAPI plugin-style discovery manifest"),
     "/.well-known/mcp.json": getPath("MCP discovery placeholder and OpenAPI/x402 pointers"),
+    "/directory": textPath("Crawler-friendly public directory profile", "text/html"),
+    "/directory.json": getPath("Public-safe directory profile JSON"),
     "/llms.txt": textPath("LLM-readable Trust402 discovery and safety summary", "text/plain"),
     "/robots.txt": textPath("Crawler policy and sitemap pointer", "text/plain"),
     "/sitemap.xml": textPath("Sitemap for public discovery surfaces", "application/xml"),
@@ -201,6 +203,7 @@ export function openApiSpec() {
         }
       }
     },
+    "/api/directories/profile": getPath("Public-safe directory profile JSON for crawlers and external listings"),
     "/api/directories/submission-pack": {
       get: {
         operationId: "directories_submission_pack_get",
@@ -566,6 +569,8 @@ export function agentManifest() {
     },
     contact: {
       repository: "https://github.com/kfubtik/trust402",
+      directoryProfile: `${config.publicBaseUrl}/directory`,
+      directoryProfileJson: `${config.publicBaseUrl}/directory.json`,
       directorySubmissionPack: `${config.publicBaseUrl}/api/directories/submission-pack`
     }
   };
@@ -640,6 +645,8 @@ export function llmsText() {
     "",
     `- Website: ${config.publicBaseUrl}`,
     `- OpenAPI: ${config.publicBaseUrl}/openapi.json`,
+    `- Directory profile: ${config.publicBaseUrl}/directory`,
+    `- Directory profile JSON: ${config.publicBaseUrl}/directory.json`,
     `- x402 discovery: ${config.publicBaseUrl}/.well-known/x402`,
     `- x402 discovery JSON alias: ${config.publicBaseUrl}/.well-known/x402.json`,
     `- Agent manifest: ${config.publicBaseUrl}/.well-known/agent.json`,
@@ -685,11 +692,14 @@ export function sitemapXml() {
     "/.well-known/agent-services.json",
     "/.well-known/ai-plugin.json",
     "/.well-known/mcp.json",
+    "/directory",
+    "/directory.json",
     "/llms.txt",
     "/api/resources",
     "/api/capabilities",
     "/api/status",
     "/api/marketplace/bundle",
+    "/api/directories/profile",
     "/api/directories/submission-pack",
     "/api/deployments/github-actions-setup",
     "/api/registries/candidates",
@@ -730,6 +740,9 @@ export function capabilities() {
       deploymentPreflight: "/api/deployments/preflight",
       githubActionsSetup: "/api/deployments/github-actions-setup",
       domainActivationPack: "/api/domains/activation-pack",
+      directoryProfile: "/directory",
+      directoryProfileJson: "/directory.json",
+      apiDirectoryProfile: "/api/directories/profile",
       directorySubmissionPack: "/api/directories/submission-pack",
       liveWindowPlan: "/api/live/window-plan",
       operatorUnblockReport: "/api/operator/unblock-report",
@@ -760,6 +773,9 @@ function discoveryLinks() {
     agentServices: `${config.publicBaseUrl}/.well-known/agent-services.json`,
     aiPlugin: `${config.publicBaseUrl}/.well-known/ai-plugin.json`,
     mcp: `${config.publicBaseUrl}/.well-known/mcp.json`,
+    directoryProfile: `${config.publicBaseUrl}/directory`,
+    directoryProfileJson: `${config.publicBaseUrl}/directory.json`,
+    apiDirectoryProfile: `${config.publicBaseUrl}/api/directories/profile`,
     llms: `${config.publicBaseUrl}/llms.txt`,
     robots: `${config.publicBaseUrl}/robots.txt`,
     sitemap: `${config.publicBaseUrl}/sitemap.xml`,
