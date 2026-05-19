@@ -20,19 +20,18 @@ v0.1.0
 CDP Bazaar state:
 
 ```text
-9 of 10 paid launch resources indexed
-status = partially-indexed
-missing = trust.compare_resources
+10 of 10 paid launch resources indexed
+status = all-indexed
+missing = none
 ```
 
-Trust402 is live as a production x402 service, but do not claim full CDP Bazaar
-coverage until `trust.compare_resources` is indexed again. Live Trust402
-procurement, paid Proof402 delegation, and AgentCash auto-refill remain
-disabled until separately approved.
+Trust402 is live as a production x402 service and CDP Bazaar currently exposes
+all paid launch resources. Live Trust402 procurement, paid Proof402 delegation,
+and AgentCash auto-refill remain disabled until separately approved.
 
 ## Current External Directory Visibility
 
-Last checked on 2026-05-19 at 15:58:13 +07:00 with:
+Last checked on 2026-05-19 at 16:21:15 +07:00 with:
 
 ```powershell
 npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
@@ -156,6 +155,21 @@ Action:
 - rerun `npm run directories:check -- https://<custom-domain> --timeout-ms=10000`;
 - submit only the public-safe listing fields from this file after the custom
   domain passes x402 smoke.
+
+Custom domain candidates checked through Vercel on 2026-05-19 at 16:45 +07:
+
+| Domain | Status | First-year price |
+| --- | --- | --- |
+| `trust402.com` | unavailable | n/a |
+| `trust402.dev` | available, recommended | `$9.99` |
+| `trust402.xyz` | available, cheapest | `$1.99` |
+| `trust402.org` | available | `$8.99` |
+| `trust402.net` | available | `$13.50` |
+| `trust402.io` | available | `$37.99` |
+| `gettrust402.com` | available | `$11.25` |
+| `trust402agent.com` | available | `$11.25` |
+
+Prices and availability can change; recheck before purchase.
 
 Useful public URLs:
 

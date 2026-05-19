@@ -28,6 +28,12 @@ export function completionAudit(runtimeConfig = config) {
     tool: "completion.audit",
     generatedAt: new Date().toISOString(),
     objective: "Trust402 autonomous buyer-agent success criteria",
+    planSource: {
+      document: "docs/autonomous-completion-plan.md",
+      pinnedAt: "2026-05-19",
+      mustAllBeVerified: true,
+      requirementIds: requirements.map((item) => item.id)
+    },
     goalComplete: isGoalComplete(requirements),
     summary,
     requirements,

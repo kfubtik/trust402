@@ -20,6 +20,30 @@ Do not replace this plan with a weaker interpretation. If the implementation
 changes, update this document, the machine-readable completion audit, and the
 final verifier together.
 
+## Pinned 2026-05-19 Execution Ledger
+
+These are the exact work items pinned from the operator request. Each item maps
+to one machine-readable completion audit requirement. The final success state is
+all rows `verified` in the current production runtime, plus the final verifier
+passing after live evidence is approved and collected.
+
+| Work item | Audit requirement | Required success proof |
+| --- | --- | --- |
+| Git/Vercel auto-deploy | `git_vercel_auto_deploy` | Push to `main` creates a production Vercel deploy and monitor passes without manual `vercel --prod`. |
+| External directories | `external_x402_directories` | CDP Bazaar remains 10/10 indexed and at least one non-CDP directory visibly lists Trust402. |
+| Unified spend policy | `unified_spend_policy` | Per-call, per-job, daily caps, allowlist, denylist, approval threshold, emergency stop, and dry-run profile are visible through policy APIs. |
+| Live procurement | `live_procurement` | Approved live run buys only allowlisted x402 resources inside limits and returns receipts/audit evidence. |
+| AgentCash wallet binding | `agentcash_wallet_binding` | Local Trust402-only wallet policy is checked before any AgentCash spend and is never public. |
+| AgentCash auto-refill | `agentcash_auto_refill` | Refill threshold, provider, amount, daily cap, emergency stop, dry-run/live decision, and evidence ref are approved and enforced. |
+| Paid Proof402 delegation | `paid_proof402_delegation` | Approved hashes can be paid-notarized without private payloads, inside proof spend caps, with receipt evidence. |
+| Autonomous job flow | `autonomous_job_flow` | Goal -> resource selection -> quote -> approval/dry-run -> live execution -> receipts -> proof -> final report works under policy. |
+| Monitoring and protection | `monitoring_and_protection` | Production monitor exposes live spend gates, balances/policy, receipts, failed payments, and emergency stop state. |
+| Final verification | `final_verification` | Tests, release check, Docker build, production smoke, x402 smoke, live paid smoke, Proof402 smoke, refill check, and directory checks are current. |
+
+Nothing in this ledger is complete because code exists alone. The evidence must
+be current, production-observed, public-safe, and visible through
+`/api/completion/audit` and `npm run final:verify`.
+
 ## 1. Git/Vercel Auto-Deploy
 
 Goal: connect the private repository `kfubtik/trust402` to the Vercel project.
