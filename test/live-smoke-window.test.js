@@ -50,6 +50,30 @@ test("liveSmokeWindow previews without writing local policy", async () => {
   }
 });
 
+test("liveSmokeWindow uses local AgentCash balance and reserve when planning", async () => {
+  const cwd = makePolicyWorkspace({
+    limits: {
+      lastVerifiedBalanceUsd: 0.52,
+      minimumReserveUsd: 0.5
+    }
+  });
+  try {
+    const result = await liveSmokeWindow({
+      baseUrl: "https://trust402.vercel.app",
+      candidateEndpoint: "https://trust402.vercel.app/api/trust/compare-resources",
+      candidatePriceUsd: 0.03,
+      maxTotalUsd: 0.03,
+      includeProof: false
+    }, { cwd });
+
+    assert.equal(result.status, "blocked");
+    assert.ok(result.blockers.some((item) => item.message.includes("minimum reserve")));
+    assert.equal(result.localPolicySummary.limits.lastVerifiedBalanceUsd, 0.52);
+  } finally {
+    rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
 test("liveSmokeWindow applies local policy during run and restores it after", async () => {
   const cwd = makePolicyWorkspace();
   const originalEnv = process.env.TRUST402_LIVE_SMOKE_WINDOW_APPROVED;
@@ -120,10 +144,10 @@ test("liveSmokeWindow blocks live apply without explicit smoke-window approval",
   }
 });
 
-function makePolicyWorkspace() {
+function makePolicyWorkspace(overrides = {}) {
   const cwd = mkdtempSync(join(tmpdir(), "trust402-smoke-window-"));
   mkdirSync(join(cwd, ".local"), { recursive: true });
-  writeFileSync(join(cwd, ".local", "trust402-agentcash-wallet.json"), `${JSON.stringify(basePolicy(cwd), null, 2)}\n`, "utf8");
+  writeFileSync(join(cwd, ".local", "trust402-agentcash-wallet.json"), `${JSON.stringify(basePolicy(cwd, overrides), null, 2)}\n`, "utf8");
   return cwd;
 }
 
@@ -131,7 +155,18 @@ function readPolicy(cwd) {
   return JSON.parse(readFileSync(join(cwd, ".local", "trust402-agentcash-wallet.json"), "utf8"));
 }
 
-function basePolicy(cwd = process.cwd()) {
+function basePolicy(cwd = process.cwd(), overrides = {}) {
+  const limits = {
+    agentcashGlobalMaxAmountUsd: 0.01,
+    manualSmokeRemainingBudgetUsd: 0,
+    lastVerifiedBalanceUsd: 1,
+    minimumReserveUsd: 0.5,
+    autoRefill: {
+      enabled: false,
+      futureThresholdUsd: 0.5
+    },
+    ...(overrides.limits || {})
+  };
   return {
     service: "Trust402",
     status: "dedicated-for-trust402-operator-spend",
@@ -148,15 +183,6 @@ function basePolicy(cwd = process.cwd()) {
       trust402LiveProcurement: "disabled-until-separate-approval",
       proof402Delegation: "disabled-until-separate-approval"
     },
-    limits: {
-      agentcashGlobalMaxAmountUsd: 0.01,
-      manualSmokeRemainingBudgetUsd: 0,
-      lastVerifiedBalanceUsd: 1,
-      minimumReserveUsd: 0.5,
-      autoRefill: {
-        enabled: false,
-        futureThresholdUsd: 0.5
-      }
-    }
+    limits
   };
 }

@@ -12,14 +12,14 @@ export async function liveSmokeWindow(input = {}, options = {}) {
   const cwd = options.cwd || process.cwd();
   const policyPath = input.policyPath || LOCAL_AGENTCASH_POLICY_PATH;
   const baseUrl = normalizeBaseUrl(input.baseUrl || DEFAULT_BASE_URL);
+  const policyResult = readLocalAgentcashPolicy({ cwd, policyPath });
   const plan = liveWindowPlan({
-    ...input,
+    ...withLocalPolicyDefaults(input, policyResult),
     baseUrl,
     includeProof: input.includeProof !== false,
     includeAutonomous: input.includeAutonomous === true,
     includeAutoRefill: input.includeAutoRefill === true
   }, options);
-  const policyResult = readLocalAgentcashPolicy({ cwd, policyPath });
   const preview = previewResult({ input, plan, policyResult, policyPath });
 
   if (input.live !== true || input.applyLocalPolicy !== true) {
@@ -77,6 +77,7 @@ export async function liveSmokeWindow(input = {}, options = {}) {
     smoke: smokeResult,
     safety: {
       appliedLocalPolicy: true,
+      mutatesLocalPolicy: true,
       restoreAfterDefault: true,
       persistentPolicyAllowed: input.restoreAfter === false && input.allowPersistentPolicy === true,
       sendsPaymentHeadersFromRunner: false,
@@ -153,6 +154,21 @@ function liveBlockers({ input, plan, policyResult }) {
   return blockers;
 }
 
+function withLocalPolicyDefaults(input, policyResult) {
+  const policy = policyResult.policy;
+  if (!policy) return input;
+
+  return {
+    ...input,
+    lastVerifiedBalanceUsd: hasValue(input.lastVerifiedBalanceUsd)
+      ? input.lastVerifiedBalanceUsd
+      : policy.limits?.lastVerifiedBalanceUsd,
+    minimumReserveUsd: hasValue(input.minimumReserveUsd)
+      ? input.minimumReserveUsd
+      : policy.limits?.minimumReserveUsd
+  };
+}
+
 function safePolicyPath(cwd, policyPath) {
   const root = resolve(cwd);
   const absolutePath = resolve(cwd, policyPath || LOCAL_AGENTCASH_POLICY_PATH);
@@ -188,6 +204,10 @@ function summarizeStagedPolicy(policy) {
 
 function normalizeBaseUrl(value) {
   return String(value || DEFAULT_BASE_URL).replace(/\/+$/, "");
+}
+
+function hasValue(value) {
+  return value !== undefined && value !== null && value !== "";
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
