@@ -20,17 +20,19 @@ v0.1.0
 CDP Bazaar state:
 
 ```text
-10 of 10 paid launch resources indexed
-status = all-indexed
+9 of 10 paid launch resources indexed
+status = partially-indexed
+missing = trust.compare_resources
 ```
 
-Trust402 is ready to present as a production x402 service, but not as a
-universal autonomous buyer. Live Trust402 procurement, paid Proof402 delegation,
-and AgentCash auto-refill remain disabled until separately approved.
+Trust402 is live as a production x402 service, but do not claim full CDP Bazaar
+coverage until `trust.compare_resources` is indexed again. Live Trust402
+procurement, paid Proof402 delegation, and AgentCash auto-refill remain
+disabled until separately approved.
 
 ## Current External Directory Visibility
 
-Last checked on 2026-05-19 at 12:42:10 +07:00 with:
+Last checked on 2026-05-19 at 15:35:54 +07:00 with:
 
 ```powershell
 npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
@@ -41,10 +43,10 @@ Result:
 ```text
 status = not-visible-yet
 checked = 7
-reachable = 6
+reachable = 5
 visible = 0
-notVisibleYet = 6
-unreachable = 1
+notVisibleYet = 5
+unreachable = 2
 customDomainBlocked = 1
 ```
 

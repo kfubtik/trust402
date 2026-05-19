@@ -14,34 +14,53 @@ npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10
 
 ## Current Production State
 
-Last checked on 2026-05-18 at 16:03:33 +07:00.
+Last checked on 2026-05-19 at 15:31:17 +07:00.
 
 Latest production deployment:
 
 ```text
-dpl_H49hy4WbLpc7RavbCtPTLexxAvw1
-https://trust402-qlrycbdrm-sergo565456-2815s-projects.vercel.app
+dpl_5B26c99sy75nWMnhitpf5woQzTTv
+https://trust402-asd1ol2pi-sergo565456-2815s-projects.vercel.app
 ```
 
-- indexed resources: 10 of 10;
-- CDP Bazaar status: `all-indexed`;
-- missing resources: none;
+- indexed resources: 9 of 10;
+- CDP Bazaar status: `partially-indexed`;
+- missing resources: `trust.compare_resources`;
 - Trust402 live procurement: disabled;
 - Proof402 paid delegation: disabled;
-- Vercel production error logs: clean.
+- live OpenAPI and unpaid x402 challenge expose the updated structured
+  candidate schema for `trust.compare_resources`.
 
-Indexed:
+Indexed right now:
 
 - `trust.check_x402`
 - `trust.score_resource`
 - `trust.evaluate_origin`
 - `seller.readiness`
-- `trust.compare_resources`
 - `procurement.plan`
 - `procurement.quote`
 - `monitor.snapshot`
 - `monitor.badge`
 - `reports.x402_diligence`
+
+## Current Indexing Blocker
+
+`trust.compare_resources` was previously indexed, then dropped from CDP Bazaar
+search results. The current production route is healthy:
+
+- `POST /api/trust/compare-resources` returns an unpaid HTTP 402 challenge;
+- the challenge contains top-level `extensions.bazaar`;
+- the Bazaar input schema now has explicit candidate fields such as
+  `endpoint`, `priceUsd`, `hasInputSchema`, `hasOpenApi`, `hasWellKnown`, and
+  `receiptReady`;
+- `npm test`, `npm run release:check`, `npm audit --omit=dev --audit-level=high`,
+  and Docker build passed after the schema fix.
+
+CDP Bazaar discovery is settle-driven for resource visibility. The safe next
+step is one bounded paid settle against
+`https://trust402.vercel.app/api/trust/compare-resources` with a `$0.03`
+per-request cap, then rerun the all-resource indexing check. Do not do this
+while `.local/trust402-agentcash-wallet.json` reports zero manual smoke budget.
 
 ## Historical Final Paid Smoke Bodies
 
@@ -102,7 +121,8 @@ hashes are stored only in ignored local `.tmp/` files.
 
 ## Completion Gate
 
-The completion gate is currently achieved. To recheck the live state:
+The completion gate is not currently achieved because CDP Bazaar is 9/10. To
+recheck the live state:
 
 ```powershell
 npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10000 --limit=20
