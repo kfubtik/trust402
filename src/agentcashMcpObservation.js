@@ -38,7 +38,7 @@ export function agentcashMcpObservation(input = {}, options = {}) {
 
   if (!baseAccount) {
     blockers.push(blocker("agentcash_base_account_missing", "Observed AgentCash accounts do not include the policy network account."));
-  } else {
+  } else if (policy) {
     const observedAddress = normalizeAddress(baseAccount.address);
     if (!expectedAddress || observedAddress !== expectedAddress) {
       blockers.push(blocker("agentcash_wallet_address_mismatch", "Observed AgentCash Base account address does not match the Trust402 local policy wallet address."));

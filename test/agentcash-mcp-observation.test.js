@@ -50,6 +50,26 @@ test("agentcashMcpObservation blocks mismatched address and unsafe maxAmount", (
   assert.ok(result.blockers.some((item) => item.id === "agentcash_non_base_balance_present"));
 });
 
+test("agentcashMcpObservation does not compare addresses when the local policy is missing", () => {
+  const result = agentcashMcpObservation({
+    accounts: [
+      { network: "base", address: "0xf2aB09D8146f453CA86486afEA15D6747B72D0D7", balance: 1.283 }
+    ],
+    settings: { maxAmount: 0.01 }
+  }, {
+    localAgentcashPolicyResult: {
+      present: false,
+      policyPath: ".local/trust402-agentcash-wallet.json",
+      policy: null,
+      failures: ["No local AgentCash policy file exists."]
+    }
+  });
+
+  assert.equal(result.status, "blocked-policy");
+  assert.ok(result.blockers.some((item) => item.id === "local_agentcash_policy_missing"));
+  assert.equal(result.blockers.some((item) => item.id === "agentcash_wallet_address_mismatch"), false);
+});
+
 function localPolicy() {
   return {
     present: true,
