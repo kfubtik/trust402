@@ -22,6 +22,7 @@
     "directories:check": "node scripts/check-external-directories.js",
     "launch:monitor": "node scripts/launch-monitor.js",
     "live:evidence-smoke": "node scripts/live-evidence-smoke.js",
+    "live:smoke-window": "node scripts/live-smoke-window.js",
     "live:window-plan": "node scripts/live-window-plan.js",
     "marketplace:bundle": "node scripts/export-marketplace-bundle.js",
     "agentcash:policy": "node scripts/check-agentcash-policy.js",

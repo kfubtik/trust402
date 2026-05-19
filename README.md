@@ -408,6 +408,22 @@ Ledger entries go under `.local/evidence-ledger/`, which is ignored by Git.
 They contain hashes, stage status, and public-safe evidence refs, not operator
 keys, payment signatures, private payloads, or wallet secrets.
 
+For an approved one-shot live smoke window, use the guarded wrapper so the
+local AgentCash policy patch is restored after the run:
+
+```powershell
+$env:TRUST402_LIVE_SMOKE_WINDOW_APPROVED="true"
+npm run live:smoke-window -- https://trust402.vercel.app `
+  --live `
+  --apply-local-policy `
+  --candidate-endpoint=https://approved.example/paid `
+  --candidate-price=0.01 `
+  --max-total-usd=0.03
+```
+
+Without `--live` and `--apply-local-policy`, the wrapper is preview-only and
+writes nothing.
+
 Export the public-safe operator action pack for all remaining blockers:
 
 ```powershell

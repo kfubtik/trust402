@@ -274,6 +274,23 @@ command for the approved smoke window.
 
 Agents can request the same read-only plan through `POST /api/live/window-plan`.
 
+During the approved smoke window, prefer the one-shot local wrapper:
+
+```powershell
+$env:TRUST402_LIVE_SMOKE_WINDOW_APPROVED="true"
+npm run live:smoke-window -- https://trust402.vercel.app `
+  --live `
+  --apply-local-policy `
+  --candidate-endpoint=https://approved.example/paid `
+  --candidate-price=0.01 `
+  --max-total-usd=0.03
+```
+
+It stages the approved local AgentCash policy patch, runs the bounded evidence
+smoke, and restores the previous local policy in `finally` so the manual smoke
+budget returns to its prior state after the run. Without `--live` and
+`--apply-local-policy`, it is preview-only and writes nothing.
+
 During approved evidence collection, append `--write-evidence` to write a
 local public-safe JSONL ledger under `.local/evidence-ledger/`. This ledger is
 ignored by Git and stores hashes, stage statuses, and evidence refs only; it

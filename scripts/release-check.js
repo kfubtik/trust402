@@ -45,6 +45,7 @@ assert(packageJson.scripts?.["bazaar:indexing:check:all"], "package must expose 
 assert(packageJson.scripts?.["directories:check"], "package must expose npm run directories:check");
 assert(packageJson.scripts?.["launch:monitor"], "package must expose npm run launch:monitor");
 assert(packageJson.scripts?.["live:evidence-smoke"], "package must expose npm run live:evidence-smoke");
+assert(packageJson.scripts?.["live:smoke-window"], "package must expose npm run live:smoke-window");
 assert(packageJson.scripts?.["live:window-plan"], "package must expose npm run live:window-plan");
 assert(packageJson.scripts?.["marketplace:bundle"], "package must expose npm run marketplace:bundle");
 assert(packageJson.scripts?.["agentcash:policy"], "package must expose npm run agentcash:policy");
@@ -82,6 +83,7 @@ assert(existsSync("src/autonomousJob.js"), "autonomous job flow module must exis
 assert(existsSync("src/agentcashRefill.js"), "AgentCash refill workflow module must exist");
 assert(existsSync("src/evidenceLedger.js"), "evidence ledger module must exist");
 assert(existsSync("src/localAgentcashPolicy.js"), "local AgentCash policy guard module must exist");
+assert(existsSync("src/liveSmokeWindow.js"), "live smoke window module must exist");
 assert(existsSync("src/liveWindowPlan.js"), "live window planning module must exist");
 assert(existsSync("src/operatorActionPack.js"), "operator action pack module must exist");
 assert(existsSync("src/operatorUnblockReport.js"), "operator unblock report module must exist");
@@ -115,9 +117,11 @@ assert(existsSync("scripts/operator-unblock-check.js"), "operator unblock check 
 assert(existsSync("scripts/operator-action-pack.js"), "operator action pack script must exist");
 assert(existsSync("scripts/final-verification.js"), "final verification script must exist");
 assert(existsSync("scripts/live-evidence-smoke.js"), "live evidence smoke script must exist");
+assert(existsSync("scripts/live-smoke-window.js"), "live smoke window script must exist");
 assert(existsSync("scripts/live-window-plan.js"), "live window plan script must exist");
 assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("evaluateLocalAgentcashPolicyForLive"), "live evidence smoke must enforce local AgentCash policy before live mode");
 assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("appendEvidenceLedger"), "live evidence smoke must support local public-safe evidence ledger writes");
+assert(readFileSync("src/liveSmokeWindow.js", "utf8").includes("restoredAfterRun"), "live smoke window must restore local policy after approved runs");
 assert(liveWindowPlanSource.includes("writesLocalPolicy: false"), "live window plan must stay read-only");
 assert(liveWindowPlanSource.includes("LIVE_SPENT_TODAY_USD"), "live window plan must include spent-today tracking");
 assert(configSource.includes("liveSpentTodayUsd"), "config must expose LIVE_SPENT_TODAY_USD");

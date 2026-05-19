@@ -320,6 +320,22 @@ The planner proposes:
 It is intentionally read-only: no wallet mutation, no env writes, no payment
 headers, and no secret output.
 
+After the plan is approved, prefer the guarded smoke-window wrapper:
+
+```powershell
+$env:TRUST402_LIVE_SMOKE_WINDOW_APPROVED="true"
+npm run live:smoke-window -- https://trust402.vercel.app `
+  --live `
+  --apply-local-policy `
+  --candidate-endpoint=https://approved.example/paid `
+  --candidate-price=0.01 `
+  --max-total-usd=0.03
+```
+
+It stages the local policy patch, runs the bounded evidence smoke, and restores
+the previous `.local/trust402-agentcash-wallet.json` in `finally`. Without
+`--live` and `--apply-local-policy`, it only previews the same plan.
+
 The same planner is exposed as a free API helper for agents:
 
 ```text
