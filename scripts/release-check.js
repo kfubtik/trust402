@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { openApiSpec, x402WellKnown } from "../src/openapi.js";
 import { spendPolicyStatus } from "../src/policies.js";
+import { completionAudit } from "../src/completionAudit.js";
 import { launchChecklist } from "../src/readiness.js";
 import { marketplaceBundle } from "../src/marketplace.js";
 
@@ -25,6 +26,7 @@ const wellKnown = x402WellKnown();
 const checklist = launchChecklist();
 const bundle = marketplaceBundle();
 const spendPolicy = spendPolicyStatus();
+const completion = completionAudit();
 
 assert(packageJson.name === "trust402", "package name must be trust402");
 assert(packageJson.private === false, "package private must be false before GitHub release");
@@ -39,6 +41,7 @@ assert(packageJson.scripts?.["launch:monitor"], "package must expose npm run lau
 assert(packageJson.scripts?.["marketplace:bundle"], "package must expose npm run marketplace:bundle");
 assert(packageJson.scripts?.["agentcash:policy"], "package must expose npm run agentcash:policy");
 assert(packageJson.scripts?.["agentcash:refill-check"], "package must expose npm run agentcash:refill-check");
+assert(packageJson.scripts?.["completion:audit"], "package must expose npm run completion:audit");
 assert(packageJson.scripts?.["privacy:check"], "package must expose npm run privacy:check");
 assert(packageJson.scripts?.["release:check"], "package must expose npm run release:check");
 assert(packageJson.scripts?.["settlement:preflight"], "package must expose npm run settlement:preflight");
@@ -63,6 +66,7 @@ assert(existsSync("api/index.js"), "Vercel API handler must exist");
 assert(existsSync("src/expressApp.js"), "Express x402 entrypoint bridge must exist");
 assert(existsSync("src/autonomousJob.js"), "autonomous job flow module must exist");
 assert(existsSync("src/agentcashRefill.js"), "AgentCash refill workflow module must exist");
+assert(existsSync("src/completionAudit.js"), "completion audit module must exist");
 assert(existsSync("src/policies.js"), "spend policy status module must exist");
 assert(existsSync("compose.yaml"), "compose.yaml must exist");
 assert(existsSync("docs/deployment.md"), "deployment docs must exist");
@@ -86,9 +90,11 @@ assert(serverSource.includes("x-trust402-operator-key"), "server must require an
 assert(existsSync("scripts/check-external-directories.js"), "external directory check script must exist");
 assert(existsSync("scripts/check-agentcash-policy.js"), "AgentCash policy check script must exist");
 assert(existsSync("scripts/agentcash-refill-check.js"), "AgentCash refill check script must exist");
+assert(existsSync("scripts/completion-audit.js"), "completion audit script must exist");
 assert(existsSync("scripts/launch-monitor.js"), "production launch monitor script must exist");
 assert(smokeScript.includes("/api/jobs/autonomous-run"), "smoke script must cover autonomous job dry-run");
 assert(smokeScript.includes("/api/agentcash/refill-check"), "smoke script must cover AgentCash refill dry-run");
+assert(smokeScript.includes("/api/completion/audit"), "smoke script must cover completion audit");
 assert(launchMonitorScript.includes("/api/policies/spend"), "launch monitor must check spend policy");
 assert(workflow.includes("npm audit --omit=dev --audit-level=high"), "CI must run high-severity npm audit");
 assert(workflow.includes("docker build -t trust402:test ."), "CI must build the Docker image");
@@ -139,6 +145,10 @@ assert(
   "free spend policy status helper must exist"
 );
 assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/completion/audit"),
+  "free completion audit helper must exist"
+);
+assert(
   catalog.freeResources.some((resource) => resource.path === "/api/procurement/execute" && resource.priceUsd === 0),
   "free dry-run execute helper must exist"
 );
@@ -153,6 +163,7 @@ assert(openapi.paths?.["/api/marketplace/bundle"]?.get, "marketplace bundle must
 assert(openapi.paths?.["/api/settlement/status"]?.get, "settlement status must be present in OpenAPI");
 assert(openapi.paths?.["/api/settlement/preflight"]?.get, "settlement preflight must be present in OpenAPI");
 assert(openapi.paths?.["/api/policies/spend"]?.get, "spend policy status must be present in OpenAPI");
+assert(openapi.paths?.["/api/completion/audit"]?.get, "completion audit must be present in OpenAPI");
 assert(openapi.paths?.["/api/jobs/autonomous-run"]?.post, "autonomous job flow must be present in OpenAPI");
 assert(openapi.paths?.["/api/agentcash/refill-check"]?.post, "AgentCash refill check must be present in OpenAPI");
 assert(checklist.readiness.dryRunLaunchReady === true, "dry-run launch checklist must pass");
@@ -167,6 +178,15 @@ assert(spendPolicy.readiness.anyLiveSpendReady === false, "spend policy status m
 assert(spendPolicy.policies.agentcashAutoRefill.ready === false, "AgentCash auto-refill must not be ready by default");
 assert(spendPolicy.policies.liveProcurement.ready === false, "live procurement must not be ready by default");
 assert(spendPolicy.policies.proof402Delegation.ready === false, "Proof402 delegation must not be ready by default");
+assert(completion.goalComplete === false, "completion audit must not claim full completion by default");
+assert(
+  completion.requirements.some((item) => item.id === "unified_spend_policy" && item.status === "verified"),
+  "completion audit must verify unified spend policy"
+);
+assert(
+  completion.blockers.some((item) => item.id === "git_vercel_auto_deploy"),
+  "completion audit must expose Git/Vercel blocker"
+);
 assert(
   bundle.resources.every((resource) => resource.metadata?.inputSchema && resource.bazaarExtensionDraft?.bazaar),
   "marketplace bundle resources must include input schemas and Bazaar drafts"
@@ -222,6 +242,7 @@ for (const resource of catalog.laterResourcesToPreserve) {
 run("node", ["scripts/privacy-check.js"]);
 run("node", ["scripts/check-agentcash-policy.js"]);
 run("node", ["scripts/agentcash-refill-check.js", "--balance", "1.00"]);
+run("node", ["scripts/completion-audit.js"]);
 run("node", ["scripts/settlement-check.js"]);
 run("node", ["--test", "test"]);
 

@@ -8,6 +8,7 @@ import { autonomousRun } from "./autonomousJob.js";
 import { marketplaceBundle } from "./marketplace.js";
 import { monitorBadge, monitorSnapshot } from "./monitor.js";
 import { capabilities, openApiSpec, x402WellKnown } from "./openapi.js";
+import { completionAudit } from "./completionAudit.js";
 import { spendPolicyStatus } from "./policies.js";
 import { procurementExecute, procurementQuote } from "./procurement.js";
 import { notarizeResult } from "./proof402Client.js";
@@ -67,6 +68,7 @@ export async function handleTrust402Request(req, res) {
           settlementStatus: "/api/settlement/status",
           settlementPreflight: "/api/settlement/preflight",
           spendPolicy: "/api/policies/spend",
+          completionAudit: "/api/completion/audit",
           agentcashRefillCheck: "/api/agentcash/refill-check",
           autonomousRun: "/api/jobs/autonomous-run",
           resources: "/api/resources",
@@ -125,6 +127,10 @@ export async function handleTrust402Request(req, res) {
 
     if (req.method === "GET" && path === "/api/policies/spend") {
       return sendJson(res, 200, spendPolicyStatus());
+    }
+
+    if (req.method === "GET" && path === "/api/completion/audit") {
+      return sendJson(res, 200, completionAudit());
     }
 
     if (req.method === "GET" && path === "/openapi.json") {
@@ -195,6 +201,7 @@ function statusSummary() {
       settlementStatus: "/api/settlement/status",
       settlementPreflight: "/api/settlement/preflight",
       spendPolicy: "/api/policies/spend",
+      completionAudit: "/api/completion/audit",
       agentcashRefillCheck: "/api/agentcash/refill-check",
       autonomousRun: "/api/jobs/autonomous-run",
       openapi: "/openapi.json",

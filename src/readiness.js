@@ -4,13 +4,13 @@ import { settlementStatus } from "./settlement.js";
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
-export function launchChecklist() {
+export function launchChecklist(runtimeConfig = config) {
   const catalog = loadCatalog();
   const paidLaunchResources = catalog.paidLaunchResources || [];
   const freeResources = catalog.freeResources || [];
   const laterResources = catalog.laterResourcesToPreserve || [];
-  const publicBase = parseUrl(config.publicBaseUrl);
-  const settlement = settlementStatus({ config, catalog });
+  const publicBase = parseUrl(runtimeConfig.publicBaseUrl);
+  const settlement = settlementStatus({ config: runtimeConfig, catalog });
   const checks = [
     check({
       id: "catalog_paid_launch_resources",
@@ -40,14 +40,14 @@ export function launchChecklist() {
     check({
       id: "dry_run_mode",
       scope: "dry-run-launch",
-      passed: config.defaultMode === "dry-run",
+      passed: runtimeConfig.defaultMode === "dry-run",
       pass: "Default mode is dry-run.",
       fail: "Default mode must stay dry-run for the MVP."
     }),
     check({
       id: "live_spend_disabled",
       scope: "dry-run-launch",
-      passed: isLiveSpendDisabled(),
+      passed: isLiveSpendDisabled(runtimeConfig),
       pass: "Live spend and Proof402 paid delegation are disabled.",
       fail: "Live spend settings must be disabled before launch."
     }),
@@ -75,7 +75,7 @@ export function launchChecklist() {
     check({
       id: "pay_to_configured",
       scope: "public-production",
-      passed: isNonZeroPayTo(config.payTo),
+      passed: isNonZeroPayTo(runtimeConfig.payTo),
       pass: "PAY_TO is configured.",
       fail: "Set PAY_TO before enabling mock payment flow for external clients or real settlement."
     }),
@@ -109,29 +109,29 @@ export function launchChecklist() {
       liveSettlementReady: settlement.readiness.realSettlementReady
     },
     environment: {
-      serviceName: config.serviceName,
-      version: config.version,
-      host: config.host,
-      port: config.port,
-      publicBaseUrl: config.publicBaseUrl,
-      mode: config.defaultMode,
-      paywallMode: config.paywallMode,
-      x402Network: config.x402Network,
-      x402Asset: config.x402Asset,
-      payToConfigured: isNonZeroPayTo(config.payTo),
-      realSettlementEnabled: config.realSettlementEnabled,
-      successfulSettlementObserved: config.successfulSettlementObserved,
-      facilitatorUrlConfigured: Boolean(config.facilitatorUrl),
-      cdpApiKeyIdConfigured: config.cdpApiKeyIdConfigured,
-      cdpApiKeySecretConfigured: config.cdpApiKeySecretConfigured,
-      cdpWalletSecretConfigured: config.cdpWalletSecretConfigured,
-      liveSpendEnabled: config.liveSpendEnabled,
-      liveMaxPerCallUsd: config.liveMaxPerCallUsd,
-      liveMaxPerJobUsd: config.liveMaxPerJobUsd,
-      liveDailyLimitUsd: config.liveDailyLimitUsd,
-      liveAllowedRegistriesCount: config.liveAllowedRegistries.length,
-      proof402DelegationMode: config.proof402DelegationMode,
-      proof402MaxSpendUsd: config.proof402MaxSpendUsd
+      serviceName: runtimeConfig.serviceName,
+      version: runtimeConfig.version,
+      host: runtimeConfig.host,
+      port: runtimeConfig.port,
+      publicBaseUrl: runtimeConfig.publicBaseUrl,
+      mode: runtimeConfig.defaultMode,
+      paywallMode: runtimeConfig.paywallMode,
+      x402Network: runtimeConfig.x402Network,
+      x402Asset: runtimeConfig.x402Asset,
+      payToConfigured: isNonZeroPayTo(runtimeConfig.payTo),
+      realSettlementEnabled: runtimeConfig.realSettlementEnabled,
+      successfulSettlementObserved: runtimeConfig.successfulSettlementObserved,
+      facilitatorUrlConfigured: Boolean(runtimeConfig.facilitatorUrl),
+      cdpApiKeyIdConfigured: runtimeConfig.cdpApiKeyIdConfigured,
+      cdpApiKeySecretConfigured: runtimeConfig.cdpApiKeySecretConfigured,
+      cdpWalletSecretConfigured: runtimeConfig.cdpWalletSecretConfigured,
+      liveSpendEnabled: runtimeConfig.liveSpendEnabled,
+      liveMaxPerCallUsd: runtimeConfig.liveMaxPerCallUsd,
+      liveMaxPerJobUsd: runtimeConfig.liveMaxPerJobUsd,
+      liveDailyLimitUsd: runtimeConfig.liveDailyLimitUsd,
+      liveAllowedRegistriesCount: runtimeConfig.liveAllowedRegistries.length,
+      proof402DelegationMode: runtimeConfig.proof402DelegationMode,
+      proof402MaxSpendUsd: runtimeConfig.proof402MaxSpendUsd
     },
     settlement: settlement.readiness,
     resources: {
@@ -177,11 +177,11 @@ function nextActions(failedChecks) {
   return actions;
 }
 
-function isLiveSpendDisabled() {
-  return config.defaultMode === "dry-run" &&
-    config.liveSpendEnabled === false &&
-    config.proof402DelegationMode === "disabled" &&
-    config.proof402MaxSpendUsd === 0;
+function isLiveSpendDisabled(runtimeConfig) {
+  return runtimeConfig.defaultMode === "dry-run" &&
+    runtimeConfig.liveSpendEnabled === false &&
+    runtimeConfig.proof402DelegationMode === "disabled" &&
+    runtimeConfig.proof402MaxSpendUsd === 0;
 }
 
 function isNonZeroPayTo(payTo) {

@@ -44,6 +44,17 @@ async function main() {
   assert(spendPolicy.readiness?.anyLiveSpendReady === false, "/api/policies/spend must not make live spend ready by default");
   assert(spendPolicy.policies?.agentcashAutoRefill?.ready === false, "/api/policies/spend must keep auto-refill gated");
 
+  const completion = await getJson("/api/completion/audit");
+  assert(completion.goalComplete === false, "/api/completion/audit must not claim full completion while live/manual blockers remain");
+  assert(
+    completion.requirements?.some((item) => item.id === "unified_spend_policy" && item.status === "verified"),
+    "/api/completion/audit must verify unified spend policy"
+  );
+  assert(
+    completion.blockers?.some((item) => item.id === "git_vercel_auto_deploy"),
+    "/api/completion/audit must expose Git/Vercel blocker"
+  );
+
   const openapi = await getJson("/openapi.json");
   assert(openapi.openapi === "3.1.0", "/openapi.json version mismatch");
   assert(openapi.paths?.["/api/trust/check-x402"]?.post, "/openapi missing check-x402");
@@ -51,6 +62,7 @@ async function main() {
   assert(openapi.paths?.["/api/settlement/status"]?.get, "/openapi missing settlement status");
   assert(openapi.paths?.["/api/settlement/preflight"]?.get, "/openapi missing settlement preflight");
   assert(openapi.paths?.["/api/policies/spend"]?.get, "/openapi missing spend policy");
+  assert(openapi.paths?.["/api/completion/audit"]?.get, "/openapi missing completion audit");
   assert(openapi.paths?.["/api/jobs/autonomous-run"]?.post, "/openapi missing autonomous run");
   assert(openapi.paths?.["/api/monitor/snapshot"]?.post, "/openapi missing monitor snapshot");
 

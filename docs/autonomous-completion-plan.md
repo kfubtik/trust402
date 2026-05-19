@@ -144,6 +144,8 @@ Trust402 is complete when it can:
 - monitor its AgentCash balance policy;
 - keep auto-refill bound to an approved policy;
 - expose all of the above through API checks;
+- expose a machine-readable completion audit that keeps unresolved manual,
+  external, and live-spend blockers visible;
 - pass local tests, release checks, Docker build, production smoke, x402 smoke,
   bounded live paid smoke, Proof402 paid smoke, refill check, and
   Bazaar/external-directory checks.

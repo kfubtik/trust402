@@ -81,6 +81,7 @@ http://127.0.0.1:4032/api/launch/checklist
 http://127.0.0.1:4032/api/marketplace/bundle
 http://127.0.0.1:4032/api/settlement/status
 http://127.0.0.1:4032/api/policies/spend
+http://127.0.0.1:4032/api/completion/audit
 http://127.0.0.1:4032/api/jobs/autonomous-run
 http://127.0.0.1:4032/api/agentcash/refill-check
 http://127.0.0.1:4032/api/resources
@@ -212,6 +213,7 @@ GET /api/marketplace/bundle
 GET /api/settlement/status
 GET /api/settlement/preflight
 GET /api/policies/spend
+GET /api/completion/audit
 GET /api/resources
 POST /api/receipts/hash-result
 POST /api/receipts/notarize-result
@@ -348,6 +350,13 @@ Inspect live-spend policy gates without spending:
 Invoke-RestMethod -Method Get -Uri http://127.0.0.1:4032/api/policies/spend
 ```
 
+Run the completion audit without pretending blocked live/manual items are done:
+
+```powershell
+npm run completion:audit
+Invoke-RestMethod -Method Get -Uri http://127.0.0.1:4032/api/completion/audit
+```
+
 Check the local Trust402-only AgentCash policy without spending:
 
 ```powershell
@@ -374,6 +383,8 @@ MVP guarantees:
 - `/api/receipts/notarize-result` never makes a paid Proof402 call in the MVP;
 - `/api/settlement/status` does not claim marketplace indexing readiness until explicit config and paid smoke evidence exist;
 - `/api/settlement/preflight` can plan one paid smoke but never sends payment;
+- `/api/completion/audit` keeps final success criteria machine-readable and
+  marks live/manual/external blockers as unresolved until real evidence exists;
 - `bazaar:indexing:check` only reads public CDP discovery endpoints and never sends payment;
 - real paywall mode fails closed for protected routes when settlement guards are incomplete;
 - unpaid probes strip `PAYMENT-SIGNATURE`, `X-Payment`, `Authorization`, cookie, and proxy authorization headers;
@@ -408,6 +419,7 @@ Future live procurement must require:
 - `src/settlement.js` - real x402 settlement readiness and unpaid challenge metadata.
 - `src/x402SdkAdapter.js` - disabled-by-default x402 SDK adapter used by the Express bridge.
 - `src/policies.js` - machine-readable spend policy gates and launch issue links.
+- `src/completionAudit.js` - final buyer-agent requirement audit and blockers.
 - `src/marketplace.js` - marketplace submission bundle and Bazaar extension drafts.
 - `src/openapi.js` - OpenAPI, capabilities, and `.well-known/x402`.
 - `src/readiness.js` - dry-run launch and public marketplace readiness checks.
@@ -428,5 +440,6 @@ Future live procurement must require:
 - `scripts/check-external-directories.js` - read-only external directory visibility check.
 - `scripts/check-agentcash-policy.js` - local Trust402-only AgentCash policy check.
 - `scripts/agentcash-refill-check.js` - local AgentCash refill dry-run monitor.
+- `scripts/completion-audit.js` - local or production completion audit runner.
 - `scripts/launch-monitor.js` - combined production API, x402, Bazaar, and directory monitor.
 - `test/` - API and engine tests.

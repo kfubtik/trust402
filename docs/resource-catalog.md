@@ -75,6 +75,18 @@ Price: free.
 Reason: future autonomous spend should be enabled from a policy checklist, not
 from scattered env flags.
 
+### `GET /api/completion/audit`
+
+Requirement-by-requirement audit for the final autonomous buyer-agent plan. It
+reports which criteria are verified, implemented but blocked, externally
+blocked, missing, or still unverified.
+
+Price: free.
+
+Reason: final readiness should be machine-readable. This endpoint prevents the
+agent from claiming completion while live procurement, paid Proof402, Git/Vercel
+auto-deploy, Bazaar 10/10, or external directory evidence is still unresolved.
+
 ### `GET /api/resources`
 
 Public catalog of Trust402 resources, prices, input schemas, and safety notes.

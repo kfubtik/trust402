@@ -121,3 +121,23 @@ Invoke-RestMethod -Method Post -Uri https://trust402.vercel.app/api/agentcash/re
 
 Live refill still requires explicit approval, provider config, operator
 authorization, caps, and emergency stop remaining false.
+
+## Completion Audit
+
+Use the completion audit to see which final buyer-agent criteria are verified,
+implemented-but-blocked, externally blocked, missing, or unverified:
+
+```powershell
+npm run completion:audit
+npm run completion:audit -- https://trust402.vercel.app
+```
+
+The API form is:
+
+```powershell
+Invoke-RestMethod -Method Get -Uri https://trust402.vercel.app/api/completion/audit
+```
+
+The audit intentionally returns `goalComplete=false` until Git/Vercel
+auto-deploy, external directory/Bazaar requirements, live procurement, paid
+Proof402 delegation, and final paid-smoke evidence are actually proven.

@@ -67,6 +67,8 @@ Added:
 - `/api/settlement/preflight` and `npm run settlement:preflight` for one paid-smoke readiness check without sending payment.
 - `/api/policies/spend` for read-only live procurement, Proof402 delegation,
   and AgentCash auto-refill policy gates.
+- `/api/completion/audit` for a machine-readable final DoD audit that keeps
+  manual, external, and live-spend blockers visible.
 - `/api/agentcash/refill-check` for dry-run AgentCash threshold/refill decisions
   with receipt hashes and live action gates.
 - `src/expressApp.js` bridge for Vercel/serverless and real-mode Express middleware.
@@ -136,6 +138,8 @@ Implemented:
 - `/api/jobs/autonomous-run` dry-run-first top-level workflow;
 - `npm run agentcash:refill-check` and `/api/agentcash/refill-check` dry-run
   refill monitor;
+- `npm run completion:audit` and `/api/completion/audit` for final evidence
+  tracking;
 - live execution skeleton with operator authorization, allowlist, denylist,
   caps, approval, and receipt bundles.
 

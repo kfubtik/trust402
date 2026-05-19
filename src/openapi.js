@@ -45,6 +45,7 @@ export function openApiSpec() {
     "/api/settlement/status": getPath("Real x402 settlement readiness and unpaid challenge status"),
     "/api/settlement/preflight": getPath("Operator preflight for one paid settlement smoke"),
     "/api/policies/spend": getPath("Spend policy gates for live procurement, Proof402 delegation, and AgentCash auto-refill"),
+    "/api/completion/audit": getPath("Requirement-by-requirement audit of Trust402 autonomous buyer-agent completion"),
     "/api/resources": getPath("Public Trust402 resource catalog"),
     "/api/agentcash/refill-check": {
       post: {
@@ -237,6 +238,7 @@ export function capabilities() {
       settlementStatus: "/api/settlement/status",
       settlementPreflight: "/api/settlement/preflight",
       spendPolicy: "/api/policies/spend",
+      completionAudit: "/api/completion/audit",
       agentcashRefillCheck: "/api/agentcash/refill-check",
       openapi: "/openapi.json",
       x402WellKnown: "/.well-known/x402"

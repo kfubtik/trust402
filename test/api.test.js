@@ -38,6 +38,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/settlement/status"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/settlement/preflight"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/policies/spend"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/completion/audit"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/procurement/execute"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/jobs/autonomous-run"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/agentcash/refill-check"));
@@ -81,6 +82,13 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(policies.body.policies.proof402Delegation.mode, "disabled");
     assert.ok(policies.body.issues.agentcashAutoRefill.includes("/issues/7"));
 
+    const completion = await request(baseUrl, "/api/completion/audit");
+    assert.equal(completion.response.status, 200);
+    assert.equal(completion.body.tool, "completion.audit");
+    assert.equal(completion.body.goalComplete, false);
+    assert.ok(completion.body.requirements.some((item) => item.id === "unified_spend_policy" && item.status === "verified"));
+    assert.ok(completion.body.blockers.some((item) => item.id === "git_vercel_auto_deploy"));
+
     const checklist = await request(baseUrl, "/api/launch/checklist");
     assert.equal(checklist.response.status, 200);
     assert.equal(checklist.body.tool, "launch.checklist");
@@ -106,6 +114,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/api/settlement/status"].get);
     assert.ok(openapi.body.paths["/api/settlement/preflight"].get);
     assert.ok(openapi.body.paths["/api/policies/spend"].get);
+    assert.ok(openapi.body.paths["/api/completion/audit"].get);
     assert.ok(openapi.body.paths["/api/jobs/autonomous-run"].post);
     assert.ok(openapi.body.paths["/api/agentcash/refill-check"].post);
     assert.ok(openapi.body.paths["/api/receipts/hash-result"].post);
