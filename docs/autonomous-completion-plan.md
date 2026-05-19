@@ -110,6 +110,9 @@ Acceptance:
 - emergency stop overrides every live path;
 - payment-provider readiness proves that live mode uses `@x402/fetch` or an
   approved payment bridge instead of plain `fetch`;
+- `agentcash-mcp` and `external-adapter` live modes explicitly require
+  `LIVE_PAYMENT_ADAPTER_URL`; `x402-fetch` explicitly requires
+  `X402_BUYER_PRIVATE_KEY` and `X402_BUYER_RPC_URL`;
 - `/api/policies/spend` exposes the current non-secret policy state.
 
 Tracking: https://github.com/kfubtik/trust402/issues/8

@@ -3,6 +3,56 @@ import { config } from "./config.js";
 
 const EVM_PRIVATE_KEY_RE = /^0x[a-fA-F0-9]{64}$/;
 
+export function paymentProviderRequiredSecrets(provider) {
+  if (provider === "agentcash-mcp" || provider === "external-adapter") {
+    return ["LIVE_PAYMENT_ADAPTER_URL"];
+  }
+  if (provider === "x402-fetch") {
+    return ["X402_BUYER_PRIVATE_KEY", "X402_BUYER_RPC_URL"];
+  }
+  return [];
+}
+
+export function paymentBridgeContract(provider = "agentcash-mcp") {
+  if (provider !== "agentcash-mcp" && provider !== "external-adapter") return null;
+  return {
+    provider,
+    runtime: provider === "agentcash-mcp" ? "agentcash-bridge" : "external-adapter",
+    endpointEnv: "LIVE_PAYMENT_ADAPTER_URL",
+    method: "POST",
+    requestShape: {
+      service: "Trust402",
+      provider,
+      protocol: "x402",
+      maxAmountUsd: "<LIVE_MAX_PER_CALL_USD>",
+      network: "<X402_NETWORK>",
+      request: {
+        url: "<downstream x402 URL>",
+        method: "<GET|POST|PUT|PATCH|DELETE>",
+        headers: "<public headers only; auth/payment/secret headers stripped>",
+        body: "<stringified public-safe request body>"
+      }
+    },
+    responseShape: {
+      response: {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+          "payment-response": "<optional public payment receipt header>"
+        },
+        body: "<downstream response body>"
+      }
+    },
+    safety: {
+      trust402SendsPrivateKeys: false,
+      trust402SendsPaymentHeadersToBridge: false,
+      trust402StripsSecretHeaders: true,
+      maxBodyBytes: 100000,
+      bridgeMustEnforceMaxAmountUsd: true
+    }
+  };
+}
+
 export function paymentProviderReadiness(runtimeConfig = config, options = {}) {
   const provider = runtimeConfig.livePaymentProvider || "disabled";
   const blockers = [];
@@ -175,6 +225,8 @@ function providerStatus({ provider, runtime, ready, blockers, runtimeConfig }) {
     adapterUrlConfigured: Boolean(runtimeConfig.livePaymentAdapterUrl),
     x402BuyerPrivateKeyConfigured: Boolean(runtimeConfig.x402BuyerPrivateKeyConfigured),
     x402BuyerRpcUrlConfigured: Boolean(runtimeConfig.x402BuyerRpcUrl),
+    requiredSecrets: paymentProviderRequiredSecrets(provider),
+    bridgeContract: paymentBridgeContract(provider),
     storesPrivatePayload: false,
     blockers
   };

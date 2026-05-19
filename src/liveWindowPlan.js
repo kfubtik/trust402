@@ -1,5 +1,6 @@
 import { config } from "./config.js";
 import { sha256Json } from "./hash.js";
+import { paymentBridgeContract, paymentProviderRequiredSecrets } from "./paymentAdapters.js";
 
 const DEFAULT_BASE_URL = "https://trust402.vercel.app";
 const DEFAULT_PROOF402_BASE_URL = "https://proof402.vercel.app";
@@ -14,6 +15,7 @@ export function liveWindowPlan(input = {}, options = {}) {
   const proof402BaseUrl = normalizeBaseUrl(input.proof402BaseUrl || cfg.proof402BaseUrl || DEFAULT_PROOF402_BASE_URL);
   const proof402Origin = originOf(proof402BaseUrl);
   const paymentProvider = choosePaymentProvider(input.paymentProvider, cfg.livePaymentProvider);
+  const paymentAdapterContract = paymentBridgeContract(paymentProvider);
   const includeAutonomous = input.includeAutonomous === true;
   const includeProof = input.includeProof !== false;
   const includeAutoRefill = input.includeAutoRefill === true;
@@ -79,10 +81,8 @@ export function liveWindowPlan(input = {}, options = {}) {
     },
     requiredSecretsAlreadyExistOrMustBeAddedManually: [
       "TRUST402_OPERATOR_API_KEY",
-      paymentProvider === "external-adapter" ? "LIVE_PAYMENT_ADAPTER_URL" : null,
-      paymentProvider === "x402-fetch" ? "X402_BUYER_PRIVATE_KEY" : null,
-      paymentProvider === "x402-fetch" ? "X402_BUYER_RPC_URL" : null
-    ].filter(Boolean)
+      ...paymentProviderRequiredSecrets(paymentProvider)
+    ]
   };
 
   const localPolicyPatch = {
@@ -129,6 +129,7 @@ export function liveWindowPlan(input = {}, options = {}) {
     includeAutonomous,
     includeAutoRefill,
     downstreamRequestPolicy,
+    paymentAdapterContract,
     blockers,
     vercelEnvPlan,
     localPolicyPatch,

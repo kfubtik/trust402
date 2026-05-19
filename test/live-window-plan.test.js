@@ -31,8 +31,12 @@ test("live window plan stays read-only and produces a bounded staging profile", 
   assert.equal(result.vercelEnvPlan.production.LIVE_SPENT_TODAY_USD, "0");
   assert.equal(result.vercelEnvPlan.production.PROOF402_DELEGATION_MODE, "live");
   assert.deepEqual(result.vercelEnvPlan.requiredSecretsAlreadyExistOrMustBeAddedManually, [
-    "TRUST402_OPERATOR_API_KEY"
+    "TRUST402_OPERATOR_API_KEY",
+    "LIVE_PAYMENT_ADAPTER_URL"
   ]);
+  assert.equal(result.paymentAdapterContract.provider, "agentcash-mcp");
+  assert.equal(result.paymentAdapterContract.endpointEnv, "LIVE_PAYMENT_ADAPTER_URL");
+  assert.equal(result.paymentAdapterContract.safety.trust402StripsSecretHeaders, true);
   assert.equal(result.localPolicyPatch.restrictions.trust402LiveProcurement, "approved-for-manual-smoke");
   assert.equal(result.localPolicyPatch.restrictions.proof402Delegation, "approved-for-manual-smoke");
   assert.equal(result.localPolicyPatch.limits.agentcashGlobalMaxAmountUsd, "0.03");
@@ -61,8 +65,33 @@ test("live window plan describes Proof402 notarize payload safety", () => {
   assert.equal(result.downstreamRequestPolicy.schema, "proof402.notarize");
   assert.deepEqual(result.downstreamRequestPolicy.sendsOnly, ["contentHash", "label", "idempotencyKey", "metadata"]);
   assert.equal(result.downstreamRequestPolicy.privatePayloadAllowed, false);
+  assert.deepEqual(result.vercelEnvPlan.requiredSecretsAlreadyExistOrMustBeAddedManually, [
+    "TRUST402_OPERATOR_API_KEY",
+    "LIVE_PAYMENT_ADAPTER_URL"
+  ]);
   assert.match(result.command, /--candidate-price=0\.005/);
   assert.match(result.command, /--proof-reserve-usd=0\.005/);
+});
+
+test("live window plan lists x402-fetch buyer secrets without bridge contract", () => {
+  const result = liveWindowPlan({
+    candidateEndpoint: "https://trusted.example/api/paid",
+    candidatePriceUsd: 0.01,
+    maxTotalUsd: 0.02,
+    manualSmokeBudgetUsd: 0.02,
+    paymentProvider: "x402-fetch",
+    lastVerifiedBalanceUsd: 1.25,
+    minimumReserveUsd: 0.5,
+    includeProof: true
+  }, { config: baseConfig });
+
+  assert.equal(result.status, "ready-to-stage");
+  assert.equal(result.paymentAdapterContract, null);
+  assert.deepEqual(result.vercelEnvPlan.requiredSecretsAlreadyExistOrMustBeAddedManually, [
+    "TRUST402_OPERATOR_API_KEY",
+    "X402_BUYER_PRIVATE_KEY",
+    "X402_BUYER_RPC_URL"
+  ]);
 });
 
 test("live window plan blocks unsafe or underfunded staging profiles", () => {

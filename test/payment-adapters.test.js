@@ -1,6 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createPaidFetch, paymentProviderReadiness } from "../src/paymentAdapters.js";
+import {
+  createPaidFetch,
+  paymentBridgeContract,
+  paymentProviderReadiness,
+  paymentProviderRequiredSecrets
+} from "../src/paymentAdapters.js";
 
 const baseConfig = {
   livePaymentProvider: "disabled",
@@ -20,7 +25,28 @@ test("paymentProviderReadiness blocks AgentCash MCP without a bridge URL", () =>
 
   assert.equal(status.ready, false);
   assert.equal(status.runtime, "agentcash-bridge");
+  assert.deepEqual(status.requiredSecrets, ["LIVE_PAYMENT_ADAPTER_URL"]);
+  assert.equal(status.bridgeContract.endpointEnv, "LIVE_PAYMENT_ADAPTER_URL");
+  assert.equal(status.bridgeContract.safety.trust402SendsPaymentHeadersToBridge, false);
   assert.ok(status.blockers.some((item) => item.id === "missing_payment_adapter_url"));
+});
+
+test("paymentProviderRequiredSecrets matches each live payment runtime", () => {
+  assert.deepEqual(paymentProviderRequiredSecrets("agentcash-mcp"), ["LIVE_PAYMENT_ADAPTER_URL"]);
+  assert.deepEqual(paymentProviderRequiredSecrets("external-adapter"), ["LIVE_PAYMENT_ADAPTER_URL"]);
+  assert.deepEqual(paymentProviderRequiredSecrets("x402-fetch"), ["X402_BUYER_PRIVATE_KEY", "X402_BUYER_RPC_URL"]);
+  assert.deepEqual(paymentProviderRequiredSecrets("disabled"), []);
+});
+
+test("paymentBridgeContract documents public-safe bridge request shape", () => {
+  const contract = paymentBridgeContract("agentcash-mcp");
+
+  assert.equal(contract.provider, "agentcash-mcp");
+  assert.equal(contract.endpointEnv, "LIVE_PAYMENT_ADAPTER_URL");
+  assert.equal(contract.requestShape.service, "Trust402");
+  assert.equal(contract.requestShape.request.headers, "<public headers only; auth/payment/secret headers stripped>");
+  assert.equal(contract.safety.trust402SendsPrivateKeys, false);
+  assert.equal(paymentBridgeContract("x402-fetch"), null);
 });
 
 test("paymentProviderReadiness accepts x402-fetch only with buyer key and RPC configured", () => {

@@ -147,6 +147,31 @@ X402_BUYER_PRIVATE_KEY=
 X402_BUYER_RPC_URL=
 ```
 
+When `LIVE_PAYMENT_PROVIDER=agentcash-mcp` or `external-adapter`,
+`LIVE_PAYMENT_ADAPTER_URL` is required. Trust402 posts a public-safe bridge
+request to that URL and expects the bridge to perform the paid x402 fetch while
+enforcing `maxAmountUsd`. The bridge request shape is:
+
+```json
+{
+  "service": "Trust402",
+  "provider": "agentcash-mcp",
+  "protocol": "x402",
+  "maxAmountUsd": "<LIVE_MAX_PER_CALL_USD>",
+  "network": "<X402_NETWORK>",
+  "request": {
+    "url": "<downstream x402 URL>",
+    "method": "POST",
+    "headers": "<public headers only>",
+    "body": "<stringified public-safe request body>"
+  }
+}
+```
+
+Trust402 strips auth, cookie, payment, signature, token, secret, and API-key
+headers before calling the bridge. It does not send private keys or payment
+headers to the bridge.
+
 ### Git-backed Deploys
 
 Manual Vercel CLI production deploys work:
