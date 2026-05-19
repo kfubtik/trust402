@@ -197,6 +197,14 @@ Useful public URLs:
 https://trust402.vercel.app
 https://trust402.vercel.app/openapi.json
 https://trust402.vercel.app/.well-known/x402
+https://trust402.vercel.app/.well-known/x402.json
+https://trust402.vercel.app/.well-known/agent.json
+https://trust402.vercel.app/.well-known/agent-services.json
+https://trust402.vercel.app/.well-known/ai-plugin.json
+https://trust402.vercel.app/.well-known/mcp.json
+https://trust402.vercel.app/llms.txt
+https://trust402.vercel.app/robots.txt
+https://trust402.vercel.app/sitemap.xml
 https://trust402.vercel.app/api/resources
 https://trust402.vercel.app/api/marketplace/bundle
 https://trust402.vercel.app/api/settlement/status
@@ -283,6 +291,11 @@ Name: Trust402
 Website: https://trust402.vercel.app
 OpenAPI: https://trust402.vercel.app/openapi.json
 x402 discovery: https://trust402.vercel.app/.well-known/x402
+x402 discovery JSON: https://trust402.vercel.app/.well-known/x402.json
+Agent manifest: https://trust402.vercel.app/.well-known/agent.json
+Agent services: https://trust402.vercel.app/.well-known/agent-services.json
+LLM summary: https://trust402.vercel.app/llms.txt
+Sitemap: https://trust402.vercel.app/sitemap.xml
 Marketplace bundle: https://trust402.vercel.app/api/marketplace/bundle
 Category: Agent infrastructure
 Networks: Base

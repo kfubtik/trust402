@@ -23,6 +23,70 @@
       "purpose": "x402 discovery document."
     },
     {
+      "id": "discovery.x402_json",
+      "method": "GET",
+      "path": "/.well-known/x402.json",
+      "priceUsd": 0,
+      "status": "free-discovery",
+      "purpose": "JSON alias for x402 crawlers that prefer explicit .json well-known documents."
+    },
+    {
+      "id": "discovery.agent_manifest",
+      "method": "GET",
+      "path": "/.well-known/agent.json",
+      "priceUsd": 0,
+      "status": "free-discovery",
+      "purpose": "Agent manifest for external directories and autonomous buyers."
+    },
+    {
+      "id": "discovery.agent_services",
+      "method": "GET",
+      "path": "/.well-known/agent-services.json",
+      "priceUsd": 0,
+      "status": "free-discovery",
+      "purpose": "Service manifest that groups Trust402's x402 resources for crawler ingestion."
+    },
+    {
+      "id": "discovery.ai_plugin",
+      "method": "GET",
+      "path": "/.well-known/ai-plugin.json",
+      "priceUsd": 0,
+      "status": "free-discovery",
+      "purpose": "OpenAPI plugin-style manifest for agent platforms that still inspect ai-plugin metadata."
+    },
+    {
+      "id": "discovery.mcp_manifest",
+      "method": "GET",
+      "path": "/.well-known/mcp.json",
+      "priceUsd": 0,
+      "status": "free-discovery",
+      "purpose": "MCP discovery placeholder that directs agents to OpenAPI and x402 resources."
+    },
+    {
+      "id": "discovery.llms",
+      "method": "GET",
+      "path": "/llms.txt",
+      "priceUsd": 0,
+      "status": "free-discovery",
+      "purpose": "LLM-readable summary of Trust402 resources, safety posture, and discovery links."
+    },
+    {
+      "id": "discovery.robots",
+      "method": "GET",
+      "path": "/robots.txt",
+      "priceUsd": 0,
+      "status": "free-discovery",
+      "purpose": "Crawler access policy and sitemap pointer."
+    },
+    {
+      "id": "discovery.sitemap",
+      "method": "GET",
+      "path": "/sitemap.xml",
+      "priceUsd": 0,
+      "status": "free-discovery",
+      "purpose": "Sitemap for discovery surfaces and paid x402 resources."
+    },
+    {
       "method": "GET",
       "path": "/api/capabilities",
       "purpose": "Machine-readable capability summary."

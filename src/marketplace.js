@@ -34,7 +34,15 @@ export function marketplaceBundle() {
       marketplaceBundle: `${config.publicBaseUrl}/api/marketplace/bundle`,
       settlementStatus: `${config.publicBaseUrl}/api/settlement/status`,
       openapi: `${config.publicBaseUrl}/openapi.json`,
-      x402WellKnown: `${config.publicBaseUrl}/.well-known/x402`
+      x402WellKnown: `${config.publicBaseUrl}/.well-known/x402`,
+      x402WellKnownJson: `${config.publicBaseUrl}/.well-known/x402.json`,
+      agentManifest: `${config.publicBaseUrl}/.well-known/agent.json`,
+      agentServices: `${config.publicBaseUrl}/.well-known/agent-services.json`,
+      aiPlugin: `${config.publicBaseUrl}/.well-known/ai-plugin.json`,
+      mcpManifest: `${config.publicBaseUrl}/.well-known/mcp.json`,
+      llms: `${config.publicBaseUrl}/llms.txt`,
+      robots: `${config.publicBaseUrl}/robots.txt`,
+      sitemap: `${config.publicBaseUrl}/sitemap.xml`
     },
     submissionChecklist: checklist,
     settlement,

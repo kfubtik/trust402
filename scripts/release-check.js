@@ -161,6 +161,9 @@ assert(smokeScript.includes("/api/directories/submission-pack"), "smoke script m
 assert(smokeScript.includes("/api/live/window-plan"), "smoke script must cover live window plan");
 assert(smokeScript.includes("/api/operator/unblock-report"), "smoke script must cover operator unblock report");
 assert(smokeScript.includes("/api/operator/action-pack"), "smoke script must cover operator action pack");
+assert(smokeScript.includes("/.well-known/agent.json"), "smoke script must cover agent manifest discovery");
+assert(smokeScript.includes("/llms.txt"), "smoke script must cover llms.txt discovery");
+assert(smokeScript.includes("/sitemap.xml"), "smoke script must cover sitemap discovery");
 assert(launchMonitorScript.includes("/api/policies/spend"), "launch monitor must check spend policy");
 assert(launchMonitorScript.includes("childTimeoutMs"), "launch monitor must cap child directory/indexing checks");
 assert(launchMonitorScript.includes('status: "script-timeout"'), "launch monitor must report child script timeouts");
@@ -277,6 +280,21 @@ assert(
   catalog.freeResources.some((resource) => resource.path === "/api/payments/bridge-check" && resource.priceUsd === 0),
   "free operator-gated payment bridge check helper must exist"
 );
+for (const path of [
+  "/.well-known/x402.json",
+  "/.well-known/agent.json",
+  "/.well-known/agent-services.json",
+  "/.well-known/ai-plugin.json",
+  "/.well-known/mcp.json",
+  "/llms.txt",
+  "/robots.txt",
+  "/sitemap.xml"
+]) {
+  assert(
+    catalog.freeResources.some((resource) => resource.path === path && resource.priceUsd === 0),
+    `${path} free discovery helper must exist`
+  );
+}
 assert(openapi.paths?.["/api/receipts/hash-result"]?.post, "hash-result helper must be present in OpenAPI");
 assert(openapi.paths?.["/api/receipts/notarize-result"]?.post, "notarize-result helper must be present in OpenAPI");
 assert(openapi.paths?.["/api/launch/checklist"]?.get, "launch checklist must be present in OpenAPI");
@@ -300,6 +318,14 @@ assert(JSON.stringify(openapi.paths["/api/live/window-plan"]).includes("liveSpen
 assert(openapi.paths?.["/api/jobs/autonomous-run"]?.post, "autonomous job flow must be present in OpenAPI");
 assert(openapi.paths?.["/api/agentcash/refill-check"]?.post, "AgentCash refill check must be present in OpenAPI");
 assert(openapi.paths?.["/api/payments/bridge-check"]?.post, "payment bridge check must be present in OpenAPI");
+assert(openapi.paths?.["/.well-known/x402.json"]?.get, "x402 JSON alias must be present in OpenAPI");
+assert(openapi.paths?.["/.well-known/agent.json"]?.get, "agent manifest must be present in OpenAPI");
+assert(openapi.paths?.["/.well-known/agent-services.json"]?.get, "agent services manifest must be present in OpenAPI");
+assert(openapi.paths?.["/.well-known/ai-plugin.json"]?.get, "ai-plugin manifest must be present in OpenAPI");
+assert(openapi.paths?.["/.well-known/mcp.json"]?.get, "MCP manifest must be present in OpenAPI");
+assert(openapi.paths?.["/llms.txt"]?.get, "llms.txt must be present in OpenAPI");
+assert(openapi.paths?.["/robots.txt"]?.get, "robots.txt must be present in OpenAPI");
+assert(openapi.paths?.["/sitemap.xml"]?.get, "sitemap.xml must be present in OpenAPI");
 assert(
   openapi.paths["/api/trust/compare-resources"].post.requestBody.content["application/json"].schema.properties.candidates.items.properties.endpoint.format === "uri",
   "compare-resources OpenAPI must expose structured candidate endpoint schema"
@@ -420,6 +446,12 @@ for (const resource of catalog.paidLaunchResources) {
     `${resource.id} must be present in .well-known/x402`
   );
 }
+
+assert(wellKnown.resources.length === catalog.paidLaunchResources.length, ".well-known/x402 must expose each paid launch resource as a URL");
+assert(wellKnown.endpoints.length === catalog.paidLaunchResources.length, ".well-known/x402 must expose endpoint metadata for each paid launch resource");
+assert(wellKnown.resources.every((entry) => entry.startsWith("http")), ".well-known/x402 resources must be absolute URLs");
+assert(wellKnown.resources.every((entry) => !entry.startsWith("POST ")), ".well-known/x402 resources must not include method prefixes");
+assert(wellKnown.endpoints.every((entry) => entry.accepts?.[0]?.network), ".well-known/x402 endpoints must include payment accept metadata");
 
 for (const resource of catalog.laterResourcesToPreserve) {
   assert(resource.status !== "launch-mvp", `${resource.id} later resource must not be launch-mvp`);

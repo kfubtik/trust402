@@ -22,6 +22,18 @@ OpenAPI 3.1 contract for all resources.
 
 Agent-readable x402 discovery document listing paid resources.
 
+### Discovery Aliases And Manifests
+
+Free discovery surfaces for crawlers and agent directories:
+
+- `GET /.well-known/x402.json` - JSON alias for x402 crawlers.
+- `GET /.well-known/agent.json` - agent manifest with capabilities and paid resources.
+- `GET /.well-known/agent-services.json` - service grouping for crawler ingestion.
+- `GET /.well-known/ai-plugin.json` - OpenAPI plugin-style manifest.
+- `GET /.well-known/mcp.json` - MCP placeholder pointing agents to OpenAPI and x402.
+- `GET /llms.txt` - LLM-readable resource and safety summary.
+- `GET /robots.txt` and `GET /sitemap.xml` - crawler policy and route index.
+
 ### `GET /api/capabilities`
 
 Short machine-readable summary for agents and marketplaces.

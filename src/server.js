@@ -9,7 +9,18 @@ import { domainActivationPack } from "./domainActivationPack.js";
 import { deploymentPreflight } from "./deploymentPreflight.js";
 import { marketplaceBundle } from "./marketplace.js";
 import { monitorBadge, monitorSnapshot } from "./monitor.js";
-import { capabilities, openApiSpec, x402WellKnown } from "./openapi.js";
+import {
+  agentManifest,
+  agentServicesManifest,
+  aiPluginManifest,
+  capabilities,
+  llmsText,
+  mcpManifest,
+  openApiSpec,
+  robotsTxt,
+  sitemapXml,
+  x402WellKnown
+} from "./openapi.js";
 import { completionAudit } from "./completionAudit.js";
 import { completionPlan } from "./completionPlan.js";
 import { spendPolicyStatus } from "./policies.js";
@@ -98,7 +109,15 @@ export async function handleTrust402Request(req, res) {
           proof402Preview: "/api/receipts/notarize-result",
           capabilities: "/api/capabilities",
           openapi: "/openapi.json",
-          x402WellKnown: "/.well-known/x402"
+          x402WellKnown: "/.well-known/x402",
+          x402WellKnownJson: "/.well-known/x402.json",
+          agentManifest: "/.well-known/agent.json",
+          agentServices: "/.well-known/agent-services.json",
+          aiPlugin: "/.well-known/ai-plugin.json",
+          mcpManifest: "/.well-known/mcp.json",
+          llms: "/llms.txt",
+          robots: "/robots.txt",
+          sitemap: "/sitemap.xml"
         }
       });
     }
@@ -184,6 +203,38 @@ export async function handleTrust402Request(req, res) {
       return sendJson(res, 200, x402WellKnown());
     }
 
+    if (req.method === "GET" && path === "/.well-known/x402.json") {
+      return sendJson(res, 200, x402WellKnown());
+    }
+
+    if (req.method === "GET" && path === "/.well-known/agent.json") {
+      return sendJson(res, 200, agentManifest());
+    }
+
+    if (req.method === "GET" && path === "/.well-known/agent-services.json") {
+      return sendJson(res, 200, agentServicesManifest());
+    }
+
+    if (req.method === "GET" && path === "/.well-known/ai-plugin.json") {
+      return sendJson(res, 200, aiPluginManifest());
+    }
+
+    if (req.method === "GET" && path === "/.well-known/mcp.json") {
+      return sendJson(res, 200, mcpManifest());
+    }
+
+    if (req.method === "GET" && path === "/llms.txt") {
+      return sendText(res, 200, llmsText());
+    }
+
+    if (req.method === "GET" && path === "/robots.txt") {
+      return sendText(res, 200, robotsTxt());
+    }
+
+    if (req.method === "GET" && path === "/sitemap.xml") {
+      return sendText(res, 200, sitemapXml(), "application/xml; charset=utf-8");
+    }
+
     const handler = routes.get(`${req.method} ${path}`);
     if (!handler) {
       throw new ApiError(404, "not_found", "Route not found.", { method: req.method, path });
@@ -258,6 +309,14 @@ function statusSummary() {
       autonomousRun: "/api/jobs/autonomous-run",
       openapi: "/openapi.json",
       x402WellKnown: "/.well-known/x402",
+      x402WellKnownJson: "/.well-known/x402.json",
+      agentManifest: "/.well-known/agent.json",
+      agentServices: "/.well-known/agent-services.json",
+      aiPlugin: "/.well-known/ai-plugin.json",
+      mcpManifest: "/.well-known/mcp.json",
+      llms: "/llms.txt",
+      robots: "/robots.txt",
+      sitemap: "/sitemap.xml",
       roadmap: "docs/mvp-roadmap.md",
       safetyPolicy: "docs/safety-policy.md"
     }
@@ -323,6 +382,12 @@ function sendJson(res, status, body) {
   res.statusCode = status;
   res.setHeader("content-type", "application/json; charset=utf-8");
   res.end(status === 204 ? "" : JSON.stringify(body, null, 2));
+}
+
+function sendText(res, status, body, contentType = "text/plain; charset=utf-8") {
+  res.statusCode = status;
+  res.setHeader("content-type", contentType);
+  res.end(status === 204 ? "" : body);
 }
 
 function isOperatorAuthorized(req) {

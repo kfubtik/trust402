@@ -38,6 +38,14 @@ export function openApiSpec() {
     "/health": getPath("Runtime status and spend mode"),
     "/openapi.json": getPath("OpenAPI contract"),
     "/.well-known/x402": getPath("x402 discovery document"),
+    "/.well-known/x402.json": getPath("x402 discovery document JSON alias"),
+    "/.well-known/agent.json": getPath("Agent manifest for directories and autonomous buyers"),
+    "/.well-known/agent-services.json": getPath("Agent services manifest for crawler ingestion"),
+    "/.well-known/ai-plugin.json": getPath("OpenAPI plugin-style discovery manifest"),
+    "/.well-known/mcp.json": getPath("MCP discovery placeholder and OpenAPI/x402 pointers"),
+    "/llms.txt": textPath("LLM-readable Trust402 discovery and safety summary", "text/plain"),
+    "/robots.txt": textPath("Crawler policy and sitemap pointer", "text/plain"),
+    "/sitemap.xml": textPath("Sitemap for public discovery surfaces", "application/xml"),
     "/api/capabilities": getPath("Machine-readable capability summary"),
     "/api/status": getPath("Launch readiness, safety, and backlog status"),
     "/api/launch/checklist": getPath("Dry-run launch and public marketplace readiness checklist"),
@@ -377,16 +385,198 @@ export function openApiSpec() {
 
 export function x402WellKnown() {
   const catalog = loadCatalog();
+  const endpoints = catalog.paidLaunchResources.map((resource) => endpointDiscoveryRecord(resource));
   return {
     version: 1,
+    x402Version: 2,
     name: catalog.name,
+    provider: catalog.name,
     description: catalog.positioning,
+    tagline: catalog.tagline,
+    category: catalog.category,
     defaultMode: catalog.defaultMode,
-    resources: catalog.paidLaunchResources.map((resource) => `${resource.method} ${config.publicBaseUrl}${resource.path}`),
+    resources: endpoints.map((endpoint) => endpoint.url),
+    endpoints,
+    categories: {
+      trust: endpoints.filter((endpoint) => endpoint.category === "trust").map((endpoint) => endpoint.path),
+      procurement: endpoints.filter((endpoint) => endpoint.category === "procurement").map((endpoint) => endpoint.path),
+      monitoring: endpoints.filter((endpoint) => endpoint.category === "monitoring").map((endpoint) => endpoint.path),
+      diligence: endpoints.filter((endpoint) => endpoint.category === "diligence").map((endpoint) => endpoint.path),
+      seller: endpoints.filter((endpoint) => endpoint.category === "seller").map((endpoint) => endpoint.path)
+    },
+    openapi: `${config.publicBaseUrl}/openapi.json`,
+    capabilities: `${config.publicBaseUrl}/api/capabilities`,
+    marketplaceBundle: `${config.publicBaseUrl}/api/marketplace/bundle`,
+    llms: `${config.publicBaseUrl}/llms.txt`,
+    ownershipProofs: [],
     safety: catalog.safety,
     instructions:
-      "Start with check-x402 or score-resource. Trust402 launch resources do not execute live paid subcalls; procurement execution is preserved for a later explicitly budgeted profile."
+      "Start with check-x402 or score-resource. Trust402 launch resources are paid x402 resources for buyer-side trust, diligence, monitoring, and procurement planning. Live downstream procurement is disabled unless an operator explicitly enables budgets, allowlists, receipts, and payment-provider policy."
   };
+}
+
+export function agentManifest() {
+  const catalog = loadCatalog();
+  return {
+    schemaVersion: "0.1",
+    name: catalog.name,
+    description: catalog.positioning,
+    tagline: catalog.tagline,
+    category: catalog.category,
+    url: config.publicBaseUrl,
+    provider: {
+      name: "Trust402",
+      url: config.publicBaseUrl
+    },
+    capabilities: [
+      "x402 endpoint probing",
+      "resource trust scoring",
+      "origin readiness evaluation",
+      "candidate comparison",
+      "bounded procurement planning",
+      "hash-ready diligence reports",
+      "Proof402 preview and paid-delegation gating",
+      "AgentCash balance/refill policy checks"
+    ],
+    discovery: discoveryLinks(),
+    resources: x402WellKnown().endpoints,
+    safety: {
+      ...catalog.safety,
+      dryRunFirst: true,
+      liveSpendRequiresOperatorPolicy: true,
+      publicManifestsContainSecrets: false
+    },
+    contact: {
+      repository: "https://github.com/kfubtik/trust402",
+      directorySubmissionPack: `${config.publicBaseUrl}/api/directories/submission-pack`
+    }
+  };
+}
+
+export function agentServicesManifest() {
+  const agent = agentManifest();
+  return {
+    version: 1,
+    services: [
+      {
+        id: "trust402",
+        name: agent.name,
+        description: agent.description,
+        url: agent.url,
+        protocol: "x402",
+        openapi: agent.discovery.openapi,
+        x402: agent.discovery.x402,
+        resources: agent.resources
+      }
+    ]
+  };
+}
+
+export function aiPluginManifest() {
+  const catalog = loadCatalog();
+  return {
+    schema_version: "v1",
+    name_for_human: catalog.name,
+    name_for_model: "trust402",
+    description_for_human: catalog.positioning,
+    description_for_model:
+      "Use Trust402 to evaluate x402 endpoints, compare paid resources, plan bounded procurement, create hash-ready diligence reports, and inspect spend policy before any live buyer spend.",
+    auth: {
+      type: "none"
+    },
+    api: {
+      type: "openapi",
+      url: `${config.publicBaseUrl}/openapi.json`,
+      is_user_authenticated: false
+    },
+    logo_url: `${config.publicBaseUrl}/api/monitor/badge`,
+    contact_email: "operator@trust402.local",
+    legal_info_url: `${config.publicBaseUrl}/api/status`
+  };
+}
+
+export function mcpManifest() {
+  return {
+    mcpServers: {},
+    note: "Trust402 does not expose a live MCP server yet. Use OpenAPI and x402 discovery resources for agent access.",
+    discovery: discoveryLinks(),
+    safety: {
+      includesSecrets: false,
+      liveSpendEnabledByDefault: false
+    }
+  };
+}
+
+export function llmsText() {
+  const catalog = loadCatalog();
+  const endpoints = x402WellKnown().endpoints;
+  const lines = [
+    "# Trust402",
+    "",
+    `${catalog.tagline}`,
+    "",
+    "Trust402 is a buyer-side trust and procurement agent for x402 resources.",
+    "Use it to probe x402 endpoints, score resources, compare candidates, plan spend, monitor payment-flow drift, and produce hash-ready diligence reports.",
+    "",
+    "## Discovery",
+    "",
+    `- Website: ${config.publicBaseUrl}`,
+    `- OpenAPI: ${config.publicBaseUrl}/openapi.json`,
+    `- x402 discovery: ${config.publicBaseUrl}/.well-known/x402`,
+    `- x402 discovery JSON alias: ${config.publicBaseUrl}/.well-known/x402.json`,
+    `- Agent manifest: ${config.publicBaseUrl}/.well-known/agent.json`,
+    `- Resource catalog: ${config.publicBaseUrl}/api/resources`,
+    `- Marketplace bundle: ${config.publicBaseUrl}/api/marketplace/bundle`,
+    `- Spend policy: ${config.publicBaseUrl}/api/policies/spend`,
+    "",
+    "## Paid x402 Resources",
+    ""
+  ];
+  for (const endpoint of endpoints) {
+    lines.push(`- ${endpoint.method} ${endpoint.url} - ${endpoint.price_usd} USD - ${endpoint.description}`);
+  }
+  lines.push(
+    "",
+    "## Safety",
+    "",
+    "- Live downstream procurement is disabled by default.",
+    "- Paid Proof402 delegation is disabled until explicit operator policy is configured.",
+    "- AgentCash auto-refill is disabled until provider, threshold, daily cap, audit log, and emergency stop are approved.",
+    "- Public discovery documents do not include secrets, private keys, payment headers, or local wallet policy."
+  );
+  return `${lines.join("\n")}\n`;
+}
+
+export function robotsTxt() {
+  return [
+    "User-agent: *",
+    "Allow: /",
+    `Sitemap: ${config.publicBaseUrl}/sitemap.xml`,
+    ""
+  ].join("\n");
+}
+
+export function sitemapXml() {
+  const urls = [
+    "/",
+    "/health",
+    "/openapi.json",
+    "/.well-known/x402",
+    "/.well-known/x402.json",
+    "/.well-known/agent.json",
+    "/.well-known/agent-services.json",
+    "/.well-known/ai-plugin.json",
+    "/.well-known/mcp.json",
+    "/llms.txt",
+    "/api/resources",
+    "/api/capabilities",
+    "/api/status",
+    "/api/marketplace/bundle",
+    "/api/directories/submission-pack",
+    ...loadCatalog().paidLaunchResources.map((resource) => resource.path)
+  ];
+  const body = urls.map((path) => `  <url><loc>${xmlEscape(`${config.publicBaseUrl}${path}`)}</loc></url>`).join("\n");
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`;
 }
 
 export function capabilities() {
@@ -423,9 +613,70 @@ export function capabilities() {
       operatorActionPack: "/api/operator/action-pack",
       agentcashRefillCheck: "/api/agentcash/refill-check",
       openapi: "/openapi.json",
-      x402WellKnown: "/.well-known/x402"
+      x402WellKnown: "/.well-known/x402",
+      x402WellKnownJson: "/.well-known/x402.json",
+      agentManifest: "/.well-known/agent.json",
+      agentServices: "/.well-known/agent-services.json",
+      aiPlugin: "/.well-known/ai-plugin.json",
+      mcpManifest: "/.well-known/mcp.json",
+      llms: "/llms.txt",
+      robots: "/robots.txt",
+      sitemap: "/sitemap.xml"
     }
   };
+}
+
+function discoveryLinks() {
+  return {
+    health: `${config.publicBaseUrl}/health`,
+    openapi: `${config.publicBaseUrl}/openapi.json`,
+    x402: `${config.publicBaseUrl}/.well-known/x402`,
+    x402Json: `${config.publicBaseUrl}/.well-known/x402.json`,
+    agent: `${config.publicBaseUrl}/.well-known/agent.json`,
+    agentServices: `${config.publicBaseUrl}/.well-known/agent-services.json`,
+    aiPlugin: `${config.publicBaseUrl}/.well-known/ai-plugin.json`,
+    mcp: `${config.publicBaseUrl}/.well-known/mcp.json`,
+    llms: `${config.publicBaseUrl}/llms.txt`,
+    robots: `${config.publicBaseUrl}/robots.txt`,
+    sitemap: `${config.publicBaseUrl}/sitemap.xml`,
+    resources: `${config.publicBaseUrl}/api/resources`,
+    marketplaceBundle: `${config.publicBaseUrl}/api/marketplace/bundle`,
+    completionAudit: `${config.publicBaseUrl}/api/completion/audit`
+  };
+}
+
+function endpointDiscoveryRecord(resource) {
+  return {
+    id: resource.id,
+    url: `${config.publicBaseUrl}${resource.path}`,
+    resource: `${config.publicBaseUrl}${resource.path}`,
+    path: resource.path,
+    method: resource.method,
+    type: "http",
+    x402Version: 2,
+    price_usd: resource.priceUsd,
+    description: resource.purpose,
+    category: categoryFor(resource),
+    accepts: [paymentInfo(resource).protocols[0].x402],
+    inputSchema: requestSchemaFor(resource.id),
+    openapi: `${config.publicBaseUrl}/openapi.json`
+  };
+}
+
+function categoryFor(resource) {
+  if (resource.id.startsWith("procurement.")) return "procurement";
+  if (resource.id.startsWith("monitor.")) return "monitoring";
+  if (resource.id.startsWith("reports.")) return "diligence";
+  if (resource.id.startsWith("seller.")) return "seller";
+  return "trust";
+}
+
+function xmlEscape(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 }
 
 function getPath(summary) {
@@ -435,6 +686,25 @@ function getPath(summary) {
       tags: ["Trust402"],
       responses: {
         "200": jsonResponse
+      }
+    }
+  };
+}
+
+function textPath(summary, contentType) {
+  return {
+    get: {
+      summary,
+      tags: ["Trust402"],
+      responses: {
+        "200": {
+          description: "Text response",
+          content: {
+            [contentType]: {
+              schema: { type: "string" }
+            }
+          }
+        }
       }
     }
   };

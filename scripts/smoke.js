@@ -9,6 +9,53 @@ async function main() {
 
   const resources = await getJson("/api/resources");
   assert(resources.paidLaunchResources?.length === 10, "/api/resources expected 10 launch resources");
+  assert(
+    resources.freeResources?.some((item) => item.path === "/.well-known/agent.json"),
+    "/api/resources must expose agent manifest discovery"
+  );
+  assert(
+    resources.freeResources?.some((item) => item.path === "/llms.txt"),
+    "/api/resources must expose llms.txt discovery"
+  );
+
+  const wellKnown = await getJson("/.well-known/x402");
+  assert(wellKnown.resources?.length === 10, "/.well-known/x402 expected 10 paid resources");
+  assert(
+    wellKnown.resources.every((resource) => typeof resource === "string" && resource.startsWith("http")),
+    "/.well-known/x402 resources must be absolute URLs"
+  );
+  assert(
+    wellKnown.resources.every((resource) => !resource.startsWith("POST ")),
+    "/.well-known/x402 resources must not include method prefixes"
+  );
+  assert(wellKnown.endpoints?.length === 10, "/.well-known/x402 expected 10 endpoint records");
+
+  const wellKnownJson = await getJson("/.well-known/x402.json");
+  assert(wellKnownJson.resources?.length === 10, "/.well-known/x402.json expected 10 paid resources");
+
+  const agent = await getJson("/.well-known/agent.json");
+  assert(agent.name === "Trust402", "/.well-known/agent.json name mismatch");
+  assert(agent.resources?.length === 10, "/.well-known/agent.json expected 10 resources");
+
+  const agentServices = await getJson("/.well-known/agent-services.json");
+  assert(agentServices.services?.[0]?.id === "trust402", "/.well-known/agent-services.json service mismatch");
+
+  const aiPlugin = await getJson("/.well-known/ai-plugin.json");
+  assert(aiPlugin.name_for_model === "trust402", "/.well-known/ai-plugin.json model name mismatch");
+
+  const mcp = await getJson("/.well-known/mcp.json");
+  assert(mcp.safety?.liveSpendEnabledByDefault === false, "/.well-known/mcp.json must keep live spend disabled");
+
+  const llms = await getText("/llms.txt");
+  assert(llms.includes("# Trust402"), "/llms.txt heading mismatch");
+  assert(llms.includes("Paid x402 Resources"), "/llms.txt must list paid resources");
+
+  const robots = await getText("/robots.txt");
+  assert(robots.includes("Sitemap:"), "/robots.txt must include sitemap");
+
+  const sitemap = await getText("/sitemap.xml");
+  assert(sitemap.includes("<urlset"), "/sitemap.xml must include urlset");
+  assert(sitemap.includes("/api/trust/score-resource"), "/sitemap.xml must include paid resource routes");
 
   const status = await getJson("/api/status");
   assert(status.launchReadiness?.readyForGitHub === true, "/api/status readyForGitHub mismatch");
@@ -332,6 +379,13 @@ async function main() {
 async function getJson(path) {
   const response = await fetch(`${baseUrl}${path}`);
   return parseJson(response, path);
+}
+
+async function getText(path) {
+  const response = await fetch(`${baseUrl}${path}`);
+  const body = await response.text();
+  assert(response.ok, `${path} returned HTTP ${response.status}: ${body}`);
+  return body;
 }
 
 async function postJson(path, body) {

@@ -50,6 +50,18 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/jobs/autonomous-run"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/agentcash/refill-check"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/payments/bridge-check"));
+    for (const path of [
+      "/.well-known/x402.json",
+      "/.well-known/agent.json",
+      "/.well-known/agent-services.json",
+      "/.well-known/ai-plugin.json",
+      "/.well-known/mcp.json",
+      "/llms.txt",
+      "/robots.txt",
+      "/sitemap.xml"
+    ]) {
+      assert.ok(resources.body.freeResources.some((resource) => resource.path === path && resource.priceUsd === 0));
+    }
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/trust/check-x402"));
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/procurement/quote"));
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/monitor/snapshot"));
@@ -155,6 +167,9 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(bundle.body.listingState.dryRunMetadataReady, true);
     assert.equal(bundle.body.listingState.cdpBazaarIndexingReady, false);
     assert.equal(bundle.body.indexing.cdpBazaar.status, "blocked");
+    assert.ok(bundle.body.discovery.agentManifest.endsWith("/.well-known/agent.json"));
+    assert.ok(bundle.body.discovery.llms.endsWith("/llms.txt"));
+    assert.ok(bundle.body.discovery.sitemap.endsWith("/sitemap.xml"));
     assert.ok(bundle.body.resources.every((resource) => resource.bazaarExtensionDraft?.bazaar));
     assert.ok(bundle.body.resources.every((resource) => resource.listingStatus === "blocked"));
 
@@ -184,6 +199,14 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/api/agentcash/refill-check"].post);
     assert.ok(openapi.body.paths["/api/receipts/hash-result"].post);
     assert.ok(openapi.body.paths["/api/receipts/notarize-result"].post);
+    assert.ok(openapi.body.paths["/.well-known/x402.json"].get);
+    assert.ok(openapi.body.paths["/.well-known/agent.json"].get);
+    assert.ok(openapi.body.paths["/.well-known/agent-services.json"].get);
+    assert.ok(openapi.body.paths["/.well-known/ai-plugin.json"].get);
+    assert.ok(openapi.body.paths["/.well-known/mcp.json"].get);
+    assert.ok(openapi.body.paths["/llms.txt"].get);
+    assert.ok(openapi.body.paths["/robots.txt"].get);
+    assert.ok(openapi.body.paths["/sitemap.xml"].get);
     assert.ok(openapi.body.paths["/api/procurement/quote"].post["x-payment-info"]);
     const compareSchema = openapi.body.paths["/api/trust/compare-resources"].post.requestBody.content["application/json"].schema;
     const compareCandidateSchema = compareSchema.properties.candidates.items;
@@ -198,6 +221,50 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     const wellKnown = await request(baseUrl, "/.well-known/x402");
     assert.equal(wellKnown.response.status, 200);
     assert.ok(wellKnown.body.resources.some((resource) => resource.includes("/api/trust/score-resource")));
+    assert.equal(wellKnown.body.resources.length, 10);
+    assert.equal(wellKnown.body.endpoints.length, 10);
+    assert.ok(wellKnown.body.resources.every((resource) => resource.startsWith("http")));
+    assert.ok(wellKnown.body.resources.every((resource) => !resource.startsWith("POST ")));
+    assert.ok(wellKnown.body.endpoints.some((endpoint) => endpoint.path === "/api/procurement/quote"));
+    assert.ok(wellKnown.body.endpoints.every((endpoint) => endpoint.accepts?.[0]?.network));
+
+    const wellKnownJson = await request(baseUrl, "/.well-known/x402.json");
+    assert.equal(wellKnownJson.response.status, 200);
+    assert.deepEqual(wellKnownJson.body.resources, wellKnown.body.resources);
+
+    const agent = await request(baseUrl, "/.well-known/agent.json");
+    assert.equal(agent.response.status, 200);
+    assert.equal(agent.body.name, "Trust402");
+    assert.ok(agent.body.discovery.x402.endsWith("/.well-known/x402"));
+    assert.equal(agent.body.resources.length, 10);
+
+    const agentServices = await request(baseUrl, "/.well-known/agent-services.json");
+    assert.equal(agentServices.response.status, 200);
+    assert.equal(agentServices.body.services[0].id, "trust402");
+    assert.equal(agentServices.body.services[0].resources.length, 10);
+
+    const aiPlugin = await request(baseUrl, "/.well-known/ai-plugin.json");
+    assert.equal(aiPlugin.response.status, 200);
+    assert.equal(aiPlugin.body.name_for_model, "trust402");
+    assert.ok(aiPlugin.body.api.url.endsWith("/openapi.json"));
+
+    const mcp = await request(baseUrl, "/.well-known/mcp.json");
+    assert.equal(mcp.response.status, 200);
+    assert.equal(mcp.body.safety.liveSpendEnabledByDefault, false);
+
+    const llms = await request(baseUrl, "/llms.txt");
+    assert.equal(llms.response.status, 200);
+    assert.match(llms.body, /# Trust402/);
+    assert.match(llms.body, /Paid x402 Resources/);
+
+    const robots = await request(baseUrl, "/robots.txt");
+    assert.equal(robots.response.status, 200);
+    assert.match(robots.body, /Sitemap:/);
+
+    const sitemap = await request(baseUrl, "/sitemap.xml");
+    assert.equal(sitemap.response.status, 200);
+    assert.match(sitemap.body, /<urlset/);
+    assert.match(sitemap.body, /\/api\/trust\/score-resource/);
 
     const liveWindow = await request(baseUrl, "/api/live/window-plan", {
       method: "POST",
@@ -229,6 +296,9 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(directoryPackPost.body.tool, "directories.submission_pack");
     assert.equal(directoryPackPost.body.safety.includesSecrets, false);
     assert.equal(directoryPackPost.body.evidenceEnv.TRUST402_EXTERNAL_DIRECTORY_STATUS, "visible");
+    assert.ok(directoryPackPost.body.listingCopy.agentManifest.endsWith("/.well-known/agent.json"));
+    assert.ok(directoryPackPost.body.listingCopy.llms.endsWith("/llms.txt"));
+    assert.ok(directoryPackPost.body.listingCopy.sitemap.endsWith("/sitemap.xml"));
 
     const domainPackPost = await request(baseUrl, "/api/domains/activation-pack", {
       method: "POST",
