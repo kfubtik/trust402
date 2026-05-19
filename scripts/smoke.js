@@ -40,13 +40,46 @@ async function main() {
   assert(preflight.readiness?.paidSmokeReady === false, "/api/settlement/preflight must not be paid-smoke ready by default");
   assert(preflight.policy?.liveSpendEnabled === false, "/api/settlement/preflight must not enable live spend");
 
+  const spendPolicy = await getJson("/api/policies/spend");
+  assert(spendPolicy.readiness?.anyLiveSpendReady === false, "/api/policies/spend must not make live spend ready by default");
+  assert(spendPolicy.policies?.agentcashAutoRefill?.ready === false, "/api/policies/spend must keep auto-refill gated");
+
   const openapi = await getJson("/openapi.json");
   assert(openapi.openapi === "3.1.0", "/openapi.json version mismatch");
   assert(openapi.paths?.["/api/trust/check-x402"]?.post, "/openapi missing check-x402");
   assert(openapi.paths?.["/api/receipts/hash-result"]?.post, "/openapi missing hash-result");
   assert(openapi.paths?.["/api/settlement/status"]?.get, "/openapi missing settlement status");
   assert(openapi.paths?.["/api/settlement/preflight"]?.get, "/openapi missing settlement preflight");
+  assert(openapi.paths?.["/api/policies/spend"]?.get, "/openapi missing spend policy");
+  assert(openapi.paths?.["/api/jobs/autonomous-run"]?.post, "/openapi missing autonomous run");
   assert(openapi.paths?.["/api/monitor/snapshot"]?.post, "/openapi missing monitor snapshot");
+
+  const autonomous = await postJson("/api/jobs/autonomous-run", {
+    mode: "dry-run",
+    goal: "Run a safe autonomous smoke job.",
+    budgetUsd: 0.25,
+    maxPaidCalls: 1,
+    includeProofPreview: true,
+    candidates: [
+      {
+        id: "good",
+        endpoint: "https://example.com/good",
+        priceUsd: 0.01,
+        has402: true,
+        hasInputSchema: true,
+        hasOpenApi: true,
+        hasWellKnown: true,
+        receiptReady: true
+      },
+      {
+        id: "weak",
+        endpoint: "https://example.com/weak",
+        priceUsd: 0.04
+      }
+    ]
+  });
+  assert(autonomous.mode === "dry-run", "/api/jobs/autonomous-run must default to dry-run");
+  assert(autonomous.execution?.paidSubcallsMade === 0, "/api/jobs/autonomous-run dry-run must not make paid subcalls");
 
   const realProtectedRoutes = settlement.readiness.realSettlementReady === true;
   if (realProtectedRoutes) {

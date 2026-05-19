@@ -119,6 +119,46 @@ test("notarizeResult blocks live paid Proof402 delegation", async () => {
   );
 });
 
+test("notarizeResult can complete live Proof402 delegation through injected paid fetch", async () => {
+  const calls = [];
+  const result = await notarizeResult(
+    {
+      resultHash: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      proof402Mode: "live",
+      metadata: {
+        taskId: "paid_proof_test"
+      }
+    },
+    {
+      operatorAuthorized: true,
+      config: testConfig({
+        proof402BaseUrl: "https://proof402.vercel.app",
+        proof402DelegationMode: "live",
+        liveSpendEnabled: true,
+        proof402MaxSpendUsd: 0.01,
+        livePaymentProvider: "x402-fetch",
+        operatorApiKey: "test-operator"
+      }),
+      fetchImpl: async (url, options = {}) => {
+        calls.push({ url, options });
+        return jsonResponse(200, {
+          ok: true,
+          proofLink: "https://proof402.vercel.app/proof/mock-proof"
+        }, {
+          "payment-response": "mock-paid-proof"
+        });
+      }
+    }
+  );
+
+  assert.equal(result.mode, "live");
+  assert.equal(result.delegation.paidProofCallMade, true);
+  assert.equal(result.delegation.paymentResponseObserved, true);
+  assert.equal(result.proofLink, "https://proof402.vercel.app/proof/mock-proof");
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].options.headers["x-trust402-max-amount-usd"], "0.01");
+});
+
 function testConfig(overrides = {}) {
   return {
     publicBaseUrl: "https://trust402.example",
@@ -126,6 +166,9 @@ function testConfig(overrides = {}) {
     proof402DelegationMode: "disabled",
     proof402MaxSpendUsd: 0,
     liveSpendEnabled: false,
+    livePaymentProvider: "disabled",
+    operatorApiKey: "",
+    emergencyStop: false,
     requestTimeoutMs: 100,
     ...overrides
   };

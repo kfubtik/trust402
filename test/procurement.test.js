@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { config } from "../src/config.js";
 import { procurementExecute, procurementQuote } from "../src/procurement.js";
 
 const goodCandidate = {
@@ -58,9 +59,66 @@ test("procurementExecute simulates execution and blocks paid subcalls", () => {
   assert.equal(result.result.status, "not-executed");
 });
 
-test("procurementExecute rejects live spend requests", () => {
-  assert.throws(
-    () => procurementExecute({ liveSpendEnabled: true }),
-    /Trust402 execute is dry-run only/
+test("procurementExecute blocks live spend without policy", async () => {
+  await assert.rejects(
+    procurementExecute({
+      liveSpendEnabled: true,
+      goal: "Try live spend without policy.",
+      budgetUsd: 0.5,
+      candidates: [goodCandidate, weakCandidate]
+    }),
+    /Live procurement is blocked by spend policy/
   );
+});
+
+test("procurementExecute can run live through an injected paid fetch inside policy", async () => {
+  const quote = procurementQuote({
+    goal: "Buy one safe x402 data resource.",
+    budgetUsd: 0.5,
+    maxPaidCalls: 1,
+    riskTolerance: "low",
+    candidates: [goodCandidate, weakCandidate]
+  });
+  const fakeFetch = async () => new Response(JSON.stringify({
+    ok: true,
+    tool: "paid.example",
+    result: "done"
+  }), {
+    status: 200,
+    headers: {
+      "content-type": "application/json",
+      "payment-response": "mock-paid-receipt"
+    }
+  });
+
+  const result = await procurementExecute({
+    mode: "live",
+    quote,
+    approval: {
+      approved: true,
+      quoteHash: quote.quoteHash
+    }
+  }, {
+    operatorAuthorized: true,
+    fetchImpl: fakeFetch,
+    config: {
+      ...config,
+      liveSpendEnabled: true,
+      livePaymentProvider: "x402-fetch",
+      operatorApiKey: "test-operator",
+      liveMaxPerCallUsd: 0.05,
+      liveMaxPerJobUsd: 0.25,
+      liveDailyLimitUsd: 1,
+      liveApprovalThresholdUsd: 0,
+      liveAllowedRegistries: ["https://example.com"],
+      liveEndpointDenylist: [],
+      liveReceiptLogMode: "response-only"
+    }
+  });
+
+  assert.equal(result.mode, "live");
+  assert.equal(result.paidSubcallsMade, 1);
+  assert.equal(result.result.status, "executed");
+  assert.equal(result.result.calls[0].paymentResponseObserved, true);
+  assert.match(result.executionHash, /^sha256:[a-f0-9]{64}$/);
 });

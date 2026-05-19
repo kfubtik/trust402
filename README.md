@@ -81,6 +81,7 @@ http://127.0.0.1:4032/api/launch/checklist
 http://127.0.0.1:4032/api/marketplace/bundle
 http://127.0.0.1:4032/api/settlement/status
 http://127.0.0.1:4032/api/policies/spend
+http://127.0.0.1:4032/api/jobs/autonomous-run
 http://127.0.0.1:4032/api/resources
 http://127.0.0.1:4032/openapi.json
 http://127.0.0.1:4032/.well-known/x402
@@ -141,6 +142,7 @@ Operational launch backlog:
 
 ```text
 docs/launch-issues.md
+docs/autonomous-completion-plan.md
 ```
 
 ## Modes
@@ -212,6 +214,8 @@ GET /api/policies/spend
 GET /api/resources
 POST /api/receipts/hash-result
 POST /api/receipts/notarize-result
+POST /api/procurement/execute
+POST /api/jobs/autonomous-run
 ```
 
 ## Paid Launch Resources
@@ -257,6 +261,12 @@ Simulate controlled execution:
 ```powershell
 $body = Get-Content .\examples\procurement-execute-dry-run.json -Raw
 Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/procurement/execute -ContentType application/json -Body $body
+```
+
+Run the autonomous dry-run workflow:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/jobs/autonomous-run -ContentType application/json -Body '{"mode":"dry-run","goal":"Choose and audit one safe x402 resource.","budgetUsd":0.25,"maxPaidCalls":1,"includeProofPreview":true,"candidates":[{"id":"a","endpoint":"https://example.com/a","priceUsd":0.01,"has402":true,"hasInputSchema":true,"hasOpenApi":true,"hasWellKnown":true},{"id":"b","endpoint":"https://example.com/b","priceUsd":0.04}]}'
 ```
 
 Create a monitor snapshot:
@@ -330,6 +340,12 @@ Inspect live-spend policy gates without spending:
 Invoke-RestMethod -Method Get -Uri http://127.0.0.1:4032/api/policies/spend
 ```
 
+Check the local Trust402-only AgentCash policy without spending:
+
+```powershell
+npm run agentcash:policy
+```
+
 ## Safety
 
 Trust402 is allowed to reason about spending before it is allowed to spend.
@@ -340,6 +356,8 @@ MVP guarantees:
 - no private keys are required;
 - no paid subcalls are made;
 - `/api/procurement/execute` is dry-run only and returns an audit instead of buying;
+- `/api/jobs/autonomous-run` is dry-run by default and uses the same operator
+  and spend-policy gates as live procurement;
 - `/api/receipts/notarize-result` never makes a paid Proof402 call in the MVP;
 - `/api/settlement/status` does not claim marketplace indexing readiness until explicit config and paid smoke evidence exist;
 - `/api/settlement/preflight` can plan one paid smoke but never sends payment;
@@ -354,6 +372,8 @@ Future live procurement must require:
 
 - hot-wallet profile;
 - AgentCash auto-refill provider and stop rule if refill is enabled;
+- operator API key for every live execution;
+- emergency stop remaining false;
 - per-call limit;
 - per-job limit;
 - daily limit;
@@ -368,6 +388,7 @@ Future live procurement must require:
 - `src/expressApp.js` - Express entrypoint bridge for Vercel and real x402 middleware.
 - `src/trustEngine.js` - checks, scoring, planning, and report logic.
 - `src/procurement.js` - quote and dry-run execution audit logic.
+- `src/autonomousJob.js` - dry-run-first autonomous job orchestration.
 - `src/monitor.js` - one-shot monitor snapshot and badge logic.
 - `src/proof402Client.js` - Proof402 request preview/probe logic with live calls blocked.
 - `src/settlement.js` - real x402 settlement readiness and unpaid challenge metadata.
@@ -386,9 +407,11 @@ Future live procurement must require:
 - `docs/external-marketplace-listing.md` - public-safe listing copy and directory submission plan.
 - `docs/launch-monitoring.md` - combined production launch monitoring runbook.
 - `docs/launch-issues.md` - tracked manual launch and live-spend policy gates.
+- `docs/autonomous-completion-plan.md` - final autonomous buyer-agent completion plan.
 - `compose.yaml` - local Docker Compose service with dry-run defaults.
 - `docs/github-release-checklist.md` - public release checklist.
 - `scripts/check-bazaar-indexing.js` - read-only CDP Bazaar visibility check.
 - `scripts/check-external-directories.js` - read-only external directory visibility check.
+- `scripts/check-agentcash-policy.js` - local Trust402-only AgentCash policy check.
 - `scripts/launch-monitor.js` - combined production API, x402, Bazaar, and directory monitor.
 - `test/` - API and engine tests.

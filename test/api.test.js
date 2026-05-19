@@ -39,6 +39,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/settlement/preflight"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/policies/spend"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/procurement/execute"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/jobs/autonomous-run"));
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/trust/check-x402"));
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/procurement/quote"));
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/monitor/snapshot"));
@@ -50,6 +51,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(status.body.launchReadiness.readyForGitHub, true);
     assert.equal(status.body.launchReadiness.readyForReceiptLayer, true);
     assert.equal(status.body.launchReadiness.readyForControlledProcurementDryRun, true);
+    assert.equal(status.body.launchReadiness.readyForAutonomousDryRun, true);
     assert.equal(status.body.launchReadiness.readyForOneShotMonitoring, true);
     assert.equal(status.body.launchReadiness.readyForLiveSpend, false);
     assert.equal(status.body.launchReadiness.readyForAgentCashAutoRefill, false);
@@ -102,6 +104,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/api/settlement/status"].get);
     assert.ok(openapi.body.paths["/api/settlement/preflight"].get);
     assert.ok(openapi.body.paths["/api/policies/spend"].get);
+    assert.ok(openapi.body.paths["/api/jobs/autonomous-run"].post);
     assert.ok(openapi.body.paths["/api/receipts/hash-result"].post);
     assert.ok(openapi.body.paths["/api/receipts/notarize-result"].post);
     assert.ok(openapi.body.paths["/api/procurement/quote"].post["x-payment-info"]);

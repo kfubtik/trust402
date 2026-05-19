@@ -11,12 +11,15 @@ const workflow = readFileSync(".github/workflows/test.yml", "utf8");
 const launchMonitorWorkflow = readFileSync(".github/workflows/launch-monitor.yml", "utf8");
 const dependabot = readFileSync(".github/dependabot.yml", "utf8");
 const launchIssues = readFileSync("docs/launch-issues.md", "utf8");
+const autonomousPlan = readFileSync("docs/autonomous-completion-plan.md", "utf8");
 const dockerfile = readFileSync("Dockerfile", "utf8");
 const compose = readFileSync("compose.yaml", "utf8");
 const vercelConfig = readFileSync("vercel.json", "utf8");
 const vercelIgnore = readFileSync(".vercelignore", "utf8");
 const apiIndex = readFileSync("api/index.js", "utf8");
 const serverSource = readFileSync("src/server.js", "utf8");
+const smokeScript = readFileSync("scripts/smoke.js", "utf8");
+const launchMonitorScript = readFileSync("scripts/launch-monitor.js", "utf8");
 const openapi = openApiSpec();
 const wellKnown = x402WellKnown();
 const checklist = launchChecklist();
@@ -34,6 +37,7 @@ assert(packageJson.scripts?.["bazaar:indexing:check:all"], "package must expose 
 assert(packageJson.scripts?.["directories:check"], "package must expose npm run directories:check");
 assert(packageJson.scripts?.["launch:monitor"], "package must expose npm run launch:monitor");
 assert(packageJson.scripts?.["marketplace:bundle"], "package must expose npm run marketplace:bundle");
+assert(packageJson.scripts?.["agentcash:policy"], "package must expose npm run agentcash:policy");
 assert(packageJson.scripts?.["privacy:check"], "package must expose npm run privacy:check");
 assert(packageJson.scripts?.["release:check"], "package must expose npm run release:check");
 assert(packageJson.scripts?.["settlement:preflight"], "package must expose npm run settlement:preflight");
@@ -56,6 +60,7 @@ assert(existsSync(".github/workflows/launch-monitor.yml"), "launch monitor workf
 assert(existsSync("vercel.json"), "vercel.json must exist");
 assert(existsSync("api/index.js"), "Vercel API handler must exist");
 assert(existsSync("src/expressApp.js"), "Express x402 entrypoint bridge must exist");
+assert(existsSync("src/autonomousJob.js"), "autonomous job flow module must exist");
 assert(existsSync("src/policies.js"), "spend policy status module must exist");
 assert(existsSync("compose.yaml"), "compose.yaml must exist");
 assert(existsSync("docs/deployment.md"), "deployment docs must exist");
@@ -63,6 +68,7 @@ assert(existsSync("docs/bazaar-indexing.md"), "Bazaar indexing runbook must exis
 assert(existsSync("docs/external-marketplace-listing.md"), "external marketplace listing pack must exist");
 assert(existsSync("docs/github-release-checklist.md"), "GitHub release checklist must exist");
 assert(existsSync("docs/launch-issues.md"), "launch issue mirror must exist");
+assert(existsSync("docs/autonomous-completion-plan.md"), "autonomous completion plan must exist");
 assert(existsSync("examples/x402-diligence.json"), "x402 diligence example must exist");
 assert(dockerfile.includes("HEALTHCHECK"), "Dockerfile must expose a healthcheck");
 assert(dockerfile.includes("npm ci --omit=dev"), "Dockerfile must install production dependencies");
@@ -74,8 +80,12 @@ assert(vercelIgnore.includes(".env"), "Vercel ignore must exclude local env file
 assert(vercelIgnore.includes(".agentcash"), "Vercel ignore must exclude AgentCash material");
 assert(apiIndex.includes("createTrust402ExpressApp"), "Vercel API handler must use the Express x402 bridge");
 assert(serverSource.includes("createTrust402ExpressApp"), "node start must use the Express bridge in real paywall mode");
+assert(serverSource.includes("x-trust402-operator-key"), "server must require an operator key header for live operator actions");
 assert(existsSync("scripts/check-external-directories.js"), "external directory check script must exist");
+assert(existsSync("scripts/check-agentcash-policy.js"), "AgentCash policy check script must exist");
 assert(existsSync("scripts/launch-monitor.js"), "production launch monitor script must exist");
+assert(smokeScript.includes("/api/jobs/autonomous-run"), "smoke script must cover autonomous job dry-run");
+assert(launchMonitorScript.includes("/api/policies/spend"), "launch monitor must check spend policy");
 assert(workflow.includes("npm audit --omit=dev --audit-level=high"), "CI must run high-severity npm audit");
 assert(workflow.includes("docker build -t trust402:test ."), "CI must build the Docker image");
 assert(workflow.includes("docker compose config"), "CI must validate docker compose config");
@@ -91,9 +101,14 @@ assert(launchIssues.includes("https://github.com/kfubtik/trust402/issues/6"), "l
 assert(launchIssues.includes("https://github.com/kfubtik/trust402/issues/7"), "launch issues must track AgentCash auto-refill policy");
 assert(launchIssues.includes("https://github.com/kfubtik/trust402/issues/8"), "launch issues must track live procurement policy");
 assert(launchIssues.includes("https://github.com/kfubtik/trust402/issues/9"), "launch issues must track paid Proof402 delegation policy");
+assert(launchIssues.includes("https://github.com/kfubtik/trust402/issues/10"), "launch issues must track final autonomous completion plan");
 assert(launchIssues.includes("AgentCash auto-refill: disabled"), "launch issues must keep AgentCash auto-refill disabled");
 assert(launchIssues.includes("Trust402 live procurement: disabled"), "launch issues must keep live procurement disabled");
 assert(launchIssues.includes("Paid Proof402 delegation: disabled"), "launch issues must keep paid Proof402 delegation disabled");
+assert(autonomousPlan.includes("Final Definition Of Done"), "autonomous plan must define final success criteria");
+assert(autonomousPlan.includes("operator authorization"), "autonomous plan must require operator authorization for live execution");
+assert(autonomousPlan.includes("emergency stop"), "autonomous plan must include emergency stop criteria");
+assert(autonomousPlan.includes("zero remaining manual smoke"), "autonomous plan must record current AgentCash blocker");
 assert(catalog.paidLaunchResources.length === 10, "expected 10 paid launch resources");
 assert(catalog.status === "production-mvp", "catalog status must reflect production MVP state");
 assert(catalog.laterResourcesToPreserve.length >= 2, "expected preserved later resources");
@@ -123,6 +138,10 @@ assert(
   catalog.freeResources.some((resource) => resource.path === "/api/procurement/execute" && resource.priceUsd === 0),
   "free dry-run execute helper must exist"
 );
+assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/jobs/autonomous-run" && resource.priceUsd === 0),
+  "free autonomous dry-run helper must exist"
+);
 assert(openapi.paths?.["/api/receipts/hash-result"]?.post, "hash-result helper must be present in OpenAPI");
 assert(openapi.paths?.["/api/receipts/notarize-result"]?.post, "notarize-result helper must be present in OpenAPI");
 assert(openapi.paths?.["/api/launch/checklist"]?.get, "launch checklist must be present in OpenAPI");
@@ -130,6 +149,7 @@ assert(openapi.paths?.["/api/marketplace/bundle"]?.get, "marketplace bundle must
 assert(openapi.paths?.["/api/settlement/status"]?.get, "settlement status must be present in OpenAPI");
 assert(openapi.paths?.["/api/settlement/preflight"]?.get, "settlement preflight must be present in OpenAPI");
 assert(openapi.paths?.["/api/policies/spend"]?.get, "spend policy status must be present in OpenAPI");
+assert(openapi.paths?.["/api/jobs/autonomous-run"]?.post, "autonomous job flow must be present in OpenAPI");
 assert(checklist.readiness.dryRunLaunchReady === true, "dry-run launch checklist must pass");
 assert(checklist.readiness.publicMarketplaceReady === false, "public marketplace readiness must remain false for localhost/no-settlement defaults");
 assert(checklist.settlement.realSettlementReady === false, "real settlement must remain disabled by default");
@@ -163,6 +183,10 @@ assert(
   !openapi.paths["/api/procurement/execute"].post["x-payment-info"],
   "dry-run execute helper must not require payment"
 );
+assert(
+  !openapi.paths["/api/jobs/autonomous-run"].post["x-payment-info"],
+  "autonomous dry-run helper must not require payment"
+);
 
 const ids = new Set();
 const paths = new Set();
@@ -187,6 +211,7 @@ for (const resource of catalog.laterResourcesToPreserve) {
 }
 
 run("node", ["scripts/privacy-check.js"]);
+run("node", ["scripts/check-agentcash-policy.js"]);
 run("node", ["scripts/settlement-check.js"]);
 run("node", ["--test", "test"]);
 

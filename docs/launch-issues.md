@@ -8,6 +8,9 @@ same operational truth as GitHub. Keep it public-safe: issue text may mention
 policy gates and public URLs, but never include API keys, wallet secrets,
 payment headers, private receipts, or AgentCash internals.
 
+The full final Definition of Done is pinned in
+[autonomous-completion-plan.md](autonomous-completion-plan.md).
+
 ## Open Launch Backlog
 
 | Issue | Track | Why it matters | Safe next step |
@@ -17,6 +20,7 @@ payment headers, private receipts, or AgentCash internals.
 | [#7](https://github.com/kfubtik/trust402/issues/7) | AgentCash auto-refill policy | The Trust402-reserved AgentCash wallet is funded, but auto-refill needs provider, caps, audit, and emergency-stop rules. | Approve the refill source, threshold, amount, cap, and log format before writing live refill code. |
 | [#8](https://github.com/kfubtik/trust402/issues/8) | Live procurement policy | Trust402 can plan and quote, but should not autonomously buy downstream resources without spend controls. | Approve allowlists, per-call/job/day caps, receipt storage, and approval thresholds. |
 | [#9](https://github.com/kfubtik/trust402/issues/9) | Paid Proof402 delegation policy | Trust402 can prepare Proof402-ready hashes, but paid delegation is intentionally disabled. | Approve which hashes can be notarized, proof spend caps, retry policy, and receipt fields. |
+| [#10](https://github.com/kfubtik/trust402/issues/10) | Final autonomous buyer-agent plan | The full success criteria need one canonical tracking issue. | Keep `docs/autonomous-completion-plan.md` and this issue aligned until every safe gate is complete. |
 
 ## Current Safe State
 

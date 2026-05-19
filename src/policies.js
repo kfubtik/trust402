@@ -18,6 +18,7 @@ export function spendPolicyStatus(runtimeConfig = config) {
     tool: "policies.spend_status",
     generatedAt: new Date().toISOString(),
     mode: "dry-run-first",
+    emergencyStop: runtimeConfig.emergencyStop,
     readiness: {
       liveProcurementReady: liveProcurement.ready,
       proof402DelegationReady: proof402Delegation.ready,
@@ -35,15 +36,22 @@ export function spendPolicyStatus(runtimeConfig = config) {
       sendsPaymentHeaders: false,
       readsPrivateKeys: false,
       storesPrivateKeys: false,
-      mutatesWalletBalance: false
+      mutatesWalletBalance: false,
+      operatorApiKeyConfigured: Boolean(runtimeConfig.operatorApiKey)
     },
     nextActions: nextPolicyActions({ liveProcurement, proof402Delegation, agentcashAutoRefill })
   };
 }
 
-function liveProcurementPolicy(runtimeConfig) {
+export function liveProcurementPolicy(runtimeConfig) {
   const blockers = [];
+  if (runtimeConfig.emergencyStop) blockers.push(blocker("emergency_stop", "TRUST402_EMERGENCY_STOP or LIVE_EMERGENCY_STOP is true."));
   if (!runtimeConfig.liveSpendEnabled) blockers.push(blocker("live_spend_disabled", "LIVE_SPEND_ENABLED is false."));
+  if (!runtimeConfig.operatorApiKey) blockers.push(blocker("missing_operator_key", "TRUST402_OPERATOR_API_KEY is not configured."));
+  if (!isSupportedPaymentProvider(runtimeConfig.livePaymentProvider)) blockers.push(blocker("missing_payment_provider", "LIVE_PAYMENT_PROVIDER must be agentcash-mcp, x402-fetch, or external-adapter."));
+  if (runtimeConfig.livePaymentProvider === "external-adapter" && !runtimeConfig.livePaymentAdapterUrl) {
+    blockers.push(blocker("missing_payment_adapter_url", "LIVE_PAYMENT_ADAPTER_URL is required for external-adapter provider."));
+  }
   if (!(runtimeConfig.liveMaxPerCallUsd > 0)) blockers.push(blocker("missing_per_call_cap", "LIVE_MAX_PER_CALL_USD must be greater than zero."));
   if (!(runtimeConfig.liveMaxPerJobUsd > 0)) blockers.push(blocker("missing_per_job_cap", "LIVE_MAX_PER_JOB_USD must be greater than zero."));
   if (!(runtimeConfig.liveDailyLimitUsd > 0)) blockers.push(blocker("missing_daily_cap", "LIVE_DAILY_LIMIT_USD must be greater than zero."));
@@ -63,17 +71,28 @@ function liveProcurementPolicy(runtimeConfig) {
       maxPerCallUsd: runtimeConfig.liveMaxPerCallUsd,
       maxPerJobUsd: runtimeConfig.liveMaxPerJobUsd,
       dailyLimitUsd: runtimeConfig.liveDailyLimitUsd,
-      allowedRegistriesCount: runtimeConfig.liveAllowedRegistries.length
+      approvalThresholdUsd: runtimeConfig.liveApprovalThresholdUsd,
+      allowedRegistriesCount: runtimeConfig.liveAllowedRegistries.length,
+      endpointDenylistCount: runtimeConfig.liveEndpointDenylist.length,
+      receiptLogMode: runtimeConfig.liveReceiptLogMode,
+      paymentProvider: publicProvider(runtimeConfig.livePaymentProvider),
+      paymentAdapterConfigured: Boolean(runtimeConfig.livePaymentAdapterUrl),
+      operatorApiKeyConfigured: Boolean(runtimeConfig.operatorApiKey),
+      emergencyStop: runtimeConfig.emergencyStop
     },
     blockers
   };
 }
 
-function proof402DelegationPolicy(runtimeConfig) {
+export function proof402DelegationPolicy(runtimeConfig) {
   const blockers = [];
+  if (runtimeConfig.emergencyStop) blockers.push(blocker("emergency_stop", "TRUST402_EMERGENCY_STOP or LIVE_EMERGENCY_STOP is true."));
   if (runtimeConfig.proof402DelegationMode !== "live") {
     blockers.push(blocker("proof402_delegation_not_live", "PROOF402_DELEGATION_MODE is not live."));
   }
+  if (!runtimeConfig.liveSpendEnabled) blockers.push(blocker("live_spend_disabled", "LIVE_SPEND_ENABLED is false."));
+  if (!runtimeConfig.operatorApiKey) blockers.push(blocker("missing_operator_key", "TRUST402_OPERATOR_API_KEY is not configured."));
+  if (!isSupportedPaymentProvider(runtimeConfig.livePaymentProvider)) blockers.push(blocker("missing_payment_provider", "LIVE_PAYMENT_PROVIDER must be agentcash-mcp, x402-fetch, or external-adapter."));
   if (!runtimeConfig.proof402BaseUrl) blockers.push(blocker("missing_proof402_base_url", "PROOF402_BASE_URL is not configured."));
   if (!(runtimeConfig.proof402MaxSpendUsd > 0)) blockers.push(blocker("missing_proof402_spend_cap", "PROOF402_MAX_SPEND_USD must be greater than zero."));
 
@@ -83,17 +102,22 @@ function proof402DelegationPolicy(runtimeConfig) {
     issue: launchIssues.proof402Delegation,
     controls: {
       proof402BaseUrlConfigured: Boolean(runtimeConfig.proof402BaseUrl),
-      maxSpendUsd: runtimeConfig.proof402MaxSpendUsd
+      maxSpendUsd: runtimeConfig.proof402MaxSpendUsd,
+      paymentProvider: publicProvider(runtimeConfig.livePaymentProvider),
+      operatorApiKeyConfigured: Boolean(runtimeConfig.operatorApiKey),
+      emergencyStop: runtimeConfig.emergencyStop
     },
     blockers
   };
 }
 
-function agentcashAutoRefillPolicy(runtimeConfig) {
+export function agentcashAutoRefillPolicy(runtimeConfig) {
   const blockers = [];
+  if (runtimeConfig.emergencyStop) blockers.push(blocker("emergency_stop", "TRUST402_EMERGENCY_STOP or LIVE_EMERGENCY_STOP is true."));
   if (!runtimeConfig.agentcashAutoRefillApproved) blockers.push(blocker("agentcash_refill_not_approved", "AGENTCASH_AUTO_REFILL_APPROVED is false."));
   if (!runtimeConfig.agentcashAutoRefillEnabled) blockers.push(blocker("agentcash_refill_disabled", "AGENTCASH_AUTO_REFILL_ENABLED is false."));
   if (!runtimeConfig.agentcashAutoRefillProvider) blockers.push(blocker("missing_refill_provider", "AGENTCASH_AUTO_REFILL_PROVIDER is not configured."));
+  if (!runtimeConfig.operatorApiKey) blockers.push(blocker("missing_operator_key", "TRUST402_OPERATOR_API_KEY is not configured."));
   if (!(runtimeConfig.agentcashAutoRefillThresholdUsd > 0)) blockers.push(blocker("missing_refill_threshold", "AGENTCASH_AUTO_REFILL_THRESHOLD_USD must be greater than zero."));
   if (!(runtimeConfig.agentcashAutoRefillAmountUsd > 0)) blockers.push(blocker("missing_refill_amount", "AGENTCASH_AUTO_REFILL_AMOUNT_USD must be greater than zero."));
   if (!(runtimeConfig.agentcashAutoRefillDailyCapUsd > 0)) blockers.push(blocker("missing_refill_daily_cap", "AGENTCASH_AUTO_REFILL_DAILY_CAP_USD must be greater than zero."));
@@ -113,7 +137,11 @@ function agentcashAutoRefillPolicy(runtimeConfig) {
       thresholdUsd: runtimeConfig.agentcashAutoRefillThresholdUsd,
       refillAmountUsd: runtimeConfig.agentcashAutoRefillAmountUsd,
       dailyCapUsd: runtimeConfig.agentcashAutoRefillDailyCapUsd,
-      providerConfigured: Boolean(runtimeConfig.agentcashAutoRefillProvider)
+      providerConfigured: Boolean(runtimeConfig.agentcashAutoRefillProvider),
+      walletBindingRequired: runtimeConfig.agentcashWalletBindingRequired,
+      network: runtimeConfig.agentcashNetwork,
+      operatorApiKeyConfigured: Boolean(runtimeConfig.operatorApiKey),
+      emergencyStop: runtimeConfig.emergencyStop
     },
     blockers
   };
@@ -130,4 +158,12 @@ function nextPolicyActions({ liveProcurement, proof402Delegation, agentcashAutoR
 
 function blocker(id, message) {
   return { id, message };
+}
+
+function isSupportedPaymentProvider(provider) {
+  return ["agentcash-mcp", "x402-fetch", "external-adapter"].includes(provider);
+}
+
+function publicProvider(provider) {
+  return provider && provider !== "disabled" ? provider : "not-configured";
 }

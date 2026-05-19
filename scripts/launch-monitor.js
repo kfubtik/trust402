@@ -71,6 +71,7 @@ async function checkProductionApi() {
   const resources = await getJson("/api/resources");
   const bundle = await getJson("/api/marketplace/bundle");
   const settlement = await getJson("/api/settlement/status");
+  const spendPolicy = await getJson("/api/policies/spend");
   const failures = [];
 
   if (!health.ok) failures.push("/health failed");
@@ -86,6 +87,9 @@ async function checkProductionApi() {
   if (settlement.body?.readiness?.realSettlementReady !== true) failures.push("/api/settlement/status realSettlementReady must be true in production");
   if (settlement.body?.readiness?.marketplaceIndexingReady !== true) failures.push("/api/settlement/status marketplaceIndexingReady must be true in production");
   if ((settlement.body?.blockers || []).length > 0) failures.push("/api/settlement/status must not expose blockers in production");
+  if (!spendPolicy.ok) failures.push("/api/policies/spend failed");
+  if (spendPolicy.body?.readiness?.anyLiveSpendReady !== false) failures.push("/api/policies/spend anyLiveSpendReady must remain false until live buyer policy is approved");
+  if (spendPolicy.body?.emergencyStop === true) failures.push("/api/policies/spend emergencyStop is active");
 
   return {
     ok: failures.length === 0,
@@ -97,19 +101,28 @@ async function checkProductionApi() {
       publicMarketplaceReady: bundle.body?.listingState?.publicMarketplaceReady ?? null,
       realSettlementReady: settlement.body?.readiness?.realSettlementReady ?? null,
       marketplaceIndexingReady: settlement.body?.readiness?.marketplaceIndexingReady ?? null,
-      blockers: settlement.body?.blockers?.length || 0
+      blockers: settlement.body?.blockers?.length || 0,
+      anyLiveSpendReady: spendPolicy.body?.readiness?.anyLiveSpendReady ?? null,
+      autoRefillReady: spendPolicy.body?.readiness?.agentcashAutoRefillReady ?? null
     },
     endpoints: {
       health: briefHttp(health),
       resources: briefHttp(resources),
       marketplaceBundle: briefHttp(bundle),
-      settlementStatus: briefHttp(settlement)
+      settlementStatus: briefHttp(settlement),
+      spendPolicy: briefHttp(spendPolicy)
     },
     failures,
     details: {
       settlementMode: settlement.body?.mode || null,
       payment: settlement.body?.payment || null,
-      blockers: settlement.body?.blockers || []
+      blockers: settlement.body?.blockers || [],
+      spendPolicy: {
+        emergencyStop: spendPolicy.body?.emergencyStop ?? null,
+        liveProcurementReady: spendPolicy.body?.readiness?.liveProcurementReady ?? null,
+        proof402DelegationReady: spendPolicy.body?.readiness?.proof402DelegationReady ?? null,
+        agentcashAutoRefillReady: spendPolicy.body?.readiness?.agentcashAutoRefillReady ?? null
+      }
     }
   };
 }

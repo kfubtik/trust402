@@ -1,6 +1,7 @@
 import { config } from "./config.js";
 import { ApiError } from "./errors.js";
 import { sha256Json, sha256Text } from "./hash.js";
+import { proof402DelegationPolicy } from "./policies.js";
 
 const SHA256_RE = /^sha256:[a-f0-9]{64}$/;
 const SENSITIVE_METADATA_KEY_RE =
@@ -10,7 +11,11 @@ export async function notarizeResult(input = {}, options = {}) {
   const cfg = options.config || config;
   const fetchImpl = options.fetchImpl || globalThis.fetch;
   const prepared = prepareProof402Request(input, cfg);
-  const delegation = await proof402Delegation(prepared, { cfg, fetchImpl });
+  const delegation = await proof402Delegation(prepared, {
+    cfg,
+    fetchImpl,
+    operatorAuthorized: options.operatorAuthorized === true
+  });
 
   return {
     ok: true,
@@ -31,7 +36,8 @@ export async function notarizeResult(input = {}, options = {}) {
       maxProofSpendUsd: cfg.proof402MaxSpendUsd,
       requiresExplicitApproval: true,
       storesPrivatePayload: false,
-      paidCallImplemented: false
+      paidCallImplemented: true,
+      operatorAuthorized: options.operatorAuthorized === true
     }
   };
 }
@@ -87,7 +93,7 @@ export function prepareProof402Request(input = {}, cfg = config) {
   };
 }
 
-export async function proof402Delegation(prepared, { cfg = config, fetchImpl = globalThis.fetch } = {}) {
+export async function proof402Delegation(prepared, { cfg = config, fetchImpl = globalThis.fetch, operatorAuthorized = false } = {}) {
   const baseUrl = normalizeBaseUrl(cfg.proof402BaseUrl);
   const configuredMode = normalizeMode(cfg.proof402DelegationMode);
   const requestedMode = normalizeMode(prepared.requestedMode);
@@ -138,20 +144,84 @@ export async function proof402Delegation(prepared, { cfg = config, fetchImpl = g
   }
 
   if (mode === "live") {
-    if (!cfg.liveSpendEnabled || cfg.proof402MaxSpendUsd <= 0) {
+    const policy = proof402DelegationPolicy(cfg);
+    const blockers = [...policy.blockers];
+    if (!operatorAuthorized) {
+      blockers.push({
+        id: "operator_not_authorized",
+        message: "Paid Proof402 delegation requires x-trust402-operator-key."
+      });
+    }
+    if (blockers.length > 0) {
       throw new ApiError(403, "live_proof_delegation_blocked", "Live Proof402 delegation is blocked by policy.", {
-        liveSpendEnabled: cfg.liveSpendEnabled,
-        proof402MaxSpendUsd: cfg.proof402MaxSpendUsd,
-        required: "Set explicit live spend limits and approval policy before enabling paid proof calls."
+        blockers,
+        paidProofCallMade: false
       });
     }
 
-    throw new ApiError(501, "live_proof_delegation_not_implemented", "Paid Proof402 delegation is not implemented in this MVP.", {
+    return paidProof402Call({ baseUrl, proofRequest, cfg, fetchImpl });
+  }
+
+  throw new ApiError(400, "invalid_proof402_mode", "Unsupported Proof402 delegation mode.", { mode });
+}
+
+async function paidProof402Call({ baseUrl, proofRequest, cfg, fetchImpl }) {
+  const response = await fetchImpl(proofRequest.url, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "user-agent": "Trust402 Proof402 delegation/0.1",
+      "x-trust402-max-amount-usd": String(cfg.proof402MaxSpendUsd)
+    },
+    body: JSON.stringify(proofRequest.body),
+    signal: AbortSignal.timeout(cfg.requestTimeoutMs || 6000)
+  });
+  const body = await responseJson(response);
+  const paymentRequired = response.headers.get("payment-required") || "";
+  const paymentResponse = response.headers.get("payment-response") || "";
+
+  if (response.status === 402 || paymentRequired) {
+    throw new ApiError(402, "proof402_payment_required_not_settled", "Proof402 requested payment, but the configured fetch adapter did not settle it.", {
+      maxProofSpendUsd: cfg.proof402MaxSpendUsd,
+      paymentProvider: cfg.livePaymentProvider,
       paidProofCallMade: false
     });
   }
 
-  throw new ApiError(400, "invalid_proof402_mode", "Unsupported Proof402 delegation mode.", { mode });
+  if (!response.ok) {
+    throw new ApiError(response.status || 502, "proof402_paid_call_failed", "Proof402 paid delegation failed.", {
+      status: response.status,
+      bodySummary: summarizeProof402Body(body),
+      paidProofCallMade: false
+    });
+  }
+
+  const proofLink = extractProofLink(body, baseUrl);
+  return {
+    configured: true,
+    mode: "live",
+    baseUrl,
+    proofRequest,
+    proofStatus: proofLink ? "proof-created" : "paid-call-complete",
+    proofLink,
+    paidProofCallMade: true,
+    unpaidProbeMade: false,
+    reason: "Paid Proof402 delegation completed through the configured payment adapter.",
+    maxProofSpendUsd: cfg.proof402MaxSpendUsd,
+    paymentResponseObserved: Boolean(paymentResponse),
+    responseHash: sha256Json(body || {})
+  };
+}
+
+function extractProofLink(body, baseUrl) {
+  if (!body || typeof body !== "object") return null;
+  const value = body.proofLink || body.url || body.proof?.url || body.proof?.link;
+  if (typeof value !== "string" || !value) return null;
+  try {
+    return new URL(value, baseUrl).href;
+  } catch {
+    return null;
+  }
 }
 
 function previewDelegation({ mode, proofRequest, proofStatus, reason }) {

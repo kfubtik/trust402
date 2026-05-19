@@ -46,6 +46,27 @@ export function openApiSpec() {
     "/api/settlement/preflight": getPath("Operator preflight for one paid settlement smoke"),
     "/api/policies/spend": getPath("Spend policy gates for live procurement, Proof402 delegation, and AgentCash auto-refill"),
     "/api/resources": getPath("Public Trust402 resource catalog"),
+    "/api/jobs/autonomous-run": {
+      post: {
+        operationId: "jobs_autonomous_run",
+        summary: "Run a dry-run-first autonomous Trust402 job from goal to quote, execution audit, receipt, and optional proof preview",
+        tags: ["Trust402"],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: requestSchemaFor("jobs.autonomous_run"),
+              example: exampleFor("jobs.autonomous_run")
+            }
+          }
+        },
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse,
+          "403": errorResponse
+        }
+      }
+    },
     "/api/receipts/hash-result": {
       post: {
         operationId: "receipts_hash_result",
@@ -308,6 +329,29 @@ function requestSchemaFor(id) {
     };
   }
 
+  if (id === "jobs.autonomous_run") {
+    return {
+      type: "object",
+      required: ["goal", "budgetUsd"],
+      properties: {
+        mode: { type: "string", enum: ["dry-run", "live"], default: "dry-run" },
+        goal: { type: "string" },
+        budgetUsd: { type: "number" },
+        maxPaidCalls: { type: "integer", default: 3 },
+        riskTolerance: { type: "string", enum: ["low", "medium", "high"], default: "low" },
+        includeProofPreview: { type: "boolean", default: false },
+        proof402Mode: { type: "string", enum: ["disabled", "preview", "probe", "live"] },
+        approval: { type: "object" },
+        candidates: {
+          type: "array",
+          minItems: 2,
+          maxItems: 10,
+          items: { type: "object" }
+        }
+      }
+    };
+  }
+
   if (id === "monitor.snapshot") {
     return {
       type: "object",
@@ -444,6 +488,20 @@ function exampleFor(id) {
       mode: "dry-run",
       goal: "Simulate a controlled x402 procurement run.",
       budgetUsd: 0.25,
+      candidates: [
+        { id: "a", endpoint: "https://example.com/a", priceUsd: 0.01, has402: true, hasInputSchema: true, hasOpenApi: true, hasWellKnown: true },
+        { id: "b", endpoint: "https://example.com/b", priceUsd: 0.04, hasInputSchema: false }
+      ]
+    };
+  }
+  if (id === "jobs.autonomous_run") {
+    return {
+      mode: "dry-run",
+      goal: "Choose and audit the safest x402 resource for endpoint diligence.",
+      budgetUsd: 0.25,
+      maxPaidCalls: 2,
+      riskTolerance: "low",
+      includeProofPreview: true,
       candidates: [
         { id: "a", endpoint: "https://example.com/a", priceUsd: 0.01, has402: true, hasInputSchema: true, hasOpenApi: true, hasWellKnown: true },
         { id: "b", endpoint: "https://example.com/b", priceUsd: 0.04, hasInputSchema: false }

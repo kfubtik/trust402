@@ -1,5 +1,7 @@
+import { config } from "./config.js";
 import { ApiError } from "./errors.js";
 import { sha256Json } from "./hash.js";
+import { liveProcurementPolicy } from "./policies.js";
 import { receiptBundle } from "./receipts.js";
 import { compareResources, procurementPlan } from "./trustEngine.js";
 
@@ -15,6 +17,7 @@ export function procurementQuote(input = {}) {
   }) : null;
   const selectedResources = selectResources({
     ranked: comparison?.ranked || [],
+    candidates,
     maxPaidCalls: plan.budget.maxPaidCalls,
     minimumTrustScore: plan.policy.minimumTrustScore,
     perCallLimitUsd: plan.budget.perCallLimitUsd
@@ -71,20 +74,9 @@ export function procurementQuote(input = {}) {
   };
 }
 
-export function procurementExecute(input = {}) {
+export function procurementExecute(input = {}, options = {}) {
   if (input.liveSpendEnabled === true || input.mode === "live") {
-    throw new ApiError(403, "live_spend_disabled", "Trust402 execute is dry-run only in this product phase.", {
-      liveSpendEnabled: false,
-      requiredBeforeLive: [
-        "hot wallet profile",
-        "registry allowlist",
-        "per-call limit",
-        "per-job limit",
-        "daily limit",
-        "receipt log",
-        "explicit human approval"
-      ]
-    });
+    return procurementExecuteLive(input, options);
   }
 
   const quote = input.quote?.quoteHash
@@ -129,21 +121,154 @@ export function procurementExecute(input = {}) {
   };
 }
 
-function selectResources({ ranked, maxPaidCalls, minimumTrustScore, perCallLimitUsd }) {
+async function procurementExecuteLive(input = {}, options = {}) {
+  const cfg = options.config || config;
+  const operatorAuthorized = options.operatorAuthorized === true;
+  const fetchImpl = options.fetchImpl || globalThis.fetch;
+  const quote = input.quote?.quoteHash
+    ? normalizeSubmittedQuote(input.quote)
+    : input.quoteHash && input.quote
+      ? normalizeSubmittedQuote(input)
+      : procurementQuote(input);
+  const policy = liveProcurementPolicy(cfg);
+  const blockers = [...policy.blockers];
+  const selectedResources = quote.quote.selectedResources || [];
+  const approval = input.approval || input.approvalPayload || {};
+
+  if (!operatorAuthorized) {
+    blockers.push({
+      id: "operator_not_authorized",
+      message: "Live procurement requires x-trust402-operator-key."
+    });
+  }
+  if (selectedResources.length === 0) {
+    blockers.push({
+      id: "no_selected_resources",
+      message: "Quote has no selected resources to execute."
+    });
+  }
+  if (!quote.quote.withinBudget) {
+    blockers.push({
+      id: "quote_over_budget",
+      message: "Quote estimated total exceeds the requested budget."
+    });
+  }
+  if (quote.quote.passThroughEstimateUsd > cfg.liveMaxPerJobUsd) {
+    blockers.push({
+      id: "pass_through_exceeds_job_cap",
+      message: "Selected resource pass-through estimate exceeds LIVE_MAX_PER_JOB_USD."
+    });
+  }
+  if (approvalRequired(quote, cfg) && !approvalMatchesQuote(approval, quote)) {
+    blockers.push({
+      id: "approval_required",
+      message: "Live execution requires approval.approved=true and a matching approval.quoteHash."
+    });
+  }
+
+  for (const resource of selectedResources) {
+    blockers.push(...resourcePolicyBlockers(resource, cfg));
+  }
+
+  if (blockers.length > 0) {
+    throw new ApiError(403, "live_spend_policy_blocked", "Live procurement is blocked by spend policy.", {
+      quoteId: quote.quoteId,
+      quoteHash: quote.quoteHash,
+      blockers,
+      paidSubcallsMade: 0
+    });
+  }
+
+  const calls = [];
+  let estimatedPaidUsd = 0;
+  for (const resource of selectedResources) {
+    const call = await callPaidResource({ resource, input, fetchImpl, cfg });
+    calls.push(call);
+    if (!call.ok) {
+      const executionHash = sha256Json({ quoteHash: quote.quoteHash, calls });
+      throw new ApiError(call.status || 502, "downstream_purchase_failed", "A downstream paid resource call failed.", {
+        quoteId: quote.quoteId,
+        executionHash,
+        failedResource: resource.id,
+        calls,
+        paidSubcallsMade: calls.filter((item) => item.ok).length
+      });
+    }
+    estimatedPaidUsd = roundUsd(estimatedPaidUsd + (resource.priceUsd || 0));
+  }
+
+  const executionHash = sha256Json({
+    quoteHash: quote.quoteHash,
+    calls,
+    estimatedPaidUsd
+  });
+
+  return {
+    ok: true,
+    tool: "procurement.execute",
+    mode: "live",
+    generatedAt: new Date().toISOString(),
+    quoteId: quote.quoteId,
+    quoteHash: quote.quoteHash,
+    executionHash,
+    paidSubcallsMade: calls.length,
+    liveSpendEnabled: true,
+    result: {
+      status: "executed",
+      selectedResources,
+      estimatedPaidUsd,
+      calls
+    },
+    audit: {
+      goal: quote.quote.goal || input.goal || "live procurement execution",
+      policyResult: {
+        liveSpendEnabled: true,
+        paymentProvider: cfg.livePaymentProvider,
+        receiptLogMode: cfg.liveReceiptLogMode,
+        approvalRequired: approvalRequired(quote, cfg),
+        approvalObserved: approvalMatchesQuote(approval, quote)
+      },
+      limits: {
+        maxPerCallUsd: cfg.liveMaxPerCallUsd,
+        maxPerJobUsd: cfg.liveMaxPerJobUsd,
+        dailyLimitUsd: cfg.liveDailyLimitUsd,
+        approvalThresholdUsd: cfg.liveApprovalThresholdUsd
+      }
+    },
+    receiptBundle: receiptBundle({
+      subject: quote.quote.goal || "live procurement execution",
+      resultHash: executionHash,
+      payloadHash: executionHash,
+      purpose: "live procurement execution audit"
+    }),
+    nextSteps: [
+      "Review downstream call receipts and result hashes.",
+      "Create a Proof402 receipt only for approved public-safe hashes.",
+      "Stop execution immediately if spend policy or receipts do not match expectations."
+    ]
+  };
+}
+
+function selectResources({ ranked, candidates = [], maxPaidCalls, minimumTrustScore, perCallLimitUsd }) {
   return ranked
     .filter((resource) => resource.budgetFit)
     .filter((resource) => resource.score >= minimumTrustScore)
     .filter((resource) => resource.priceUsd === null || resource.priceUsd <= perCallLimitUsd)
     .slice(0, maxPaidCalls)
-    .map((resource) => ({
-      rank: resource.rank,
-      id: resource.id,
-      endpoint: resource.endpoint,
-      priceUsd: resource.priceUsd,
-      score: resource.score,
-      riskLevel: resource.riskLevel,
-      reason: "selected by quote policy"
-    }));
+    .map((resource) => {
+      const source = findSourceCandidate(resource, candidates);
+      return {
+        rank: resource.rank,
+        id: resource.id,
+        endpoint: resource.endpoint,
+        method: source.method || source.request?.method || "POST",
+        requestBody: source.requestBody ?? source.body ?? source.request?.body ?? {},
+        priceUsd: resource.priceUsd,
+        score: resource.score,
+        riskLevel: resource.riskLevel,
+        reason: "selected by quote policy"
+      };
+    });
 }
 
 function estimateTrust402DecisionFees({ candidateCount, includeComparison, includeReceipt }) {
@@ -170,6 +295,126 @@ function normalizeSubmittedQuote(quote) {
     });
   }
   return quote;
+}
+
+function approvalRequired(quote, cfg) {
+  const threshold = cfg.liveApprovalThresholdUsd;
+  if (!(threshold > 0)) return true;
+  return quote.quote.estimatedTotalUsd >= threshold;
+}
+
+function approvalMatchesQuote(approval, quote) {
+  return approval?.approved === true && approval?.quoteHash === quote.quoteHash;
+}
+
+function resourcePolicyBlockers(resource, cfg) {
+  const blockers = [];
+  const endpoint = parseEndpoint(resource.endpoint);
+  if (!endpoint) {
+    blockers.push({ id: "invalid_resource_endpoint", message: `${resource.id} endpoint is not a valid URL.` });
+    return blockers;
+  }
+  if (resource.priceUsd === null || resource.priceUsd === undefined) {
+    blockers.push({ id: "missing_resource_price", message: `${resource.id} has no priceUsd.` });
+  } else if (resource.priceUsd > cfg.liveMaxPerCallUsd) {
+    blockers.push({ id: "resource_exceeds_per_call_cap", message: `${resource.id} exceeds LIVE_MAX_PER_CALL_USD.` });
+  }
+  if (!matchesAllowlist(endpoint, cfg.liveAllowedRegistries)) {
+    blockers.push({ id: "resource_not_allowlisted", message: `${resource.id} origin is not in LIVE_ALLOWED_REGISTRIES.` });
+  }
+  if (matchesDenylist(endpoint, cfg.liveEndpointDenylist)) {
+    blockers.push({ id: "resource_denylisted", message: `${resource.id} matches LIVE_ENDPOINT_DENYLIST.` });
+  }
+  return blockers;
+}
+
+async function callPaidResource({ resource, input, fetchImpl, cfg }) {
+  const method = normalizeMethod(resource.method);
+  const response = await fetchImpl(resource.endpoint, {
+    method,
+    headers: {
+      "content-type": "application/json",
+      "user-agent": "Trust402 live procurement/0.1"
+    },
+    body: method === "GET" || method === "HEAD"
+      ? undefined
+      : JSON.stringify(resource.requestBody || { goal: input.goal || "Trust402 procurement" }),
+    signal: AbortSignal.timeout(cfg.requestTimeoutMs || 6000)
+  });
+  const body = await responseBody(response);
+  const paymentResponse = response.headers?.get?.("payment-response") || "";
+  const paymentRequired = response.headers?.get?.("payment-required") || "";
+  return {
+    id: resource.id,
+    endpoint: resource.endpoint,
+    method,
+    ok: response.ok,
+    status: response.status,
+    plannedPriceUsd: resource.priceUsd,
+    paymentResponseObserved: Boolean(paymentResponse),
+    paymentRequiredObserved: Boolean(paymentRequired),
+    bodyHash: sha256Json(body ?? {}),
+    bodySummary: summarizeBody(body)
+  };
+}
+
+async function responseBody(response) {
+  const text = await response.text();
+  if (!text.trim()) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { raw: text.slice(0, 1000) };
+  }
+}
+
+function summarizeBody(body) {
+  if (!body || typeof body !== "object") return body;
+  return {
+    ok: body.ok ?? null,
+    tool: body.tool || null,
+    keys: Object.keys(body).slice(0, 20)
+  };
+}
+
+function parseEndpoint(value) {
+  try {
+    return new URL(value);
+  } catch {
+    return null;
+  }
+}
+
+function matchesAllowlist(url, allowlist) {
+  return allowlist.some((entry) => matchesListEntry(url, entry));
+}
+
+function matchesDenylist(url, denylist) {
+  return denylist.some((entry) => matchesListEntry(url, entry));
+}
+
+function matchesListEntry(url, entry) {
+  if (!entry) return false;
+  if (entry === "*") return true;
+  try {
+    const parsed = new URL(entry);
+    return url.href.startsWith(parsed.href) || url.origin === parsed.origin;
+  } catch {
+    return url.hostname === entry || url.origin === entry || url.href.startsWith(entry);
+  }
+}
+
+function normalizeMethod(value) {
+  const method = String(value || "POST").toUpperCase();
+  return ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"].includes(method) ? method : "POST";
+}
+
+function findSourceCandidate(resource, candidates) {
+  return candidates.find((candidate) => {
+    const id = candidate.id || candidate.name;
+    const endpoint = candidate.endpoint || candidate.url;
+    return id === resource.id || endpoint === resource.endpoint;
+  }) || {};
 }
 
 function buildDryRunAudit({ input, quote }) {

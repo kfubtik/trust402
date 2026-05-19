@@ -3,6 +3,7 @@ import { createServer } from "node:http";
 import { config, isMockPaywallEnabled } from "./config.js";
 import { paidResourceByPath, publicResources } from "./catalog.js";
 import { ApiError, errorBody } from "./errors.js";
+import { autonomousRun } from "./autonomousJob.js";
 import { marketplaceBundle } from "./marketplace.js";
 import { monitorBadge, monitorSnapshot } from "./monitor.js";
 import { capabilities, openApiSpec, x402WellKnown } from "./openapi.js";
@@ -27,6 +28,7 @@ const routes = new Map([
   ["POST /api/receipts/notarize-result", notarizeResult],
   ["POST /api/procurement/quote", procurementQuote],
   ["POST /api/procurement/execute", procurementExecute],
+  ["POST /api/jobs/autonomous-run", autonomousRun],
   ["POST /api/monitor/snapshot", monitorSnapshot],
   ["POST /api/monitor/badge", monitorBadge],
   ["POST /api/trust/check-x402", checkX402],
@@ -63,6 +65,7 @@ export async function handleTrust402Request(req, res) {
           settlementStatus: "/api/settlement/status",
           settlementPreflight: "/api/settlement/preflight",
           spendPolicy: "/api/policies/spend",
+          autonomousRun: "/api/jobs/autonomous-run",
           resources: "/api/resources",
           proof402Preview: "/api/receipts/notarize-result",
           capabilities: "/api/capabilities",
@@ -140,7 +143,7 @@ export async function handleTrust402Request(req, res) {
     }
 
     const body = await readJson(req);
-    const result = await handler(body);
+    const result = await handler(body, { operatorAuthorized: isOperatorAuthorized(req) });
     return sendJson(res, 200, result);
   } catch (error) {
     const status = error instanceof ApiError ? error.status : 500;
@@ -160,6 +163,7 @@ function statusSummary() {
       readyForGitHub: true,
       readyForReceiptLayer: true,
       readyForControlledProcurementDryRun: true,
+      readyForAutonomousDryRun: true,
       readyForOneShotMonitoring: true,
       readyForProof402Preview: Boolean(config.proof402BaseUrl),
       readyForLiveSpend: false,
@@ -187,6 +191,7 @@ function statusSummary() {
       settlementStatus: "/api/settlement/status",
       settlementPreflight: "/api/settlement/preflight",
       spendPolicy: "/api/policies/spend",
+      autonomousRun: "/api/jobs/autonomous-run",
       openapi: "/openapi.json",
       x402WellKnown: "/.well-known/x402",
       roadmap: "docs/mvp-roadmap.md",
@@ -256,6 +261,12 @@ function sendJson(res, status, body) {
   res.end(status === 204 ? "" : JSON.stringify(body, null, 2));
 }
 
+function isOperatorAuthorized(req) {
+  if (!config.operatorApiKey) return false;
+  const supplied = req.headers["x-trust402-operator-key"];
+  return typeof supplied === "string" && supplied === config.operatorApiKey;
+}
+
 function setSecurityHeaders(res) {
   res.setHeader("x-content-type-options", "nosniff");
   res.setHeader("x-frame-options", "DENY");
@@ -263,7 +274,7 @@ function setSecurityHeaders(res) {
   res.setHeader("cross-origin-resource-policy", "same-origin");
   res.setHeader("access-control-allow-origin", "*");
   res.setHeader("access-control-allow-methods", "GET,POST,OPTIONS");
-  res.setHeader("access-control-allow-headers", "content-type,payment-signature,x-payment,x-payment-payload");
+  res.setHeader("access-control-allow-headers", "content-type,payment-signature,x-payment,x-payment-payload,x-trust402-operator-key");
   res.setHeader("access-control-expose-headers", "payment-required,payment-response");
 }
 

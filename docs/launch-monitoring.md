@@ -16,6 +16,7 @@ call, and never submits external marketplace forms.
 - catalog status is `production-mvp`;
 - production settlement readiness has no blockers;
 - unpaid x402 challenge on a protected paid route;
+- spend policy gates remain closed for unapproved live buyer spend;
 - CDP Bazaar all-resource visibility;
 - external directory visibility.
 

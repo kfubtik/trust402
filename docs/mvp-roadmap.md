@@ -131,9 +131,13 @@ Implemented:
 - pass-through and Trust402 fee estimates;
 - approval payload;
 - `/api/procurement/execute` dry-run audit;
-- hard rejection for live spend requests.
+- `/api/jobs/autonomous-run` dry-run-first top-level workflow;
+- live execution skeleton with operator authorization, allowlist, denylist,
+  caps, approval, and receipt bundles.
 
-Live paid subcalls can only be added after policy is proven.
+Live paid subcalls now have a policy-gated skeleton with injected paid-fetch
+tests. They remain blocked in production until operator authorization,
+allowlists, caps, receipt logging, and local AgentCash policy are approved.
 
 Required:
 

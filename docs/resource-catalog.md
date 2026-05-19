@@ -112,6 +112,18 @@ Price: free while live spend is disabled.
 Reason: buyers need to see exactly what would happen before trusting live
 procurement.
 
+### `POST /api/jobs/autonomous-run`
+
+Dry-run-first autonomous workflow that turns a goal and candidate list into a
+quote, execution audit, result hash, receipt bundle, and optional Proof402
+preview. In live mode it uses the same spend policy, operator authorization,
+allowlist, denylist, caps, and receipt rules as controlled procurement.
+
+Price: free while live spend is disabled.
+
+Reason: this is the top-level agent workflow. It should be easy to inspect in
+dry-run mode before any autonomous spending is approved.
+
 ## Paid Launch Resources
 
 ### 1. `POST /api/trust/check-x402`

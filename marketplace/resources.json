@@ -85,6 +85,14 @@
       "priceUsd": 0,
       "status": "dry-run-helper",
       "purpose": "Simulate controlled procurement execution and return an audit bundle without live spend."
+    },
+    {
+      "id": "jobs.autonomous_run",
+      "method": "POST",
+      "path": "/api/jobs/autonomous-run",
+      "priceUsd": 0,
+      "status": "dry-run-helper",
+      "purpose": "Run a dry-run-first autonomous Trust402 job from goal to quote, execution audit, receipt, and optional proof preview."
     }
   ],
   "paidLaunchResources": [
