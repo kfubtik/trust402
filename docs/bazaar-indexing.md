@@ -14,7 +14,8 @@ npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10
 
 ## Current Production State
 
-Last checked on 2026-05-19 at 17:21:35 +07:00.
+Last checked on 2026-05-19 at 17:33:27 +07:00 after production commit
+`02b1fee`.
 
 Production alias:
 
@@ -66,6 +67,9 @@ CDP Bazaar search results again. The production route itself is healthy:
   `routeSummary.missing = [trust.compare_resources]`;
 - `npm run smoke:x402 -- https://trust402.vercel.app /api/trust/compare-resources`
   passes, so the missing catalog row is not caused by a broken unpaid route.
+- a direct unpaid 402 probe confirms the `PAYMENT-REQUIRED` header includes
+  the `https://trust402.vercel.app/api/trust/compare-resources` resource URL,
+  Base USDC payment fields, and top-level `extensions.bazaar`.
 
 CDP Bazaar discovery can be settle-driven and asynchronous. The safe next step
 is one bounded paid settle against
@@ -86,6 +90,15 @@ Do not run this while `.local/trust402-agentcash-wallet.json` reports zero
 manual smoke budget or a global max below `$0.03`. The current local policy
 blocks that spend until the operator explicitly approves a temporary smoke
 window.
+
+The read-only action pack for this no-Proof smoke window is:
+
+```text
+actionPackHash = sha256:0db1a554a12b5a04a930245577c12423ff8795e733bdd2df9685bd393e10a0f5
+liveWindowPlan.status = ready-to-stage
+liveWindowPlan.planHash = sha256:3cdbab6d847e0e7cb56f5d50cf06fe3942fbfc622a2ac0bb589f4ee4a71ade3a
+estimatedMaxSpendUsd = 0.03
+```
 
 ## Historical Final Paid Smoke Bodies
 

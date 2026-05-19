@@ -73,13 +73,15 @@ public directory pages.
 
 ## Latest Verified Baseline
 
-Last checked on 2026-05-19 at 17:21:35 +07:00 with:
+Last checked on 2026-05-19 at 17:38:58 +07:00 after production commit
+`02b1fee` with:
 
 ```powershell
 npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=15000
 npm run smoke -- https://trust402.vercel.app
-npm run smoke:x402 -- https://trust402.vercel.app
-npm run final:verify -- https://trust402.vercel.app --timeout-ms=15000 --docker-bin=D:\Programs\Docker\resources\bin\docker.exe --skip-directories
+npm run smoke:x402 -- https://trust402.vercel.app /api/trust/compare-resources
+npm run directories:check -- https://trust402.vercel.app --timeout-ms=15000
+npm run final:verify -- https://trust402.vercel.app --timeout-ms=15000 --docker-bin=D:\Programs\Docker\resources\bin\docker.exe
 ```
 
 Trust402's verified production/discovery state is:
@@ -99,14 +101,22 @@ cdpBazaar.routeSummary.indexed = 9
 cdpBazaar.routeSummary.missing = [trust.compare_resources]
 externalDirectories.status = not-visible-yet
 externalDirectories.visible = 0
+externalDirectories.checked = 8
 finalVerification.status = blocked
 finalVerification.commandsPassed = false
 finalVerification.nonFinalOpenRequirements = 6
+finalVerification.verificationHash = sha256:3349957abf236fcc9f7c28cb088d86e096537d22ee3d44f0e17cc2ee918b58a7
 ```
 
 That state is production-healthy for API/x402/spend safety, but launch
 attention is required for CDP Bazaar 10/10 visibility, non-CDP external
 directory visibility, and intentionally closed live-spend gates.
+
+The latest final verifier passed local release checks, Docker build,
+production smoke, production x402 smoke, AgentCash refill dry-run, external
+directory read-only check, and production completion audit. The only failing
+required command gate was the launch monitor because CDP Bazaar still reports
+`trust.compare_resources` missing.
 
 ## AgentCash Refill Check
 

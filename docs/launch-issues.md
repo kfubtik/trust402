@@ -26,10 +26,15 @@ The full final Definition of Done is pinned in
 
 - Production URL: `https://trust402.vercel.app`.
 - CDP Bazaar indexing: 9/10 paid launch resources verified; missing
-  `trust.compare_resources` as of 2026-05-19 17:21:35 +07:00.
+  `trust.compare_resources` as of 2026-05-19 17:33:27 +07:00.
 - External directory visibility: monitored read-only; latest check found 0/8
-  visible, 5 reachable, and 3 timeout/unreachable directories; one directory
-  requires a custom domain before submission.
+  visible, 5 reachable, and 3 timeout/unreachable directories as of
+  2026-05-19 17:36:24 +07:00; one directory requires a custom domain before
+  submission.
+- Final verification: blocked as of 2026-05-19 17:38:58 +07:00 only after the
+  launch monitor failed on CDP Bazaar 9/10 and external directories remained
+  not visible; verification hash
+  `sha256:3349957abf236fcc9f7c28cb088d86e096537d22ee3d44f0e17cc2ee918b58a7`.
 - Trust402 live procurement: disabled.
 - Paid Proof402 delegation: disabled.
 - AgentCash auto-refill: disabled; dry-run monitor is available through
