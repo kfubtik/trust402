@@ -44,6 +44,7 @@ assert(packageJson.scripts?.["marketplace:bundle"], "package must expose npm run
 assert(packageJson.scripts?.["agentcash:policy"], "package must expose npm run agentcash:policy");
 assert(packageJson.scripts?.["agentcash:refill-check"], "package must expose npm run agentcash:refill-check");
 assert(packageJson.scripts?.["completion:audit"], "package must expose npm run completion:audit");
+assert(packageJson.scripts?.["completion:unblockers"], "package must expose npm run completion:unblockers");
 assert(packageJson.scripts?.["final:verify"], "package must expose npm run final:verify");
 assert(packageJson.scripts?.["privacy:check"], "package must expose npm run privacy:check");
 assert(packageJson.scripts?.["release:check"], "package must expose npm run release:check");
@@ -73,6 +74,7 @@ assert(existsSync("src/expressApp.js"), "Express x402 entrypoint bridge must exi
 assert(existsSync("src/autonomousJob.js"), "autonomous job flow module must exist");
 assert(existsSync("src/agentcashRefill.js"), "AgentCash refill workflow module must exist");
 assert(existsSync("src/localAgentcashPolicy.js"), "local AgentCash policy guard module must exist");
+assert(existsSync("src/operatorUnblockReport.js"), "operator unblock report module must exist");
 assert(existsSync("src/completionAudit.js"), "completion audit module must exist");
 assert(existsSync("src/paymentAdapters.js"), "payment adapter module must exist");
 assert(existsSync("src/policies.js"), "spend policy status module must exist");
@@ -99,6 +101,7 @@ assert(existsSync("scripts/check-external-directories.js"), "external directory 
 assert(existsSync("scripts/check-agentcash-policy.js"), "AgentCash policy check script must exist");
 assert(existsSync("scripts/agentcash-refill-check.js"), "AgentCash refill check script must exist");
 assert(existsSync("scripts/completion-audit.js"), "completion audit script must exist");
+assert(existsSync("scripts/operator-unblock-check.js"), "operator unblock check script must exist");
 assert(existsSync("scripts/final-verification.js"), "final verification script must exist");
 assert(existsSync("scripts/live-evidence-smoke.js"), "live evidence smoke script must exist");
 assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("evaluateLocalAgentcashPolicyForLive"), "live evidence smoke must enforce local AgentCash policy before live mode");

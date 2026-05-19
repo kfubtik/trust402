@@ -158,10 +158,12 @@ function evaluationResult({ policyResult, blockers }) {
   return {
     ok: blockers.length === 0,
     blockers,
-    summary: policyResult.summary || {
-      present: Boolean(policyResult.present),
-      policyPath: policyResult.policyPath || LOCAL_AGENTCASH_POLICY_PATH
-    }
+    summary: policyResult.summary || (policyResult.policy
+      ? summarizePolicy(policyResult.policy, { policyPath: policyResult.policyPath || LOCAL_AGENTCASH_POLICY_PATH })
+      : {
+          present: Boolean(policyResult.present),
+          policyPath: policyResult.policyPath || LOCAL_AGENTCASH_POLICY_PATH
+        })
   };
 }
 

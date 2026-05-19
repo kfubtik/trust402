@@ -232,6 +232,16 @@ Use the read-only verifier to produce the evidence ref:
 npm run final:verify -- https://trust402.vercel.app --timeout-ms=10000
 ```
 
+Before the approved final/live window, run the read-only operator unblock report:
+
+```powershell
+npm run completion:unblockers -- https://trust402.vercel.app
+```
+
+It consolidates Git/Vercel, custom-domain, external-directory, live spend,
+Proof402, AgentCash refill, autonomous-job, and final-evidence blockers without
+mutating wallets or sending payment headers.
+
 On this workstation the verifier auto-detects Docker Desktop at
 `D:\Programs\Docker\resources\bin\docker.exe`. If Docker is installed elsewhere,
 pass `--docker-bin=<path-to-docker.exe>` or set `TRUST402_DOCKER_BIN`.

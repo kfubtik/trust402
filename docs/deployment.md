@@ -235,6 +235,19 @@ This fallback can produce the Git/Vercel evidence required by
 the workflow checks pass. Record the workflow run URL or Vercel deployment URL
 in `TRUST402_GIT_AUTO_DEPLOY_EVIDENCE_URL`.
 
+## Operator Unblock Check
+
+Use this read-only command before an approved final/live window:
+
+```powershell
+npm run completion:unblockers -- https://trust402.vercel.app
+```
+
+It does not set secrets, mutate wallets, submit directory forms, or send payment
+headers. It summarizes the remaining manual blockers for Git/Vercel auto-deploy,
+custom domain and external directory evidence, live procurement, paid Proof402,
+AgentCash refill, autonomous-job evidence, and final verification evidence.
+
 ## Live Evidence Smoke Runner
 
 Trust402 includes a local runner for the final live evidence window:
