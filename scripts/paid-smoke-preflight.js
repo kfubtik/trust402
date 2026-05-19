@@ -5,7 +5,9 @@ const runtimeConfig = {
   ...config,
   paidSmokeResourceId: valueArg("--resource-id") || config.paidSmokeResourceId,
   paidSmokeMaxUsd: numberArg("--max-usd", config.paidSmokeMaxUsd),
-  paidSmokeApproved: process.argv.includes("--approved") || config.paidSmokeApproved
+  paidSmokeApproved: process.argv.includes("--approved") || config.paidSmokeApproved,
+  realSettlementEnabled: process.argv.includes("--real-settlement") || config.realSettlementEnabled,
+  paywallMode: valueArg("--paywall-mode") || config.paywallMode
 };
 
 const report = settlementPreflight({ config: runtimeConfig });

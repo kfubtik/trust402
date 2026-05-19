@@ -76,6 +76,12 @@ TRUST402_PAID_SMOKE_RESOURCE_ID=trust.compare_resources
 TRUST402_PAID_SMOKE_MAX_USD=0.03
 ```
 
+Preview that exact window without changing `.env` or spending:
+
+```powershell
+npm run settlement:preflight -- --resource-id=trust.compare_resources --max-usd=0.03 --approved --real-settlement --paywall-mode=real
+```
+
 Do not run this while `.local/trust402-agentcash-wallet.json` reports zero
 manual smoke budget or a global max below `$0.03`. The current local policy
 blocks that spend until the operator explicitly approves a temporary smoke
