@@ -27,6 +27,7 @@ try {
     budgetUsd: args.budgetUsd || "",
     maxTotalUsd: args.maxTotalUsd || process.env.TRUST402_LIVE_EVIDENCE_MAX_TOTAL_USD || "",
     proofReserveUsd: args.proofReserveUsd || process.env.TRUST402_LIVE_EVIDENCE_PROOF_RESERVE_USD || "",
+    bridgePreflightMaxAmountUsd: args.bridgePreflightMaxAmount || "",
     agentcashBalanceUsd: args.agentcashBalance || process.env.TRUST402_AGENTCASH_BALANCE_USD || "",
     amountRefilledTodayUsd: args.refilledToday || "",
     includeProof: args.skipProof !== true,

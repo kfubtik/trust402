@@ -134,16 +134,49 @@ test("liveEvidenceSmoke live mode returns suggested evidence env refs", async ()
   assert.equal(result.suggestedEnv.TRUST402_LIVE_PROCUREMENT_SMOKE_OBSERVED, "true");
   assert.equal(result.suggestedEnv.TRUST402_PROOF402_PAID_SMOKE_OBSERVED, "true");
   assert.equal(result.suggestedEnv.TRUST402_AUTONOMOUS_JOB_SMOKE_OBSERVED, "true");
+  assert.ok(result.stages.some((item) => item.id === "payment_bridge_preflight" && item.status === "passed"));
+  assert.equal(result.safety.paymentBridgePreflightRequired, true);
+  assert.equal(result.safety.paymentBridgePreflightPassed, true);
+  assert.ok(calls.some((call) => new URL(call.url).pathname === "/api/payments/bridge-check"));
   assert.ok(calls.some((call) => call.headers?.["x-trust402-operator-key"] === "test-operator"));
 });
 
-function fakeFetch(calls) {
-  return async (url, options = {}) => {
+test("liveEvidenceSmoke blocks live mode when bridge preflight cannot prove dry-run safety", async () => {
+  await assert.rejects(
+    liveEvidenceSmoke({
+      baseUrl: "https://trust402.example",
+      mode: "live",
+      approved: true,
+      operatorKey: "test-operator",
+      candidateEndpoint: "https://resource.example/paid",
+      candidatePriceUsd: 0.01,
+      maxTotalUsd: 0.05
+    }, {
+      fetchImpl: fakeFetch([], {
+        bridgePreflight: {
+          ok: true,
+          status: "failed",
+          passed: false,
+          blockers: [{ id: "payment_bridge_dry_run_not_confirmed", message: "No dry-run confirmation." }]
+        }
+      }),
+      localAgentcashPolicyResult: approvedLocalPolicyResult()
+    }),
+    (error) => {
+      assert.equal(error.code, "payment_bridge_preflight_failed");
+      assert.ok(error.details.blockers.some((item) => item.id === "payment_bridge_dry_run_not_confirmed"));
+      return true;
+    }
+  );
+});
+
+function fakeFetch(calls, behavior = {}) {
+  return async (url, requestOptions = {}) => {
     calls.push({
       url: String(url),
-      method: options.method || "GET",
-      headers: options.headers || {},
-      body: options.body ? JSON.parse(options.body) : null
+      method: requestOptions.method || "GET",
+      headers: requestOptions.headers || {},
+      body: requestOptions.body ? JSON.parse(requestOptions.body) : null
     });
     const path = new URL(url).pathname;
     if (path === "/api/policies/spend") {
@@ -153,6 +186,35 @@ function fakeFetch(calls) {
           liveProcurementReady: true,
           proof402DelegationReady: true,
           agentcashAutoRefillReady: false
+        },
+        policies: {
+          liveProcurement: {
+            controls: {
+              paymentAdapter: {
+                provider: "agentcash-mcp",
+                adapterUrlConfigured: true,
+                bridgeContract: {
+                  provider: "agentcash-mcp",
+                  endpointEnv: "LIVE_PAYMENT_ADAPTER_URL"
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+    if (path === "/api/payments/bridge-check") {
+      return json(behavior.bridgePreflight || {
+        ok: true,
+        tool: "payments.bridge_check",
+        status: "passed",
+        passed: true,
+        provider: "agentcash-mcp",
+        bridgeRequestHash: "sha256:bridge-preflight",
+        readiness: { adapterUrlConfigured: true },
+        safety: {
+          paidSubcallsMade: 0,
+          sendsPaymentHeaders: false
         }
       });
     }
@@ -169,7 +231,7 @@ function fakeFetch(calls) {
       });
     }
     if (path === "/api/procurement/execute") {
-      const live = JSON.parse(options.body).mode === "live";
+      const live = JSON.parse(requestOptions.body).mode === "live";
       return json({
         ok: true,
         mode: live ? "live" : "dry-run",
@@ -179,7 +241,7 @@ function fakeFetch(calls) {
       });
     }
     if (path === "/api/receipts/notarize-result") {
-      const live = JSON.parse(options.body).proof402Mode === "live";
+      const live = JSON.parse(requestOptions.body).proof402Mode === "live";
       return json({
         ok: true,
         resultHash: live ? "sha256:live-proof" : "sha256:preview-proof",
@@ -190,7 +252,7 @@ function fakeFetch(calls) {
       });
     }
     if (path === "/api/jobs/autonomous-run") {
-      const live = JSON.parse(options.body).mode === "live";
+      const live = JSON.parse(requestOptions.body).mode === "live";
       return json({
         ok: true,
         mode: live ? "live" : "dry-run",

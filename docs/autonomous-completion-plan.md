@@ -116,6 +116,9 @@ Acceptance:
 - `npm run payment:bridge-check` and `POST /api/payments/bridge-check` can
   dry-run-probe the configured bridge and require explicit no-payment evidence
   before live spend is enabled;
+- `npm run live:evidence-smoke -- --live ...` automatically runs the bridge
+  preflight for bridge-backed providers and stops before paid execution if the
+  bridge cannot prove dry-run/no-payment behavior;
 - `/api/policies/spend` exposes the current non-secret policy state.
 
 Tracking: https://github.com/kfubtik/trust402/issues/8

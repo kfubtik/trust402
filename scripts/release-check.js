@@ -135,6 +135,7 @@ assert(existsSync("scripts/live-window-plan.js"), "live window plan script must 
 assert(existsSync("scripts/payment-bridge-check.js"), "payment bridge check script must exist");
 assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("evaluateLocalAgentcashPolicyForLive"), "live evidence smoke must enforce local AgentCash policy before live mode");
 assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("appendEvidenceLedger"), "live evidence smoke must support local public-safe evidence ledger writes");
+assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("payment_bridge_preflight"), "live evidence smoke must require payment bridge preflight before bridge-backed live spend");
 assert(readFileSync("src/liveSmokeWindow.js", "utf8").includes("restoredAfterRun"), "live smoke window must restore local policy after approved runs");
 assert(proof402ClientSource.includes("links?.proof"), "Proof402 client must capture Proof402 links.proof from paid responses");
 assert(proof402ClientSource.includes("proof402_hash_mismatch"), "Proof402 client must reject paid responses with mismatched content hashes");

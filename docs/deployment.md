@@ -337,6 +337,11 @@ values that can be reviewed before adding them to production.
 For the Proof402 candidate, the downstream procurement request contains only a
 generated `contentHash`, `label`, `idempotencyKey`, and public-safe metadata.
 
+When the configured live payment provider uses a bridge, such as `agentcash-mcp`
+or `external-adapter`, the runner calls `/api/payments/bridge-check` before any
+live procurement or paid Proof402 call. The live run stops unless that dry-run
+preflight proves no payment headers were sent and no paid subcalls happened.
+
 Before any live request, the runner also reads
 `.local/trust402-agentcash-wallet.json`. Live mode is blocked unless that local
 policy explicitly approves the manual smoke window and the estimated spend fits

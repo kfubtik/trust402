@@ -57,6 +57,33 @@ export async function liveEvidenceSmoke(input = {}, options = {}) {
     agentcashAutoRefillReady: policies.readiness?.agentcashAutoRefillReady ?? null
   }));
 
+  const bridgePreflightNeeded = mode === "live" && bridgePreflightRequired(policies);
+  let bridgePreflight = null;
+  if (bridgePreflightNeeded) {
+    bridgePreflight = await runBridgePreflight({
+      fetchImpl,
+      baseUrl,
+      headers,
+      policies,
+      candidate,
+      maxAmountUsd: Math.min(candidate.priceUsd || 0, numberOr(input.bridgePreflightMaxAmountUsd, candidate.priceUsd || 0.01))
+    });
+    stages.push(stage("payment_bridge_preflight", bridgePreflight.passed ? "passed" : "blocked", bridgePreflight.bridgeRequestHash || hashPublic(bridgePreflight), {
+      provider: bridgePreflight.provider || bridgeProvider(policies) || null,
+      adapterConfigured: bridgePreflight.readiness?.adapterUrlConfigured ?? null,
+      paidSubcallsMade: bridgePreflight.safety?.paidSubcallsMade ?? null,
+      sendsPaymentHeaders: bridgePreflight.safety?.sendsPaymentHeaders ?? null
+    }));
+    if (!bridgePreflight.passed) {
+      throw new ApiError(403, "payment_bridge_preflight_failed", "Live evidence smoke requires a passing dry-run payment bridge preflight before paid execution.", {
+        status: bridgePreflight.status || "failed",
+        blockers: bridgePreflight.blockers || [],
+        httpStatus: bridgePreflight.httpStatus || null,
+        bridgeRequestHash: bridgePreflight.bridgeRequestHash || null
+      });
+    }
+  }
+
   const quoteBody = quoteInput(input, candidate);
   const quote = procurementQuote(quoteBody);
   stages.push(stage("procurement_quote", "complete", quote.quoteHash, {
@@ -158,6 +185,8 @@ export async function liveEvidenceSmoke(input = {}, options = {}) {
       sendsPaymentHeadersFromRunner: false,
       liveAutonomousIncluded: includeAutonomous && mode === "live",
       liveRefillIncluded: input.includeRefillLive === true && mode === "live",
+      paymentBridgePreflightRequired: bridgePreflightNeeded,
+      paymentBridgePreflightPassed: bridgePreflight?.passed === true,
       localAgentcashPolicy: localAgentcashPolicy?.summary || null
     },
     nextActions: nextActions({ mode, evidenceRefs, policies, includeAutonomous })
@@ -280,16 +309,36 @@ async function postJson(fetchImpl, url, body, headers) {
   return responseJsonOrThrow(response, url);
 }
 
+async function runBridgePreflight({ fetchImpl, baseUrl, headers, policies, candidate, maxAmountUsd }) {
+  const response = await fetchImpl(`${baseUrl}/api/payments/bridge-check`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      provider: bridgeProvider(policies),
+      candidateEndpoint: candidate.endpoint,
+      method: candidate.method,
+      maxAmountUsd,
+      body: candidate.requestBody || null
+    })
+  });
+  const body = await responseJson(response);
+  if (response.ok) return body || {};
+  return {
+    ok: false,
+    status: "failed",
+    passed: false,
+    httpStatus: response.status,
+    blockers: [{
+      id: body?.error?.code || "payment_bridge_preflight_http_error",
+      message: body?.error?.message || `Payment bridge preflight returned HTTP ${response.status}.`
+    }],
+    responseHash: hashPublic(body || {})
+  };
+}
+
 async function responseJsonOrThrow(response, url) {
   const text = await response.text();
-  let body = null;
-  if (text.trim()) {
-    try {
-      body = JSON.parse(text);
-    } catch {
-      body = { raw: text.slice(0, 1000) };
-    }
-  }
+  const body = parseJsonText(text);
   if (!response.ok) {
     throw new ApiError(response.status || 502, "live_evidence_request_failed", "Live evidence smoke request failed.", {
       url,
@@ -298,6 +347,19 @@ async function responseJsonOrThrow(response, url) {
     });
   }
   return body || {};
+}
+
+async function responseJson(response) {
+  return parseJsonText(await response.text());
+}
+
+function parseJsonText(text) {
+  if (!String(text || "").trim()) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { raw: String(text).slice(0, 1000) };
+  }
 }
 
 function evidenceFrom({ mode, execution, proof, autonomous, refill }) {
@@ -386,6 +448,21 @@ function isProof402NotarizeEndpoint(value) {
   } catch {
     return false;
   }
+}
+
+function bridgePreflightRequired(policies) {
+  const adapter = bridgeAdapter(policies);
+  return Boolean(adapter?.bridgeContract) || ["agentcash-mcp", "external-adapter"].includes(adapter?.provider);
+}
+
+function bridgeProvider(policies) {
+  return bridgeAdapter(policies)?.provider || "agentcash-mcp";
+}
+
+function bridgeAdapter(policies) {
+  return policies?.policies?.liveProcurement?.controls?.paymentAdapter ||
+    policies?.policies?.proof402Delegation?.controls?.paymentAdapter ||
+    null;
 }
 
 function validSha256(value) {

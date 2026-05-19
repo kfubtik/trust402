@@ -36,6 +36,7 @@ Implemented:
 - Proof402 request preview/probe helper without paid delegation;
 - real x402 settlement readiness endpoint and unpaid challenge smoke script;
 - paid settlement smoke preflight endpoint and script;
+- operator-gated payment bridge dry-run preflight plus live evidence runner enforcement;
 - x402 SDK adapter/check plus an Express middleware bridge for future live settlement;
 - optional mock 402 paywall for local payment-flow testing;
 - tests and smoke script.
@@ -461,6 +462,11 @@ npm run live:evidence-smoke -- https://trust402.vercel.app --write-evidence
 Ledger entries go under `.local/evidence-ledger/`, which is ignored by Git.
 They contain hashes, stage status, and public-safe evidence refs, not operator
 keys, payment signatures, private payloads, or wallet secrets.
+
+In live mode, bridge-backed providers must pass `/api/payments/bridge-check`
+first. If the bridge does not explicitly confirm dry-run/no-payment behavior,
+the runner stops before procurement, Proof402 delegation, or autonomous live
+job execution.
 
 For an approved one-shot live smoke window, use the guarded wrapper so the
 local AgentCash policy patch is restored after the run:
