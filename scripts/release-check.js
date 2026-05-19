@@ -67,6 +67,8 @@ assert(packageJson.scripts?.["completion:unblockers"], "package must expose npm 
 assert(packageJson.scripts?.["completion:actions"], "package must expose npm run completion:actions");
 assert(packageJson.scripts?.["deployment:preflight"], "package must expose npm run deployment:preflight");
 assert(packageJson.scripts?.["deployment:github-actions-setup"], "package must expose npm run deployment:github-actions-setup");
+assert(packageJson.scripts?.["domains:activation-pack"], "package must expose npm run domains:activation-pack");
+assert(packageJson.scripts?.["directories:submission-pack"], "package must expose npm run directories:submission-pack");
 assert(packageJson.scripts?.["final:verify"], "package must expose npm run final:verify");
 assert(packageJson.scripts?.["privacy:check"], "package must expose npm run privacy:check");
 assert(packageJson.scripts?.["release:check"], "package must expose npm run release:check");
@@ -144,6 +146,8 @@ assert(existsSync("scripts/operator-unblock-check.js"), "operator unblock check 
 assert(existsSync("scripts/operator-action-pack.js"), "operator action pack script must exist");
 assert(existsSync("scripts/deployment-preflight.js"), "deployment preflight script must exist");
 assert(existsSync("scripts/github-actions-setup-pack.js"), "GitHub Actions setup pack script must exist");
+assert(existsSync("scripts/domain-activation-pack.js"), "domain activation pack script must exist");
+assert(existsSync("scripts/directory-submission-pack.js"), "directory submission pack script must exist");
 assert(existsSync("scripts/final-verification.js"), "final verification script must exist");
 assert(existsSync("scripts/live-evidence-smoke.js"), "live evidence smoke script must exist");
 assert(existsSync("scripts/live-smoke-window.js"), "live smoke window script must exist");
@@ -213,6 +217,8 @@ assert(operatorUnblockCheckScript.includes("args.local"), "operator unblock CLI 
 assert(operatorUnblockCheckScript.includes("localAgentcashPolicyProbe"), "operator unblock CLI must include local AgentCash policy probe context");
 assert(githubActionsSetupScript.includes(".vercel/project.json"), "GitHub Actions setup CLI must read local Vercel project ids when available");
 assert(githubActionsSetupScript.includes("githubActionsSetupPack"), "GitHub Actions setup CLI must use the reusable setup pack");
+assert(readFileSync("scripts/domain-activation-pack.js", "utf8").includes("/api/domains/activation-pack"), "domain activation CLI must support production API mode");
+assert(readFileSync("scripts/directory-submission-pack.js", "utf8").includes("/api/directories/submission-pack"), "directory submission CLI must support production API mode");
 assert(productionDeployWorkflow.includes("branches: [main]"), "production deploy workflow must run on main pushes");
 assert(productionDeployWorkflow.includes("VERCEL_TOKEN"), "production deploy workflow must require VERCEL_TOKEN");
 assert(productionDeployWorkflow.includes("VERCEL_ORG_ID"), "production deploy workflow must require VERCEL_ORG_ID");

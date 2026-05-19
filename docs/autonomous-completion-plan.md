@@ -376,6 +376,15 @@ GET /api/directories/submission-pack
 POST /api/directories/submission-pack
 ```
 
+Or from the CLI, with the production API as source of truth and the intended
+custom listing host as the public website:
+
+```powershell
+npm run directories:submission-pack -- https://trust402.vercel.app `
+  --listing-base-url=https://trust402.dev `
+  --user-approved-outreach
+```
+
 The pack includes listing copy, directory targets, custom-domain blockers, CDP
 Bazaar readiness, evidence env names, and verification commands. It does not
 submit forms, mutate wallets, set env vars, or send payment headers.
@@ -385,6 +394,13 @@ For the custom-domain step, generate the read-only activation plan:
 ```text
 GET /api/domains/activation-pack
 POST /api/domains/activation-pack
+```
+
+Or from the CLI after rechecking candidate availability:
+
+```powershell
+npm run domains:activation-pack -- https://trust402.vercel.app `
+  --selected-domain=trust402.dev
 ```
 
 The pack checks whether the current host still blocks external directories,

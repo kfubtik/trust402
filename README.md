@@ -139,6 +139,9 @@ env names without submitting forms:
 
 ```powershell
 Invoke-RestMethod -Method Get -Uri https://trust402.vercel.app/api/directories/submission-pack
+npm run directories:submission-pack -- https://trust402.vercel.app `
+  --listing-base-url=https://trust402.dev `
+  --user-approved-outreach
 ```
 
 Generate the custom-domain activation plan without buying a domain or changing
@@ -148,6 +151,8 @@ Vercel:
 Invoke-RestMethod -Method Post -Uri https://trust402.vercel.app/api/domains/activation-pack `
   -ContentType application/json `
   -Body '{"selectedDomain":"trust402.dev"}'
+npm run domains:activation-pack -- https://trust402.vercel.app `
+  --selected-domain=trust402.dev
 ```
 
 Generate the Git/Vercel/custom-domain preflight pack without mutating GitHub or

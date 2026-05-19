@@ -36,6 +36,8 @@
     "completion:actions": "node scripts/operator-action-pack.js",
     "deployment:preflight": "node scripts/deployment-preflight.js",
     "deployment:github-actions-setup": "node scripts/github-actions-setup-pack.js",
+    "domains:activation-pack": "node scripts/domain-activation-pack.js",
+    "directories:submission-pack": "node scripts/directory-submission-pack.js",
     "final:verify": "node scripts/final-verification.js",
     "privacy:check": "node scripts/privacy-check.js",
     "release:check": "node scripts/release-check.js",
