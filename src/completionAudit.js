@@ -241,8 +241,9 @@ function autonomousJobFlow(catalog, spend, runtimeConfig) {
     title: "Autonomous Job Flow",
     status: hasRoute && liveReady && liveEvidenceReady ? "verified" : hasRoute ? "implemented-blocked" : "missing",
     evidence: [
-      "/api/jobs/autonomous-run runs goal -> quote -> execute -> receipt -> optional proof preview.",
-      "Dry-run production smoke covers resource selection and zero paid subcalls.",
+      "/api/jobs/autonomous-run runs goal -> candidate discovery -> quote -> execute -> receipt -> optional proof preview.",
+      "/api/registries/candidates exposes trusted seed candidates so dry-run jobs can select a resource even when no manual candidates are supplied.",
+      "Dry-run production smoke covers resource discovery, selection, and zero paid subcalls.",
       `liveProcurementReady=${liveReady}`,
       `autonomousJobSmokeObserved=${runtimeConfig.autonomousJobSmokeObserved}`,
       `evidenceRef=${runtimeConfig.autonomousJobEvidenceRef || "not-configured"}`

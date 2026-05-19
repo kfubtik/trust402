@@ -298,6 +298,34 @@ export function openApiSpec() {
         }
       }
     },
+    "/api/registries/candidates": {
+      get: {
+        operationId: "registries_candidates_get",
+        summary: "Read trusted seed x402 candidates for autonomous job planning",
+        tags: ["Trust402"],
+        responses: {
+          "200": jsonResponse
+        }
+      },
+      post: {
+        operationId: "registries_candidates",
+        summary: "Resolve explicit, registry-provided, and trusted seed x402 candidates without spending",
+        tags: ["Trust402"],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: requestSchemaFor("registries.candidates"),
+              example: exampleFor("registries.candidates")
+            }
+          }
+        },
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse
+        }
+      }
+    },
     "/api/agentcash/refill-check": {
       post: {
         operationId: "agentcash_refill_check",
@@ -342,7 +370,7 @@ export function openApiSpec() {
     "/api/jobs/autonomous-run": {
       post: {
         operationId: "jobs_autonomous_run",
-        summary: "Run a dry-run-first autonomous Trust402 job from goal to quote, execution audit, receipt, and optional proof preview",
+        summary: "Run a dry-run-first autonomous Trust402 job from goal to candidate discovery, quote, execution audit, receipt, and optional proof preview",
         tags: ["Trust402"],
         requestBody: {
           required: true,
@@ -664,6 +692,7 @@ export function sitemapXml() {
     "/api/marketplace/bundle",
     "/api/directories/submission-pack",
     "/api/deployments/github-actions-setup",
+    "/api/registries/candidates",
     "/api/proof402/preflight",
     ...loadCatalog().paidLaunchResources.map((resource) => resource.path)
   ];
@@ -705,6 +734,7 @@ export function capabilities() {
       liveWindowPlan: "/api/live/window-plan",
       operatorUnblockReport: "/api/operator/unblock-report",
       operatorActionPack: "/api/operator/action-pack",
+      registryCandidates: "/api/registries/candidates",
       agentcashRefillCheck: "/api/agentcash/refill-check",
       openapi: "/openapi.json",
       x402WellKnown: "/.well-known/x402",
@@ -849,7 +879,7 @@ function requestSchemaFor(id) {
         riskTolerance: { type: "string", enum: ["low", "medium", "high"], default: "low" },
         candidates: {
           type: "array",
-          minItems: 2,
+          minItems: 1,
           maxItems: 10,
           items: candidateResourceSchema()
         }
@@ -872,7 +902,7 @@ function requestSchemaFor(id) {
         },
         candidates: {
           type: "array",
-          minItems: 2,
+          minItems: 1,
           maxItems: 10,
           items: candidateResourceSchema()
         }
@@ -912,9 +942,37 @@ function requestSchemaFor(id) {
         includeProofPreview: { type: "boolean", default: false },
         proof402Mode: { type: "string", enum: ["disabled", "preview", "probe", "live"] },
         approval: { type: "object" },
+        useSeedRegistry: { type: "boolean", default: true },
+        registryCandidates: {
+          type: "array",
+          maxItems: 10,
+          items: candidateResourceSchema()
+        },
         candidates: {
           type: "array",
           minItems: 2,
+          maxItems: 10,
+          items: candidateResourceSchema()
+        }
+      }
+    };
+  }
+
+  if (id === "registries.candidates") {
+    return {
+      type: "object",
+      properties: {
+        goal: { type: "string" },
+        budgetUsd: { type: "number", default: 0.25 },
+        maxCandidates: { type: "integer", minimum: 1, maximum: 10, default: 10 },
+        useSeedRegistry: { type: "boolean", default: true },
+        registryCandidates: {
+          type: "array",
+          maxItems: 10,
+          items: candidateResourceSchema()
+        },
+        candidates: {
+          type: "array",
           maxItems: 10,
           items: candidateResourceSchema()
         }
@@ -1340,10 +1398,15 @@ function exampleFor(id) {
       maxPaidCalls: 2,
       riskTolerance: "low",
       includeProofPreview: true,
-      candidates: [
-        { id: "a", endpoint: "https://example.com/a", priceUsd: 0.01, has402: true, hasInputSchema: true, hasOpenApi: true, hasWellKnown: true },
-        { id: "b", endpoint: "https://example.com/b", priceUsd: 0.04, hasInputSchema: false }
-      ]
+      useSeedRegistry: true
+    };
+  }
+  if (id === "registries.candidates") {
+    return {
+      goal: "Create a proof-backed receipt for a safe x402 procurement result.",
+      budgetUsd: 0.02,
+      maxCandidates: 3,
+      useSeedRegistry: true
     };
   }
   if (id === "agentcash.refill_check") {

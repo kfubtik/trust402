@@ -274,6 +274,8 @@ GET /api/operator/unblock-report
 POST /api/operator/unblock-report
 POST /api/operator/action-pack
 POST /api/jobs/autonomous-run
+GET /api/registries/candidates
+POST /api/registries/candidates
 POST /api/agentcash/refill-check
 POST /api/payments/bridge-check
 ```
@@ -326,7 +328,8 @@ Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/procurement/execut
 Run the autonomous dry-run workflow:
 
 ```powershell
-Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/jobs/autonomous-run -ContentType application/json -Body '{"mode":"dry-run","goal":"Choose and audit one safe x402 resource.","budgetUsd":0.25,"maxPaidCalls":1,"includeProofPreview":true,"candidates":[{"id":"a","endpoint":"https://example.com/a","priceUsd":0.01,"has402":true,"hasInputSchema":true,"hasOpenApi":true,"hasWellKnown":true},{"id":"b","endpoint":"https://example.com/b","priceUsd":0.04}]}'
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/registries/candidates -ContentType application/json -Body '{"goal":"Create a proof-backed receipt.","budgetUsd":0.02}'
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/jobs/autonomous-run -ContentType application/json -Body '{"mode":"dry-run","goal":"Choose and audit one safe x402 resource.","budgetUsd":0.25,"maxPaidCalls":1,"includeProofPreview":true}'
 ```
 
 Check AgentCash refill policy without mutating wallet balance:
@@ -549,7 +552,11 @@ MVP guarantees:
   unless operator authorization, caps, allowlists, and a real payment adapter
   are all configured;
 - `/api/jobs/autonomous-run` is dry-run by default and uses the same operator
-  and spend-policy gates as live procurement;
+  and spend-policy gates as live procurement. Before quote generation it can
+  resolve explicit, registry-supplied, and trusted seed candidates through
+  `/api/registries/candidates`;
+- `/api/registries/candidates` performs local candidate resolution only: no
+  external registry fetches, no payment headers, and no paid subcalls;
 - `/api/agentcash/refill-check` can plan refill actions in dry-run mode but
   cannot mutate wallet balance without approved provider, operator key, caps,
   and emergency-stop checks;

@@ -107,6 +107,7 @@ export const COMPLETION_REQUIREMENTS = [
     workItem: "Run goal to resource selection, quote, approval/dry-run, execution, receipts, proof, and final report.",
     acceptance: [
       "Default mode stays dry-run.",
+      "Candidate discovery can select from trusted seed or supplied registry candidates before quote generation.",
       "Live mode uses the same spend policy as procurement.",
       "A bounded live autonomous job has public-safe evidence."
     ],

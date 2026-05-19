@@ -94,6 +94,7 @@ assert(existsSync("vercel.json"), "vercel.json must exist");
 assert(existsSync("api/index.js"), "Vercel API handler must exist");
 assert(existsSync("src/expressApp.js"), "Express x402 entrypoint bridge must exist");
 assert(existsSync("src/autonomousJob.js"), "autonomous job flow module must exist");
+assert(existsSync("src/resourceDiscovery.js"), "resource discovery module must exist");
 assert(existsSync("src/agentcashRefill.js"), "AgentCash refill workflow module must exist");
 assert(existsSync("src/agentcashPolicyGuard.js"), "AgentCash policy guard module must exist");
 assert(existsSync("src/agentcashMcpObservation.js"), "AgentCash MCP observation guard module must exist");
@@ -184,6 +185,7 @@ assert(smokeScript.includes("/api/directories/submission-pack"), "smoke script m
 assert(smokeScript.includes("/api/live/window-plan"), "smoke script must cover live window plan");
 assert(smokeScript.includes("/api/operator/unblock-report"), "smoke script must cover operator unblock report");
 assert(smokeScript.includes("/api/operator/action-pack"), "smoke script must cover operator action pack");
+assert(smokeScript.includes("/api/registries/candidates"), "smoke script must cover registry candidate discovery");
 assert(smokeScript.includes("/.well-known/agent.json"), "smoke script must cover agent manifest discovery");
 assert(smokeScript.includes("/llms.txt"), "smoke script must cover llms.txt discovery");
 assert(smokeScript.includes("/sitemap.xml"), "smoke script must cover sitemap discovery");
@@ -204,6 +206,8 @@ assert(operatorActionPackScript.includes("args.local"), "operator action pack CL
 assert(readFileSync("src/operatorActionPack.js", "utf8").includes("evidenceCollectionPlan"), "operator action pack must aggregate final evidence collection steps");
 assert(readFileSync("src/operatorActionPack.js", "utf8").includes("nextBlockingActionId"), "operator action pack must expose the next blocking action");
 assert(readFileSync("src/operatorActionPack.js", "utf8").includes("proof402PreflightCommand"), "operator action pack must include Proof402 preflight in evidence collection");
+assert(readFileSync("src/autonomousJob.js", "utf8").includes("candidatesForAutonomousRun"), "autonomous job must resolve candidates before quote when none are supplied");
+assert(readFileSync("src/resourceDiscovery.js", "utf8").includes("proof402.notarize"), "resource discovery must include Proof402 trusted seed candidate");
 assert(operatorUnblockCheckScript.includes("/api/operator/unblock-report"), "operator unblock CLI must support production API mode");
 assert(operatorUnblockCheckScript.includes("args.local"), "operator unblock CLI must preserve explicit local mode");
 assert(operatorUnblockCheckScript.includes("localAgentcashPolicyProbe"), "operator unblock CLI must include local AgentCash policy probe context");
@@ -307,6 +311,10 @@ assert(
   "free autonomous dry-run helper must exist"
 );
 assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/registries/candidates" && resource.priceUsd === 0),
+  "free registry candidate discovery helper must exist"
+);
+assert(
   catalog.freeResources.some((resource) => resource.path === "/api/agentcash/mcp-observation" && resource.priceUsd === 0),
   "free AgentCash MCP observation guard must exist"
 );
@@ -358,6 +366,8 @@ assert(openapi.paths?.["/api/live/window-plan"]?.post, "live window plan must be
 assert(openapi.paths?.["/api/operator/unblock-report"]?.get, "operator unblock report GET must be present in OpenAPI");
 assert(openapi.paths?.["/api/operator/unblock-report"]?.post, "operator unblock report POST must be present in OpenAPI");
 assert(openapi.paths?.["/api/operator/action-pack"]?.post, "operator action pack must be present in OpenAPI");
+assert(openapi.paths?.["/api/registries/candidates"]?.get, "registry candidates GET must be present in OpenAPI");
+assert(openapi.paths?.["/api/registries/candidates"]?.post, "registry candidates POST must be present in OpenAPI");
 assert(JSON.stringify(openapi.paths["/api/live/window-plan"]).includes("liveSpentTodayUsd"), "live window plan OpenAPI must expose spent-today input");
 assert(openapi.paths?.["/api/jobs/autonomous-run"]?.post, "autonomous job flow must be present in OpenAPI");
 assert(openapi.paths?.["/api/agentcash/refill-check"]?.post, "AgentCash refill check must be present in OpenAPI");
@@ -466,6 +476,10 @@ assert(
 assert(
   !openapi.paths["/api/operator/action-pack"].post["x-payment-info"],
   "operator action pack helper must not require payment"
+);
+assert(
+  !openapi.paths["/api/registries/candidates"].post["x-payment-info"],
+  "registry candidate discovery helper must not require payment"
 );
 assert(
   !openapi.paths["/api/jobs/autonomous-run"].post["x-payment-info"],

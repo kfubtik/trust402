@@ -210,15 +210,29 @@ procurement.
 
 ### `POST /api/jobs/autonomous-run`
 
-Dry-run-first autonomous workflow that turns a goal and candidate list into a
+Dry-run-first autonomous workflow that turns a goal into candidate discovery,
 quote, execution audit, result hash, receipt bundle, and optional Proof402
-preview. In live mode it uses the same spend policy, operator authorization,
-allowlist, denylist, caps, and receipt rules as controlled procurement.
+preview. It can use caller-supplied candidates, supplied registry candidates,
+or the trusted seed registry before quote generation. In live mode it uses the
+same spend policy, operator authorization, allowlist, denylist, caps, and
+receipt rules as controlled procurement.
 
 Price: free while live spend is disabled.
 
 Reason: this is the top-level buyer-agent workflow. It must be inspectable and
 dry-run-first before it can safely buy downstream resources.
+
+### `GET/POST /api/registries/candidates`
+
+Read-only candidate resolver for autonomous jobs. It merges explicit
+candidates, supplied registry candidates, and trusted seed resources such as
+Proof402 notarization, then filters by budget without fetching external
+registries or making paid subcalls.
+
+Price: free.
+
+Reason: the autonomous job needs a real resource-selection stage even before
+external registry search and live buying are enabled.
 
 ### `POST /api/agentcash/refill-check`
 

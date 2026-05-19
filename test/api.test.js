@@ -49,6 +49,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/operator/unblock-report"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/operator/action-pack"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/jobs/autonomous-run"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/registries/candidates"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/agentcash/refill-check"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/payments/bridge-check"));
     for (const path of [
@@ -162,6 +163,13 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(unblockGet.body.safety.sendsPaymentHeaders, false);
     assert.ok(unblockGet.body.checks.some((item) => item.id === "external_x402_directories"));
 
+    const registryCandidatesGet = await request(baseUrl, "/api/registries/candidates");
+    assert.equal(registryCandidatesGet.response.status, 200);
+    assert.equal(registryCandidatesGet.body.tool, "registries.candidates");
+    assert.equal(registryCandidatesGet.body.safety.readOnly, true);
+    assert.equal(registryCandidatesGet.body.safety.paidSubcallsMade, 0);
+    assert.ok(registryCandidatesGet.body.candidates.some((candidate) => candidate.id === "proof402.notarize"));
+
     const checklist = await request(baseUrl, "/api/launch/checklist");
     assert.equal(checklist.response.status, 200);
     assert.equal(checklist.body.tool, "launch.checklist");
@@ -205,6 +213,8 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/api/operator/unblock-report"].get);
     assert.ok(openapi.body.paths["/api/operator/unblock-report"].post);
     assert.ok(openapi.body.paths["/api/operator/action-pack"].post);
+    assert.ok(openapi.body.paths["/api/registries/candidates"].get);
+    assert.ok(openapi.body.paths["/api/registries/candidates"].post);
     assert.ok(openapi.body.paths["/api/jobs/autonomous-run"].post);
     assert.ok(openapi.body.paths["/api/agentcash/refill-check"].post);
     assert.ok(openapi.body.paths["/api/receipts/hash-result"].post);
@@ -343,6 +353,19 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(deploymentPreflightPost.body.tool, "deployment.preflight");
     assert.equal(deploymentPreflightPost.body.domain.ready, true);
     assert.equal(deploymentPreflightPost.body.safety.readsSecretValues, false);
+
+    const registryCandidatesPost = await request(baseUrl, "/api/registries/candidates", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        goal: "Create a proof-backed receipt.",
+        budgetUsd: 0.02
+      })
+    });
+    assert.equal(registryCandidatesPost.response.status, 200);
+    assert.equal(registryCandidatesPost.body.tool, "registries.candidates");
+    assert.ok(registryCandidatesPost.body.candidates.length >= 1);
+    assert.equal(registryCandidatesPost.body.safety.fetchesExternalRegistries, false);
 
     const githubActionsSetupPost = await request(baseUrl, "/api/deployments/github-actions-setup", {
       method: "POST",

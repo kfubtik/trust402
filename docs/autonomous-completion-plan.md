@@ -250,6 +250,10 @@ execution audit, receipts, optional proof, and final report.
 Acceptance:
 
 - default mode is dry-run;
+- `/api/registries/candidates` resolves explicit, registry-supplied, and
+  trusted seed candidates without fetching external registries or spending;
+- `/api/jobs/autonomous-run` can select a seed candidate when no manual
+  `candidates` array is supplied;
 - live mode delegates to the same spend policy as procurement;
 - result hashes and receipt bundles are returned;
 - when proof preview or paid proof is requested, the job returns both the final

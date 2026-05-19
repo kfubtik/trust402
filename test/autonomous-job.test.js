@@ -55,3 +55,32 @@ test("autonomousRun creates a dry-run quote, execution audit, receipt, and proof
   assert.equal(result.proofReceiptBundle.policy.storesPrivatePayload, false);
   assert.ok(result.stages.some((stage) => stage.id === "receipt" && stage.status === "complete"));
 });
+
+test("autonomousRun can discover a seed candidate when no candidates are supplied", async () => {
+  const result = await autonomousRun({
+    mode: "dry-run",
+    goal: "Create a proof-backed receipt for a safe x402 procurement result.",
+    budgetUsd: 0.02,
+    maxPaidCalls: 1,
+    includeProofPreview: true
+  }, {
+    config: {
+      publicBaseUrl: "https://trust402.example",
+      proof402BaseUrl: "https://proof402.vercel.app",
+      proof402DelegationMode: "preview",
+      proof402MaxSpendUsd: 0,
+      liveSpendEnabled: false,
+      x402Network: "eip155:8453",
+      x402Asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      requestTimeoutMs: 100
+    }
+  });
+
+  assert.equal(result.discovery.tool, "registries.candidates");
+  assert.equal(result.discovery.summary.seedCandidates, 1);
+  assert.equal(result.quote.quote.selectedResources.length, 1);
+  assert.equal(result.quote.quote.selectedResources[0].id, "proof402.notarize");
+  assert.equal(result.execution.paidSubcallsMade, 0);
+  assert.ok(result.stages.some((stage) => stage.id === "discover" && stage.status === "complete"));
+  assert.match(result.finalReport.discoveryHash, /^sha256:[a-f0-9]{64}$/);
+});

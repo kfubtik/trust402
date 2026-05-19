@@ -2,12 +2,18 @@ import { sha256Json } from "./hash.js";
 import { notarizeResult } from "./proof402Client.js";
 import { procurementExecute, procurementQuote } from "./procurement.js";
 import { hashResult } from "./receipts.js";
+import { candidatesForAutonomousRun } from "./resourceDiscovery.js";
 
 export async function autonomousRun(input = {}, options = {}) {
   const mode = input.mode === "live" ? "live" : "dry-run";
-  const quote = input.quote?.quoteHash ? input.quote : procurementQuote(input);
-  const execution = await procurementExecute({
+  const discovery = input.quote?.quoteHash ? null : candidatesForAutonomousRun(input, options).discovery;
+  const quoteInput = discovery ? {
     ...input,
+    candidates: discovery.candidates
+  } : input;
+  const quote = input.quote?.quoteHash ? input.quote : procurementQuote(quoteInput);
+  const execution = await procurementExecute({
+    ...quoteInput,
     mode,
     quote,
     approval: input.approval || input.approvalPayload
@@ -17,9 +23,11 @@ export async function autonomousRun(input = {}, options = {}) {
     mode,
     quoteId: quote.quoteId,
     quoteHash: quote.quoteHash,
+    discoveryHash: discovery?.discoveryHash || null,
     executionHash: execution.executionHash,
     paidSubcallsMade: execution.paidSubcallsMade,
-    status: execution.result?.status || "unknown"
+    status: execution.result?.status || "unknown",
+    selectedResourceIds: (quote.quote.selectedResources || []).map((resource) => resource.id)
   };
   const resultHash = sha256Json(finalReport);
   const receipt = hashResult({
@@ -41,11 +49,13 @@ export async function autonomousRun(input = {}, options = {}) {
     mode,
     generatedAt: new Date().toISOString(),
     stages: [
+      stage("discover", discovery ? "complete" : "provided-quote", discovery?.discoveryHash || null),
       stage("quote", "complete", quote.quoteHash),
       stage("execute", execution.mode === "live" ? "live-complete" : "dry-run-complete", execution.executionHash),
       stage("receipt", "complete", resultHash),
       stage("proof", proof ? proof.proofStatus : "skipped", proof?.resultHash || null)
     ],
+    discovery,
     quote,
     execution,
     finalReport,

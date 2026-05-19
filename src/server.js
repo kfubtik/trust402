@@ -32,6 +32,7 @@ import { procurementExecute, procurementQuote } from "./procurement.js";
 import { notarizeResult } from "./proof402Client.js";
 import { proof402Preflight } from "./proof402Preflight.js";
 import { launchChecklist } from "./readiness.js";
+import { discoverResourceCandidates } from "./resourceDiscovery.js";
 import { hashResult } from "./receipts.js";
 import { paymentChallengeFor, settlementPreflight, settlementStatus } from "./settlement.js";
 import { directorySubmissionPack } from "./directorySubmissionPack.js";
@@ -64,6 +65,7 @@ const routes = new Map([
   ["POST /api/operator/unblock-report", operatorUnblockReport],
   ["POST /api/operator/action-pack", operatorActionPack],
   ["POST /api/jobs/autonomous-run", autonomousRun],
+  ["POST /api/registries/candidates", discoverResourceCandidates],
   ["POST /api/agentcash/refill-check", agentcashRefillCheck],
   ["POST /api/agentcash/mcp-observation", agentcashMcpObservation],
   ["POST /api/monitor/snapshot", monitorSnapshot],
@@ -117,6 +119,7 @@ export async function handleTrust402Request(req, res) {
           agentcashRefillCheck: "/api/agentcash/refill-check",
           agentcashMcpObservation: "/api/agentcash/mcp-observation",
           autonomousRun: "/api/jobs/autonomous-run",
+          registryCandidates: "/api/registries/candidates",
           resources: "/api/resources",
           proof402Preview: "/api/receipts/notarize-result",
           capabilities: "/api/capabilities",
@@ -209,6 +212,10 @@ export async function handleTrust402Request(req, res) {
 
     if (req.method === "GET" && path === "/api/operator/unblock-report") {
       return sendJson(res, 200, operatorUnblockReport());
+    }
+
+    if (req.method === "GET" && path === "/api/registries/candidates") {
+      return sendJson(res, 200, discoverResourceCandidates());
     }
 
     if (req.method === "GET" && path === "/openapi.json") {
@@ -328,6 +335,7 @@ function statusSummary() {
       agentcashRefillCheck: "/api/agentcash/refill-check",
       agentcashMcpObservation: "/api/agentcash/mcp-observation",
       autonomousRun: "/api/jobs/autonomous-run",
+      registryCandidates: "/api/registries/candidates",
       openapi: "/openapi.json",
       x402WellKnown: "/.well-known/x402",
       x402WellKnownJson: "/.well-known/x402.json",

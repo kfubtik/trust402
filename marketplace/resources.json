@@ -222,7 +222,15 @@
       "path": "/api/jobs/autonomous-run",
       "priceUsd": 0,
       "status": "dry-run-helper",
-      "purpose": "Run a dry-run-first autonomous Trust402 job from goal to quote, execution audit, receipt, and optional proof preview."
+      "purpose": "Run a dry-run-first autonomous Trust402 job from goal to candidate discovery, quote, execution audit, receipt, and optional proof preview."
+    },
+    {
+      "id": "registries.candidates",
+      "method": "GET/POST",
+      "path": "/api/registries/candidates",
+      "priceUsd": 0,
+      "status": "dry-run-helper",
+      "purpose": "Resolve explicit, registry-provided, and trusted seed x402 candidates for autonomous jobs without fetching external registries or spending."
     },
     {
       "id": "agentcash.refill_check",

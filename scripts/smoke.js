@@ -33,6 +33,10 @@ async function main() {
     resources.freeResources?.some((item) => item.path === "/api/deployments/github-actions-setup"),
     "/api/resources must expose GitHub Actions setup pack"
   );
+  assert(
+    resources.freeResources?.some((item) => item.path === "/api/registries/candidates"),
+    "/api/resources must expose registry candidate discovery"
+  );
 
   const wellKnown = await getJson("/.well-known/x402");
   assert(wellKnown.resources?.length === 10, "/.well-known/x402 expected 10 paid resources");
@@ -204,6 +208,15 @@ async function main() {
     "/api/operator/unblock-report must include external directory check"
   );
 
+  const registryCandidatesGet = await getJson("/api/registries/candidates");
+  assert(registryCandidatesGet.tool === "registries.candidates", "/api/registries/candidates GET tool mismatch");
+  assert(registryCandidatesGet.safety?.readOnly === true, "/api/registries/candidates must be read-only");
+  assert(registryCandidatesGet.safety?.paidSubcallsMade === 0, "/api/registries/candidates must not spend");
+  assert(
+    registryCandidatesGet.candidates?.some((candidate) => candidate.id === "proof402.notarize"),
+    "/api/registries/candidates must include trusted Proof402 seed candidate"
+  );
+
   const liveWindow = await postJson("/api/live/window-plan", {
     candidateEndpoint: "https://trusted.example/api/paid",
     candidatePriceUsd: 0.01,
@@ -267,6 +280,15 @@ async function main() {
     "/api/deployments/github-actions-setup must not leak token values"
   );
 
+  const registryCandidatesPost = await postJson("/api/registries/candidates", {
+    goal: "Create a proof-backed receipt.",
+    budgetUsd: 0.02,
+    maxCandidates: 3
+  });
+  assert(registryCandidatesPost.tool === "registries.candidates", "/api/registries/candidates POST tool mismatch");
+  assert(registryCandidatesPost.candidates?.length >= 1, "/api/registries/candidates POST must return candidates");
+  assert(registryCandidatesPost.safety?.fetchesExternalRegistries === false, "/api/registries/candidates must not fetch external registries");
+
   const unblockPost = await postJson("/api/operator/unblock-report", {
     baseUrl,
     candidatePriceUsd: 0.01,
@@ -315,6 +337,8 @@ async function main() {
   assert(openapi.paths?.["/api/operator/unblock-report"]?.get, "/openapi missing operator unblock report GET");
   assert(openapi.paths?.["/api/operator/unblock-report"]?.post, "/openapi missing operator unblock report POST");
   assert(openapi.paths?.["/api/operator/action-pack"]?.post, "/openapi missing operator action pack");
+  assert(openapi.paths?.["/api/registries/candidates"]?.get, "/openapi missing registry candidates GET");
+  assert(openapi.paths?.["/api/registries/candidates"]?.post, "/openapi missing registry candidates POST");
   assert(openapi.paths?.["/api/jobs/autonomous-run"]?.post, "/openapi missing autonomous run");
   assert(openapi.paths?.["/api/agentcash/mcp-observation"]?.post, "/openapi missing AgentCash MCP observation guard");
   assert(openapi.paths?.["/api/monitor/snapshot"]?.post, "/openapi missing monitor snapshot");
@@ -324,31 +348,11 @@ async function main() {
     goal: "Run a safe autonomous smoke job.",
     budgetUsd: 0.25,
     maxPaidCalls: 1,
-    includeProofPreview: true,
-    candidates: [
-      {
-        id: "good",
-        endpoint: "https://example.com/good",
-        priceUsd: 0.01,
-        has402: true,
-        hasInputSchema: true,
-        hasOpenApi: true,
-        hasWellKnown: true,
-        payTo: "0x1111111111111111111111111111111111111111",
-        network: "eip155:8453",
-        asset: "USDC",
-        description: "Good structured endpoint for x402 buyers.",
-        receiptReady: true
-      },
-      {
-        id: "weak",
-        endpoint: "https://example.com/weak",
-        priceUsd: 0.04
-      }
-    ]
+    includeProofPreview: true
   });
   assert(autonomous.mode === "dry-run", "/api/jobs/autonomous-run must default to dry-run");
   assert(autonomous.quote?.quote?.selectedResources?.length === 1, "/api/jobs/autonomous-run must select a qualified dry-run resource");
+  assert(autonomous.discovery?.summary?.seedCandidates >= 1, "/api/jobs/autonomous-run must discover seed candidates when none are supplied");
   assert(autonomous.execution?.paidSubcallsMade === 0, "/api/jobs/autonomous-run dry-run must not make paid subcalls");
 
   const refill = await postJson("/api/agentcash/refill-check", {
