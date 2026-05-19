@@ -37,7 +37,7 @@ export function liveWindowPlan(input = {}, options = {}) {
   ]);
   const allowedOrigins = uniqueList([
     baseUrl,
-    ...(proof402Origin ? [proof402Origin] : []),
+    ...(includeProof && proof402Origin ? [proof402Origin] : []),
     ...(candidateOrigin ? [candidateOrigin] : [])
   ]);
   const blockers = planBlockers({
@@ -111,6 +111,7 @@ export function liveWindowPlan(input = {}, options = {}) {
     `--candidate-price=${usd(candidatePriceUsd)}`,
     `--max-total-usd=${usd(maxTotalUsd)}`,
     `--live-spent-today-usd=${usd(liveSpentTodayUsd)}`,
+    includeProof ? null : "--skip-proof",
     includeAutonomous ? "--include-autonomous-live" : null
   ].filter(Boolean).join(" ");
 

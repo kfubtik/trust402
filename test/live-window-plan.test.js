@@ -79,6 +79,27 @@ test("live window plan blocks when daily remaining spend capacity is too low", (
   assert(result.blockers.some((item) => item.includes("remaining daily spend capacity")));
 });
 
+test("live window plan emits skip-proof for procurement-only smoke windows", () => {
+  const result = liveWindowPlan({
+    candidateEndpoint: "https://trust402.vercel.app/api/trust/compare-resources",
+    candidatePriceUsd: 0.03,
+    maxTotalUsd: 0.03,
+    manualSmokeBudgetUsd: 0.03,
+    liveMaxPerCallUsd: 0.03,
+    lastVerifiedBalanceUsd: 1.283,
+    minimumReserveUsd: 0.5,
+    includeProof: false
+  }, { config: baseConfig });
+
+  assert.equal(result.status, "ready-to-stage");
+  assert.equal(result.estimatedMaxSpendUsd, 0.03);
+  assert.equal(result.vercelEnvPlan.production.PROOF402_DELEGATION_MODE, "disabled");
+  assert.equal(result.localPolicyPatch.restrictions.proof402Delegation, "disabled-until-separate-approval");
+  assert.deepEqual(result.localPolicyPatch.restrictions.allowedOrigins, ["https://trust402.vercel.app"]);
+  assert.match(result.command, /--skip-proof/);
+  assert.doesNotMatch(result.command, /--include-autonomous-live/);
+});
+
 test("live window plan can include autonomous and auto-refill staging without enabling mutation", () => {
   const result = liveWindowPlan({
     candidateEndpoint: "https://trusted.example/api/paid",
