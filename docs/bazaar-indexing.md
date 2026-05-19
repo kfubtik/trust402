@@ -16,12 +16,16 @@ npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10
 
 Last checked on 2026-05-19 at 16:59:16 +07:00.
 
-Latest production deployment:
+Production alias:
 
 ```text
-dpl_HB7w9QUyYMvSZPeWFFZEgMvbt6SN
-https://trust402-ee43soi18-sergo565456-2815s-projects.vercel.app
+https://trust402.vercel.app
 ```
+
+Use `npm run deployment:preflight -- https://trust402.vercel.app
+--probe-vercel-api --vercel-scope sergo565456-2815s-projects` for the current
+deployment id and commit SHA. The alias is the stable buyer-facing endpoint;
+deployment URLs rotate after each production release.
 
 - indexed resources: 10 of 10;
 - CDP Bazaar status: `all-indexed`;
