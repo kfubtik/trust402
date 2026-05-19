@@ -215,7 +215,7 @@ export async function handleTrust402Request(req, res) {
     }
 
     if (req.method === "GET" && path === "/api/registries/candidates") {
-      return sendJson(res, 200, discoverResourceCandidates());
+      return sendJson(res, 200, await discoverResourceCandidates());
     }
 
     if (req.method === "GET" && path === "/openapi.json") {

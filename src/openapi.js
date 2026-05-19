@@ -942,7 +942,18 @@ function requestSchemaFor(id) {
         includeProofPreview: { type: "boolean", default: false },
         proof402Mode: { type: "string", enum: ["disabled", "preview", "probe", "live"] },
         approval: { type: "object" },
+        fetchRegistries: { type: "boolean", default: false },
         useSeedRegistry: { type: "boolean", default: true },
+        registryUrls: {
+          type: "array",
+          maxItems: 5,
+          items: { type: "string", format: "uri" }
+        },
+        allowedRegistryOrigins: {
+          type: "array",
+          maxItems: 10,
+          items: { type: "string" }
+        },
         registryCandidates: {
           type: "array",
           maxItems: 10,
@@ -965,7 +976,18 @@ function requestSchemaFor(id) {
         goal: { type: "string" },
         budgetUsd: { type: "number", default: 0.25 },
         maxCandidates: { type: "integer", minimum: 1, maximum: 10, default: 10 },
+        fetchRegistries: { type: "boolean", default: false },
         useSeedRegistry: { type: "boolean", default: true },
+        registryUrls: {
+          type: "array",
+          maxItems: 5,
+          items: { type: "string", format: "uri" }
+        },
+        allowedRegistryOrigins: {
+          type: "array",
+          maxItems: 10,
+          items: { type: "string" }
+        },
         registryCandidates: {
           type: "array",
           maxItems: 10,

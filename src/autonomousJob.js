@@ -6,7 +6,8 @@ import { candidatesForAutonomousRun } from "./resourceDiscovery.js";
 
 export async function autonomousRun(input = {}, options = {}) {
   const mode = input.mode === "live" ? "live" : "dry-run";
-  const discovery = input.quote?.quoteHash ? null : candidatesForAutonomousRun(input, options).discovery;
+  const discoveryResult = input.quote?.quoteHash ? null : await candidatesForAutonomousRun(input, options);
+  const discovery = discoveryResult?.discovery || null;
   const quoteInput = discovery ? {
     ...input,
     candidates: discovery.candidates

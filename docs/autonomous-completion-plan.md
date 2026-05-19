@@ -252,6 +252,8 @@ Acceptance:
 - default mode is dry-run;
 - `/api/registries/candidates` resolves explicit, registry-supplied, and
   trusted seed candidates without fetching external registries or spending;
+- optional registry URL fetching is read-only, allowlisted, capped by JSON size,
+  and never sends payment or secret headers;
 - `/api/jobs/autonomous-run` can select a seed candidate when no manual
   `candidates` array is supplied;
 - live mode delegates to the same spend policy as procurement;

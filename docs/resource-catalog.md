@@ -225,14 +225,14 @@ dry-run-first before it can safely buy downstream resources.
 ### `GET/POST /api/registries/candidates`
 
 Read-only candidate resolver for autonomous jobs. It merges explicit
-candidates, supplied registry candidates, and trusted seed resources such as
-Proof402 notarization, then filters by budget without fetching external
-registries or making paid subcalls.
+candidates, supplied registry candidates, trusted seed resources such as
+Proof402 notarization, and optional allowlisted registry JSON fetches, then
+filters by budget without sending payment headers or making paid subcalls.
 
 Price: free.
 
-Reason: the autonomous job needs a real resource-selection stage even before
-external registry search and live buying are enabled.
+Reason: the autonomous job needs a real resource-selection stage before live
+buying is enabled. External fetches are read-only, capped, and allowlisted.
 
 ### `POST /api/agentcash/refill-check`
 

@@ -329,6 +329,7 @@ Run the autonomous dry-run workflow:
 
 ```powershell
 Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/registries/candidates -ContentType application/json -Body '{"goal":"Create a proof-backed receipt.","budgetUsd":0.02}'
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/registries/candidates -ContentType application/json -Body '{"goal":"Find a safe x402 proof resource.","budgetUsd":0.02,"registryUrls":["https://registry.example/catalog.json"],"allowedRegistryOrigins":["https://registry.example"]}'
 Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/jobs/autonomous-run -ContentType application/json -Body '{"mode":"dry-run","goal":"Choose and audit one safe x402 resource.","budgetUsd":0.25,"maxPaidCalls":1,"includeProofPreview":true}'
 ```
 
@@ -555,8 +556,9 @@ MVP guarantees:
   and spend-policy gates as live procurement. Before quote generation it can
   resolve explicit, registry-supplied, and trusted seed candidates through
   `/api/registries/candidates`;
-- `/api/registries/candidates` performs local candidate resolution only: no
-  external registry fetches, no payment headers, and no paid subcalls;
+- `/api/registries/candidates` can perform local candidate resolution and
+  optional read-only allowlisted registry JSON fetches: no payment headers, no
+  secret headers, no wallet mutation, and no paid subcalls;
 - `/api/agentcash/refill-check` can plan refill actions in dry-run mode but
   cannot mutate wallet balance without approved provider, operator key, caps,
   and emergency-stop checks;
