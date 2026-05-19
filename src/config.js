@@ -53,6 +53,8 @@ export const config = {
   gitAutoDeployVerified: process.env.TRUST402_GIT_AUTO_DEPLOY_VERIFIED === "true",
   gitAutoDeployEvidenceUrl: process.env.TRUST402_GIT_AUTO_DEPLOY_EVIDENCE_URL || "",
   gitAutoDeployCommitSha: process.env.TRUST402_GIT_AUTO_DEPLOY_COMMIT_SHA || "",
+  cdpBazaarAllResourcesIndexed: process.env.TRUST402_CDP_BAZAAR_ALL_RESOURCES_INDEXED === "true",
+  cdpBazaarEvidenceRef: process.env.TRUST402_CDP_BAZAAR_EVIDENCE_REF || "",
   externalDirectoryStatus: process.env.TRUST402_EXTERNAL_DIRECTORY_STATUS || "not-visible-yet",
   externalDirectoryEvidenceUrl: process.env.TRUST402_EXTERNAL_DIRECTORY_EVIDENCE_URL || "",
   externalDirectoryName: process.env.TRUST402_EXTERNAL_DIRECTORY_NAME || "",

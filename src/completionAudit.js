@@ -79,8 +79,11 @@ function gitVercelAutoDeploy(runtimeConfig) {
 }
 
 function externalDirectories(runtimeConfig) {
-  const verified = runtimeConfig.externalDirectoryStatus === "visible" &&
+  const cdpBazaarVerified = runtimeConfig.cdpBazaarAllResourcesIndexed &&
+    Boolean(runtimeConfig.cdpBazaarEvidenceRef);
+  const nonCdpDirectoryVerified = runtimeConfig.externalDirectoryStatus === "visible" &&
     Boolean(runtimeConfig.externalDirectoryEvidenceUrl);
+  const verified = cdpBazaarVerified && nonCdpDirectoryVerified;
   const hostPolicy = externalDirectoryHostPolicy(runtimeConfig.publicBaseUrl);
   return requirement({
     id: "external_x402_directories",
@@ -92,20 +95,26 @@ function externalDirectories(runtimeConfig) {
       `externalDirectoryStatus=${runtimeConfig.externalDirectoryStatus}`,
       `externalDirectoryName=${runtimeConfig.externalDirectoryName || "not-configured"}`,
       `evidenceUrl=${runtimeConfig.externalDirectoryEvidenceUrl || "not-configured"}`,
+      `cdpBazaarAllResourcesIndexed=${runtimeConfig.cdpBazaarAllResourcesIndexed}`,
+      `cdpBazaarEvidenceRef=${runtimeConfig.cdpBazaarEvidenceRef || "not-configured"}`,
       `publicBaseUrlHost=${hostPolicy.host || "not-configured"}`,
       `customDomainRequiredForSomeDirectories=${hostPolicy.requiresCustomDomain}`,
       verified
-        ? "A non-CDP directory visibly lists Trust402."
-        : "At least one non-CDP directory must visibly show Trust402 before this is complete."
+        ? "CDP Bazaar is 10/10 indexed and a non-CDP directory visibly lists Trust402."
+        : "CDP Bazaar must be 10/10 indexed and at least one non-CDP directory must visibly show Trust402 before this is complete."
     ],
     details: {
-      hostPolicy
+      hostPolicy,
+      cdpBazaarVerified,
+      nonCdpDirectoryVerified
     },
     nextAction: verified
       ? "Keep directory evidence fresh with read-only monitoring."
-      : hostPolicy.requiresCustomDomain
-        ? "Attach a custom production domain, rerun x402 smoke and directory checks, then submit the public-safe listing pack only where manual submission is allowed."
-        : "Run directory checks and submit the public-safe listing pack only where manual submission is allowed."
+      : !cdpBazaarVerified
+        ? "Restore CDP Bazaar 10/10 indexing, record TRUST402_CDP_BAZAAR_ALL_RESOURCES_INDEXED with a public-safe evidence ref, then continue external directory submission."
+        : hostPolicy.requiresCustomDomain
+          ? "Attach a custom production domain, rerun x402 smoke and directory checks, then submit the public-safe listing pack only where manual submission is allowed."
+          : "Run directory checks and submit the public-safe listing pack only where manual submission is allowed."
   });
 }
 
@@ -264,6 +273,8 @@ function monitoringAndProtection(spend) {
 
 function finalVerification({ settlement, checklist, spend, runtimeConfig }) {
   const allRuntimeReady = settlement.readiness.marketplaceIndexingReady &&
+    runtimeConfig.cdpBazaarAllResourcesIndexed &&
+    Boolean(runtimeConfig.cdpBazaarEvidenceRef) &&
     checklist.readiness.publicMarketplaceReady &&
     spend.readiness.anyLiveSpendReady &&
     runtimeConfig.finalVerificationObserved &&
@@ -274,6 +285,8 @@ function finalVerification({ settlement, checklist, spend, runtimeConfig }) {
     status: allRuntimeReady ? "verified" : "unverified",
     evidence: [
       `marketplaceIndexingReady=${settlement.readiness.marketplaceIndexingReady}`,
+      `cdpBazaarAllResourcesIndexed=${runtimeConfig.cdpBazaarAllResourcesIndexed}`,
+      `cdpBazaarEvidenceRef=${runtimeConfig.cdpBazaarEvidenceRef || "not-configured"}`,
       `publicMarketplaceReady=${checklist.readiness.publicMarketplaceReady}`,
       `anyLiveSpendReady=${spend.readiness.anyLiveSpendReady}`,
       `finalVerificationObserved=${runtimeConfig.finalVerificationObserved}`,

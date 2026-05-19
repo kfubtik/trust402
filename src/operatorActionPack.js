@@ -222,6 +222,8 @@ function externalDirectoryAction(cfg, baseUrl) {
       "npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000 --strict"
     ],
     evidenceEnv: {
+      TRUST402_CDP_BAZAAR_ALL_RESOURCES_INDEXED: "true",
+      TRUST402_CDP_BAZAAR_EVIDENCE_REF: "<public-safe CDP Bazaar 10/10 check hash or run URL>",
       TRUST402_EXTERNAL_DIRECTORY_STATUS: "visible",
       TRUST402_EXTERNAL_DIRECTORY_EVIDENCE_URL: "<public listing URL where Trust402 is visible>",
       TRUST402_EXTERNAL_DIRECTORY_NAME: "<directory name>"

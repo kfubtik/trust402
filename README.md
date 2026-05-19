@@ -364,8 +364,10 @@ Invoke-RestMethod -Method Get -Uri http://127.0.0.1:4032/api/completion/audit
 
 Manual or external requirements become `verified` only when public-safe
 evidence env vars are set, such as `TRUST402_GIT_AUTO_DEPLOY_VERIFIED=true` with
-a deployment evidence URL, or `TRUST402_EXTERNAL_DIRECTORY_STATUS=visible` with
-a directory evidence URL.
+a deployment evidence URL. The external-directory requirement needs both
+`TRUST402_CDP_BAZAAR_ALL_RESOURCES_INDEXED=true` with a public-safe 10/10 CDP
+Bazaar evidence ref and `TRUST402_EXTERNAL_DIRECTORY_STATUS=visible` with a
+non-CDP directory evidence URL.
 
 Live buyer-agent requirements also require public-safe evidence refs:
 `TRUST402_LIVE_PROCUREMENT_SMOKE_OBSERVED`,

@@ -85,6 +85,10 @@ Acceptance:
 
 Completion evidence:
 
+- set `TRUST402_CDP_BAZAAR_ALL_RESOURCES_INDEXED=true` only after the
+  all-resource CDP Bazaar check reports 10/10 indexed;
+- set `TRUST402_CDP_BAZAAR_EVIDENCE_REF` to the public-safe check hash, run
+  URL, or other evidence ref for that 10/10 check;
 - set `TRUST402_EXTERNAL_DIRECTORY_STATUS=visible`;
 - set `TRUST402_EXTERNAL_DIRECTORY_EVIDENCE_URL` to a public listing or search
   result where Trust402 is visible;

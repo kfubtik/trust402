@@ -32,6 +32,8 @@ test("completionAudit can verify manual/external requirements only with explicit
     gitAutoDeployVerified: true,
     gitAutoDeployEvidenceUrl: "https://vercel.com/example/trust402/git-deploy",
     gitAutoDeployCommitSha: "abc123",
+    cdpBazaarAllResourcesIndexed: true,
+    cdpBazaarEvidenceRef: "sha256:cdp-bazaar-10-of-10",
     externalDirectoryStatus: "visible",
     externalDirectoryEvidenceUrl: "https://example.com/trust402-directory",
     externalDirectoryName: "Example x402 Directory"
@@ -40,6 +42,21 @@ test("completionAudit can verify manual/external requirements only with explicit
   assert.equal(audit.requirements.find((item) => item.id === "git_vercel_auto_deploy")?.status, "verified");
   assert.equal(audit.requirements.find((item) => item.id === "external_x402_directories")?.status, "verified");
   assert.equal(audit.goalComplete, false);
+});
+
+test("completionAudit does not treat non-CDP directory visibility as CDP 10/10 evidence", () => {
+  const audit = completionAudit({
+    ...config,
+    externalDirectoryStatus: "visible",
+    externalDirectoryEvidenceUrl: "https://example.com/trust402-directory",
+    externalDirectoryName: "Example x402 Directory"
+  });
+  const external = audit.requirements.find((item) => item.id === "external_x402_directories");
+
+  assert.equal(external?.status, "blocked-external");
+  assert.equal(external?.details.cdpBazaarVerified, false);
+  assert.equal(external?.details.nonCdpDirectoryVerified, true);
+  assert.ok(external?.evidence.some((item) => item === "cdpBazaarAllResourcesIndexed=false"));
 });
 
 test("completionAudit does not treat pending directory review as visible", () => {
@@ -57,6 +74,8 @@ test("completionAudit explains custom-domain blocker for external directories", 
   const audit = completionAudit({
     ...config,
     publicBaseUrl: "https://trust402.vercel.app",
+    cdpBazaarAllResourcesIndexed: true,
+    cdpBazaarEvidenceRef: "sha256:cdp-bazaar-10-of-10",
     externalDirectoryStatus: "not-visible-yet",
     externalDirectoryEvidenceUrl: ""
   });
@@ -96,6 +115,8 @@ test("completionAudit requires smoke evidence even when live policies are ready"
 
   const withEvidence = completionAudit({
     ...livePolicyReadyConfig,
+    cdpBazaarAllResourcesIndexed: true,
+    cdpBazaarEvidenceRef: "sha256:cdp-bazaar-10-of-10",
     liveProcurementSmokeObserved: true,
     liveProcurementEvidenceRef: "receipt:live-procurement-smoke",
     proof402PaidSmokeObserved: true,
@@ -111,4 +132,33 @@ test("completionAudit requires smoke evidence even when live policies are ready"
   assert.equal(withEvidence.requirements.find((item) => item.id === "agentcash_auto_refill")?.status, "verified");
   assert.equal(withEvidence.requirements.find((item) => item.id === "autonomous_job_flow")?.status, "verified");
   assert.equal(withEvidence.goalComplete, false);
+});
+
+test("completionAudit final verification requires CDP Bazaar all-resource evidence", () => {
+  const almostFinal = completionAudit({
+    ...config,
+    realSettlementEnabled: true,
+    paywallMode: "real",
+    successfulSettlementObserved: true,
+    publicBaseUrl: "https://trust402.example",
+    payTo: "0x1111111111111111111111111111111111111111",
+    facilitatorUrl: "https://api.cdp.coinbase.com/platform/v2/x402",
+    cdpApiKeyIdConfigured: true,
+    cdpApiKeySecretConfigured: true,
+    finalVerificationObserved: true,
+    finalVerificationEvidenceRef: "sha256:final",
+    liveSpendEnabled: true,
+    livePaymentProvider: "external-adapter",
+    livePaymentAdapterUrl: "https://example.com/pay",
+    liveMaxPerCallUsd: 0.01,
+    liveMaxPerJobUsd: 0.1,
+    liveDailyLimitUsd: 1,
+    liveAllowedRegistries: ["https://example.com/registry"],
+    operatorApiKey: "test-operator-key"
+  });
+  const final = almostFinal.requirements.find((item) => item.id === "final_verification");
+
+  assert.equal(final?.status, "unverified");
+  assert.ok(final?.evidence.some((item) => item === "marketplaceIndexingReady=true"));
+  assert.ok(final?.evidence.some((item) => item === "cdpBazaarAllResourcesIndexed=false"));
 });
