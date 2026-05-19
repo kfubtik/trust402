@@ -45,6 +45,27 @@ export function openApiSpec() {
     "/api/settlement/status": getPath("Real x402 settlement readiness and unpaid challenge status"),
     "/api/settlement/preflight": getPath("Operator preflight for one paid settlement smoke"),
     "/api/policies/spend": getPath("Spend policy gates for live procurement, Proof402 delegation, and AgentCash auto-refill"),
+    "/api/payments/bridge-check": {
+      post: {
+        operationId: "payments_bridge_check",
+        summary: "Operator-gated dry-run check for the configured live payment bridge",
+        tags: ["Trust402"],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: requestSchemaFor("payments.bridge_check"),
+              example: exampleFor("payments.bridge_check")
+            }
+          }
+        },
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse,
+          "403": errorResponse
+        }
+      }
+    },
     "/api/completion/plan": getPath("Pinned autonomous buyer-agent completion plan and success criteria"),
     "/api/completion/audit": getPath("Requirement-by-requirement audit of Trust402 autonomous buyer-agent completion"),
     "/api/deployments/preflight": {
@@ -391,6 +412,7 @@ export function capabilities() {
       settlementStatus: "/api/settlement/status",
       settlementPreflight: "/api/settlement/preflight",
       spendPolicy: "/api/policies/spend",
+      paymentBridgeCheck: "/api/payments/bridge-check",
       completionPlan: "/api/completion/plan",
       completionAudit: "/api/completion/audit",
       deploymentPreflight: "/api/deployments/preflight",
@@ -543,6 +565,19 @@ function requestSchemaFor(id) {
         mode: { type: "string", enum: ["dry-run", "live"], default: "dry-run" },
         currentBalanceUsd: { type: "number" },
         amountRefilledTodayUsd: { type: "number", default: 0 }
+      }
+    };
+  }
+
+  if (id === "payments.bridge_check") {
+    return {
+      type: "object",
+      properties: {
+        provider: { type: "string", enum: ["agentcash-mcp", "external-adapter"], default: "agentcash-mcp" },
+        candidateEndpoint: { type: "string", format: "uri" },
+        method: { type: "string", enum: ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"], default: "POST" },
+        maxAmountUsd: { type: "number", default: 0.01 },
+        body: {}
       }
     };
   }
@@ -857,6 +892,14 @@ function exampleFor(id) {
       mode: "dry-run",
       currentBalanceUsd: 0.42,
       amountRefilledTodayUsd: 0
+    };
+  }
+  if (id === "payments.bridge_check") {
+    return {
+      provider: "agentcash-mcp",
+      candidateEndpoint: "https://proof402.vercel.app/api/proof/notarize",
+      method: "POST",
+      maxAmountUsd: 0.01
     };
   }
   if (id === "live.window_plan") {

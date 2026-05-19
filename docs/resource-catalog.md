@@ -209,10 +209,21 @@ blocks refill actions without reading private keys, sending payment headers, or
 mutating wallet balance. Live refill remains gated by approval, provider,
 operator authorization, caps, and emergency stop.
 
-Price: free while live spend is disabled.
+### `POST /api/payments/bridge-check`
 
-Reason: this is the top-level agent workflow. It should be easy to inspect in
-dry-run mode before any autonomous spending is approved.
+Operator-gated dry-run preflight for the configured `LIVE_PAYMENT_ADAPTER_URL`.
+It posts a public-safe bridge probe with `dryRun=true`, no payment headers, no
+private keys, and a small `maxAmountUsd`, then requires the bridge to confirm
+that no paid subcall happened.
+
+Price: free.
+
+Reason: live procurement and paid Proof402 delegation should never be enabled
+against an unknown bridge. This endpoint gives operators a machine-readable
+proof that the bridge understands Trust402's dry-run contract before any live
+spend window is opened. Public API calls can only use the configured adapter
+URL and require `x-trust402-operator-key`; arbitrary adapter probing belongs in
+the local CLI.
 
 ## Paid Launch Resources
 

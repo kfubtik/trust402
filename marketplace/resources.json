@@ -159,6 +159,14 @@
       "priceUsd": 0,
       "status": "dry-run-helper",
       "purpose": "Evaluate AgentCash balance, threshold, daily cap, and refill policy without mutating wallet balance."
+    },
+    {
+      "id": "payments.bridge_check",
+      "method": "POST",
+      "path": "/api/payments/bridge-check",
+      "priceUsd": 0,
+      "status": "operator-gated-dry-run-helper",
+      "purpose": "Verify the configured live payment bridge in dry-run mode without sending payment headers or exposing the adapter URL."
     }
   ],
   "paidLaunchResources": [

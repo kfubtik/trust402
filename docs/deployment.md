@@ -157,6 +157,8 @@ enforcing `maxAmountUsd`. The bridge request shape is:
   "service": "Trust402",
   "provider": "agentcash-mcp",
   "protocol": "x402",
+  "mode": "dry-run",
+  "dryRun": true,
   "maxAmountUsd": "<LIVE_MAX_PER_CALL_USD>",
   "network": "<X402_NETWORK>",
   "request": {
@@ -171,6 +173,24 @@ enforcing `maxAmountUsd`. The bridge request shape is:
 Trust402 strips auth, cookie, payment, signature, token, secret, and API-key
 headers before calling the bridge. It does not send private keys or payment
 headers to the bridge.
+
+Before any live spend window, run a dry-run bridge preflight. The local CLI can
+check a candidate URL directly:
+
+```powershell
+npm run payment:bridge-check -- --adapter-url=https://<bridge-host>/pay --strict
+```
+
+The production API form is operator-gated and only uses the configured
+`LIVE_PAYMENT_ADAPTER_URL`; it never accepts arbitrary public probe targets:
+
+```powershell
+Invoke-RestMethod -Method Post `
+  -Uri https://trust402.vercel.app/api/payments/bridge-check `
+  -Headers @{"x-trust402-operator-key"="<operator-key>"} `
+  -ContentType application/json `
+  -Body '{"provider":"agentcash-mcp","candidateEndpoint":"https://proof402.vercel.app/api/proof/notarize","maxAmountUsd":0.01}'
+```
 
 ### Git-backed Deploys
 

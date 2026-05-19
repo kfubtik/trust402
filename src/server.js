@@ -13,6 +13,7 @@ import { capabilities, openApiSpec, x402WellKnown } from "./openapi.js";
 import { completionAudit } from "./completionAudit.js";
 import { completionPlan } from "./completionPlan.js";
 import { spendPolicyStatus } from "./policies.js";
+import { paymentBridgeCheck } from "./paymentBridgeCheck.js";
 import { procurementExecute, procurementQuote } from "./procurement.js";
 import { notarizeResult } from "./proof402Client.js";
 import { launchChecklist } from "./readiness.js";
@@ -37,6 +38,7 @@ const routes = new Map([
   ["POST /api/receipts/notarize-result", notarizeResult],
   ["POST /api/procurement/quote", procurementQuote],
   ["POST /api/procurement/execute", procurementExecute],
+  ["POST /api/payments/bridge-check", paymentBridgeCheck],
   ["POST /api/deployments/preflight", deploymentPreflight],
   ["POST /api/domains/activation-pack", domainActivationPack],
   ["POST /api/live/window-plan", liveWindowPlan],
@@ -81,6 +83,7 @@ export async function handleTrust402Request(req, res) {
           settlementStatus: "/api/settlement/status",
           settlementPreflight: "/api/settlement/preflight",
           spendPolicy: "/api/policies/spend",
+          paymentBridgeCheck: "/api/payments/bridge-check",
           completionPlan: "/api/completion/plan",
           completionAudit: "/api/completion/audit",
           deploymentPreflight: "/api/deployments/preflight",
@@ -218,6 +221,7 @@ function statusSummary() {
       readyForLiveSpend: false,
       readyForProof402Delegation: false,
       readyForAgentCashAutoRefill: false,
+      readyForPaymentBridgeDryRunCheck: true,
       readyForAgentCashRefillDryRun: true,
       readyForRealX402Settlement: settlementStatus().readiness.realSettlementReady
     },
@@ -241,6 +245,7 @@ function statusSummary() {
       settlementStatus: "/api/settlement/status",
       settlementPreflight: "/api/settlement/preflight",
       spendPolicy: "/api/policies/spend",
+      paymentBridgeCheck: "/api/payments/bridge-check",
       completionPlan: "/api/completion/plan",
       completionAudit: "/api/completion/audit",
       deploymentPreflight: "/api/deployments/preflight",

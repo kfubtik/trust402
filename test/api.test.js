@@ -49,6 +49,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/operator/action-pack"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/jobs/autonomous-run"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/agentcash/refill-check"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/payments/bridge-check"));
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/trust/check-x402"));
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/procurement/quote"));
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/monitor/snapshot"));
@@ -89,6 +90,14 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(policies.body.policies.agentcashAutoRefill.enabled, false);
     assert.equal(policies.body.policies.proof402Delegation.mode, "disabled");
     assert.ok(policies.body.issues.agentcashAutoRefill.includes("/issues/7"));
+
+    const bridgeUnauthorized = await request(baseUrl, "/api/payments/bridge-check", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({})
+    });
+    assert.equal(bridgeUnauthorized.response.status, 403);
+    assert.equal(bridgeUnauthorized.body.error.code, "operator_not_authorized");
 
     const completionPlan = await request(baseUrl, "/api/completion/plan");
     assert.equal(completionPlan.response.status, 200);
@@ -158,6 +167,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/api/settlement/status"].get);
     assert.ok(openapi.body.paths["/api/settlement/preflight"].get);
     assert.ok(openapi.body.paths["/api/policies/spend"].get);
+    assert.ok(openapi.body.paths["/api/payments/bridge-check"].post);
     assert.ok(openapi.body.paths["/api/completion/plan"].get);
     assert.ok(openapi.body.paths["/api/completion/audit"].get);
     assert.ok(openapi.body.paths["/api/deployments/preflight"].get);

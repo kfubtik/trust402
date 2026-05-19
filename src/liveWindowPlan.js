@@ -116,6 +116,16 @@ export function liveWindowPlan(input = {}, options = {}) {
     includeProof ? null : "--skip-proof",
     includeAutonomous ? "--include-autonomous-live" : null
   ].filter(Boolean).join(" ");
+  const paymentBridgePreflightCommand = paymentAdapterContract
+    ? [
+        "npm run payment:bridge-check --",
+        "--adapter-url=<LIVE_PAYMENT_ADAPTER_URL>",
+        `--provider=${paymentProvider}`,
+        `--candidate-endpoint=${candidateEndpoint || "<approved-x402-endpoint>"}`,
+        `--max-amount-usd=${usd(liveMaxPerCallUsd)}`,
+        "--strict"
+      ].join(" ")
+    : null;
 
   const planCore = {
     baseUrl,
@@ -133,6 +143,7 @@ export function liveWindowPlan(input = {}, options = {}) {
     blockers,
     vercelEnvPlan,
     localPolicyPatch,
+    paymentBridgePreflightCommand,
     command
   };
   const planHash = sha256Json(planCore);
@@ -156,6 +167,7 @@ export function liveWindowPlan(input = {}, options = {}) {
       ? [
           "Review this plan hash and local policy patch.",
           "Apply Vercel env values manually or through an approved secret-management flow.",
+          ...(paymentBridgePreflightCommand ? ["Run the payment bridge preflight before enabling the live spend window."] : []),
           "Update the ignored local AgentCash policy for the approved smoke window.",
           "Run the generated command only after the approval window is active."
         ]

@@ -48,6 +48,10 @@ async function main() {
     "/api/policies/spend must expose remaining daily capacity"
   );
 
+  const bridgeCheckBlocked = await postRaw("/api/payments/bridge-check", {});
+  assert(bridgeCheckBlocked.response.status === 403, "/api/payments/bridge-check must require operator authorization");
+  assert(bridgeCheckBlocked.body.error?.code === "operator_not_authorized", "/api/payments/bridge-check must block without operator key");
+
   const completionPlan = await getJson("/api/completion/plan");
   assert(completionPlan.tool === "completion.plan", "/api/completion/plan tool mismatch");
   assert(completionPlan.requirements?.length === 10, "/api/completion/plan must pin 10 requirements");
@@ -174,6 +178,7 @@ async function main() {
   assert(openapi.paths?.["/api/settlement/status"]?.get, "/openapi missing settlement status");
   assert(openapi.paths?.["/api/settlement/preflight"]?.get, "/openapi missing settlement preflight");
   assert(openapi.paths?.["/api/policies/spend"]?.get, "/openapi missing spend policy");
+  assert(openapi.paths?.["/api/payments/bridge-check"]?.post, "/openapi missing payment bridge check");
   assert(openapi.paths?.["/api/completion/plan"]?.get, "/openapi missing completion plan");
   assert(openapi.paths?.["/api/completion/audit"]?.get, "/openapi missing completion audit");
   assert(openapi.paths?.["/api/deployments/preflight"]?.get, "/openapi missing deployment preflight GET");
@@ -336,6 +341,17 @@ async function postJson(path, body) {
     body: JSON.stringify(body)
   });
   return parseJson(response, path);
+}
+
+async function postRaw(path, body) {
+  const response = await fetch(`${baseUrl}${path}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  const contentType = response.headers.get("content-type") || "";
+  const parsed = contentType.includes("application/json") ? await response.json() : await response.text();
+  return { response, body: parsed };
 }
 
 async function expectPaymentRequired(path, body) {

@@ -120,8 +120,10 @@ test("operatorActionPack defaults bounded live window to Proof402 paid smoke", (
   assert.equal(pack.liveWindowPlan.downstreamRequestPolicy.schema, "proof402.notarize");
   assert.equal(pack.liveWindowPlan.paymentAdapterContract.provider, "agentcash-mcp");
   assert.equal(pack.liveWindowPlan.paymentAdapterContract.safety.bridgeMustEnforceMaxAmountUsd, true);
+  assert.match(pack.liveWindowPlan.paymentBridgePreflightCommand, /npm run payment:bridge-check/);
   assert.equal(pack.actions.find((action) => action.id === "live_procurement").downstreamRequestPolicy.privatePayloadAllowed, false);
   assert.equal(pack.actions.find((action) => action.id === "live_procurement").paymentAdapterContract.endpointEnv, "LIVE_PAYMENT_ADAPTER_URL");
+  assert.match(pack.actions.find((action) => action.id === "live_procurement").paymentBridgePreflightCommand, /--strict/);
   assert.match(pack.liveWindowPlan.command, /--candidate-endpoint=https:\/\/proof402\.vercel\.app\/api\/proof\/notarize/);
   assert.match(pack.liveWindowPlan.command, /--candidate-price=0\.005/);
 });

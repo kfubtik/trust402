@@ -110,6 +110,7 @@ export function operatorActionPack(input = {}, options = {}) {
       blockers: livePlan.blockers,
       downstreamRequestPolicy: livePlan.downstreamRequestPolicy,
       paymentAdapterContract: livePlan.paymentAdapterContract,
+      paymentBridgePreflightCommand: livePlan.paymentBridgePreflightCommand,
       vercelEnvPlan: livePlan.vercelEnvPlan,
       localPolicyPatch: livePlan.localPolicyPatch,
       safety: livePlan.safety
@@ -257,6 +258,7 @@ function liveProcurementAction(livePlan) {
     localPolicyPatch: livePlan.localPolicyPatch,
     downstreamRequestPolicy: livePlan.downstreamRequestPolicy,
     paymentAdapterContract: livePlan.paymentAdapterContract,
+    paymentBridgePreflightCommand: livePlan.paymentBridgePreflightCommand,
     runCommand: livePlan.command,
     evidenceEnv: {
       TRUST402_LIVE_PROCUREMENT_SMOKE_OBSERVED: "true",

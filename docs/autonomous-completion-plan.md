@@ -113,6 +113,9 @@ Acceptance:
 - `agentcash-mcp` and `external-adapter` live modes explicitly require
   `LIVE_PAYMENT_ADAPTER_URL`; `x402-fetch` explicitly requires
   `X402_BUYER_PRIVATE_KEY` and `X402_BUYER_RPC_URL`;
+- `npm run payment:bridge-check` and `POST /api/payments/bridge-check` can
+  dry-run-probe the configured bridge and require explicit no-payment evidence
+  before live spend is enabled;
 - `/api/policies/spend` exposes the current non-secret policy state.
 
 Tracking: https://github.com/kfubtik/trust402/issues/8
@@ -128,6 +131,7 @@ Acceptance:
 - live execution requires operator authorization;
 - every selected endpoint is allowlisted and not denylisted;
 - every paid call goes through the configured payment adapter;
+- the configured payment bridge has passed a dry-run no-payment preflight;
 - every paid call is within the per-call cap;
 - total planned spend is within job and daily caps;
 - every execution returns an audit/receipt bundle.

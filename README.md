@@ -88,6 +88,7 @@ http://127.0.0.1:4032/api/domains/activation-pack
 http://127.0.0.1:4032/api/directories/submission-pack
 http://127.0.0.1:4032/api/jobs/autonomous-run
 http://127.0.0.1:4032/api/agentcash/refill-check
+http://127.0.0.1:4032/api/payments/bridge-check
 http://127.0.0.1:4032/api/resources
 http://127.0.0.1:4032/openapi.json
 http://127.0.0.1:4032/.well-known/x402
@@ -260,6 +261,7 @@ POST /api/operator/unblock-report
 POST /api/operator/action-pack
 POST /api/jobs/autonomous-run
 POST /api/agentcash/refill-check
+POST /api/payments/bridge-check
 ```
 
 ## Paid Launch Resources
@@ -317,6 +319,13 @@ Check AgentCash refill policy without mutating wallet balance:
 
 ```powershell
 Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/agentcash/refill-check -ContentType application/json -Body '{"mode":"dry-run","currentBalanceUsd":0.42,"amountRefilledTodayUsd":0}'
+```
+
+Check a candidate payment bridge in dry-run mode before using it for live
+procurement:
+
+```powershell
+npm run payment:bridge-check -- --adapter-url=https://<bridge-host>/pay --strict
 ```
 
 Create a monitor snapshot:
@@ -552,6 +561,7 @@ Future live procurement must require:
 - receipt log;
 - payment adapter: `external-adapter`, AgentCash bridge, or in-process
   `@x402/fetch` with local/Vercel-secret buyer credentials;
+- dry-run payment bridge preflight confirming no paid subcalls before live mode;
 - human approval above threshold.
 
 ## Project Files
@@ -561,6 +571,7 @@ Future live procurement must require:
 - `src/trustEngine.js` - checks, scoring, planning, and report logic.
 - `src/procurement.js` - quote and policy-gated procurement execution logic.
 - `src/paymentAdapters.js` - buyer-side payment adapter readiness and bridge logic.
+- `src/paymentBridgeCheck.js` - operator-gated dry-run preflight for payment bridge safety.
 - `src/autonomousJob.js` - dry-run-first autonomous job orchestration.
 - `src/agentcashRefill.js` - AgentCash refill policy decision and adapter-gated live action.
 - `src/evidenceLedger.js` - local public-safe JSONL ledger for evidence hashes and refs.
