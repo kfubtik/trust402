@@ -5,10 +5,11 @@ import { config } from "../src/config.js";
 import { operatorActionPack } from "../src/operatorActionPack.js";
 
 const args = parseArgs(process.argv.slice(2));
-const baseUrl = args.baseUrl || args._.find((item) => /^https?:\/\//.test(item)) || config.publicBaseUrl || "https://trust402.vercel.app";
+const targetUrl = args.baseUrl || args._.find((item) => /^https?:\/\//.test(item)) || "";
+const baseUrl = targetUrl || config.publicBaseUrl || "https://trust402.vercel.app";
 const vercelProjectLinked = existsSync(".vercel/project.json");
 
-const result = operatorActionPack({
+const payload = {
   baseUrl,
   candidateEndpoint: args.candidateEndpoint,
   candidatePriceUsd: args.candidatePrice || args.candidatePriceUsd,
@@ -30,12 +31,40 @@ const result = operatorActionPack({
   githubCliAuthenticated: commandOk("gh", ["auth", "status"]),
   vercelProjectLinked,
   vercelProject: vercelProjectLinked ? safeProjectSummary(".vercel/project.json") : null
-}, {
-  config
-});
+};
+
+if (targetUrl && args.local !== true) {
+  const result = await postRemoteJson(targetUrl, "/api/operator/action-pack", payload);
+  console.log(JSON.stringify({
+    ...result,
+    remoteContext: {
+      baseUrl: targetUrl.replace(/\/$/, ""),
+      source: "/api/operator/action-pack"
+    }
+  }, null, 2));
+  if (args.strict === true && result.status !== "ready-for-final-window") process.exit(1);
+  process.exit(0);
+}
+
+const result = operatorActionPack(payload, { config });
 
 console.log(JSON.stringify(result, null, 2));
 if (args.strict === true && result.status !== "ready-for-final-window") process.exit(1);
+
+async function postRemoteJson(base, path, body) {
+  const url = `${String(base).replace(/\/$/, "")}${path}`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  const text = await response.text();
+  if (!response.ok) {
+    console.error(`${url} returned HTTP ${response.status}: ${text.slice(0, 500)}`);
+    process.exit(1);
+  }
+  return JSON.parse(text);
+}
 
 function parseArgs(values) {
   const parsed = { _: [] };

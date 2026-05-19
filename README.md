@@ -560,6 +560,9 @@ Future live procurement must require:
   production smoke, x402, launch monitor, directories, and completion audit.
 - `scripts/live-window-plan.js` - read-only live-window staging plan for
   approved x402 spend evidence.
-- `scripts/operator-action-pack.js` - public-safe operator action pack exporter.
+- `scripts/operator-action-pack.js` - public-safe operator action pack exporter;
+  with a URL it reads the production API unless `--local` is passed.
+- `scripts/operator-unblock-check.js` - public-safe unblock report runner; with
+  a URL it reads the production API unless `--local` is passed.
 - `scripts/launch-monitor.js` - combined production API, x402, Bazaar, and directory monitor.
 - `test/` - API and engine tests.

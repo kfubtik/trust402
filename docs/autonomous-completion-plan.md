@@ -372,6 +372,9 @@ npm run completion:actions -- https://trust402.vercel.app `
 ```
 
 Agents can request the same action pack through `POST /api/operator/action-pack`.
+When a production URL is passed, the CLI reads the production API so evidence
+matches the deployed runtime. Pass `--local` only when intentionally checking
+the local `.env` state instead.
 
 On this workstation the verifier auto-detects Docker Desktop at
 `D:\Programs\Docker\resources\bin\docker.exe`. If Docker is installed elsewhere,
