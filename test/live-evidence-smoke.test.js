@@ -295,7 +295,8 @@ function approvedLocalPolicyResult(overrides = {}) {
         allowedProjectRoot: process.cwd(),
         allowedOrigins: [
           "https://trust402.example",
-          "https://proof402.vercel.app"
+          "https://proof402.vercel.app",
+          "https://resource.example"
         ],
         trust402LiveProcurement: "approved-for-manual-smoke",
         proof402Delegation: "approved-for-manual-smoke"

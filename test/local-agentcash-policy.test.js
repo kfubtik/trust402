@@ -26,6 +26,7 @@ test("evaluateLocalAgentcashPolicyForLive accepts bounded approved smoke policy"
   const result = evaluateLocalAgentcashPolicyForLive({
     cwd: process.cwd(),
     baseUrl: "https://trust402.vercel.app",
+    candidateEndpoint: "https://proof402.vercel.app/api/proof/notarize",
     estimatedMaxSpendUsd: 0.02,
     includeProof: true,
     policyResult: policyResult({
@@ -38,6 +39,25 @@ test("evaluateLocalAgentcashPolicyForLive accepts bounded approved smoke policy"
 
   assert.equal(result.ok, true);
   assert.equal(result.blockers.length, 0);
+});
+
+test("evaluateLocalAgentcashPolicyForLive requires downstream paid origins to be allowlisted", () => {
+  const result = evaluateLocalAgentcashPolicyForLive({
+    cwd: process.cwd(),
+    baseUrl: "https://trust402.vercel.app",
+    candidateEndpoint: "https://paid.example/api/resource",
+    estimatedMaxSpendUsd: 0.01,
+    includeProof: false,
+    policyResult: policyResult({
+      manualSmokeRemainingBudgetUsd: 0.05,
+      agentcashGlobalMaxAmountUsd: 0.05,
+      trust402LiveProcurement: "approved-for-manual-smoke",
+      proof402Delegation: "disabled-until-separate-approval"
+    })
+  });
+
+  assert.equal(result.ok, false);
+  assert.ok(result.blockers.some((item) => item.id === "local_candidate_origin_not_allowed"));
 });
 
 function policyResult(overrides = {}) {

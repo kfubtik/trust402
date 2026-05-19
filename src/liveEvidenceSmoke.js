@@ -27,6 +27,7 @@ export async function liveEvidenceSmoke(input = {}, options = {}) {
         cwd: options.cwd,
         baseUrl,
         proof402BaseUrl: input.proof402BaseUrl,
+        candidateEndpoint: candidate.endpoint,
         estimatedMaxSpendUsd,
         includeProof,
         includeRefillLive: input.includeRefillLive === true && mode === "live"

@@ -25,6 +25,8 @@ const smokeScript = readFileSync("scripts/smoke.js", "utf8");
 const liveEvidenceSmokeScript = readFileSync("scripts/live-evidence-smoke.js", "utf8");
 const configSource = readFileSync("src/config.js", "utf8");
 const policySource = readFileSync("src/policies.js", "utf8");
+const localAgentcashPolicySource = readFileSync("src/localAgentcashPolicy.js", "utf8");
+const liveEvidenceSmokeSource = readFileSync("src/liveEvidenceSmoke.js", "utf8");
 const proof402ClientSource = readFileSync("src/proof402Client.js", "utf8");
 const liveWindowPlanSource = readFileSync("src/liveWindowPlan.js", "utf8");
 const launchMonitorScript = readFileSync("scripts/launch-monitor.js", "utf8");
@@ -136,6 +138,8 @@ assert(existsSync("scripts/payment-bridge-check.js"), "payment bridge check scri
 assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("evaluateLocalAgentcashPolicyForLive"), "live evidence smoke must enforce local AgentCash policy before live mode");
 assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("appendEvidenceLedger"), "live evidence smoke must support local public-safe evidence ledger writes");
 assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("payment_bridge_preflight"), "live evidence smoke must require payment bridge preflight before bridge-backed live spend");
+assert(localAgentcashPolicySource.includes("local_candidate_origin_not_allowed"), "local AgentCash policy must block downstream paid origins that are not allowlisted");
+assert(liveEvidenceSmokeSource.includes("candidateEndpoint: candidate.endpoint"), "live evidence smoke must pass downstream paid endpoint origin into local AgentCash policy evaluation");
 assert(readFileSync("src/liveSmokeWindow.js", "utf8").includes("restoredAfterRun"), "live smoke window must restore local policy after approved runs");
 assert(proof402ClientSource.includes("links?.proof"), "Proof402 client must capture Proof402 links.proof from paid responses");
 assert(proof402ClientSource.includes("proof402_hash_mismatch"), "Proof402 client must reject paid responses with mismatched content hashes");

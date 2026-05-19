@@ -167,6 +167,8 @@ Acceptance:
 
 - `.local/trust402-agentcash-wallet.json` is checked before any AgentCash spend;
 - the wallet is reserved for Trust402 and approved origins only;
+- downstream paid resource origins must also be present in the local allowed
+  origins list before a live smoke can spend through the Trust402 wallet;
 - the local policy never enters Git, API responses, or public logs;
 - a read-only policy check explains whether live operator spend is blocked.
 - `src/localAgentcashPolicy.js` is the shared local policy guard used by the

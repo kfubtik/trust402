@@ -76,6 +76,7 @@ export function evaluateLocalAgentcashPolicyForLive(input = {}) {
     : [];
   const baseOrigin = originOf(input.baseUrl);
   const proofOrigin = originOf(input.proof402BaseUrl || "https://proof402.vercel.app");
+  const candidateOrigins = candidateOriginsFor(input);
   const remainingBudgetUsd = numberOrNull(policy.limits?.manualSmokeRemainingBudgetUsd);
   const globalMaxUsd = numberOrNull(policy.limits?.agentcashGlobalMaxAmountUsd);
   const lastVerifiedBalanceUsd = numberOrNull(policy.limits?.lastVerifiedBalanceUsd);
@@ -95,6 +96,11 @@ export function evaluateLocalAgentcashPolicyForLive(input = {}) {
   }
   if (input.includeProof && proofOrigin && !allowedOrigins.includes(proofOrigin)) {
     blockers.push(blocker("local_proof402_origin_not_allowed", `Local AgentCash policy must allow ${proofOrigin} for paid Proof402 delegation.`));
+  }
+  for (const candidateOrigin of candidateOrigins) {
+    if (!allowedOrigins.includes(candidateOrigin)) {
+      blockers.push(blocker("local_candidate_origin_not_allowed", `Local AgentCash policy must allow downstream paid origin ${candidateOrigin}.`));
+    }
   }
   if (!APPROVED_LIVE_VALUES.has(policy.restrictions?.trust402LiveProcurement)) {
     blockers.push(blocker("local_live_procurement_not_approved", "Local AgentCash policy has not approved Trust402 live procurement."));
@@ -177,6 +183,15 @@ function originOf(value) {
   } catch {
     return null;
   }
+}
+
+function candidateOriginsFor(input) {
+  const values = [
+    input.candidateEndpoint,
+    ...(Array.isArray(input.candidateEndpoints) ? input.candidateEndpoints : []),
+    ...(Array.isArray(input.candidateOrigins) ? input.candidateOrigins : [])
+  ];
+  return Array.from(new Set(values.map(originOf).filter(Boolean)));
 }
 
 function numberOrNull(value) {
