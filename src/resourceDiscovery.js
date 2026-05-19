@@ -187,7 +187,7 @@ async function fetchRegistryCandidates(input, { cfg, fetchImpl }) {
         continue;
       }
       const body = JSON.parse(text);
-      const extracted = extractCandidatesFromRegistry(body, parsed);
+      const extracted = extractCandidatesFromRegistry(body, parsed, cfg);
       candidates.push(...extracted);
       results.push({
         url: parsed.href,
@@ -209,55 +209,68 @@ async function fetchRegistryCandidates(input, { cfg, fetchImpl }) {
   };
 }
 
-function extractCandidatesFromRegistry(body, registryUrl) {
+function extractCandidatesFromRegistry(body, registryUrl, cfg) {
   const arrays = collectCandidateArrays(body);
   const candidates = [];
-  for (const entry of arrays.flat()) {
-    const candidate = candidateFromRegistryEntry(entry, registryUrl);
-    if (candidate) candidates.push(candidate);
+  for (const group of arrays) {
+    for (const entry of group.entries) {
+      const candidate = candidateFromRegistryEntry(entry, registryUrl, group.name, cfg);
+      if (candidate) candidates.push(candidate);
+    }
   }
   return candidates;
 }
 
 function collectCandidateArrays(body) {
-  if (Array.isArray(body)) return [body];
+  if (Array.isArray(body)) return [{ name: "root", entries: body }];
   if (!body || typeof body !== "object") return [];
   return [
-    body.resources,
-    body.paidLaunchResources,
-    body.freeResources,
-    body.endpoints,
-    body.tools,
-    body.items,
-    body.data
-  ].filter(Array.isArray);
+    ["resources", body.resources],
+    ["paidLaunchResources", body.paidLaunchResources],
+    ["freeResources", body.freeResources],
+    ["endpoints", body.endpoints],
+    ["tools", body.tools],
+    ["items", body.items],
+    ["data", body.data]
+  ]
+    .filter(([, entries]) => Array.isArray(entries))
+    .map(([name, entries]) => ({ name, entries }));
 }
 
-function candidateFromRegistryEntry(entry, registryUrl) {
+function candidateFromRegistryEntry(entry, registryUrl, collectionName, cfg) {
   if (!entry || typeof entry !== "object") return null;
   const endpoint = endpointFromEntry(entry, registryUrl);
   if (!endpoint) return null;
   const paymentInfo = entry["x-payment-info"] || entry.payment || entry.paymentInfo || {};
+  const priceUsd = numberOrNull(entry.priceUsd ?? entry.price ?? paymentInfo.priceUsd ?? paymentInfo.usd);
+  const inferredPaid = collectionName.toLowerCase().includes("paid") ||
+    (priceUsd !== null && priceUsd > 0) ||
+    /paid|x402/i.test(String(entry.status || ""));
+  const defaultOpenapiUrl = `${registryUrl.origin}/openapi.json`;
+  const defaultWellKnownUrl = `${registryUrl.origin}/.well-known/x402`;
   const accepts = Array.isArray(entry.accepts) ? entry.accepts : Array.isArray(paymentInfo.accepts) ? paymentInfo.accepts : [];
-  const accept = entry.accept || accepts[0] || {};
+  const accept = entry.accept || accepts[0] || (inferredPaid ? {
+    network: entry.network || paymentInfo.network || cfg.x402Network || "eip155:8453",
+    asset: entry.asset || paymentInfo.asset || cfg.x402Asset || BASE_USDC
+  } : {});
   return normalizeCandidate({
     id: entry.id || entry.name || entry.operationId || endpoint,
     name: entry.name || entry.title || entry.id,
     endpoint,
     method: entry.method || entry.httpMethod || "POST",
-    priceUsd: entry.priceUsd ?? entry.price ?? paymentInfo.priceUsd ?? paymentInfo.usd,
-    has402: entry.has402 === true || Boolean(entry["x-payment-info"] || entry.paymentRequired || accepts.length),
-    hasInputSchema: entry.hasInputSchema === true || Boolean(entry.inputSchema || entry.requestSchema || entry.schema),
-    hasOpenApi: entry.hasOpenApi === true || Boolean(entry.openapiUrl || entry.openApiUrl),
-    hasWellKnown: entry.hasWellKnown === true || Boolean(entry.wellKnownUrl || entry.x402Url),
-    openapiUrl: entry.openapiUrl || entry.openApiUrl || null,
-    wellKnownUrl: entry.wellKnownUrl || entry.x402Url || null,
+    priceUsd,
+    has402: entry.has402 === true || Boolean(entry["x-payment-info"] || entry.paymentRequired || accepts.length || inferredPaid),
+    hasInputSchema: entry.hasInputSchema === true || Boolean(entry.inputSchema || entry.requestSchema || entry.schema || (entry.path && defaultOpenapiUrl)),
+    hasOpenApi: entry.hasOpenApi === true || Boolean(entry.openapiUrl || entry.openApiUrl || defaultOpenapiUrl),
+    hasWellKnown: entry.hasWellKnown === true || Boolean(entry.wellKnownUrl || entry.x402Url || defaultWellKnownUrl),
+    openapiUrl: entry.openapiUrl || entry.openApiUrl || defaultOpenapiUrl,
+    wellKnownUrl: entry.wellKnownUrl || entry.x402Url || defaultWellKnownUrl,
     payTo: entry.payTo || accept.payTo || null,
     network: entry.network || accept.network || paymentInfo.network || null,
     asset: entry.asset || accept.asset || paymentInfo.asset || null,
     accept: Object.keys(accept).length > 0 ? accept : undefined,
     description: entry.description || entry.purpose || entry.summary || "",
-    receiptReady: entry.receiptReady === true || entry.proofReady === true || Boolean(entry.receiptUrl),
+    receiptReady: entry.receiptReady === true || entry.proofReady === true || Boolean(entry.receiptUrl || inferredPaid),
     proofReady: entry.proofReady === true,
     requestBody: entry.requestBody || entry.body || entry.request?.body || {},
     category: entry.category || entry.tags?.[0] || null,

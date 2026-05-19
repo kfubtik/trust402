@@ -84,3 +84,48 @@ test("autonomousRun can discover a seed candidate when no candidates are supplie
   assert.ok(result.stages.some((stage) => stage.id === "discover" && stage.status === "complete"));
   assert.match(result.finalReport.discoveryHash, /^sha256:[a-f0-9]{64}$/);
 });
+
+test("autonomousRun can select a candidate from an allowlisted registry fetch", async () => {
+  const result = await autonomousRun({
+    mode: "dry-run",
+    goal: "Choose a registry-discovered x402 resource.",
+    budgetUsd: 0.05,
+    maxPaidCalls: 1,
+    registryUrls: ["https://registry.example/resources.json"],
+    allowedRegistryOrigins: ["https://registry.example"],
+    useSeedRegistry: false
+  }, {
+    config: {
+      publicBaseUrl: "https://trust402.example",
+      proof402BaseUrl: "https://proof402.vercel.app",
+      proof402DelegationMode: "disabled",
+      proof402MaxSpendUsd: 0,
+      liveSpendEnabled: false,
+      x402Network: "eip155:8453",
+      x402Asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      requestTimeoutMs: 100,
+      maxJsonBytes: 10000,
+      discoveryRegistryUrls: [],
+      discoveryRegistryAllowlist: []
+    },
+    fetchImpl: async () => new Response(JSON.stringify({
+      paidLaunchResources: [{
+        id: "registry-paid",
+        path: "/api/paid",
+        method: "POST",
+        priceUsd: 0.01,
+        description: "Registry supplied paid resource with enough discovery metadata for autonomous selection.",
+        payTo: "0x1111111111111111111111111111111111111111"
+      }]
+    }), {
+      status: 200,
+      headers: { "content-type": "application/json" }
+    })
+  });
+
+  assert.equal(result.discovery.summary.fetchedRegistryCandidates, 1);
+  assert.equal(result.discovery.summary.seedCandidates, 0);
+  assert.equal(result.quote.quote.selectedResources.length, 1);
+  assert.equal(result.quote.quote.selectedResources[0].id, "registry-paid");
+  assert.equal(result.execution.paidSubcallsMade, 0);
+});

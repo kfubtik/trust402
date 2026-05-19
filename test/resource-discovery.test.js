@@ -94,6 +94,9 @@ test("discoverResourceCandidates can fetch an allowlisted registry without payme
   assert.equal(result.candidates[0].id, "registry-proof");
   assert.equal(result.candidates[0].endpoint, "https://registry.example/api/proof");
   assert.equal(result.candidates[0].source, "registry:https://registry.example");
+  assert.equal(result.candidates[0].has402, true);
+  assert.equal(result.candidates[0].hasOpenApi, true);
+  assert.equal(result.candidates[0].hasWellKnown, true);
 });
 
 test("discoverResourceCandidates blocks unallowlisted registry URLs before fetch", async () => {
