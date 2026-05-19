@@ -145,7 +145,17 @@ LIVE_PAYMENT_PROVIDER=disabled
 LIVE_PAYMENT_ADAPTER_URL=
 X402_BUYER_PRIVATE_KEY=
 X402_BUYER_RPC_URL=
+CDP_EVM_ACCOUNT_ADDRESS=
+CDP_EVM_ACCOUNT_NAME=
 ```
+
+`LIVE_PAYMENT_PROVIDER=cdp-x402` uses `@coinbase/cdp-sdk` plus
+`@x402/fetch` with a CDP server-managed EVM account. It requires
+`CDP_API_KEY_ID`, `CDP_API_KEY_SECRET`, `CDP_WALLET_SECRET`, and either
+`CDP_EVM_ACCOUNT_ADDRESS` or `CDP_EVM_ACCOUNT_NAME`. Trust402 fetches an
+existing account with `cdp.evm.getAccount(...)`; it does not create a CDP
+account implicitly during a paid request. `X402_BUYER_RPC_URL` is optional for
+RPC backfill when x402 extensions need on-chain reads.
 
 When `LIVE_PAYMENT_PROVIDER=agentcash-mcp` or `external-adapter`,
 `LIVE_PAYMENT_ADAPTER_URL` is required. Trust402 posts a public-safe bridge

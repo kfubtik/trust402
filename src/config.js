@@ -38,6 +38,8 @@ export const config = {
   liveReceiptLogMode: process.env.LIVE_RECEIPT_LOG_MODE || "response-only",
   x402BuyerPrivateKeyConfigured: Boolean(process.env.X402_BUYER_PRIVATE_KEY),
   x402BuyerRpcUrl: process.env.X402_BUYER_RPC_URL || "",
+  cdpEvmAccountAddress: process.env.CDP_EVM_ACCOUNT_ADDRESS || "",
+  cdpEvmAccountName: process.env.CDP_EVM_ACCOUNT_NAME || "",
   agentcashAutoRefillApproved: process.env.AGENTCASH_AUTO_REFILL_APPROVED === "true",
   agentcashAutoRefillEnabled: process.env.AGENTCASH_AUTO_REFILL_ENABLED === "true",
   agentcashAutoRefillProvider: process.env.AGENTCASH_AUTO_REFILL_PROVIDER || "",

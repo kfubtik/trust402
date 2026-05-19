@@ -50,7 +50,7 @@ export function liveProcurementPolicy(runtimeConfig) {
   if (runtimeConfig.emergencyStop) blockers.push(blocker("emergency_stop", "TRUST402_EMERGENCY_STOP or LIVE_EMERGENCY_STOP is true."));
   if (!runtimeConfig.liveSpendEnabled) blockers.push(blocker("live_spend_disabled", "LIVE_SPEND_ENABLED is false."));
   if (!runtimeConfig.operatorApiKey) blockers.push(blocker("missing_operator_key", "TRUST402_OPERATOR_API_KEY is not configured."));
-  if (!isSupportedPaymentProvider(runtimeConfig.livePaymentProvider)) blockers.push(blocker("missing_payment_provider", "LIVE_PAYMENT_PROVIDER must be agentcash-mcp, x402-fetch, or external-adapter."));
+  if (!isSupportedPaymentProvider(runtimeConfig.livePaymentProvider)) blockers.push(blocker("missing_payment_provider", "LIVE_PAYMENT_PROVIDER must be agentcash-mcp, cdp-x402, x402-fetch, or external-adapter."));
   const paymentAdapter = paymentProviderReadiness(runtimeConfig);
   if (isSupportedPaymentProvider(runtimeConfig.livePaymentProvider)) {
     blockers.push(...paymentAdapter.blockers);
@@ -104,7 +104,7 @@ export function proof402DelegationPolicy(runtimeConfig) {
   }
   if (!runtimeConfig.liveSpendEnabled) blockers.push(blocker("live_spend_disabled", "LIVE_SPEND_ENABLED is false."));
   if (!runtimeConfig.operatorApiKey) blockers.push(blocker("missing_operator_key", "TRUST402_OPERATOR_API_KEY is not configured."));
-  if (!isSupportedPaymentProvider(runtimeConfig.livePaymentProvider)) blockers.push(blocker("missing_payment_provider", "LIVE_PAYMENT_PROVIDER must be agentcash-mcp, x402-fetch, or external-adapter."));
+  if (!isSupportedPaymentProvider(runtimeConfig.livePaymentProvider)) blockers.push(blocker("missing_payment_provider", "LIVE_PAYMENT_PROVIDER must be agentcash-mcp, cdp-x402, x402-fetch, or external-adapter."));
   const paymentAdapter = paymentProviderReadiness(runtimeConfig);
   if (isSupportedPaymentProvider(runtimeConfig.livePaymentProvider)) {
     blockers.push(...paymentAdapter.blockers);
@@ -186,7 +186,7 @@ function blocker(id, message) {
 }
 
 function isSupportedPaymentProvider(provider) {
-  return ["agentcash-mcp", "x402-fetch", "external-adapter"].includes(provider);
+  return ["agentcash-mcp", "cdp-x402", "x402-fetch", "external-adapter"].includes(provider);
 }
 
 function isSupportedRefillProvider(provider) {

@@ -4,7 +4,7 @@ import { paymentBridgeContract, paymentProviderRequiredSecrets } from "./payment
 
 const DEFAULT_BASE_URL = "https://trust402.vercel.app";
 const DEFAULT_PROOF402_BASE_URL = "https://proof402.vercel.app";
-const SUPPORTED_PAYMENT_PROVIDERS = new Set(["agentcash-mcp", "x402-fetch", "external-adapter"]);
+const SUPPORTED_PAYMENT_PROVIDERS = new Set(["agentcash-mcp", "cdp-x402", "x402-fetch", "external-adapter"]);
 
 export function liveWindowPlan(input = {}, options = {}) {
   const cfg = options.config || config;
@@ -181,7 +181,7 @@ function planBlockers(input) {
   if (input.candidateEndpoint && !input.candidateOrigin) blockers.push("Candidate endpoint must be a valid HTTPS URL.");
   if (input.candidateOrigin && !input.candidateOrigin.startsWith("https://")) blockers.push("Candidate endpoint must use HTTPS.");
   if (!SUPPORTED_PAYMENT_PROVIDERS.has(input.paymentProvider)) {
-    blockers.push("Payment provider must be agentcash-mcp, x402-fetch, or external-adapter.");
+    blockers.push("Payment provider must be agentcash-mcp, cdp-x402, x402-fetch, or external-adapter.");
   }
   if (input.estimatedMaxSpendUsd > input.maxTotalUsd) {
     blockers.push(`Estimated max spend ${usd(input.estimatedMaxSpendUsd)} exceeds max total ${usd(input.maxTotalUsd)}.`);

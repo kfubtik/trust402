@@ -2,6 +2,7 @@ import { ApiError } from "./errors.js";
 import { config } from "./config.js";
 
 const EVM_PRIVATE_KEY_RE = /^0x[a-fA-F0-9]{64}$/;
+const EVM_ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
 
 export function paymentProviderRequiredSecrets(provider) {
   if (provider === "agentcash-mcp" || provider === "external-adapter") {
@@ -9,6 +10,9 @@ export function paymentProviderRequiredSecrets(provider) {
   }
   if (provider === "x402-fetch") {
     return ["X402_BUYER_PRIVATE_KEY", "X402_BUYER_RPC_URL"];
+  }
+  if (provider === "cdp-x402") {
+    return ["CDP_API_KEY_ID", "CDP_API_KEY_SECRET", "CDP_WALLET_SECRET", "CDP_EVM_ACCOUNT_ADDRESS_OR_NAME"];
   }
   return [];
 }
@@ -113,19 +117,59 @@ export function paymentProviderReadiness(runtimeConfig = config, options = {}) {
     });
   }
 
+  if (provider === "cdp-x402") {
+    if (!runtimeConfig.cdpApiKeyIdConfigured) {
+      blockers.push({
+        id: "missing_cdp_api_key_id",
+        message: "CDP_API_KEY_ID is required for the CDP-backed x402 buyer adapter."
+      });
+    }
+    if (!runtimeConfig.cdpApiKeySecretConfigured) {
+      blockers.push({
+        id: "missing_cdp_api_key_secret",
+        message: "CDP_API_KEY_SECRET is required for the CDP-backed x402 buyer adapter."
+      });
+    }
+    if (!runtimeConfig.cdpWalletSecretConfigured) {
+      blockers.push({
+        id: "missing_cdp_wallet_secret",
+        message: "CDP_WALLET_SECRET is required for the CDP-backed x402 buyer adapter."
+      });
+    }
+    if (!cdpAccountRef(runtimeConfig)) {
+      blockers.push({
+        id: "missing_cdp_evm_account",
+        message: "CDP_EVM_ACCOUNT_ADDRESS or CDP_EVM_ACCOUNT_NAME is required for the CDP-backed x402 buyer adapter."
+      });
+    }
+    if (runtimeConfig.cdpEvmAccountAddress && !EVM_ADDRESS_RE.test(runtimeConfig.cdpEvmAccountAddress)) {
+      blockers.push({
+        id: "invalid_cdp_evm_account_address",
+        message: "CDP_EVM_ACCOUNT_ADDRESS must be a 0x-prefixed EVM address."
+      });
+    }
+    return providerStatus({
+      provider,
+      runtime: "@coinbase/cdp-sdk + @x402/fetch",
+      ready: blockers.length === 0,
+      blockers,
+      runtimeConfig
+    });
+  }
+
   return providerStatus({
     provider,
     runtime: "not-configured",
     ready: false,
     blockers: [{
       id: "missing_payment_provider",
-      message: "LIVE_PAYMENT_PROVIDER must be agentcash-mcp, x402-fetch, or external-adapter."
+      message: "LIVE_PAYMENT_PROVIDER must be agentcash-mcp, cdp-x402, x402-fetch, or external-adapter."
     }],
     runtimeConfig
   });
 }
 
-export async function createPaidFetch({ cfg = config, fetchImpl = globalThis.fetch, paidFetchImpl = null } = {}) {
+export async function createPaidFetch({ cfg = config, fetchImpl = globalThis.fetch, paidFetchImpl = null, modules = {} } = {}) {
   if (paidFetchImpl) return paidFetchImpl;
 
   const readiness = paymentProviderReadiness(cfg);
@@ -143,6 +187,10 @@ export async function createPaidFetch({ cfg = config, fetchImpl = globalThis.fet
 
   if (cfg.livePaymentProvider === "x402-fetch") {
     return createX402Fetch({ cfg, fetchImpl });
+  }
+
+  if (cfg.livePaymentProvider === "cdp-x402") {
+    return createCdpX402Fetch({ cfg, fetchImpl, modules });
   }
 
   throw new ApiError(403, "unsupported_payment_provider", "Unsupported live payment provider.", {
@@ -223,6 +271,51 @@ async function createX402Fetch({ cfg, fetchImpl }) {
   return fetchModule.wrapFetchWithPayment(fetchImpl, client);
 }
 
+async function createCdpX402Fetch({ cfg, fetchImpl, modules = {} }) {
+  const accountRef = cdpAccountRef(cfg);
+  if (!accountRef) {
+    throw new ApiError(403, "missing_cdp_evm_account", "CDP_EVM_ACCOUNT_ADDRESS or CDP_EVM_ACCOUNT_NAME is required for the CDP-backed x402 buyer adapter.");
+  }
+  if (cfg.cdpEvmAccountAddress && !EVM_ADDRESS_RE.test(cfg.cdpEvmAccountAddress)) {
+    throw new ApiError(403, "invalid_cdp_evm_account_address", "CDP_EVM_ACCOUNT_ADDRESS must be a 0x-prefixed EVM address.");
+  }
+
+  const [
+    cdpModule,
+    fetchModule,
+    evmClientModule
+  ] = await Promise.all([
+    modules.cdpModule || import("@coinbase/cdp-sdk"),
+    modules.x402FetchModule || import("@x402/fetch"),
+    modules.evmClientModule || import("@x402/evm/exact/client")
+  ]);
+
+  const CdpClient = modules.CdpClient || cdpModule.CdpClient;
+  const cdp = modules.cdpClient || new CdpClient({
+    apiKeyId: process.env.CDP_API_KEY_ID,
+    apiKeySecret: process.env.CDP_API_KEY_SECRET,
+    walletSecret: process.env.CDP_WALLET_SECRET
+  });
+  const account = modules.cdpAccount || await cdp.evm.getAccount(accountRef);
+  const signer = {
+    address: account.address,
+    signTypedData: (message) => account.signTypedData(message),
+    ...(typeof account.signTransaction === "function" ? { signTransaction: (tx) => account.signTransaction(tx) } : {})
+  };
+
+  const client = new fetchModule.x402Client();
+  const schemeConfig = {
+    signer,
+    networks: [cfg.x402Network]
+  };
+  if (cfg.x402BuyerRpcUrl) {
+    schemeConfig.schemeOptions = { rpcUrl: cfg.x402BuyerRpcUrl };
+  }
+  evmClientModule.registerExactEvmScheme(client, schemeConfig);
+
+  return fetchModule.wrapFetchWithPayment(fetchImpl, client);
+}
+
 function providerStatus({ provider, runtime, ready, blockers, runtimeConfig }) {
   return {
     provider: provider && provider !== "disabled" ? provider : "not-configured",
@@ -231,11 +324,24 @@ function providerStatus({ provider, runtime, ready, blockers, runtimeConfig }) {
     adapterUrlConfigured: Boolean(runtimeConfig.livePaymentAdapterUrl),
     x402BuyerPrivateKeyConfigured: Boolean(runtimeConfig.x402BuyerPrivateKeyConfigured),
     x402BuyerRpcUrlConfigured: Boolean(runtimeConfig.x402BuyerRpcUrl),
+    cdpApiKeyIdConfigured: Boolean(runtimeConfig.cdpApiKeyIdConfigured),
+    cdpApiKeySecretConfigured: Boolean(runtimeConfig.cdpApiKeySecretConfigured),
+    cdpWalletSecretConfigured: Boolean(runtimeConfig.cdpWalletSecretConfigured),
+    cdpEvmAccountAddressConfigured: Boolean(runtimeConfig.cdpEvmAccountAddress),
+    cdpEvmAccountNameConfigured: Boolean(runtimeConfig.cdpEvmAccountName),
     requiredSecrets: paymentProviderRequiredSecrets(provider),
     bridgeContract: paymentBridgeContract(provider),
     storesPrivatePayload: false,
     blockers
   };
+}
+
+function cdpAccountRef(runtimeConfig) {
+  const address = String(runtimeConfig.cdpEvmAccountAddress || "").trim();
+  if (address) return { address };
+  const name = String(runtimeConfig.cdpEvmAccountName || "").trim();
+  if (name) return { name };
+  return null;
 }
 
 function publicHeaders(headers) {

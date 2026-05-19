@@ -113,6 +113,9 @@ Acceptance:
 - `agentcash-mcp` and `external-adapter` live modes explicitly require
   `LIVE_PAYMENT_ADAPTER_URL`; `x402-fetch` explicitly requires
   `X402_BUYER_PRIVATE_KEY` and `X402_BUYER_RPC_URL`;
+- `cdp-x402` explicitly requires CDP API credentials, `CDP_WALLET_SECRET`, and
+  an existing `CDP_EVM_ACCOUNT_ADDRESS` or `CDP_EVM_ACCOUNT_NAME` so x402 buyer
+  signing can happen without exporting a private key;
 - `npm run payment:bridge-check` and `POST /api/payments/bridge-check` can
   dry-run-probe the configured bridge and require explicit no-payment evidence
   before live spend is enabled;

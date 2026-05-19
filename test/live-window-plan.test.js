@@ -97,6 +97,30 @@ test("live window plan lists x402-fetch buyer secrets without bridge contract", 
   ]);
 });
 
+test("live window plan lists cdp-x402 buyer secrets without bridge contract", () => {
+  const result = liveWindowPlan({
+    candidateEndpoint: "https://trusted.example/api/paid",
+    candidatePriceUsd: 0.01,
+    maxTotalUsd: 0.02,
+    manualSmokeBudgetUsd: 0.02,
+    paymentProvider: "cdp-x402",
+    lastVerifiedBalanceUsd: 1.25,
+    minimumReserveUsd: 0.5,
+    includeProof: true
+  }, { config: baseConfig });
+
+  assert.equal(result.status, "ready-to-stage");
+  assert.equal(result.paymentAdapterContract, null);
+  assert.equal(result.paymentBridgePreflightCommand, null);
+  assert.deepEqual(result.vercelEnvPlan.requiredSecretsAlreadyExistOrMustBeAddedManually, [
+    "TRUST402_OPERATOR_API_KEY",
+    "CDP_API_KEY_ID",
+    "CDP_API_KEY_SECRET",
+    "CDP_WALLET_SECRET",
+    "CDP_EVM_ACCOUNT_ADDRESS_OR_NAME"
+  ]);
+});
+
 test("live window plan blocks unsafe or underfunded staging profiles", () => {
   const result = liveWindowPlan({
     candidateEndpoint: "http://trusted.example/api/paid",

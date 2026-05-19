@@ -55,7 +55,8 @@ Live spend can only exist in a separate operator profile with all of these:
 - receipt log;
 - a real payment adapter, not plain `fetch`:
   `external-adapter`, AgentCash bridge through `LIVE_PAYMENT_ADAPTER_URL`, or
-  in-process `@x402/fetch` with secret buyer key and RPC URL;
+  in-process `@x402/fetch` with either a secret buyer key/RPC URL or a
+  CDP-managed EVM account through `LIVE_PAYMENT_PROVIDER=cdp-x402`;
 - proof receipt for final output;
 - human approval above threshold.
 

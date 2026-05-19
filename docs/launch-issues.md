@@ -54,7 +54,10 @@ The full final Definition of Done is pinned in
   `$0.005`, caps the combined procurement/proof window at `$0.015`, and marks
   the generated downstream request as hash-only/public-safe. The default
   `agentcash-mcp` payment provider requires `LIVE_PAYMENT_ADAPTER_URL` for the
-  payment bridge plus `TRUST402_OPERATOR_API_KEY`.
+  payment bridge plus `TRUST402_OPERATOR_API_KEY`. A `cdp-x402` provider is now
+  available for CDP-managed buyer signing without exporting a private key, but
+  it still requires an approved live window, operator key, caps, allowlist, and
+  existing `CDP_EVM_ACCOUNT_ADDRESS` or `CDP_EVM_ACCOUNT_NAME`.
 - Payment bridge preflight now requires an explicit dry-run/no-payment signal
   from the bridge. A bare `paidSubcallsMade=0` is logged but does not pass the
   preflight by itself.

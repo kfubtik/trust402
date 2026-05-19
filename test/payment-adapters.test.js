@@ -14,6 +14,11 @@ const baseConfig = {
   x402Network: "eip155:8453",
   x402BuyerPrivateKeyConfigured: false,
   x402BuyerRpcUrl: "",
+  cdpApiKeyIdConfigured: false,
+  cdpApiKeySecretConfigured: false,
+  cdpWalletSecretConfigured: false,
+  cdpEvmAccountAddress: "",
+  cdpEvmAccountName: "",
   requestTimeoutMs: 100
 };
 
@@ -35,6 +40,7 @@ test("paymentProviderRequiredSecrets matches each live payment runtime", () => {
   assert.deepEqual(paymentProviderRequiredSecrets("agentcash-mcp"), ["LIVE_PAYMENT_ADAPTER_URL"]);
   assert.deepEqual(paymentProviderRequiredSecrets("external-adapter"), ["LIVE_PAYMENT_ADAPTER_URL"]);
   assert.deepEqual(paymentProviderRequiredSecrets("x402-fetch"), ["X402_BUYER_PRIVATE_KEY", "X402_BUYER_RPC_URL"]);
+  assert.deepEqual(paymentProviderRequiredSecrets("cdp-x402"), ["CDP_API_KEY_ID", "CDP_API_KEY_SECRET", "CDP_WALLET_SECRET", "CDP_EVM_ACCOUNT_ADDRESS_OR_NAME"]);
   assert.deepEqual(paymentProviderRequiredSecrets("disabled"), []);
 });
 
@@ -68,6 +74,31 @@ test("paymentProviderReadiness accepts x402-fetch only with buyer key and RPC co
   });
   assert.equal(ready.ready, true);
   assert.equal(ready.runtime, "@x402/fetch");
+});
+
+test("paymentProviderReadiness accepts cdp-x402 only with CDP signing account configured", () => {
+  const blocked = paymentProviderReadiness({
+    ...baseConfig,
+    livePaymentProvider: "cdp-x402",
+    cdpApiKeyIdConfigured: true,
+    cdpApiKeySecretConfigured: true,
+    cdpWalletSecretConfigured: true
+  });
+  assert.equal(blocked.ready, false);
+  assert.equal(blocked.runtime, "@coinbase/cdp-sdk + @x402/fetch");
+  assert.ok(blocked.blockers.some((item) => item.id === "missing_cdp_evm_account"));
+
+  const ready = paymentProviderReadiness({
+    ...baseConfig,
+    livePaymentProvider: "cdp-x402",
+    cdpApiKeyIdConfigured: true,
+    cdpApiKeySecretConfigured: true,
+    cdpWalletSecretConfigured: true,
+    cdpEvmAccountName: "trust402-buyer"
+  });
+  assert.equal(ready.ready, true);
+  assert.equal(ready.requiredSecrets.includes("CDP_WALLET_SECRET"), true);
+  assert.equal(ready.cdpEvmAccountNameConfigured, true);
 });
 
 test("createPaidFetch routes external-adapter calls through a payment bridge", async () => {
@@ -134,4 +165,59 @@ test("createPaidFetch constructs x402-fetch adapter only from local buyer secret
     if (previousKey === undefined) delete process.env.X402_BUYER_PRIVATE_KEY;
     else process.env.X402_BUYER_PRIVATE_KEY = previousKey;
   }
+});
+
+test("createPaidFetch constructs cdp-x402 adapter from a CDP server account", async () => {
+  const calls = [];
+  class FakeCdpClient {
+    constructor(options) {
+      calls.push({ type: "client", options });
+      this.evm = {
+        getAccount: async (ref) => {
+          calls.push({ type: "getAccount", ref });
+          return {
+            address: "0x1111111111111111111111111111111111111111",
+            signTypedData: async () => "0xsignature"
+          };
+        }
+      };
+    }
+  }
+  class FakeX402Client {}
+
+  const paidFetch = await createPaidFetch({
+    cfg: {
+      ...baseConfig,
+      livePaymentProvider: "cdp-x402",
+      cdpApiKeyIdConfigured: true,
+      cdpApiKeySecretConfigured: true,
+      cdpWalletSecretConfigured: true,
+      cdpEvmAccountName: "trust402-buyer",
+      x402BuyerRpcUrl: "https://base.example/rpc"
+    },
+    fetchImpl: async () => new Response("{}", { status: 200 }),
+    modules: {
+      cdpModule: { CdpClient: FakeCdpClient },
+      x402FetchModule: {
+        x402Client: FakeX402Client,
+        wrapFetchWithPayment: (fetchImpl, client) => {
+          calls.push({ type: "wrap", client });
+          return fetchImpl;
+        }
+      },
+      evmClientModule: {
+        registerExactEvmScheme: (client, schemeConfig) => {
+          calls.push({ type: "register", schemeConfig });
+          return client;
+        }
+      }
+    }
+  });
+
+  assert.equal(typeof paidFetch, "function");
+  assert.deepEqual(calls.find((call) => call.type === "getAccount").ref, { name: "trust402-buyer" });
+  const registration = calls.find((call) => call.type === "register").schemeConfig;
+  assert.equal(registration.signer.address, "0x1111111111111111111111111111111111111111");
+  assert.deepEqual(registration.networks, ["eip155:8453"]);
+  assert.deepEqual(registration.schemeOptions, { rpcUrl: "https://base.example/rpc" });
 });

@@ -418,9 +418,9 @@ function evidenceCollectionPlan(actions, livePlan) {
     liveWindowPlanHash: livePlan.planHash,
     localEvidenceRequired: [
       "npm run agentcash:policy",
-      "npm run payment:bridge-check -- --adapter-url=<LIVE_PAYMENT_ADAPTER_URL> --provider=<LIVE_PAYMENT_PROVIDER> --candidate-endpoint=<approved-x402-endpoint> --max-amount-usd=<LIVE_MAX_PER_CALL_USD> --strict",
+      livePlan.paymentBridgePreflightCommand,
       "npm run live:evidence-smoke -- <base-url> --live --candidate-endpoint=<approved-x402-endpoint> --candidate-price=<price> --max-total-usd=<budget>"
-    ],
+    ].filter(Boolean),
     safety: {
       publicSafe: true,
       includesSecretValues: false,

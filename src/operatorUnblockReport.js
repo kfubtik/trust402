@@ -163,8 +163,8 @@ function liveProcurementCheck(cfg, localAgentcashPolicy) {
   const dailyRemainingUsd = dailyRemaining(cfg);
   if (!cfg.liveSpendEnabled) blockers.push("LIVE_SPEND_ENABLED is false.");
   if (!cfg.operatorApiKey) blockers.push("TRUST402_OPERATOR_API_KEY is not configured locally for the evidence runner.");
-  if (!["agentcash-mcp", "x402-fetch", "external-adapter"].includes(cfg.livePaymentProvider)) {
-    blockers.push("LIVE_PAYMENT_PROVIDER must be agentcash-mcp, x402-fetch, or external-adapter.");
+  if (!["agentcash-mcp", "cdp-x402", "x402-fetch", "external-adapter"].includes(cfg.livePaymentProvider)) {
+    blockers.push("LIVE_PAYMENT_PROVIDER must be agentcash-mcp, cdp-x402, x402-fetch, or external-adapter.");
   }
   if (!Array.isArray(cfg.liveAllowedRegistries) || cfg.liveAllowedRegistries.length === 0) {
     blockers.push("LIVE_ALLOWED_REGISTRIES is empty.");

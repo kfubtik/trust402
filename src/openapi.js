@@ -862,7 +862,7 @@ function requestSchemaFor(id) {
         candidatePriceUsd: { type: "number" },
         maxTotalUsd: { type: "number" },
         manualSmokeBudgetUsd: { type: "number" },
-        paymentProvider: { type: "string", enum: ["agentcash-mcp", "x402-fetch", "external-adapter"] },
+        paymentProvider: { type: "string", enum: ["agentcash-mcp", "cdp-x402", "x402-fetch", "external-adapter"] },
         allowedRegistries: {
           oneOf: [
             { type: "string" },
@@ -1053,7 +1053,7 @@ function operatorPlanningSchema() {
       candidatePriceUsd: { type: "number" },
       proofReserveUsd: { type: "number" },
       maxTotalUsd: { type: "number" },
-      paymentProvider: { type: "string", enum: ["agentcash-mcp", "x402-fetch", "external-adapter"] },
+      paymentProvider: { type: "string", enum: ["agentcash-mcp", "cdp-x402", "x402-fetch", "external-adapter"] },
       includeProof: { type: "boolean", default: true },
       includeAutonomous: { type: "boolean", default: false },
       includeAutoRefill: { type: "boolean", default: false },

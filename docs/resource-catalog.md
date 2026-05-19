@@ -471,8 +471,9 @@ Later price:
 Reason to wait: live spending needs hot-wallet policy, allowlists, receipts,
 human approval thresholds, and a real buyer payment adapter. Supported runtime
 paths are an external payment adapter, an AgentCash bridge via
-`LIVE_PAYMENT_ADAPTER_URL`, or in-process `@x402/fetch` with secret buyer key
-and RPC URL.
+`LIVE_PAYMENT_ADAPTER_URL`, in-process `@x402/fetch` with secret buyer key
+and RPC URL, or `LIVE_PAYMENT_PROVIDER=cdp-x402` with a CDP-managed EVM
+account reference.
 
 ### `POST /api/receipts/notarize-result` live mode
 
