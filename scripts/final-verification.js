@@ -32,7 +32,8 @@ async function main() {
       "--",
       baseUrl,
       `--timeout-ms=${timeoutMs}`,
-      "--skip-directories"
+      "--skip-directories",
+      "--strict"
     ]),
     skipDirectories
       ? skipped("external_directories", "External directories", "Skipped by --skip-directories.", false)

@@ -26,6 +26,7 @@ const configSource = readFileSync("src/config.js", "utf8");
 const policySource = readFileSync("src/policies.js", "utf8");
 const liveWindowPlanSource = readFileSync("src/liveWindowPlan.js", "utf8");
 const launchMonitorScript = readFileSync("scripts/launch-monitor.js", "utf8");
+const finalVerificationScript = readFileSync("scripts/final-verification.js", "utf8");
 const openapi = openApiSpec();
 const wellKnown = x402WellKnown();
 const checklist = launchChecklist();
@@ -137,6 +138,7 @@ assert(workflow.includes("npm run smoke:x402 -- http://127.0.0.1:4036"), "CI mus
 assert(launchMonitorWorkflow.includes("workflow_dispatch"), "launch monitor workflow must be manual");
 assert(launchMonitorWorkflow.includes("npm run launch:monitor"), "launch monitor workflow must run npm run launch:monitor");
 assert(launchMonitorWorkflow.includes("--strict"), "launch monitor workflow must fail on required production monitor failures");
+assert(finalVerificationScript.includes("--strict"), "final verifier must run launch monitor in strict mode");
 assert(productionDeployWorkflow.includes("branches: [main]"), "production deploy workflow must run on main pushes");
 assert(productionDeployWorkflow.includes("VERCEL_TOKEN"), "production deploy workflow must require VERCEL_TOKEN");
 assert(productionDeployWorkflow.includes("VERCEL_ORG_ID"), "production deploy workflow must require VERCEL_ORG_ID");
