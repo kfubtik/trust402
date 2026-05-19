@@ -255,6 +255,17 @@ It consolidates Git/Vercel, custom-domain, external-directory, live spend,
 Proof402, AgentCash refill, autonomous-job, and final-evidence blockers without
 mutating wallets or sending payment headers.
 
+For the Git/Vercel and custom-domain portion specifically, run:
+
+```powershell
+npm run deployment:preflight -- https://trust402.vercel.app
+```
+
+This preflight is read-only and records whether the GitHub Actions fallback is
+ready to configure, which Vercel secret names are required, whether Vercel Git
+App access is still blocked, and whether the current host satisfies the
+custom-domain requirement.
+
 Then generate the read-only live-window plan for the exact approved resource,
 budget, and provider:
 

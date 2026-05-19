@@ -433,6 +433,13 @@ npm run completion:actions -- https://trust402.vercel.app `
   --max-total-usd=0.03
 ```
 
+Check Git/Vercel auto-deploy and custom-domain readiness without mutating either
+service:
+
+```powershell
+npm run deployment:preflight -- https://trust402.vercel.app
+```
+
 Check the local Trust402-only AgentCash policy without spending:
 
 ```powershell

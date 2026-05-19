@@ -53,6 +53,7 @@ assert(packageJson.scripts?.["agentcash:refill-check"], "package must expose npm
 assert(packageJson.scripts?.["completion:audit"], "package must expose npm run completion:audit");
 assert(packageJson.scripts?.["completion:unblockers"], "package must expose npm run completion:unblockers");
 assert(packageJson.scripts?.["completion:actions"], "package must expose npm run completion:actions");
+assert(packageJson.scripts?.["deployment:preflight"], "package must expose npm run deployment:preflight");
 assert(packageJson.scripts?.["final:verify"], "package must expose npm run final:verify");
 assert(packageJson.scripts?.["privacy:check"], "package must expose npm run privacy:check");
 assert(packageJson.scripts?.["release:check"], "package must expose npm run release:check");
@@ -87,6 +88,7 @@ assert(existsSync("src/liveSmokeWindow.js"), "live smoke window module must exis
 assert(existsSync("src/liveWindowPlan.js"), "live window planning module must exist");
 assert(existsSync("src/operatorActionPack.js"), "operator action pack module must exist");
 assert(existsSync("src/operatorUnblockReport.js"), "operator unblock report module must exist");
+assert(existsSync("src/deploymentPreflight.js"), "deployment preflight module must exist");
 assert(existsSync("src/completionAudit.js"), "completion audit module must exist");
 assert(existsSync("src/paymentAdapters.js"), "payment adapter module must exist");
 assert(existsSync("src/policies.js"), "spend policy status module must exist");
@@ -115,6 +117,7 @@ assert(existsSync("scripts/agentcash-refill-check.js"), "AgentCash refill check 
 assert(existsSync("scripts/completion-audit.js"), "completion audit script must exist");
 assert(existsSync("scripts/operator-unblock-check.js"), "operator unblock check script must exist");
 assert(existsSync("scripts/operator-action-pack.js"), "operator action pack script must exist");
+assert(existsSync("scripts/deployment-preflight.js"), "deployment preflight script must exist");
 assert(existsSync("scripts/final-verification.js"), "final verification script must exist");
 assert(existsSync("scripts/live-evidence-smoke.js"), "live evidence smoke script must exist");
 assert(existsSync("scripts/live-smoke-window.js"), "live smoke window script must exist");

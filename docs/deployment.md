@@ -354,6 +354,20 @@ or call the free API helper:
 POST /api/operator/action-pack
 ```
 
+## Deployment Preflight
+
+Use the read-only deployment preflight before trying to close Git/Vercel
+auto-deploy or external-directory requirements:
+
+```powershell
+npm run deployment:preflight -- https://trust402.vercel.app
+```
+
+It checks the local Vercel project link, Git remote, GitHub Actions fallback
+workflow, launch-monitor workflow, expected Vercel secret names, and whether
+the current host is a custom production domain. It does not read secret values,
+connect GitHub, mutate Vercel, or submit directory forms.
+
 It returns public-safe action groups for Git/Vercel auto-deploy, custom domain,
 external directory evidence, live procurement, paid Proof402, AgentCash refill,
 autonomous job evidence, and final verification evidence. It does not set env
