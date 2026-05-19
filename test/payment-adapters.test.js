@@ -53,6 +53,8 @@ test("paymentBridgeContract documents public-safe bridge request shape", () => {
   assert.equal(contract.requestShape.request.headers, "<public headers only; auth/payment/secret headers stripped>");
   assert.equal(contract.responseShape.dryRun, "<true for preflight responses>");
   assert.equal(contract.responseShape.safety.paidSubcallsMade, "<0 for preflight responses>");
+  assert.equal(contract.liveResponseRequirements.dryRun, false);
+  assert.match(contract.liveResponseRequirements.settlementEvidence, /payment-response/);
   assert.equal(contract.safety.trust402SendsPrivateKeys, false);
   assert.equal(paymentBridgeContract("x402-fetch"), null);
 });
@@ -145,6 +147,42 @@ test("createPaidFetch routes external-adapter calls through a payment bridge", a
   assert.equal(calls[0].url, "https://pay.example/bridge");
   assert.equal(calls[0].body.request.url, "https://resource.example/paid");
   assert.equal(calls[0].body.request.headers.authorization, undefined);
+});
+
+test("createPaidFetch rejects dry-run bridge responses during live payment calls", async () => {
+  const paidFetch = await createPaidFetch({
+    cfg: {
+      ...baseConfig,
+      livePaymentProvider: "external-adapter",
+      livePaymentAdapterUrl: "https://pay.example/bridge"
+    },
+    fetchImpl: async () => new Response(JSON.stringify({
+      ok: true,
+      dryRun: true,
+      safety: { paidSubcallsMade: 0 },
+      response: {
+        status: 200,
+        headers: { "content-type": "application/json" },
+        body: { ok: true, tool: "dry-run-only" }
+      }
+    }), {
+      status: 200,
+      headers: { "content-type": "application/json" }
+    })
+  });
+
+  await assert.rejects(
+    () => paidFetch("https://resource.example/paid", {
+      method: "POST",
+      body: JSON.stringify({ hello: "world" })
+    }),
+    (error) => {
+      assert.equal(error.code, "payment_bridge_live_settlement_not_confirmed");
+      assert.ok(error.details.blockers.some((item) => item.id === "payment_bridge_returned_dry_run_response"));
+      assert.ok(error.details.blockers.some((item) => item.id === "payment_bridge_payment_evidence_missing"));
+      return true;
+    }
+  );
 });
 
 test("createPaidFetch constructs x402-fetch adapter only from local buyer secrets", async () => {

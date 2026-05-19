@@ -53,6 +53,11 @@ export function paymentBridgeContract(provider = "agentcash-mcp") {
         paidSubcallsMade: "<0 for preflight responses>"
       }
     },
+    liveResponseRequirements: {
+      dryRun: false,
+      settlementEvidence: "Live bridge responses must include a downstream payment-response header, paidSubcallsMade > 0, payment.paid=true, paid=true, settled=true, or settlement.status=settled.",
+      noPrivatePayloads: true
+    },
     safety: {
       trust402SendsPrivateKeys: false,
       trust402SendsPaymentHeadersToBridge: false,
@@ -228,6 +233,17 @@ async function fetchViaPaymentBridge({ cfg, fetchImpl, url, init }) {
       bodySummary: summarizeBridgeBody(body)
     });
   }
+  const settlement = liveSettlementVerdict(body);
+  if (!settlement.ok) {
+    throw new ApiError(502, "payment_bridge_live_settlement_not_confirmed", "Payment bridge did not prove a live x402 settlement.", {
+      provider: cfg.livePaymentProvider,
+      status: response.status,
+      bodySummary: summarizeBridgeBody(body),
+      blockers: settlement.blockers,
+      paidSubcallsMade: settlement.paidSubcallsMade,
+      paymentResponseObserved: settlement.paymentResponseObserved
+    });
+  }
   return responseFromBridgeBody(body);
 }
 
@@ -381,11 +397,74 @@ function responseFromBridgeBody(body) {
   });
 }
 
+function liveSettlementVerdict(body) {
+  const blockers = [];
+  const paidSubcallsMade = paidSubcallCount(body);
+  const paymentResponseObserved = hasPaymentResponse(body);
+  const paidOrSettled = explicitPaidOrSettled(body);
+
+  if (dryRunConfirmed(body)) {
+    blockers.push({
+      id: "payment_bridge_returned_dry_run_response",
+      message: "Live payment bridge response must not be marked as dry-run or no-payment."
+    });
+  }
+  if (paidSubcallsMade <= 0 && !paymentResponseObserved && !paidOrSettled) {
+    blockers.push({
+      id: "payment_bridge_payment_evidence_missing",
+      message: "Live payment bridge response must include settlement evidence before Trust402 records a paid purchase."
+    });
+  }
+
+  return {
+    ok: blockers.length === 0,
+    blockers,
+    paidSubcallsMade,
+    paymentResponseObserved
+  };
+}
+
+function dryRunConfirmed(body) {
+  if (!body || typeof body !== "object") return false;
+  return body.dryRun === true ||
+    body.mode === "dry-run" ||
+    body.safety?.dryRunOnly === true ||
+    body.payment?.paid === false ||
+    body.response?.paymentMade === false;
+}
+
+function paidSubcallCount(body) {
+  const value = body?.safety?.paidSubcallsMade ?? body?.paidSubcallsMade ?? body?.payment?.paidSubcallsMade ?? 0;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function hasPaymentResponse(body) {
+  const headers = body?.response?.headers || body?.headers || {};
+  return Object.entries(headers).some(([key, value]) =>
+    /payment-response/i.test(key) && String(value || "").trim()
+  );
+}
+
+function explicitPaidOrSettled(body) {
+  if (!body || typeof body !== "object") return false;
+  return body.paid === true ||
+    body.settled === true ||
+    body.payment?.paid === true ||
+    body.payment?.settled === true ||
+    body.settlement?.status === "settled" ||
+    body.payment?.status === "settled";
+}
+
 function summarizeBridgeBody(body) {
   if (!body || typeof body !== "object") return body;
   return {
     ok: body.ok ?? null,
     status: body.status ?? body.response?.status ?? null,
+    dryRun: body.dryRun ?? null,
+    mode: body.mode ?? null,
+    paidSubcallsMade: paidSubcallCount(body),
+    paymentResponseObserved: hasPaymentResponse(body),
     keys: Object.keys(body).slice(0, 20)
   };
 }
