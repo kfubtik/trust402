@@ -94,6 +94,9 @@ Completion evidence:
   live procurement smoke succeeds under the approved policy;
 - set `TRUST402_LIVE_PROCUREMENT_EVIDENCE_REF` to a public-safe receipt hash,
   run URL, or reviewed evidence reference.
+- use `npm run live:evidence-smoke -- --live ...` only during an approved
+  bounded spend window; the runner refuses live mode without local approval,
+  operator authorization, a real candidate endpoint, and a max-total cap.
 
 Tracking: https://github.com/kfubtik/trust402/issues/8
 
@@ -153,6 +156,9 @@ Completion evidence:
   Proof402 smoke succeeds for an approved hash;
 - set `TRUST402_PROOF402_EVIDENCE_REF` to the public-safe proof/receipt
   reference.
+- `npm run live:evidence-smoke -- --live ...` can produce this proof evidence
+  after live Proof402 policy is ready; it sends only hashes and public-safe
+  metadata.
 
 Tracking: https://github.com/kfubtik/trust402/issues/9
 
@@ -174,6 +180,9 @@ Completion evidence:
   autonomous job succeeds under the approved policy;
 - set `TRUST402_AUTONOMOUS_JOB_EVIDENCE_REF` to a public-safe run or receipt
   reference.
+- include `--include-autonomous-live` with `npm run live:evidence-smoke` only
+  after budgeting for the second downstream paid call used by the autonomous
+  workflow.
 
 ## 9. Monitoring And Protection
 

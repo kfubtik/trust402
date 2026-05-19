@@ -235,6 +235,33 @@ This fallback can produce the Git/Vercel evidence required by
 the workflow checks pass. Record the workflow run URL or Vercel deployment URL
 in `TRUST402_GIT_AUTO_DEPLOY_EVIDENCE_URL`.
 
+## Live Evidence Smoke Runner
+
+Trust402 includes a local runner for the final live evidence window:
+
+```powershell
+npm run live:evidence-smoke -- https://trust402.vercel.app
+```
+
+Without `--live`, it is dry-run only. For live mode it refuses to run unless all
+local runner gates are present:
+
+```powershell
+$env:TRUST402_LIVE_EVIDENCE_SMOKE_APPROVED='true'
+$env:TRUST402_OPERATOR_API_KEY='<operator key already configured in Vercel>'
+npm run live:evidence-smoke -- https://trust402.vercel.app `
+  --live `
+  --candidate-endpoint=https://approved.example/paid `
+  --candidate-price=0.01 `
+  --max-total-usd=0.05
+```
+
+Add `--include-autonomous-live` only after budgeting for a second downstream
+paid call. The runner never prints the operator key, never sends payment headers
+itself, and only records public-safe hashes/evidence refs. If live policy and
+receipts are valid, it suggests the `TRUST402_*_EVIDENCE_REF` environment
+values that can be reviewed before adding them to production.
+
 ## Live x402 Settlement
 
 The Express middleware bridge protects paid launch resources when

@@ -39,6 +39,7 @@ assert(packageJson.scripts?.["bazaar:indexing:check"], "package must expose npm 
 assert(packageJson.scripts?.["bazaar:indexing:check:all"], "package must expose npm run bazaar:indexing:check:all");
 assert(packageJson.scripts?.["directories:check"], "package must expose npm run directories:check");
 assert(packageJson.scripts?.["launch:monitor"], "package must expose npm run launch:monitor");
+assert(packageJson.scripts?.["live:evidence-smoke"], "package must expose npm run live:evidence-smoke");
 assert(packageJson.scripts?.["marketplace:bundle"], "package must expose npm run marketplace:bundle");
 assert(packageJson.scripts?.["agentcash:policy"], "package must expose npm run agentcash:policy");
 assert(packageJson.scripts?.["agentcash:refill-check"], "package must expose npm run agentcash:refill-check");
@@ -98,6 +99,7 @@ assert(existsSync("scripts/check-agentcash-policy.js"), "AgentCash policy check 
 assert(existsSync("scripts/agentcash-refill-check.js"), "AgentCash refill check script must exist");
 assert(existsSync("scripts/completion-audit.js"), "completion audit script must exist");
 assert(existsSync("scripts/final-verification.js"), "final verification script must exist");
+assert(existsSync("scripts/live-evidence-smoke.js"), "live evidence smoke script must exist");
 assert(existsSync("scripts/launch-monitor.js"), "production launch monitor script must exist");
 assert(smokeScript.includes("/api/jobs/autonomous-run"), "smoke script must cover autonomous job dry-run");
 assert(smokeScript.includes("/api/agentcash/refill-check"), "smoke script must cover AgentCash refill dry-run");
@@ -134,6 +136,7 @@ assert(autonomousPlan.includes("Final Definition Of Done"), "autonomous plan mus
 assert(autonomousPlan.includes("operator authorization"), "autonomous plan must require operator authorization for live execution");
 assert(autonomousPlan.includes("emergency stop"), "autonomous plan must include emergency stop criteria");
 assert(autonomousPlan.includes("zero remaining manual smoke"), "autonomous plan must record current AgentCash blocker");
+assert(autonomousPlan.includes("npm run live:evidence-smoke"), "autonomous plan must document live evidence smoke runner");
 assert(catalog.paidLaunchResources.length === 10, "expected 10 paid launch resources");
 assert(catalog.status === "production-mvp", "catalog status must reflect production MVP state");
 assert(catalog.laterResourcesToPreserve.length >= 2, "expected preserved later resources");

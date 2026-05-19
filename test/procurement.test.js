@@ -42,6 +42,22 @@ test("procurementQuote creates a bounded quote without spending", () => {
   assert.equal(result.receiptBundle.delegation.paidProofCallMade, false);
 });
 
+test("procurementQuote can select one trusted candidate", () => {
+  const result = procurementQuote({
+    goal: "Buy one known safe x402 resource.",
+    budgetUsd: 0.5,
+    maxPaidCalls: 1,
+    riskTolerance: "low",
+    candidates: [goodCandidate]
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.quote.selectedResources.length, 1);
+  assert.equal(result.quote.selectedResources[0].id, "good");
+  assert.equal(result.quote.comparison, null);
+  assert.equal(result.quote.withinBudget, true);
+});
+
 test("procurementExecute simulates execution and blocks paid subcalls", () => {
   const result = procurementExecute({
     mode: "dry-run",

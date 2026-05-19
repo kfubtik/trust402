@@ -4,7 +4,7 @@ import { sha256Json } from "./hash.js";
 import { createPaidFetch } from "./paymentAdapters.js";
 import { liveProcurementPolicy } from "./policies.js";
 import { receiptBundle } from "./receipts.js";
-import { compareResources, procurementPlan } from "./trustEngine.js";
+import { compareResources, procurementPlan, scoreResource } from "./trustEngine.js";
 
 const QUOTE_FEE_USD = 0.04;
 
@@ -16,8 +16,12 @@ export function procurementQuote(input = {}) {
     budgetUsd: plan.budget.perCallLimitUsd,
     candidates
   }) : null;
+  const rankedCandidates = comparison?.ranked || (candidates.length === 1 ? rankSingleCandidate({
+    candidate: candidates[0],
+    budgetUsd: plan.budget.perCallLimitUsd
+  }) : []);
   const selectedResources = selectResources({
-    ranked: comparison?.ranked || [],
+    ranked: rankedCandidates,
     candidates,
     maxPaidCalls: plan.budget.maxPaidCalls,
     minimumTrustScore: plan.policy.minimumTrustScore,
@@ -274,6 +278,33 @@ function selectResources({ ranked, candidates = [], maxPaidCalls, minimumTrustSc
     });
 }
 
+function rankSingleCandidate({ candidate, budgetUsd }) {
+  const scored = scoreResource(candidate);
+  const priceUsd = numberOrNull(candidate.priceUsd ?? candidate.price);
+  const budgetFit = budgetUsd === null || priceUsd === null || priceUsd <= budgetUsd;
+  return [{
+    rank: 1,
+    id: candidate.id || candidate.name || "candidate-1",
+    endpoint: candidate.endpoint || candidate.url || null,
+    priceUsd,
+    score: scored.score,
+    riskLevel: scored.riskLevel,
+    recommendation: scored.recommendation,
+    budgetFit,
+    valueScore: scored.score,
+    missing: scored.missing
+  }];
+}
+
+function numberOrNull(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
 function estimateTrust402DecisionFees({ candidateCount, includeComparison, includeReceipt }) {
   const checkFees = Math.min(candidateCount || 1, 10) * 0.005;
   const scoreFees = Math.min(candidateCount || 1, 10) * 0.01;
@@ -284,7 +315,8 @@ function estimateTrust402DecisionFees({ candidateCount, includeComparison, inclu
 
 function quoteNextSteps({ selectedResources, comparison, quoteCore }) {
   const steps = [];
-  if (!comparison) steps.push("Add 2-10 candidates to rank and select concrete resources.");
+  if (!comparison && selectedResources.length === 0) steps.push("Add 1-10 candidates with enough trust metadata to select concrete resources.");
+  if (!comparison && selectedResources.length > 0) steps.push("Optionally add 2-10 candidates when you want Trust402 to compare alternatives before live execution.");
   if (selectedResources.length === 0) steps.push("No candidate met the score and budget policy; fix metadata or raise the budget.");
   if (!quoteCore.withinBudget) steps.push("Reduce selected resources or increase the total budget before live execution.");
   if (steps.length === 0) steps.push("Run x402 diligence for selected resources, then execute only after explicit live-spend approval.");
