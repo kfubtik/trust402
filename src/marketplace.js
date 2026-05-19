@@ -50,8 +50,8 @@ export function marketplaceBundle() {
     notes: [
       "Use this bundle to prepare marketplace copy, Bazaar extension declarations, and buyer-facing resource metadata.",
       listingState.cdpBazaarIndexingReady
-        ? "Trust402 is eligible for CDP Bazaar indexing; the external catalog is asynchronous, so confirm visibility with npm run bazaar:indexing:check."
-        : "Do not claim CDP Bazaar listing until at least one real x402 settlement has completed for a Bazaar-enabled route.",
+        ? "Trust402 has current CDP Bazaar all-resource evidence; continue monitoring the external catalog because visibility is asynchronous."
+        : "Do not claim CDP Bazaar listing until real settlement, reviewed settlement evidence, and current all-resource CDP Bazaar route-count evidence are present.",
       "Keep live spend disabled until wallet policy, allowlists, receipt logs, and paid smoke limits are approved."
     ]
   };
@@ -65,8 +65,8 @@ function marketplaceListingState(checklist, settlement) {
     cdpBazaarIndexingReady: settlement.readiness.marketplaceIndexingReady,
     cdpBazaarIndexed: null,
     reason: settlement.readiness.marketplaceIndexingReady
-      ? "Real x402 settlement is configured and at least one successful settlement has been observed; CDP Bazaar catalog visibility is asynchronous and must be checked externally."
-      : "CDP Bazaar discovery indexes routes after a successful x402 settle through the facilitator. Trust402 currently exports metadata but keeps real settlement disabled or unproven."
+      ? "Real x402 settlement, reviewed successful-settlement evidence, and current CDP Bazaar all-resource route evidence are present."
+      : "CDP Bazaar readiness requires real x402 settlement, reviewed settlement evidence, and a current all-resource indexing check with zero missing routes."
   };
 }
 
@@ -80,6 +80,7 @@ function indexingPlan(settlement, listingState) {
         bazaarExtensionDeclared: bazaarCheck?.passed === true,
         cdpFacilitatorSelected: settlement.facilitator.cdp.selected === true,
         successfulSettlementObserved: settlement.mode.successfulSettlementObserved === true,
+        allResourceCdpBazaarEvidenceVerified: settlement.marketplaceIndexing?.cdpBazaar?.verified === true,
         realSettlementReady: settlement.readiness.realSettlementReady === true,
         paymentPayloadResourceRequired: true
       },

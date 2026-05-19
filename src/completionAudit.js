@@ -1,5 +1,6 @@
 import { loadCatalog } from "./catalog.js";
 import { config } from "./config.js";
+import { cdpBazaarEvidenceStatus } from "./cdpBazaarEvidence.js";
 import { launchIssues, spendPolicyStatus } from "./policies.js";
 import { launchChecklist } from "./readiness.js";
 import { settlementStatus } from "./settlement.js";
@@ -305,36 +306,6 @@ function finalVerification({ settlement, checklist, spend, runtimeConfig }) {
       ? "Keep final verification evidence current after future deploys."
       : "Run the full final command set after manual blockers and live-spend approvals are resolved, then set final verification evidence refs."
   });
-}
-
-function cdpBazaarEvidenceStatus(runtimeConfig) {
-  const expected = positiveInt(runtimeConfig.cdpBazaarExpectedResources);
-  const indexed = positiveInt(runtimeConfig.cdpBazaarIndexedResources);
-  const missingResources = Array.isArray(runtimeConfig.cdpBazaarMissingResources)
-    ? runtimeConfig.cdpBazaarMissingResources.filter(Boolean)
-    : [];
-  const status = runtimeConfig.cdpBazaarCheckStatus || "";
-  const hasRouteSummary = expected > 0 && indexed >= expected && missingResources.length === 0;
-  const verified = runtimeConfig.cdpBazaarAllResourcesIndexed === true &&
-    Boolean(runtimeConfig.cdpBazaarEvidenceRef) &&
-    status === "all-indexed" &&
-    hasRouteSummary;
-  return {
-    verified,
-    claimedAllResourcesIndexed: runtimeConfig.cdpBazaarAllResourcesIndexed === true,
-    evidenceRef: runtimeConfig.cdpBazaarEvidenceRef || "",
-    status,
-    expected,
-    indexed,
-    missingResources,
-    reason: verified
-      ? "CDP Bazaar all-resource evidence includes current route-count proof."
-      : "CDP Bazaar evidence must include all-indexed status, expected/indexed counts, zero missing resources, and a public-safe evidence ref."
-  };
-}
-
-function positiveInt(value) {
-  return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
 }
 
 function requirement({ id, title, status, evidence, nextAction, issue = null, details = null }) {

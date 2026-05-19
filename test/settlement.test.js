@@ -46,7 +46,7 @@ test("settlementStatus can become real-settlement ready without claiming marketp
   assert.ok(result.nextActions.some((action) => action.includes("paid smoke")));
 });
 
-test("settlementStatus requires observed settlement before marketplace indexing readiness", () => {
+test("settlementStatus requires observed settlement and current CDP evidence before marketplace indexing readiness", () => {
   const result = settlementStatus({
     config: testConfig({
       realSettlementEnabled: true,
@@ -56,13 +56,43 @@ test("settlementStatus requires observed settlement before marketplace indexing 
       facilitatorUrl: "https://api.cdp.coinbase.com/platform/v2/x402",
       cdpApiKeyIdConfigured: true,
       cdpApiKeySecretConfigured: true,
-      successfulSettlementObserved: true
+      successfulSettlementObserved: true,
+      cdpBazaarAllResourcesIndexed: true,
+      cdpBazaarEvidenceRef: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      cdpBazaarCheckStatus: "all-indexed",
+      cdpBazaarExpectedResources: 10,
+      cdpBazaarIndexedResources: 10,
+      cdpBazaarMissingResources: []
     }),
     catalog: { paidLaunchResources: manyResources() }
   });
 
   assert.equal(result.readiness.realSettlementReady, true);
   assert.equal(result.readiness.marketplaceIndexingReady, true);
+  assert.equal(result.marketplaceIndexing.cdpBazaar.verified, true);
+});
+
+test("settlementStatus does not treat stale CDP Bazaar boolean as marketplace-ready", () => {
+  const result = settlementStatus({
+    config: testConfig({
+      realSettlementEnabled: true,
+      paywallMode: "real",
+      publicBaseUrl: "https://trust402.example",
+      payTo: "0x1111111111111111111111111111111111111111",
+      facilitatorUrl: "https://api.cdp.coinbase.com/platform/v2/x402",
+      cdpApiKeyIdConfigured: true,
+      cdpApiKeySecretConfigured: true,
+      successfulSettlementObserved: true,
+      cdpBazaarAllResourcesIndexed: true,
+      cdpBazaarEvidenceRef: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }),
+    catalog: { paidLaunchResources: manyResources() }
+  });
+
+  assert.equal(result.readiness.realSettlementReady, true);
+  assert.equal(result.readiness.marketplaceIndexingReady, false);
+  assert.equal(result.marketplaceIndexing.cdpBazaar.verified, false);
+  assert.ok(result.nextActions.some((action) => action.includes("all-resource CDP Bazaar")));
 });
 
 test("settlementPreflight requires explicit paid-smoke approval and a small budget", () => {
@@ -188,6 +218,12 @@ function testConfig(overrides = {}) {
     cdpApiKeySecretConfigured: false,
     realSettlementEnabled: false,
     successfulSettlementObserved: false,
+    cdpBazaarAllResourcesIndexed: false,
+    cdpBazaarEvidenceRef: "",
+    cdpBazaarCheckStatus: "",
+    cdpBazaarExpectedResources: 0,
+    cdpBazaarIndexedResources: 0,
+    cdpBazaarMissingResources: [],
     paidSmokeApproved: false,
     paidSmokeMaxUsd: 0,
     paidSmokeResourceId: "trust.score_resource",

@@ -1,5 +1,6 @@
 import { loadCatalog } from "./catalog.js";
 import { config } from "./config.js";
+import { cdpBazaarEvidenceStatus } from "./cdpBazaarEvidence.js";
 import { declareDiscoveryExtension } from "@x402/extensions/bazaar";
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
@@ -11,6 +12,10 @@ export function settlementStatus(options = {}) {
   const paidResources = catalog.paidLaunchResources || [];
   const checks = settlementChecks(runtimeConfig, paidResources);
   const blockers = checks.filter((item) => !item.passed);
+  const cdpBazaar = cdpBazaarEvidenceStatus(runtimeConfig);
+  const marketplaceIndexingReady = blockers.length === 0 &&
+    runtimeConfig.successfulSettlementObserved &&
+    cdpBazaar.verified;
   const routeConfigDraft = Object.fromEntries(
     paidResources.map((resource) => [`${resource.method} ${resource.path}`, routeConfigFor(resource, runtimeConfig)])
   );
@@ -28,7 +33,15 @@ export function settlementStatus(options = {}) {
     readiness: {
       unpaidChallengeReady: unpaidChallengeReady(runtimeConfig),
       realSettlementReady: blockers.length === 0,
-      marketplaceIndexingReady: blockers.length === 0 && runtimeConfig.successfulSettlementObserved
+      marketplaceIndexingReady
+    },
+    marketplaceIndexing: {
+      successfulSettlementObserved: runtimeConfig.successfulSettlementObserved === true,
+      cdpBazaar,
+      requiredResourceCount: paidResources.length,
+      reason: marketplaceIndexingReady
+        ? "Real settlement, successful-settlement evidence, and current CDP Bazaar all-resource evidence are present."
+        : "Marketplace indexing readiness requires real settlement, a reviewed successful settlement, and current CDP Bazaar all-resource evidence."
     },
     payment: {
       x402Version: 2,
@@ -73,7 +86,7 @@ export function settlementStatus(options = {}) {
     routeConfigDraft,
     checks,
     blockers: blockers.map(({ id, scope, message }) => ({ id, scope, message })),
-    nextActions: nextActions(blockers, runtimeConfig)
+    nextActions: nextActions(blockers, runtimeConfig, cdpBazaar)
   };
 }
 
@@ -471,7 +484,7 @@ function unpaidChallengeReady(runtimeConfig) {
   return runtimeConfig.paywallMode === "mock" && isNonZeroPayTo(runtimeConfig.payTo);
 }
 
-function nextActions(blockers, runtimeConfig) {
+function nextActions(blockers, runtimeConfig, cdpBazaar = cdpBazaarEvidenceStatus(runtimeConfig)) {
   const ids = new Set(blockers.map((item) => item.id));
   const actions = [];
   if (ids.has("explicit_real_settlement_enabled")) {
@@ -488,6 +501,9 @@ function nextActions(blockers, runtimeConfig) {
   }
   if (actions.length === 0 && !runtimeConfig.successfulSettlementObserved) {
     actions.push("Run one explicit paid smoke with a strict max spend, then set TRUST402_SUCCESSFUL_SETTLEMENT_OBSERVED=true after verification.");
+  }
+  if (actions.length === 0 && !cdpBazaar.verified) {
+    actions.push("Run the all-resource CDP Bazaar indexing check and set the route-count evidence env only after it reports all-indexed with zero missing resources.");
   }
   return actions;
 }

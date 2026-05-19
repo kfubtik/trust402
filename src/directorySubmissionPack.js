@@ -1,5 +1,6 @@
 import { loadCatalog } from "./catalog.js";
 import { config } from "./config.js";
+import { cdpBazaarEvidenceStatus } from "./cdpBazaarEvidence.js";
 import { sha256Json } from "./hash.js";
 
 const FREE_HOST_SUFFIXES = [
@@ -186,35 +187,6 @@ export function directorySubmissionPack(input = {}, options = {}) {
       setsEnv: false
     }
   };
-}
-
-function cdpBazaarEvidenceStatus(cfg) {
-  const expected = positiveInt(cfg.cdpBazaarExpectedResources);
-  const indexed = positiveInt(cfg.cdpBazaarIndexedResources);
-  const missingResources = Array.isArray(cfg.cdpBazaarMissingResources)
-    ? cfg.cdpBazaarMissingResources.filter(Boolean)
-    : [];
-  const status = cfg.cdpBazaarCheckStatus || "";
-  const verified = cfg.cdpBazaarAllResourcesIndexed === true &&
-    Boolean(cfg.cdpBazaarEvidenceRef) &&
-    status === "all-indexed" &&
-    expected > 0 &&
-    indexed >= expected &&
-    missingResources.length === 0;
-  return {
-    verified,
-    status,
-    expected,
-    indexed,
-    missingResources,
-    reason: verified
-      ? "CDP Bazaar all-resource evidence includes current route-count proof."
-      : "CDP Bazaar evidence must include all-indexed status, expected/indexed counts, zero missing resources, and a public-safe evidence ref."
-  };
-}
-
-function positiveInt(value) {
-  return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
 }
 
 function targetPlan(target, context) {

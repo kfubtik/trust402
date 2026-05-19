@@ -195,6 +195,6 @@ test("completionAudit final verification requires CDP Bazaar all-resource eviden
   const final = almostFinal.requirements.find((item) => item.id === "final_verification");
 
   assert.equal(final?.status, "unverified");
-  assert.ok(final?.evidence.some((item) => item === "marketplaceIndexingReady=true"));
+  assert.ok(final?.evidence.some((item) => item === "marketplaceIndexingReady=false"));
   assert.ok(final?.evidence.some((item) => item === "cdpBazaarAllResourcesIndexed=false"));
 });
