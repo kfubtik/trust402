@@ -29,9 +29,11 @@ The full final Definition of Done is pinned in
   The latest `deployment:preflight` must confirm the production deployment
   commit matches the current repository HEAD; push-triggered Git/Vercel
   auto-deploy evidence is still not verified.
-- Latest manual production deployment: `dpl_9EHTBwb7a1f2kFGsS89WeQjmPG61`
-  from commit `a7a6a742800a8b1dce81301603b21d0831ae8281`; preflight confirmed
-  it matches repository HEAD as of 2026-05-19 23:21:26 +07:00.
+- Recent manual production deployment evidence snapshot:
+  `dpl_9EHTBwb7a1f2kFGsS89WeQjmPG61` from commit
+  `a7a6a742800a8b1dce81301603b21d0831ae8281`; preflight confirmed it matched
+  repository HEAD as of 2026-05-19 23:21:26 +07:00. Treat the latest
+  `deployment:preflight` output as the source of truth after any later deploy.
 - CDP Bazaar indexing: 10/10 paid launch resources verified as of
   2026-05-19 23:17:14 +07:00.
 - External directory visibility: monitored read-only; latest check found 0/8
@@ -40,7 +42,7 @@ The full final Definition of Done is pinned in
   submission.
 - Production gates: smoke, x402 smoke, launch monitor, deployment preflight,
   Docker build, `npm audit`, and external directory read-only check passed as
-  of 2026-05-19 23:21:04 +07:00. Latest final verification hash:
+  of 2026-05-19 23:21:04 +07:00. Recent final verification hash:
   `sha256:f96558088a30f9fbb350c4b6c08513d75e86dab6d9ae47200419b8a051f369ca`.
   `final:verify` remains blocked because Git/Vercel auto-deploy,
   external-directory visibility, live procurement, paid Proof402 delegation,
