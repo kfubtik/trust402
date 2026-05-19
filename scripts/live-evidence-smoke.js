@@ -30,6 +30,9 @@ try {
     includeRefill: args.skipRefill !== true,
     includeRefillLive: args.includeRefillLive === true,
     includeAutonomous: args.includeAutonomousLive === true || (live ? false : args.skipAutonomous !== true)
+  }, {
+    writeEvidenceLedger: args.writeEvidence === true || process.env.TRUST402_WRITE_EVIDENCE_LEDGER === "true",
+    evidenceLedgerDir: args.evidenceDir || process.env.TRUST402_EVIDENCE_LEDGER_DIR || undefined
   });
   console.log(JSON.stringify(result, null, 2));
 } catch (error) {

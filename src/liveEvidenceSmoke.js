@@ -1,4 +1,5 @@
 import { ApiError } from "./errors.js";
+import { appendEvidenceLedger } from "./evidenceLedger.js";
 import { sha256Json } from "./hash.js";
 import { evaluateLocalAgentcashPolicyForLive, readLocalAgentcashPolicy } from "./localAgentcashPolicy.js";
 import { procurementQuote } from "./procurement.js";
@@ -137,7 +138,7 @@ export async function liveEvidenceSmoke(input = {}, options = {}) {
     evidenceRefs
   });
 
-  return {
+  const result = {
     ok: true,
     tool: "live.evidence_smoke",
     mode,
@@ -161,6 +162,19 @@ export async function liveEvidenceSmoke(input = {}, options = {}) {
     },
     nextActions: nextActions({ mode, evidenceRefs, policies, includeAutonomous })
   };
+
+  if (options.writeEvidenceLedger === true) {
+    result.evidenceLedger = appendEvidenceLedger({
+      source: "live.evidence_smoke",
+      result
+    }, {
+      cwd: options.cwd,
+      ledgerDir: options.evidenceLedgerDir
+    });
+    delete result.evidenceLedger.record;
+  }
+
+  return result;
 }
 
 function guardLive({ mode, approved, operatorKey, candidate, maxTotalUsd, estimatedMaxSpendUsd, localAgentcashPolicy }) {

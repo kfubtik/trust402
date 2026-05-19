@@ -260,6 +260,12 @@ command for the approved smoke window.
 
 Agents can request the same read-only plan through `POST /api/live/window-plan`.
 
+During approved evidence collection, append `--write-evidence` to write a
+local public-safe JSONL ledger under `.local/evidence-ledger/`. This ledger is
+ignored by Git and stores hashes, stage statuses, and evidence refs only; it
+does not store operator keys, private payloads, payment signatures, or wallet
+secrets.
+
 For the full remaining-blocker checklist, export the public-safe operator
 action pack:
 

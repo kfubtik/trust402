@@ -282,6 +282,17 @@ the local remaining budget, global cap, and minimum reserve. The current local
 policy intentionally has `manualSmokeRemainingBudgetUsd=0`, so live evidence
 smoke remains blocked until a new approved spend window is recorded locally.
 
+To keep a local public-safe evidence trail, add `--write-evidence`:
+
+```powershell
+npm run live:evidence-smoke -- https://trust402.vercel.app --write-evidence
+```
+
+The runner appends JSONL entries under `.local/evidence-ledger/`. Those entries
+are ignored by Git and include only evidence hashes, stage status, public-safe
+evidence refs, and redacted safety summaries. They do not store operator keys,
+payment signatures, private payloads, wallet secrets, or payment headers.
+
 ## Live Window Planner
 
 Before changing local policy or production env for a live window, generate a

@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { mkdtempSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { liveEvidenceSmoke } from "../src/liveEvidenceSmoke.js";
 
 test("liveEvidenceSmoke dry-run produces staged evidence without approval", async () => {
@@ -19,6 +22,27 @@ test("liveEvidenceSmoke dry-run produces staged evidence without approval", asyn
   assert.ok(result.stages.some((item) => item.id === "procurement_execute" && item.status === "dry-run-complete"));
   assert.ok(result.stages.some((item) => item.id === "autonomous_job" && item.status === "dry-run-complete"));
   assert.equal(calls.some((call) => call.headers?.["x-trust402-operator-key"]), false);
+});
+
+test("liveEvidenceSmoke can write a public-safe local evidence ledger", async () => {
+  const cwd = mkdtempSync(join(tmpdir(), "trust402-live-ledger-"));
+  const result = await liveEvidenceSmoke({
+    baseUrl: "https://trust402.example",
+    includeAutonomous: false
+  }, {
+    fetchImpl: fakeFetch([]),
+    cwd,
+    writeEvidenceLedger: true,
+    evidenceLedgerDir: ".local/evidence-ledger-test"
+  });
+
+  assert.equal(result.evidenceLedger.written, true);
+  assert.match(result.evidenceLedger.recordHash, /^sha256:[a-f0-9]{64}$/);
+  const line = readFileSync(join(cwd, result.evidenceLedger.ledgerPath), "utf8").trim();
+  const record = JSON.parse(line);
+  assert.equal(record.evidenceHash, result.evidenceHash);
+  assert.equal(record.safety.includesSecretValues, false);
+  assert.equal(JSON.stringify(record).includes("test-operator"), false);
 });
 
 test("liveEvidenceSmoke blocks live mode without runner approval gates", async () => {

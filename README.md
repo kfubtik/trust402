@@ -397,6 +397,17 @@ npm run live:window-plan -- https://trust402.vercel.app `
   --max-total-usd=0.03
 ```
 
+Write a public-safe local evidence ledger during dry-run or approved live
+evidence collection:
+
+```powershell
+npm run live:evidence-smoke -- https://trust402.vercel.app --write-evidence
+```
+
+Ledger entries go under `.local/evidence-ledger/`, which is ignored by Git.
+They contain hashes, stage status, and public-safe evidence refs, not operator
+keys, payment signatures, private payloads, or wallet secrets.
+
 Export the public-safe operator action pack for all remaining blockers:
 
 ```powershell
@@ -468,6 +479,7 @@ Future live procurement must require:
 - `src/paymentAdapters.js` - buyer-side payment adapter readiness and bridge logic.
 - `src/autonomousJob.js` - dry-run-first autonomous job orchestration.
 - `src/agentcashRefill.js` - AgentCash refill policy decision and adapter-gated live action.
+- `src/evidenceLedger.js` - local public-safe JSONL ledger for evidence hashes and refs.
 - `src/liveWindowPlan.js` - read-only live evidence window planner.
 - `src/operatorActionPack.js` - public-safe action pack for remaining completion blockers.
 - `src/monitor.js` - one-shot monitor snapshot and badge logic.
