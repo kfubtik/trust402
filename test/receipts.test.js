@@ -58,6 +58,10 @@ test("notarizeResult previews a Proof402 request without a paid proof call", asy
   assert.equal(result.proofRequest.body.contentHash, result.resultHash);
   assert.equal(result.proofRequest.body.metadata.taskId, "task_123");
   assert.equal(result.proofRequest.body.metadata.apiKey, undefined);
+  assert.equal(result.receiptBundle.resultHash, result.resultHash);
+  assert.equal(result.receiptBundle.proofStatus, "preview-only");
+  assert.equal(result.receiptBundle.delegation.paidProofCallMade, false);
+  assert.equal(result.receiptBundle.policy.storesPrivatePayload, false);
   assert.ok(result.consistency.warnings.some((warning) => warning.includes("metadata.apiKey")));
 });
 
@@ -174,6 +178,13 @@ test("notarizeResult can complete live Proof402 delegation through injected paid
   assert.equal(result.delegation.proof.id, "mock-proof");
   assert.equal(result.delegation.proof.verified, true);
   assert.equal(result.delegation.proof.signatureObserved, true);
+  assert.equal(result.receiptBundle.proofStatus, "proof-created");
+  assert.equal(result.receiptBundle.proofLink, "https://proof402.vercel.app/proof/mock-proof");
+  assert.equal(result.receiptBundle.delegation.paidProofCallMade, true);
+  assert.equal(result.receiptBundle.delegation.paymentResponseObserved, true);
+  assert.equal(result.receiptBundle.policy.liveSpendEnabled, true);
+  assert.equal(result.receiptBundle.policy.operatorAuthorized, true);
+  assert.equal(result.receiptBundle.policy.storesPrivatePayload, false);
   assert.equal(calls.length, 1);
   assert.equal(calls[0].options.headers["x-trust402-max-amount-usd"], "0.01");
 });

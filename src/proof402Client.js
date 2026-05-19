@@ -3,6 +3,7 @@ import { ApiError } from "./errors.js";
 import { sha256Json, sha256Text } from "./hash.js";
 import { createPaidFetch } from "./paymentAdapters.js";
 import { proof402DelegationPolicy } from "./policies.js";
+import { receiptBundle } from "./receipts.js";
 
 const SHA256_RE = /^sha256:[a-f0-9]{64}$/;
 const SENSITIVE_METADATA_KEY_RE =
@@ -33,6 +34,23 @@ export async function notarizeResult(input = {}, options = {}) {
     proofLink: delegation.proofLink,
     proofRequest: delegation.proofRequest,
     delegation,
+    receiptBundle: receiptBundle({
+      subject: prepared.subject,
+      resultHash: prepared.resultHash,
+      payloadHash: prepared.payloadHash,
+      purpose: "Proof402 notarization receipt",
+      proofStatus: delegation.proofStatus,
+      proofLink: delegation.proofLink,
+      delegation: receiptDelegationSummary(delegation),
+      policy: {
+        liveSpendEnabled: cfg.liveSpendEnabled,
+        maxProofSpendUsd: cfg.proof402MaxSpendUsd,
+        requiresExplicitApproval: true,
+        storesPrivatePayload: false,
+        operatorAuthorized: options.operatorAuthorized === true
+      },
+      nextAction: nextReceiptAction(delegation)
+    }),
     policy: {
       liveSpendEnabled: cfg.liveSpendEnabled,
       maxProofSpendUsd: cfg.proof402MaxSpendUsd,
@@ -42,6 +60,27 @@ export async function notarizeResult(input = {}, options = {}) {
       operatorAuthorized: options.operatorAuthorized === true
     }
   };
+}
+
+function receiptDelegationSummary(delegation = {}) {
+  return {
+    configured: Boolean(delegation.configured),
+    mode: delegation.mode || "unknown",
+    baseUrl: delegation.baseUrl || null,
+    paidProofCallMade: Boolean(delegation.paidProofCallMade),
+    unpaidProbeMade: Boolean(delegation.unpaidProbeMade),
+    paymentResponseObserved: Boolean(delegation.paymentResponseObserved),
+    proofLink: delegation.proofLink || null,
+    verifyLink: delegation.verifyLink || null,
+    reason: delegation.reason || null,
+    responseHash: delegation.responseHash || null
+  };
+}
+
+function nextReceiptAction(delegation = {}) {
+  if (delegation.paidProofCallMade) return "Store the public-safe proof receipt reference with the associated Trust402 audit bundle.";
+  if (delegation.unpaidProbeMade) return "Review the unpaid probe result, then enable paid delegation only during an approved bounded spend window.";
+  return "Review this Proof402 request preview; paid delegation stays disabled until operator approval, spend caps, and receipt logging are ready.";
 }
 
 export function prepareProof402Request(input = {}, cfg = config) {

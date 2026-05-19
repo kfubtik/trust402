@@ -205,7 +205,9 @@ Acceptance:
 - private payloads are never sent to Proof402;
 - proof spend cap is enforced;
 - paid proof requires operator authorization;
-- proof result is included in the receipt/audit bundle.
+- proof result is included in the receipt/audit bundle;
+- `/api/receipts/notarize-result` returns a public-safe `receiptBundle` for
+  preview, probe, and live Proof402 outcomes.
 
 Completion evidence:
 

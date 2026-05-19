@@ -40,7 +40,17 @@ export function hashResult(input = {}) {
   };
 }
 
-export function receiptBundle({ subject, resultHash, payloadHash = null, purpose = "proof-ready result hash" }) {
+export function receiptBundle({
+  subject,
+  resultHash,
+  payloadHash = null,
+  purpose = "proof-ready result hash",
+  proofStatus = null,
+  proofLink = null,
+  delegation = null,
+  policy = null,
+  nextAction = null
+}) {
   if (!SHA256_RE.test(resultHash || "")) {
     throw new ApiError(400, "invalid_input", "resultHash must be sha256:<64 lowercase hex chars>.", {
       resultHash: "Use sha256:<hex>."
@@ -49,6 +59,19 @@ export function receiptBundle({ subject, resultHash, payloadHash = null, purpose
 
   const proofConfigured = Boolean(config.proof402BaseUrl);
   const delegationEnabled = config.proof402DelegationMode === "live";
+  const defaultDelegation = {
+    configured: proofConfigured,
+    mode: config.proof402DelegationMode,
+    baseUrl: proofConfigured ? config.proof402BaseUrl : null,
+    paidProofCallMade: false,
+    reason: delegationReason({ proofConfigured, delegationEnabled })
+  };
+  const defaultPolicy = {
+    liveSpendEnabled: false,
+    maxProofSpendUsd: config.proof402MaxSpendUsd,
+    requiresExplicitApproval: true,
+    storesPrivatePayload: false
+  };
 
   return {
     receiptId: `trust402:${resultHash.slice(7, 19)}`,
@@ -57,24 +80,16 @@ export function receiptBundle({ subject, resultHash, payloadHash = null, purpose
     resultHash,
     payloadHash,
     proofProvider: "Proof402",
-    proofStatus: delegationEnabled ? "blocked-by-policy" : "not-delegated",
-    proofLink: null,
-    delegation: {
-      configured: proofConfigured,
-      mode: config.proof402DelegationMode,
-      baseUrl: proofConfigured ? config.proof402BaseUrl : null,
-      paidProofCallMade: false,
-      reason: delegationReason({ proofConfigured, delegationEnabled })
-    },
+    proofStatus: proofStatus || (delegationEnabled ? "blocked-by-policy" : "not-delegated"),
+    proofLink: proofLink || null,
+    delegation: delegation || defaultDelegation,
     policy: {
-      liveSpendEnabled: false,
-      maxProofSpendUsd: config.proof402MaxSpendUsd,
-      requiresExplicitApproval: true,
-      storesPrivatePayload: false
+      ...defaultPolicy,
+      ...(policy || {})
     },
-    nextAction: proofConfigured
+    nextAction: nextAction || (proofConfigured
       ? "Call /api/receipts/notarize-result for a Proof402 request preview; enable paid proof delegation only after explicit max-spend approval and receipt logging."
-      : "Set PROOF402_BASE_URL later to delegate this hash to Proof402 without modifying Proof402."
+      : "Set PROOF402_BASE_URL later to delegate this hash to Proof402 without modifying Proof402.")
   };
 }
 
