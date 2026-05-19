@@ -81,6 +81,7 @@ test("operatorActionPack can become ready except final evidence when runtime fla
       externalDirectoryName: "Example Directory",
       liveSpendEnabled: true,
       livePaymentProvider: "external-adapter",
+      livePaymentAdapterUrl: "https://bridge.example/pay",
       liveAllowedRegistries: ["https://trusted.example"],
       operatorApiKey: "configured",
       proof402DelegationMode: "live",
@@ -200,6 +201,17 @@ test("operatorActionPack can stage a CDP x402 buyer path without bridge adapter"
     pack.liveWindowPlan.paymentProviderAlternatives.find((item) => item.provider === "cdp-x402").selected,
     true
   );
+  assert.equal(pack.unblockReport.summary.paymentProvider, "disabled");
+  assert.equal(pack.unblockReport.summary.proposedPaymentProvider, "cdp-x402");
+  assert.equal(
+    pack.unblockReport.checks.find((item) => item.id === "live_procurement").evidence.paymentAdapter.provider,
+    "cdp-x402"
+  );
+  assert.ok(
+    pack.unblockReport.checks
+      .find((item) => item.id === "live_procurement")
+      .evidence.paymentAdapter.requiredSecrets.includes("CDP_WALLET_SECRET")
+  );
 });
 
 test("operatorActionPack hash changes when the selected payment provider changes", () => {
@@ -239,8 +251,20 @@ function baseConfig() {
     externalDirectoryName: "",
     liveSpendEnabled: false,
     livePaymentProvider: "disabled",
+    livePaymentAdapterUrl: "",
     liveAllowedRegistries: [],
+    liveMaxPerCallUsd: 0,
+    liveMaxPerJobUsd: 0,
+    liveDailyLimitUsd: 0,
+    liveSpentTodayUsd: 0,
     operatorApiKey: "",
+    cdpApiKeyIdConfigured: false,
+    cdpApiKeySecretConfigured: false,
+    cdpWalletSecretConfigured: false,
+    cdpEvmAccountAddress: "",
+    cdpEvmAccountName: "",
+    x402BuyerPrivateKeyConfigured: false,
+    x402BuyerRpcUrl: "",
     proof402DelegationMode: "disabled",
     proof402BaseUrl: "https://proof402.vercel.app",
     proof402MaxSpendUsd: 0,

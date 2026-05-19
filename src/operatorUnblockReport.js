@@ -1,5 +1,6 @@
 import { config } from "./config.js";
 import { evaluateLocalAgentcashPolicyForLive, readLocalAgentcashPolicy } from "./localAgentcashPolicy.js";
+import { paymentProviderReadiness } from "./paymentAdapters.js";
 
 const FREE_HOST_SUFFIXES = [
   ".vercel.app",
@@ -16,6 +17,7 @@ export function operatorUnblockReport(input = {}, options = {}) {
   const proofReserveUsd = numberOr(input.proofReserveUsd, Math.max(cfg.proof402MaxSpendUsd || 0, 0.01));
   const includeProof = input.includeProof !== false;
   const includeAutonomous = input.includeAutonomous === true;
+  const proposedPaymentProvider = input.paymentProvider || cfg.livePaymentProvider || "disabled";
   const estimatedMaxSpendUsd = roundUsd(
     candidatePriceUsd * (includeAutonomous ? 2 : 1) +
     (includeProof ? proofReserveUsd : 0)
@@ -36,8 +38,8 @@ export function operatorUnblockReport(input = {}, options = {}) {
     gitAutoDeployCheck(cfg, input),
     externalDirectoryCheck(cfg, hostPolicy),
     customDomainCheck(hostPolicy),
-    liveProcurementCheck(cfg, localAgentcashPolicy),
-    proof402DelegationCheck(cfg, localAgentcashPolicy),
+    liveProcurementCheck(cfg, localAgentcashPolicy, { proposedPaymentProvider }),
+    proof402DelegationCheck(cfg, localAgentcashPolicy, { proposedPaymentProvider }),
     agentcashRefillCheck(cfg, localAgentcashPolicy, input.includeRefillLive === true),
     autonomousJobCheck(cfg),
     finalEvidenceCheck(cfg)
@@ -67,6 +69,8 @@ export function operatorUnblockReport(input = {}, options = {}) {
       localAgentcashPolicyReady: localAgentcashPolicy.ok,
       gitAutoDeployVerified: cfg.gitAutoDeployVerified,
       liveSpendEnabled: cfg.liveSpendEnabled,
+      paymentProvider: cfg.livePaymentProvider || "disabled",
+      proposedPaymentProvider,
       proof402DelegationMode: cfg.proof402DelegationMode || "disabled",
       agentcashAutoRefillEnabled: cfg.agentcashAutoRefillEnabled
     },
@@ -158,14 +162,20 @@ function customDomainCheck(hostPolicy) {
   };
 }
 
-function liveProcurementCheck(cfg, localAgentcashPolicy) {
+function liveProcurementCheck(cfg, localAgentcashPolicy, context = {}) {
+  const proposedPaymentProvider = context.proposedPaymentProvider || cfg.livePaymentProvider || "disabled";
+  const proposedPaymentAdapter = paymentProviderReadiness({
+    ...cfg,
+    livePaymentProvider: proposedPaymentProvider
+  });
   const blockers = [];
   const dailyRemainingUsd = dailyRemaining(cfg);
   if (!cfg.liveSpendEnabled) blockers.push("LIVE_SPEND_ENABLED is false.");
   if (!cfg.operatorApiKey) blockers.push("TRUST402_OPERATOR_API_KEY is not configured locally for the evidence runner.");
-  if (!["agentcash-mcp", "cdp-x402", "x402-fetch", "external-adapter"].includes(cfg.livePaymentProvider)) {
+  if (!["agentcash-mcp", "cdp-x402", "x402-fetch", "external-adapter"].includes(proposedPaymentProvider)) {
     blockers.push("LIVE_PAYMENT_PROVIDER must be agentcash-mcp, cdp-x402, x402-fetch, or external-adapter.");
   }
+  blockers.push(...proposedPaymentAdapter.blockers.map((item) => `${item.id}: ${item.message}`));
   if (!Array.isArray(cfg.liveAllowedRegistries) || cfg.liveAllowedRegistries.length === 0) {
     blockers.push("LIVE_ALLOWED_REGISTRIES is empty.");
   }
@@ -181,6 +191,8 @@ function liveProcurementCheck(cfg, localAgentcashPolicy) {
     evidence: {
       liveSpendEnabled: cfg.liveSpendEnabled,
       paymentProvider: cfg.livePaymentProvider,
+      proposedPaymentProvider,
+      paymentAdapter: publicPaymentAdapterEvidence(proposedPaymentAdapter),
       operatorKeyConfigured: Boolean(cfg.operatorApiKey),
       allowedRegistriesCount: Array.isArray(cfg.liveAllowedRegistries) ? cfg.liveAllowedRegistries.length : 0,
       maxPerCallUsd: cfg.liveMaxPerCallUsd,
@@ -197,9 +209,19 @@ function liveProcurementCheck(cfg, localAgentcashPolicy) {
   };
 }
 
-function proof402DelegationCheck(cfg, localAgentcashPolicy) {
+function proof402DelegationCheck(cfg, localAgentcashPolicy, context = {}) {
+  const proposedPaymentProvider = context.proposedPaymentProvider || cfg.livePaymentProvider || "disabled";
+  const proposedPaymentAdapter = paymentProviderReadiness({
+    ...cfg,
+    livePaymentProvider: proposedPaymentProvider
+  });
   const blockers = [];
   if (cfg.proof402DelegationMode !== "live") blockers.push("PROOF402_DELEGATION_MODE is not live.");
+  if (!cfg.liveSpendEnabled) blockers.push("LIVE_SPEND_ENABLED is false.");
+  if (!["agentcash-mcp", "cdp-x402", "x402-fetch", "external-adapter"].includes(proposedPaymentProvider)) {
+    blockers.push("LIVE_PAYMENT_PROVIDER must be agentcash-mcp, cdp-x402, x402-fetch, or external-adapter.");
+  }
+  blockers.push(...proposedPaymentAdapter.blockers.map((item) => `${item.id}: ${item.message}`));
   if (!cfg.proof402BaseUrl) blockers.push("PROOF402_BASE_URL is not configured.");
   if (!(cfg.proof402MaxSpendUsd > 0)) blockers.push("PROOF402_MAX_SPEND_USD must be greater than zero.");
   if (!cfg.operatorApiKey) blockers.push("TRUST402_OPERATOR_API_KEY is not configured.");
@@ -213,6 +235,9 @@ function proof402DelegationCheck(cfg, localAgentcashPolicy) {
       proof402BaseUrlConfigured: Boolean(cfg.proof402BaseUrl),
       proof402DelegationMode: cfg.proof402DelegationMode || "disabled",
       proof402MaxSpendUsd: cfg.proof402MaxSpendUsd,
+      paymentProvider: cfg.livePaymentProvider,
+      proposedPaymentProvider,
+      paymentAdapter: publicPaymentAdapterEvidence(proposedPaymentAdapter),
       operatorKeyConfigured: Boolean(cfg.operatorApiKey),
       blockers
     },
@@ -342,4 +367,25 @@ function roundUsd(value) {
 function dailyRemaining(cfg) {
   if (!(cfg.liveDailyLimitUsd > 0)) return 0;
   return roundUsd(Math.max(0, cfg.liveDailyLimitUsd - Math.max(0, cfg.liveSpentTodayUsd || 0)));
+}
+
+function publicPaymentAdapterEvidence(readiness) {
+  return {
+    provider: readiness.provider,
+    runtime: readiness.runtime,
+    ready: readiness.ready,
+    adapterUrlConfigured: readiness.adapterUrlConfigured,
+    x402BuyerPrivateKeyConfigured: readiness.x402BuyerPrivateKeyConfigured,
+    x402BuyerRpcUrlConfigured: readiness.x402BuyerRpcUrlConfigured,
+    cdpApiKeyIdConfigured: readiness.cdpApiKeyIdConfigured,
+    cdpApiKeySecretConfigured: readiness.cdpApiKeySecretConfigured,
+    cdpWalletSecretConfigured: readiness.cdpWalletSecretConfigured,
+    cdpEvmAccountAddressConfigured: readiness.cdpEvmAccountAddressConfigured,
+    cdpEvmAccountNameConfigured: readiness.cdpEvmAccountNameConfigured,
+    requiredSecrets: readiness.requiredSecrets,
+    blockers: readiness.blockers.map((item) => ({
+      id: item.id,
+      message: item.message
+    }))
+  };
 }

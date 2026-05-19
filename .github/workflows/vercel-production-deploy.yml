@@ -46,6 +46,7 @@ jobs:
       - name: Deploy production output
         id: deploy
         run: |
+          set -euo pipefail
           npx vercel@latest deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} | tee deployment-output.txt
           tail -n 1 deployment-output.txt > deployment-url.txt
           echo "url=$(cat deployment-url.txt)" >> "$GITHUB_OUTPUT"

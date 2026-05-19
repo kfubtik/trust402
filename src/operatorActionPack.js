@@ -20,19 +20,6 @@ export function operatorActionPack(input = {}, options = {}) {
   const includeAutoRefill = input.includeAutoRefill === true;
   const localDefaults = localAgentcashPolicyDefaults(options.localAgentcashPolicyResult);
 
-  const unblock = operatorUnblockReport({
-    baseUrl,
-    candidateEndpoint,
-    candidatePriceUsd,
-    proofReserveUsd,
-    includeProof,
-    includeAutonomous,
-    includeRefillLive: includeAutoRefill,
-    githubActionsFallbackPresent: input.githubActionsFallbackPresent,
-    githubCliAuthenticated: input.githubCliAuthenticated,
-    vercelProjectLinked: input.vercelProjectLinked
-  }, options);
-
   const livePlan = liveWindowPlan({
     baseUrl,
     candidateEndpoint,
@@ -58,6 +45,20 @@ export function operatorActionPack(input = {}, options = {}) {
     minimumReserveUsd: hasValue(input.minimumReserveUsd)
       ? input.minimumReserveUsd
       : localDefaults.minimumReserveUsd
+  }, options);
+
+  const unblock = operatorUnblockReport({
+    baseUrl,
+    candidateEndpoint,
+    candidatePriceUsd,
+    paymentProvider: livePlan.paymentProvider,
+    proofReserveUsd,
+    includeProof,
+    includeAutonomous,
+    includeRefillLive: includeAutoRefill,
+    githubActionsFallbackPresent: input.githubActionsFallbackPresent,
+    githubCliAuthenticated: input.githubCliAuthenticated,
+    vercelProjectLinked: input.vercelProjectLinked
   }, options);
 
   const actions = [
@@ -111,6 +112,7 @@ export function operatorActionPack(input = {}, options = {}) {
     unblockReport: {
       status: unblock.status,
       blockers: unblock.blockers,
+      checks: unblock.checks,
       summary: unblock.summary
     },
     evidenceCollection,

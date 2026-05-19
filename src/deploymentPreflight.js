@@ -126,6 +126,7 @@ function workflowEvidence(text) {
     runsReleaseCheck: source.includes("npm run release:check"),
     deploysPrebuiltProd: source.includes("vercel@latest build --prod") &&
       source.includes("vercel@latest deploy --prebuilt --prod"),
+    deploymentOutputCaptureSafe: !source.includes("| tee") || /set\s+-euo\s+pipefail/.test(source),
     smokesProductionAlias: source.includes("npm run smoke:x402 -- https://trust402.vercel.app"),
     strictLaunchMonitor: source.includes("npm run launch:monitor") && source.includes("--strict")
   };
@@ -279,6 +280,12 @@ function blockersFor(input) {
     blockers.push(blocker(
       "production_deploy_monitor_not_strict",
       "Production deploy workflow must run the launch monitor in strict mode."
+    ));
+  }
+  if (!input.productionWorkflow.deploymentOutputCaptureSafe) {
+    blockers.push(blocker(
+      "production_deploy_capture_not_pipefail_safe",
+      "Production deploy workflow captures the Vercel URL through a pipeline and must use set -euo pipefail."
     ));
   }
   if (!input.launchWorkflow.present) {

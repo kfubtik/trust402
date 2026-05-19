@@ -181,6 +181,39 @@ test("deploymentPreflight blocks stale recorded auto-deploy evidence", () => {
   assert.ok(result.blockers.some((item) => item.id === "git_auto_deploy_commit_stale"));
 });
 
+test("deploymentPreflight blocks unsafe Vercel deploy pipeline capture", () => {
+  const unsafeWorkflow = productionWorkflow + `
+      - run: npx vercel@latest deploy --prebuilt --prod --token=\${{ secrets.VERCEL_TOKEN }} | tee deployment-output.txt
+`;
+  const result = deploymentPreflight({
+    baseUrl: "https://trust402.example",
+    gitRemote: "https://github.com/kfubtik/trust402.git",
+    gitHead: "abc1234",
+    vercelProject: {
+      projectName: "trust402",
+      projectId: "prj_123",
+      orgId: "team_123"
+    },
+    productionDeployWorkflowText: unsafeWorkflow,
+    launchMonitorWorkflowText: launchWorkflow,
+    githubActionsSecretsConfigured: true,
+    gitAutoDeployVerified: true,
+    gitAutoDeployEvidenceUrl: "https://github.com/kfubtik/trust402/actions/runs/1",
+    gitAutoDeployCommitSha: "abc1234"
+  }, {
+    config: {
+      ...baseConfig(),
+      gitAutoDeployVerified: true,
+      gitAutoDeployEvidenceUrl: "https://github.com/kfubtik/trust402/actions/runs/1",
+      gitAutoDeployCommitSha: "abc1234"
+    }
+  });
+
+  assert.equal(result.status, "blocked-manual-evidence");
+  assert.equal(result.productionWorkflow.deploymentOutputCaptureSafe, false);
+  assert.ok(result.blockers.some((item) => item.id === "production_deploy_capture_not_pipefail_safe"));
+});
+
 function baseConfig() {
   return {
     publicBaseUrl: "https://trust402.vercel.app",

@@ -44,6 +44,7 @@ test("operatorUnblockReport becomes ready when every gate has evidence", () => {
       externalDirectoryName: "Example Directory",
       liveSpendEnabled: true,
       livePaymentProvider: "external-adapter",
+      livePaymentAdapterUrl: "https://bridge.example/pay",
       liveAllowedRegistries: ["https://resource.example"],
       operatorApiKey: "configured",
       proof402DelegationMode: "live",
@@ -92,6 +93,7 @@ test("operatorUnblockReport includes downstream origin in local AgentCash readin
       externalDirectoryName: "Example Directory",
       liveSpendEnabled: true,
       livePaymentProvider: "external-adapter",
+      livePaymentAdapterUrl: "https://bridge.example/pay",
       liveAllowedRegistries: ["https://not-allowed.example"],
       operatorApiKey: "configured",
       proof402DelegationMode: "live",
@@ -146,6 +148,51 @@ test("operatorUnblockReport keeps external directories blocked without CDP Bazaa
   assert.match(external.nextAction, /CDP Bazaar 10\/10/);
 });
 
+test("operatorUnblockReport previews proposed CDP x402 buyer blockers", () => {
+  const report = operatorUnblockReport({
+    baseUrl: "https://trust402.vercel.app",
+    candidateEndpoint: "https://proof402.vercel.app/api/proof/notarize",
+    candidatePriceUsd: 0.005,
+    paymentProvider: "cdp-x402",
+    githubActionsFallbackPresent: true,
+    vercelProjectLinked: true
+  }, {
+    config: {
+      ...baseConfig(),
+      liveSpendEnabled: true,
+      livePaymentProvider: "agentcash-mcp",
+      liveAllowedRegistries: ["https://proof402.vercel.app"],
+      operatorApiKey: "configured",
+      liveMaxPerCallUsd: 0.005,
+      liveMaxPerJobUsd: 0.015,
+      liveDailyLimitUsd: 0.015,
+      cdpApiKeyIdConfigured: true,
+      cdpApiKeySecretConfigured: true
+    },
+    localAgentcashPolicyResult: localPolicy({
+      manualSmokeRemainingBudgetUsd: 0.015,
+      agentcashGlobalMaxAmountUsd: 0.015,
+      trust402LiveProcurement: "approved-for-manual-smoke",
+      proof402Delegation: "approved-for-manual-smoke"
+    })
+  });
+  const live = report.checks.find((item) => item.id === "live_procurement");
+
+  assert.equal(report.summary.paymentProvider, "agentcash-mcp");
+  assert.equal(report.summary.proposedPaymentProvider, "cdp-x402");
+  assert.equal(live.evidence.paymentProvider, "agentcash-mcp");
+  assert.equal(live.evidence.proposedPaymentProvider, "cdp-x402");
+  assert.equal(live.evidence.paymentAdapter.provider, "cdp-x402");
+  assert.deepEqual(live.evidence.paymentAdapter.requiredSecrets, [
+    "CDP_API_KEY_ID",
+    "CDP_API_KEY_SECRET",
+    "CDP_WALLET_SECRET",
+    "CDP_EVM_ACCOUNT_ADDRESS_OR_NAME"
+  ]);
+  assert.ok(live.evidence.paymentAdapter.blockers.some((item) => item.id === "missing_cdp_wallet_secret"));
+  assert.ok(live.evidence.paymentAdapter.blockers.some((item) => item.id === "missing_cdp_evm_account"));
+});
+
 function baseConfig() {
   return {
     publicBaseUrl: "https://trust402.vercel.app",
@@ -159,8 +206,20 @@ function baseConfig() {
     externalDirectoryName: "",
     liveSpendEnabled: false,
     livePaymentProvider: "disabled",
+    livePaymentAdapterUrl: "",
     liveAllowedRegistries: [],
+    liveMaxPerCallUsd: 0,
+    liveMaxPerJobUsd: 0,
+    liveDailyLimitUsd: 0,
+    liveSpentTodayUsd: 0,
     operatorApiKey: "",
+    cdpApiKeyIdConfigured: false,
+    cdpApiKeySecretConfigured: false,
+    cdpWalletSecretConfigured: false,
+    cdpEvmAccountAddress: "",
+    cdpEvmAccountName: "",
+    x402BuyerPrivateKeyConfigured: false,
+    x402BuyerRpcUrl: "",
     proof402DelegationMode: "disabled",
     proof402BaseUrl: "https://proof402.vercel.app",
     proof402MaxSpendUsd: 0,
