@@ -379,6 +379,13 @@ public-safe verification hash:
 npm run final:verify -- https://trust402.vercel.app --skip-docker --skip-directories
 ```
 
+On this Windows workstation, use the installed Docker Desktop binary for the
+full Docker gate:
+
+```powershell
+npm run final:verify -- https://trust402.vercel.app --docker-bin=D:\Programs\Docker\resources\bin\docker.exe
+```
+
 Check the local Trust402-only AgentCash policy without spending:
 
 ```powershell

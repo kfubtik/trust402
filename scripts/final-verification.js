@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
+import path from "node:path";
 import { config } from "../src/config.js";
 import { finalVerificationReport } from "../src/finalVerification.js";
 
@@ -75,11 +76,12 @@ async function main() {
 
 function runCommand(id, label, command, commandArgs, options = {}) {
   const started = Date.now();
+  const commandEnv = envWithCommandDirectory(command);
   const result = spawnSync(command, commandArgs, {
     cwd: process.cwd(),
     encoding: "utf8",
     shell: process.platform === "win32",
-    env: process.env,
+    env: commandEnv,
     maxBuffer: 30 * 1024 * 1024
   });
   const stdout = String(result.stdout || "");
@@ -98,6 +100,18 @@ function runCommand(id, label, command, commandArgs, options = {}) {
     stdout,
     stderr,
     nextAction: passed ? null : nextActionFor(id)
+  };
+}
+
+function envWithCommandDirectory(command) {
+  if (!command || command === "npm" || command === "npx" || command === "docker") return process.env;
+  const directory = path.dirname(command);
+  if (!directory || directory === ".") return process.env;
+  const pathKey = process.platform === "win32" ? "Path" : "PATH";
+  const currentPath = process.env[pathKey] || process.env.PATH || "";
+  return {
+    ...process.env,
+    [pathKey]: `${directory}${path.delimiter}${currentPath}`
   };
 }
 

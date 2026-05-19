@@ -148,6 +148,13 @@ of what still blocks completion:
 npm run final:verify -- https://trust402.vercel.app --timeout-ms=10000
 ```
 
+On this Windows workstation, pass the Docker Desktop binary explicitly so the
+Docker credential helper directory is available to the verifier:
+
+```powershell
+npm run final:verify -- https://trust402.vercel.app --timeout-ms=10000 --docker-bin=D:\Programs\Docker\resources\bin\docker.exe
+```
+
 Useful safe modes:
 
 ```powershell
