@@ -36,6 +36,8 @@ test("operatorUnblockReport becomes ready when every gate has evidence", () => {
       gitAutoDeployVerified: true,
       gitAutoDeployEvidenceUrl: "https://github.com/kfubtik/trust402/actions/runs/1",
       gitAutoDeployCommitSha: "abc1234",
+      cdpBazaarAllResourcesIndexed: true,
+      cdpBazaarEvidenceRef: "sha256:cdp-bazaar-10-of-10",
       externalDirectoryStatus: "visible",
       externalDirectoryEvidenceUrl: "https://directory.example/trust402",
       externalDirectoryName: "Example Directory",
@@ -68,12 +70,38 @@ test("operatorUnblockReport becomes ready when every gate has evidence", () => {
   assert.equal(report.blockers.length, 0);
 });
 
+test("operatorUnblockReport keeps external directories blocked without CDP Bazaar 10/10 evidence", () => {
+  const report = operatorUnblockReport({
+    baseUrl: "https://trust402.example"
+  }, {
+    config: {
+      ...baseConfig(),
+      externalDirectoryStatus: "visible",
+      externalDirectoryEvidenceUrl: "https://directory.example/trust402",
+      externalDirectoryName: "Example Directory"
+    },
+    localAgentcashPolicyResult: localPolicy({
+      manualSmokeRemainingBudgetUsd: 0,
+      trust402LiveProcurement: "disabled-until-separate-approval",
+      proof402Delegation: "disabled-until-separate-approval"
+    })
+  });
+  const external = report.checks.find((item) => item.id === "external_x402_directories");
+
+  assert.equal(external.status, "blocked-cdp-bazaar");
+  assert.equal(external.evidence.cdpBazaarReady, false);
+  assert.equal(external.evidence.nonCdpDirectoryReady, true);
+  assert.match(external.nextAction, /CDP Bazaar 10\/10/);
+});
+
 function baseConfig() {
   return {
     publicBaseUrl: "https://trust402.vercel.app",
     gitAutoDeployVerified: false,
     gitAutoDeployEvidenceUrl: "",
     gitAutoDeployCommitSha: "",
+    cdpBazaarAllResourcesIndexed: false,
+    cdpBazaarEvidenceRef: "",
     externalDirectoryStatus: "not-visible-yet",
     externalDirectoryEvidenceUrl: "",
     externalDirectoryName: "",

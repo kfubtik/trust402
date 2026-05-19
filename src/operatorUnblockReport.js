@@ -104,26 +104,41 @@ function gitAutoDeployCheck(cfg, input) {
 }
 
 function externalDirectoryCheck(cfg, hostPolicy) {
-  const ready = cfg.externalDirectoryStatus === "visible" &&
+  const cdpBazaarReady = cfg.cdpBazaarAllResourcesIndexed &&
+    Boolean(cfg.cdpBazaarEvidenceRef);
+  const nonCdpDirectoryReady = cfg.externalDirectoryStatus === "visible" &&
     Boolean(cfg.externalDirectoryEvidenceUrl) &&
     Boolean(cfg.externalDirectoryName);
+  const ready = cdpBazaarReady && nonCdpDirectoryReady;
   return {
     id: "external_x402_directories",
     label: "External x402 directory evidence",
     required: true,
-    status: ready ? "ready" : hostPolicy.requiresCustomDomain ? "blocked-custom-domain" : "blocked-external",
+    status: ready
+      ? "ready"
+      : !cdpBazaarReady
+        ? "blocked-cdp-bazaar"
+        : hostPolicy.requiresCustomDomain
+          ? "blocked-custom-domain"
+          : "blocked-external",
     evidence: {
+      cdpBazaarAllResourcesIndexed: cfg.cdpBazaarAllResourcesIndexed,
+      cdpBazaarEvidenceRefConfigured: Boolean(cfg.cdpBazaarEvidenceRef),
+      cdpBazaarReady,
       status: cfg.externalDirectoryStatus,
       evidenceUrlConfigured: Boolean(cfg.externalDirectoryEvidenceUrl),
       directoryNameConfigured: Boolean(cfg.externalDirectoryName),
+      nonCdpDirectoryReady,
       host: hostPolicy.host,
       hostRequiresCustomDomain: hostPolicy.requiresCustomDomain
     },
     nextAction: ready
       ? "No action required."
-      : hostPolicy.requiresCustomDomain
-        ? "Attach a custom production domain before submitting to directories that reject free-hosting domains."
-        : "Submit the public-safe listing pack and record a visible listing evidence URL."
+      : !cdpBazaarReady
+        ? "Restore CDP Bazaar 10/10 indexing and record a public-safe CDP evidence ref."
+        : hostPolicy.requiresCustomDomain
+          ? "Attach a custom production domain before submitting to directories that reject free-hosting domains."
+          : "Submit the public-safe listing pack and record a visible listing evidence URL."
   };
 }
 
