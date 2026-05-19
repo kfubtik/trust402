@@ -30,7 +30,7 @@ and AgentCash auto-refill remain disabled until separately approved.
 
 ## Current External Directory Visibility
 
-Last checked on 2026-05-18 at 16:10:39 +07:00 with:
+Last checked on 2026-05-19 at 12:04:53 +07:00 with:
 
 ```powershell
 npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
