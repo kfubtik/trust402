@@ -346,6 +346,16 @@ procurement:
 npm run payment:bridge-check -- --adapter-url=https://<bridge-host>/pay --strict
 ```
 
+Plan the buyer payment route before opening a live window. The live-window and
+operator action-pack outputs include `paymentProviderAlternatives` for
+`agentcash-mcp`, `cdp-x402`, `x402-fetch`, and `external-adapter`; these list
+required secret names and preflight commands without printing secret values:
+
+```powershell
+npm run live:window-plan -- https://trust402.vercel.app --payment-provider=cdp-x402 --candidate-endpoint=https://proof402.vercel.app/api/proof/notarize --candidate-price=0.005 --max-total-usd=0.015
+npm run payment:buyer-preflight -- --provider=cdp-x402 --strict
+```
+
 Create a monitor snapshot:
 
 ```powershell

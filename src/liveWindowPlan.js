@@ -126,6 +126,10 @@ export function liveWindowPlan(input = {}, options = {}) {
         "--strict"
       ].join(" ")
     : null;
+  const paymentBuyerPreflightCommand = paymentProvider === "cdp-x402"
+    ? "npm run payment:buyer-preflight -- --provider=cdp-x402 --strict"
+    : null;
+  const paymentProviderPreflightCommand = paymentBridgePreflightCommand || paymentBuyerPreflightCommand;
   const proof402PreflightCommand = includeProof
     ? [
         "npm run proof402:preflight --",
@@ -149,10 +153,18 @@ export function liveWindowPlan(input = {}, options = {}) {
     includeAutoRefill,
     downstreamRequestPolicy,
     paymentAdapterContract,
+    paymentProviderAlternatives: paymentProviderAlternatives({
+      selectedProvider: paymentProvider,
+      candidateEndpoint,
+      liveMaxPerCallUsd,
+      includeProof
+    }),
     blockers,
     vercelEnvPlan,
     localPolicyPatch,
     paymentBridgePreflightCommand,
+    paymentBuyerPreflightCommand,
+    paymentProviderPreflightCommand,
     proof402PreflightCommand,
     command
   };
@@ -178,6 +190,7 @@ export function liveWindowPlan(input = {}, options = {}) {
           "Review this plan hash and local policy patch.",
           "Apply Vercel env values manually or through an approved secret-management flow.",
           ...(paymentBridgePreflightCommand ? ["Run the payment bridge preflight before enabling the live spend window."] : []),
+          ...(paymentBuyerPreflightCommand ? ["Run the CDP buyer preflight before enabling the live spend window."] : []),
           ...(proof402PreflightCommand ? ["Run the Proof402 paid-proof preflight for the exact approved result hash."] : []),
           "Update the ignored local AgentCash policy for the approved smoke window.",
           "Run the generated command only after the approval window is active."
@@ -227,6 +240,95 @@ function requestPolicyForCandidate(candidateEndpoint) {
     sendsOnly: ["goal"],
     privatePayloadAllowed: false,
     generatedBy: "scripts/live-evidence-smoke.js"
+  };
+}
+
+function paymentProviderAlternatives({ selectedProvider, candidateEndpoint, liveMaxPerCallUsd, includeProof }) {
+  return [
+    providerAlternative({
+      provider: "agentcash-mcp",
+      selectedProvider,
+      label: "AgentCash MCP bridge",
+      useWhen: "Use when a Trust402-specific AgentCash payment bridge URL is available and should keep wallet operations outside the Vercel function.",
+      preflightCommand: [
+        "npm run payment:bridge-check --",
+        "--adapter-url=<LIVE_PAYMENT_ADAPTER_URL>",
+        "--provider=agentcash-mcp",
+        `--candidate-endpoint=${candidateEndpoint || "<approved-x402-endpoint>"}`,
+        `--max-amount-usd=${usd(liveMaxPerCallUsd)}`,
+        "--strict"
+      ].join(" "),
+      requiresBridgePreflight: true
+    }),
+    providerAlternative({
+      provider: "cdp-x402",
+      selectedProvider,
+      label: "CDP-managed x402 buyer",
+      useWhen: "Use when the CDP project has CDP_WALLET_SECRET plus an existing EVM account address or name; no LIVE_PAYMENT_ADAPTER_URL is required.",
+      preflightCommand: "npm run payment:buyer-preflight -- --provider=cdp-x402 --strict",
+      probeCommand: "npm run payment:buyer-preflight -- --provider=cdp-x402 --probe-cdp --operator-approved --strict",
+      requiresCdpAccountRef: true
+    }),
+    providerAlternative({
+      provider: "x402-fetch",
+      selectedProvider,
+      label: "Local @x402/fetch buyer key",
+      useWhen: "Use only when the operator explicitly accepts private-key custody in runtime env; this is the most direct path but has the highest key-management burden.",
+      preflightCommand: "npm run completion:unblockers -- <base-url>",
+      privateKeyMaterialRequired: true
+    }),
+    providerAlternative({
+      provider: "external-adapter",
+      selectedProvider,
+      label: "External payment adapter",
+      useWhen: "Use when a non-AgentCash bridge implements the Trust402 payment adapter contract and can prove dry-run/no-payment behavior.",
+      preflightCommand: [
+        "npm run payment:bridge-check --",
+        "--adapter-url=<LIVE_PAYMENT_ADAPTER_URL>",
+        "--provider=external-adapter",
+        `--candidate-endpoint=${candidateEndpoint || "<approved-x402-endpoint>"}`,
+        `--max-amount-usd=${usd(liveMaxPerCallUsd)}`,
+        "--strict"
+      ].join(" "),
+      requiresBridgePreflight: true
+    })
+  ].map((item) => ({
+    ...item,
+    proof402Compatible: includeProof ? true : "not-required"
+  }));
+}
+
+function providerAlternative({
+  provider,
+  selectedProvider,
+  label,
+  useWhen,
+  preflightCommand,
+  probeCommand = null,
+  requiresBridgePreflight = false,
+  requiresCdpAccountRef = false,
+  privateKeyMaterialRequired = false
+}) {
+  return {
+    provider,
+    selected: provider === selectedProvider,
+    label,
+    useWhen,
+    envPlan: {
+      LIVE_PAYMENT_PROVIDER: provider
+    },
+    requiredSecrets: paymentProviderRequiredSecrets(provider),
+    bridgeContract: paymentBridgeContract(provider),
+    requiresBridgePreflight,
+    requiresCdpAccountRef,
+    privateKeyMaterialRequired,
+    preflightCommand,
+    probeCommand,
+    safety: {
+      includesSecretValues: false,
+      sendsPaymentHeadersDuringPreflight: false,
+      mutatesWalletDuringPreflight: false
+    }
   };
 }
 

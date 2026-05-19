@@ -119,7 +119,10 @@ export function operatorActionPack(input = {}, options = {}) {
       blockers: livePlan.blockers,
       downstreamRequestPolicy: livePlan.downstreamRequestPolicy,
       paymentAdapterContract: livePlan.paymentAdapterContract,
+      paymentProviderAlternatives: livePlan.paymentProviderAlternatives,
       paymentBridgePreflightCommand: livePlan.paymentBridgePreflightCommand,
+      paymentBuyerPreflightCommand: livePlan.paymentBuyerPreflightCommand,
+      paymentProviderPreflightCommand: livePlan.paymentProviderPreflightCommand,
       proof402PreflightCommand: livePlan.proof402PreflightCommand,
       vercelEnvPlan: livePlan.vercelEnvPlan,
       localPolicyPatch: livePlan.localPolicyPatch,
@@ -269,7 +272,10 @@ function liveProcurementAction(livePlan, cfg) {
     localPolicyPatch: livePlan.localPolicyPatch,
     downstreamRequestPolicy: livePlan.downstreamRequestPolicy,
     paymentAdapterContract: livePlan.paymentAdapterContract,
+    paymentProviderAlternatives: livePlan.paymentProviderAlternatives,
     paymentBridgePreflightCommand: livePlan.paymentBridgePreflightCommand,
+    paymentBuyerPreflightCommand: livePlan.paymentBuyerPreflightCommand,
+    paymentProviderPreflightCommand: livePlan.paymentProviderPreflightCommand,
     proof402PreflightCommand: livePlan.proof402PreflightCommand,
     runCommand: livePlan.command,
     evidenceEnv: {
@@ -422,7 +428,7 @@ function evidenceCollectionPlan(actions, livePlan) {
     liveWindowPlanHash: livePlan.planHash,
     localEvidenceRequired: [
       "npm run agentcash:policy",
-      livePlan.paymentBridgePreflightCommand,
+      livePlan.paymentProviderPreflightCommand,
       livePlan.proof402PreflightCommand,
       "npm run live:evidence-smoke -- <base-url> --live --candidate-endpoint=<approved-x402-endpoint> --candidate-price=<price> --max-total-usd=<budget>"
     ].filter(Boolean),

@@ -169,6 +169,20 @@ API equivalent is `POST /api/payments/buyer-preflight` with the operator key.
 The probe calls `cdp.evm.getAccount(...)` only, never creates accounts, never
 sends payment headers, and prints only address previews/hashes.
 
+`/api/live/window-plan` and `/api/operator/action-pack` include
+`paymentProviderAlternatives` so the operator can compare the supported buyer
+paths before opening a paid window:
+
+| Provider | Extra requirement | Preflight |
+| --- | --- | --- |
+| `agentcash-mcp` | `LIVE_PAYMENT_ADAPTER_URL` for the Trust402 AgentCash bridge | `npm run payment:bridge-check -- --provider=agentcash-mcp --strict` |
+| `cdp-x402` | `CDP_WALLET_SECRET` plus `CDP_EVM_ACCOUNT_ADDRESS` or `CDP_EVM_ACCOUNT_NAME` | `npm run payment:buyer-preflight -- --provider=cdp-x402 --strict` |
+| `x402-fetch` | `X402_BUYER_PRIVATE_KEY` and `X402_BUYER_RPC_URL` in runtime env | `/api/policies/spend` / unblock report readiness |
+| `external-adapter` | `LIVE_PAYMENT_ADAPTER_URL` for an approved non-AgentCash bridge | `npm run payment:bridge-check -- --provider=external-adapter --strict` |
+
+The alternatives are public-safe: they list secret names and commands, not
+secret values, private keys, payment headers, or wallet internals.
+
 When `LIVE_PAYMENT_PROVIDER=agentcash-mcp` or `external-adapter`,
 `LIVE_PAYMENT_ADAPTER_URL` is required. Trust402 posts a public-safe bridge
 request to that URL and expects the bridge to perform the paid x402 fetch while

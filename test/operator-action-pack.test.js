@@ -34,6 +34,8 @@ test("operatorActionPack turns blockers into public-safe operator actions", () =
   assert.ok(pack.evidenceCollection.verifyCommands.includes("npm test"));
   assert.ok(pack.evidenceCollection.localEvidenceRequired.some((item) => item.includes("agentcash:policy")));
   assert.ok(pack.evidenceCollection.localEvidenceRequired.some((item) => item.includes("proof402:preflight")));
+  assert.ok(pack.liveWindowPlan.paymentProviderAlternatives.some((item) => item.provider === "cdp-x402"));
+  assert.equal(pack.actions.find((action) => action.id === "live_procurement").paymentProviderAlternatives.length, 4);
   assert.equal(pack.evidenceCollection.safety.includesSecretValues, false);
   assert.equal(pack.liveWindowPlan.localPolicyPatch.limits.lastVerifiedBalanceUsd, "1.2");
   assert.equal(pack.liveWindowPlan.localPolicyPatch.limits.minimumReserveUsd, "0.5");
@@ -143,15 +145,61 @@ test("operatorActionPack defaults bounded live window to Proof402 paid smoke", (
   assert.equal(pack.liveWindowPlan.downstreamRequestPolicy.schema, "proof402.notarize");
   assert.equal(pack.liveWindowPlan.paymentAdapterContract.provider, "agentcash-mcp");
   assert.equal(pack.liveWindowPlan.paymentAdapterContract.safety.bridgeMustEnforceMaxAmountUsd, true);
+  assert.equal(pack.liveWindowPlan.paymentProviderPreflightCommand, pack.liveWindowPlan.paymentBridgePreflightCommand);
+  assert.equal(pack.liveWindowPlan.paymentBuyerPreflightCommand, null);
   assert.match(pack.liveWindowPlan.paymentBridgePreflightCommand, /npm run payment:bridge-check/);
   assert.match(pack.liveWindowPlan.proof402PreflightCommand, /npm run proof402:preflight/);
   assert.equal(pack.actions.find((action) => action.id === "live_procurement").downstreamRequestPolicy.privatePayloadAllowed, false);
   assert.equal(pack.actions.find((action) => action.id === "live_procurement").paymentAdapterContract.endpointEnv, "LIVE_PAYMENT_ADAPTER_URL");
+  assert.equal(
+    pack.actions.find((action) => action.id === "live_procurement").paymentProviderAlternatives.find((item) => item.provider === "cdp-x402").requiresCdpAccountRef,
+    true
+  );
   assert.match(pack.actions.find((action) => action.id === "live_procurement").paymentBridgePreflightCommand, /--strict/);
   assert.match(pack.actions.find((action) => action.id === "live_procurement").proof402PreflightCommand, /--strict/);
   assert.match(pack.actions.find((action) => action.id === "paid_proof402_delegation").preflightCommand, /--approved-hash=sha256:<approved-result-hash>/);
   assert.match(pack.liveWindowPlan.command, /--candidate-endpoint=https:\/\/proof402\.vercel\.app\/api\/proof\/notarize/);
   assert.match(pack.liveWindowPlan.command, /--candidate-price=0\.005/);
+});
+
+test("operatorActionPack can stage a CDP x402 buyer path without bridge adapter", () => {
+  const pack = operatorActionPack({
+    baseUrl: "https://trust402.vercel.app",
+    candidateEndpoint: "https://proof402.vercel.app/api/proof/notarize",
+    candidatePriceUsd: 0.005,
+    maxTotalUsd: 0.015,
+    paymentProvider: "cdp-x402",
+    githubActionsFallbackPresent: true,
+    vercelProjectLinked: true
+  }, {
+    config: baseConfig(),
+    localAgentcashPolicyResult: localPolicy({
+      manualSmokeRemainingBudgetUsd: 0.015,
+      agentcashGlobalMaxAmountUsd: 0.015,
+      trust402LiveProcurement: "approved-for-manual-smoke",
+      proof402Delegation: "approved-for-manual-smoke"
+    })
+  });
+
+  assert.equal(pack.liveWindowPlan.paymentAdapterContract, null);
+  assert.equal(pack.liveWindowPlan.paymentBridgePreflightCommand, null);
+  assert.match(pack.liveWindowPlan.paymentBuyerPreflightCommand, /payment:buyer-preflight/);
+  assert.equal(pack.liveWindowPlan.paymentProviderPreflightCommand, pack.liveWindowPlan.paymentBuyerPreflightCommand);
+  assert.deepEqual(
+    pack.actions.find((action) => action.id === "live_procurement").requiredSecretNames,
+    [
+      "TRUST402_OPERATOR_API_KEY",
+      "CDP_API_KEY_ID",
+      "CDP_API_KEY_SECRET",
+      "CDP_WALLET_SECRET",
+      "CDP_EVM_ACCOUNT_ADDRESS_OR_NAME"
+    ]
+  );
+  assert.ok(pack.evidenceCollection.localEvidenceRequired.some((item) => item.includes("payment:buyer-preflight")));
+  assert.equal(
+    pack.liveWindowPlan.paymentProviderAlternatives.find((item) => item.provider === "cdp-x402").selected,
+    true
+  );
 });
 
 function baseConfig() {

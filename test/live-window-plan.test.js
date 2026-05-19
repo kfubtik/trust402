@@ -37,8 +37,17 @@ test("live window plan stays read-only and produces a bounded staging profile", 
   assert.equal(result.paymentAdapterContract.provider, "agentcash-mcp");
   assert.equal(result.paymentAdapterContract.endpointEnv, "LIVE_PAYMENT_ADAPTER_URL");
   assert.equal(result.paymentAdapterContract.safety.trust402StripsSecretHeaders, true);
+  assert.equal(result.paymentProviderPreflightCommand, result.paymentBridgePreflightCommand);
+  assert.equal(result.paymentBuyerPreflightCommand, null);
   assert.match(result.paymentBridgePreflightCommand, /npm run payment:bridge-check/);
   assert.match(result.paymentBridgePreflightCommand, /--provider=agentcash-mcp/);
+  assert.equal(result.paymentProviderAlternatives.length, 4);
+  assert.equal(result.paymentProviderAlternatives.find((item) => item.provider === "agentcash-mcp").selected, true);
+  assert.deepEqual(
+    result.paymentProviderAlternatives.find((item) => item.provider === "cdp-x402").requiredSecrets,
+    ["CDP_API_KEY_ID", "CDP_API_KEY_SECRET", "CDP_WALLET_SECRET", "CDP_EVM_ACCOUNT_ADDRESS_OR_NAME"]
+  );
+  assert.equal(result.paymentProviderAlternatives.find((item) => item.provider === "cdp-x402").requiresCdpAccountRef, true);
   assert.match(result.proof402PreflightCommand, /npm run proof402:preflight/);
   assert.match(result.proof402PreflightCommand, /--approved-hash=sha256:<approved-result-hash>/);
   assert.equal(result.localPolicyPatch.restrictions.trust402LiveProcurement, "approved-for-manual-smoke");
@@ -93,6 +102,8 @@ test("live window plan lists x402-fetch buyer secrets without bridge contract", 
   assert.equal(result.status, "ready-to-stage");
   assert.equal(result.paymentAdapterContract, null);
   assert.equal(result.paymentBridgePreflightCommand, null);
+  assert.equal(result.paymentBuyerPreflightCommand, null);
+  assert.equal(result.paymentProviderPreflightCommand, null);
   assert.deepEqual(result.vercelEnvPlan.requiredSecretsAlreadyExistOrMustBeAddedManually, [
     "TRUST402_OPERATOR_API_KEY",
     "X402_BUYER_PRIVATE_KEY",
@@ -115,6 +126,9 @@ test("live window plan lists cdp-x402 buyer secrets without bridge contract", ()
   assert.equal(result.status, "ready-to-stage");
   assert.equal(result.paymentAdapterContract, null);
   assert.equal(result.paymentBridgePreflightCommand, null);
+  assert.equal(result.paymentProviderPreflightCommand, result.paymentBuyerPreflightCommand);
+  assert.match(result.paymentBuyerPreflightCommand, /payment:buyer-preflight/);
+  assert.equal(result.paymentProviderAlternatives.find((item) => item.provider === "cdp-x402").selected, true);
   assert.deepEqual(result.vercelEnvPlan.requiredSecretsAlreadyExistOrMustBeAddedManually, [
     "TRUST402_OPERATOR_API_KEY",
     "CDP_API_KEY_ID",
