@@ -14,22 +14,20 @@ const skipDocker = args.includes("--skip-docker");
 const skipDirectories = args.includes("--skip-directories");
 const withVercelLogs = args.includes("--with-vercel-logs");
 const dockerBin = valueArg("--docker-bin") || process.env.TRUST402_DOCKER_BIN || defaultDockerBin();
-const npmBin = "npm";
+const nodeBin = process.execPath;
 const npxBin = "npx";
 
 async function main() {
   const checks = [
-    runCommand("release_check", "Local release gate", npmBin, ["run", "release:check"]),
+    runCommand("release_check", "Local release gate", nodeBin, ["scripts/release-check.js"]),
     skipDocker
       ? skipped("docker_build", "Docker build", "Skipped by --skip-docker.")
       : runCommand("docker_build", "Docker build", dockerBin, ["build", "-t", "trust402:test", "."]),
-    runCommand("production_smoke", "Production smoke", npmBin, ["run", "smoke", "--", baseUrl]),
-    runCommand("production_x402_smoke", "Production x402 smoke", npmBin, ["run", "smoke:x402", "--", baseUrl]),
-    runCommand("agentcash_refill_check", "AgentCash refill dry-run check", npmBin, ["run", "agentcash:refill-check"]),
-    runCommand("launch_monitor", "Production launch monitor", npmBin, [
-      "run",
-      "launch:monitor",
-      "--",
+    runCommand("production_smoke", "Production smoke", nodeBin, ["scripts/smoke.js", baseUrl]),
+    runCommand("production_x402_smoke", "Production x402 smoke", nodeBin, ["scripts/x402-smoke.js", baseUrl]),
+    runCommand("agentcash_refill_check", "AgentCash refill dry-run check", nodeBin, ["scripts/agentcash-refill-check.js"]),
+    runCommand("launch_monitor", "Production launch monitor", nodeBin, [
+      "scripts/launch-monitor.js",
       baseUrl,
       `--timeout-ms=${timeoutMs}`,
       "--skip-directories",
@@ -37,17 +35,13 @@ async function main() {
     ]),
     skipDirectories
       ? skipped("external_directories", "External directories", "Skipped by --skip-directories.", false)
-      : runCommand("external_directories", "External directory visibility", npmBin, [
-          "run",
-          "directories:check",
-          "--",
+      : runCommand("external_directories", "External directory visibility", nodeBin, [
+          "scripts/check-external-directories.js",
           baseUrl,
           `--timeout-ms=${timeoutMs}`
         ], { required: false }),
-    runCommand("production_completion_audit", "Production completion audit", npmBin, [
-      "run",
-      "completion:audit",
-      "--",
+    runCommand("production_completion_audit", "Production completion audit", nodeBin, [
+      "scripts/completion-audit.js",
       baseUrl
     ]),
     withVercelLogs
@@ -82,7 +76,7 @@ function runCommand(id, label, command, commandArgs, options = {}) {
   const result = spawnSync(command, commandArgs, {
     cwd: process.cwd(),
     encoding: "utf8",
-    shell: process.platform === "win32",
+    shell: shouldUseShell(command),
     env: commandEnv,
     maxBuffer: 30 * 1024 * 1024
   });
@@ -104,6 +98,13 @@ function runCommand(id, label, command, commandArgs, options = {}) {
     stderr,
     nextAction: passed ? null : nextActionFor(id)
   };
+}
+
+function shouldUseShell(command) {
+  if (process.platform !== "win32") return false;
+  const value = String(command || "");
+  if (path.isAbsolute(value) || value.toLowerCase().endsWith(".exe")) return false;
+  return true;
 }
 
 function envWithCommandDirectory(command) {
