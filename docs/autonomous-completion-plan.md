@@ -506,6 +506,20 @@ the unpaid AgentCash schema-check input, the paid AgentCash fetch input, stable
 input hashes, and the restore-after-run policy values. It does not call
 AgentCash, does not write `.local`, and does not spend.
 
+After the exact one-line approval is supplied, the local policy window can be
+opened and closed with:
+
+```powershell
+npm run agentcash:direct-smoke-window -- --status
+npm run agentcash:direct-smoke-window -- --open --approval "<exact one-line approval>"
+npm run agentcash:direct-smoke-window -- --close
+```
+
+The open command writes only `.local/trust402-agentcash-wallet.json` and an
+ignored `.local/trust402-agentcash-direct-smoke-window.json` restore file. It
+does not call AgentCash and does not pay. The close command restores the
+original local policy from the ignored restore file and removes that state file.
+
 The `fetch.input` in that output may help produce indexing evidence for
 `trust.compare_resources`, but it remains out-of-band. It does not prove the
 Trust402 runtime payment adapter and must not be used to mark
