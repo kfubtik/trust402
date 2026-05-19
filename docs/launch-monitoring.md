@@ -73,12 +73,13 @@ public directory pages.
 
 ## Latest Verified Baseline
 
-Last checked on 2026-05-19 at 16:49:24 +07:00 with:
+Last checked on 2026-05-19 at 17:06:05 +07:00 with:
 
 ```powershell
 npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=15000
 npm run smoke -- https://trust402.vercel.app
 npm run smoke:x402 -- https://trust402.vercel.app
+npm run final:verify -- https://trust402.vercel.app --timeout-ms=15000 --docker-bin=D:\Programs\Docker\resources\bin\docker.exe --skip-directories
 ```
 
 Trust402's verified production/discovery state is:
@@ -98,6 +99,9 @@ cdpBazaar.routeSummary.indexed = 10
 cdpBazaar.routeSummary.missing = []
 externalDirectories.status = not-visible-yet
 externalDirectories.visible = 0
+finalVerification.status = blocked
+finalVerification.commandsPassed = true
+finalVerification.nonFinalOpenRequirements = 6
 ```
 
 That state is production-healthy for API/x402/spend safety, but final launch

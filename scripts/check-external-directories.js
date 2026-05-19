@@ -86,6 +86,18 @@ const directories = [
       `https://x402-list.com/api/v1/services?q=${encodeURIComponent("Trust402")}`,
       `https://x402-list.com/api/v1/services?q=${encodeURIComponent(host)}`
     ]
+  },
+  {
+    id: "agora402",
+    name: "Agora402",
+    status: "registry-or-search",
+    urls: [
+      "https://agora402.io/",
+      "https://agora402.io/search?q=Trust402",
+      `https://agora402.io/search?q=${encodeURIComponent(host)}`,
+      `https://agora402.io/api/v1/discover?query=${encodeURIComponent("Trust402")}`,
+      `https://agora402.io/api/v1/discover?query=${encodeURIComponent(host)}`
+    ]
   }
 ];
 

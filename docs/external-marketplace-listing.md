@@ -31,7 +31,7 @@ and AgentCash auto-refill remain disabled until separately approved.
 
 ## Current External Directory Visibility
 
-Last checked on 2026-05-19 at 16:21:15 +07:00 with:
+Last checked on 2026-05-19 at 17:09:07 +07:00 with:
 
 ```powershell
 npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
@@ -41,22 +41,21 @@ Result:
 
 ```text
 status = not-visible-yet
-checked = 7
+checked = 8
 reachable = 5
 visible = 0
 notVisibleYet = 5
-unreachable = 2
+unreachable = 3
 customDomainBlocked = 1
 ```
 
 Interpretation:
 
 - CDP Bazaar remains the authoritative discovery signal for Trust402 right now;
-- Agentic.Market, x402scan, x402Bazaar, RelAI market, x402list, and
-  x402-list.com were reachable but did not expose Trust402 in the fetched public
-  HTML/search/API pages;
-- x402.org ecosystem was not reliably reachable within the 10-second read-only
-  check window;
+- Agentic.Market, x402scan, x402Bazaar, RelAI market, x402list,
+  x402-list.com, and Agora402 are monitored for public Trust402 visibility;
+- x402.org ecosystem and Agora402 were not reliably reachable within the
+  10-second read-only check window;
 - `not-visible-yet` is not proof of absence because several directories are
   client-rendered, asynchronously indexed, curated, or rate-limited.
 
@@ -123,7 +122,7 @@ Reference:
 
 - https://www.x402.org/ecosystem
 
-### x402scan, x402.direct, x402bazaar, RelAI, x402list, Agent402
+### x402scan, x402.direct, x402bazaar, RelAI, x402list, Agent402, Agora402
 
 Status: monitor or submit when a safe form/API is available.
 

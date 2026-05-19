@@ -95,6 +95,11 @@ function indexingPlan(settlement, listingState) {
         name: "x402 Bazaar",
         url: "https://docs.cdp.coinbase.com/x402/bazaar",
         mode: "settlement-indexed"
+      },
+      {
+        name: "Agora402",
+        url: "https://agora402.io/",
+        mode: "registry-or-search"
       }
     ]
   };
