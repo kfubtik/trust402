@@ -25,19 +25,20 @@ The full final Definition of Done is pinned in
 ## Current Safe State
 
 - Production URL: `https://trust402.vercel.app`.
-- Latest manual production deployment: commit `f4be1e6` deployed through
-  Vercel CLI on 2026-05-19 20:37:29 +07:00; push-triggered Git/Vercel
+- Deployment mode: production is still updated through manual Vercel CLI runs.
+  The latest `deployment:preflight` must confirm the production deployment
+  commit matches the current repository HEAD; push-triggered Git/Vercel
   auto-deploy evidence is still not verified.
 - CDP Bazaar indexing: 10/10 paid launch resources verified as of
-  2026-05-19 20:41:40 +07:00.
+  2026-05-19 20:48:42 +07:00.
 - External directory visibility: monitored read-only; latest check found 0/8
   visible, 5 reachable, and 3 timeout/unreachable directories as of
   2026-05-19 20:44:14 +07:00; one directory requires a custom domain before
   submission.
 - Production gates: smoke, x402 smoke, launch monitor, deployment preflight,
-  and external directory read-only check passed as of
-  2026-05-19 20:44:14 +07:00, but goal remains blocked because Git/Vercel
-  auto-deploy,
+  Docker build, `npm audit`, and external directory read-only check passed as
+  of 2026-05-19 20:52:55 +07:00, but `final:verify` remains blocked because
+  Git/Vercel auto-deploy,
   external-directory visibility, live procurement, paid Proof402 delegation,
   AgentCash auto-refill, and autonomous live job evidence are still unresolved.
 - Live evidence staging: production action pack now defaults the bounded
