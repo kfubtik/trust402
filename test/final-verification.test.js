@@ -82,6 +82,94 @@ test("finalVerificationReport is complete when production audit is complete", ()
   assert.equal(report.summary.productionGoalComplete, true);
 });
 
+test("finalVerificationReport exposes external discovery blockers from launch monitor output", () => {
+  const report = finalVerificationReport({
+    baseUrl: "https://trust402.vercel.app",
+    checks: [
+      check("release_check", "passed"),
+      {
+        ...check("launch_monitor", "failed"),
+        stdout: JSON.stringify({
+          summary: {
+            cdpBazaar: {
+              status: "partially-indexed",
+              routeSummary: {
+                expected: 10,
+                indexed: 9,
+                missing: ["trust.compare_resources"]
+              }
+            },
+            externalDirectories: {
+              status: "not-visible-yet",
+              visible: 0,
+              checked: 7
+            }
+          }
+        })
+      }
+    ],
+    productionAudit: {
+      goalComplete: false,
+      summary: { verified: 4 },
+      requirements: [
+        { id: "external_x402_directories", status: "blocked-external" },
+        { id: "final_verification", status: "unverified" }
+      ],
+      blockers: [{ id: "external_x402_directories" }]
+    }
+  });
+
+  assert.equal(report.status, "blocked");
+  assert.equal(report.summary.cdpBazaarStatus, "partially-indexed");
+  assert.equal(report.summary.externalDirectoryStatus, "not-visible-yet");
+  assert.deepEqual(report.externalEvidence.cdpBazaar.routeSummary.missing, ["trust.compare_resources"]);
+  assert.ok(report.blockers.some((item) => item.id === "cdp_bazaar_indexing"));
+  assert.ok(report.blockers.some((item) => item.id === "external_directory_visibility"));
+});
+
+test("finalVerificationReport does not become ready when external evidence is failing", () => {
+  const report = finalVerificationReport({
+    baseUrl: "https://trust402.vercel.app",
+    checks: [
+      check("release_check", "passed"),
+      {
+        ...check("launch_monitor", "passed"),
+        stdout: JSON.stringify({
+          summary: {
+            cdpBazaar: {
+              status: "all-indexed",
+              routeSummary: {
+                expected: 10,
+                indexed: 10,
+                missing: []
+              }
+            },
+            externalDirectories: {
+              status: "not-visible-yet",
+              visible: 0,
+              checked: 7
+            }
+          }
+        })
+      }
+    ],
+    productionAudit: {
+      goalComplete: false,
+      summary: { verified: 9, unverified: 1 },
+      requirements: [
+        ...verifiedRequirements,
+        { id: "final_verification", status: "unverified" }
+      ],
+      blockers: [{ id: "final_verification" }]
+    }
+  });
+
+  assert.equal(report.status, "blocked");
+  assert.equal(report.suggestedEnv, null);
+  assert.equal(report.summary.externalEvidenceBlockers, 1);
+  assert.ok(report.blockers.some((item) => item.id === "external_directory_visibility"));
+});
+
 function check(id, status) {
   return {
     id,

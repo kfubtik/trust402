@@ -73,8 +73,8 @@ function gitVercelAutoDeploy(runtimeConfig) {
 }
 
 function externalDirectories(runtimeConfig) {
-  const accepted = new Set(["visible", "pending-review"]);
-  const verified = accepted.has(runtimeConfig.externalDirectoryStatus) && Boolean(runtimeConfig.externalDirectoryEvidenceUrl);
+  const verified = runtimeConfig.externalDirectoryStatus === "visible" &&
+    Boolean(runtimeConfig.externalDirectoryEvidenceUrl);
   const hostPolicy = externalDirectoryHostPolicy(runtimeConfig.publicBaseUrl);
   return requirement({
     id: "external_x402_directories",
@@ -89,8 +89,8 @@ function externalDirectories(runtimeConfig) {
       `publicBaseUrlHost=${hostPolicy.host || "not-configured"}`,
       `customDomainRequiredForSomeDirectories=${hostPolicy.requiresCustomDomain}`,
       verified
-        ? "A non-CDP directory is visible or has a recorded curated-review submission."
-        : "At least one non-CDP directory must show Trust402 or record a pending curated review before this is complete."
+        ? "A non-CDP directory visibly lists Trust402."
+        : "At least one non-CDP directory must visibly show Trust402 before this is complete."
     ],
     details: {
       hostPolicy

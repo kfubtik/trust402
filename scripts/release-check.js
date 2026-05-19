@@ -162,6 +162,7 @@ assert(launchIssues.includes("Paid Proof402 delegation: disabled"), "launch issu
 assert(autonomousPlan.includes("Final Definition Of Done"), "autonomous plan must define final success criteria");
 assert(autonomousPlan.includes("operator authorization"), "autonomous plan must require operator authorization for live execution");
 assert(autonomousPlan.includes("emergency stop"), "autonomous plan must include emergency stop criteria");
+assert(autonomousPlan.includes("at least one external directory visibly shows Trust402"), "autonomous plan must require visible external directory evidence");
 assert(autonomousPlan.includes("zero remaining manual smoke"), "autonomous plan must record current AgentCash blocker");
 assert(autonomousPlan.includes("npm run live:evidence-smoke"), "autonomous plan must document live evidence smoke runner");
 assert(autonomousPlan.includes("npm run live:window-plan"), "autonomous plan must document live window planner");
@@ -261,6 +262,10 @@ assert(
 assert(
   completion.blockers.some((item) => item.id === "git_vercel_auto_deploy"),
   "completion audit must expose Git/Vercel blocker"
+);
+assert(
+  completion.blockers.some((item) => item.id === "external_x402_directories"),
+  "completion audit must expose visible external directory blocker"
 );
 assert(
   bundle.resources.every((resource) => resource.metadata?.inputSchema && resource.bazaarExtensionDraft?.bazaar),

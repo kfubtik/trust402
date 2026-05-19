@@ -104,7 +104,7 @@ function gitAutoDeployCheck(cfg, input) {
 }
 
 function externalDirectoryCheck(cfg, hostPolicy) {
-  const ready = ["visible", "pending-review"].includes(cfg.externalDirectoryStatus) &&
+  const ready = cfg.externalDirectoryStatus === "visible" &&
     Boolean(cfg.externalDirectoryEvidenceUrl) &&
     Boolean(cfg.externalDirectoryName);
   return {
@@ -123,7 +123,7 @@ function externalDirectoryCheck(cfg, hostPolicy) {
       ? "No action required."
       : hostPolicy.requiresCustomDomain
         ? "Attach a custom production domain before submitting to directories that reject free-hosting domains."
-        : "Submit the public-safe listing pack and record the listing or pending-review evidence."
+        : "Submit the public-safe listing pack and record a visible listing evidence URL."
   };
 }
 

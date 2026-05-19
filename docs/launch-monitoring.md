@@ -31,8 +31,9 @@ external directory visibility has not appeared yet or was skipped.
 `needs-attention` means at least one required production or CDP Bazaar check
 failed.
 
-External directory visibility is advisory. Those sites can be curated,
-client-rendered, rate-limited, or asynchronously indexed.
+External directory visibility is advisory for production health because those
+sites can be curated, client-rendered, rate-limited, or asynchronously indexed.
+It is still required for the final autonomous completion audit.
 
 ## Useful Modes
 

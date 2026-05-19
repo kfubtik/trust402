@@ -22,9 +22,14 @@ export function finalVerificationReport({
     .filter(([id, status]) => id !== "final_verification" && status !== "verified")
     .map(([id, status]) => ({ id, status }));
   const finalRequirementStatus = requirementStatuses.final_verification || "missing";
+  const externalEvidence = externalEvidenceFromChecks(checks);
+  const externalBlockers = externalEvidenceBlockers(externalEvidence);
   const commandsPassed = failedRequired.length === 0;
-  const readyForFinalEvidence = commandsPassed && nonFinalOpenRequirements.length === 0;
-  const goalComplete = productionAudit?.goalComplete === true;
+  const externalEvidenceReady = externalBlockers.length === 0;
+  const readyForFinalEvidence = commandsPassed &&
+    nonFinalOpenRequirements.length === 0 &&
+    externalEvidenceReady;
+  const goalComplete = productionAudit?.goalComplete === true && externalEvidenceReady;
   const status = goalComplete
     ? "complete"
     : readyForFinalEvidence
@@ -34,8 +39,9 @@ export function finalVerificationReport({
     baseUrl,
     checks: normalizedChecks,
     requirementStatuses,
-    productionGoalComplete: Boolean(productionAudit?.goalComplete),
-    productionSummary: productionAudit?.summary || null
+    productionGoalComplete: goalComplete,
+    productionSummary: productionAudit?.summary || null,
+    externalEvidence
   };
   const verificationHash = sha256Json(evidenceSubject);
 
@@ -54,7 +60,10 @@ export function finalVerificationReport({
       skipped: checks.filter((check) => check.skipped).length,
       nonFinalOpenRequirements: nonFinalOpenRequirements.length,
       finalRequirementStatus,
-      productionGoalComplete: Boolean(productionAudit?.goalComplete)
+      productionGoalComplete: goalComplete,
+      externalEvidenceBlockers: externalBlockers.length,
+      cdpBazaarStatus: externalEvidence?.cdpBazaar?.status || "not-observed",
+      externalDirectoryStatus: externalEvidence?.externalDirectories?.status || "not-observed"
     },
     blockers: [
       ...failedRequired.map((check) => ({
@@ -62,6 +71,7 @@ export function finalVerificationReport({
         status: check.status,
         nextAction: check.nextAction || "Inspect command output and rerun the check."
       })),
+      ...externalBlockers,
       ...nonFinalOpenRequirements.map((item) => ({
         id: item.id,
         status: item.status,
@@ -82,6 +92,7 @@ export function finalVerificationReport({
           blockers: productionAudit.blockers || []
         }
       : null,
+    externalEvidence,
     notes: [
       "This verifier is read-only except for local command side effects such as Docker build cache.",
       "It does not send payment headers, submit directory forms, mutate wallets, or set environment variables.",
@@ -111,4 +122,66 @@ function publicCheck(check, includeDetails) {
 
 function trim(value) {
   return String(value || "").slice(0, 4000);
+}
+
+function externalEvidenceFromChecks(checks) {
+  const launchMonitor = parseJsonOutput(checks.find((check) => check.id === "launch_monitor")?.stdout);
+  const directoryCheck = parseJsonOutput(checks.find((check) => check.id === "external_directories")?.stdout);
+  const cdpBazaar = launchMonitor?.summary?.cdpBazaar || null;
+  const externalDirectories = directoryCheck
+    ? {
+        status: directoryCheck.status || directoryCheck.summary?.status || null,
+        summary: directoryCheck.summary || null,
+        visible: directoryCheck.summary?.visible ?? null,
+        checked: directoryCheck.summary?.checked ?? null
+      }
+    : launchMonitor?.summary?.externalDirectories || null;
+
+  if (!cdpBazaar && !externalDirectories) return null;
+  return {
+    source: "final-verification-checks",
+    cdpBazaar,
+    externalDirectories
+  };
+}
+
+function externalEvidenceBlockers(externalEvidence) {
+  const blockers = [];
+  const cdpBazaar = externalEvidence?.cdpBazaar;
+  if (cdpBazaar && cdpBazaar.status !== "all-indexed") {
+    blockers.push({
+      id: "cdp_bazaar_indexing",
+      status: cdpBazaar.status || "not-all-indexed",
+      nextAction: cdpBazaar.routeSummary?.missing?.length
+        ? `Resolve CDP Bazaar missing routes: ${cdpBazaar.routeSummary.missing.join(", ")}.`
+        : "Rerun CDP Bazaar indexing check and resolve missing route visibility."
+    });
+  }
+
+  const externalDirectories = externalEvidence?.externalDirectories;
+  if (externalDirectories && externalDirectories.status !== "visible-in-some-directories") {
+    blockers.push({
+      id: "external_directory_visibility",
+      status: externalDirectories.status || "not-visible",
+      nextAction: "Get at least one non-CDP directory to visibly list Trust402, then rerun directory checks."
+    });
+  }
+  return blockers;
+}
+
+function parseJsonOutput(stdout) {
+  const text = String(stdout || "").trim();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.indexOf("{");
+    const end = text.lastIndexOf("}");
+    if (start === -1 || end === -1 || end <= start) return null;
+    try {
+      return JSON.parse(text.slice(start, end + 1));
+    } catch {
+      return null;
+    }
+  }
 }

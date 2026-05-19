@@ -196,7 +196,7 @@ function customDomainAction(baseUrl) {
 }
 
 function externalDirectoryAction(cfg, baseUrl) {
-  const ready = ["visible", "pending-review"].includes(cfg.externalDirectoryStatus) &&
+  const ready = cfg.externalDirectoryStatus === "visible" &&
     cfg.externalDirectoryEvidenceUrl &&
     cfg.externalDirectoryName;
   return {
@@ -222,8 +222,8 @@ function externalDirectoryAction(cfg, baseUrl) {
       "npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000 --strict"
     ],
     evidenceEnv: {
-      TRUST402_EXTERNAL_DIRECTORY_STATUS: "visible|pending-review",
-      TRUST402_EXTERNAL_DIRECTORY_EVIDENCE_URL: "<public listing or review confirmation URL>",
+      TRUST402_EXTERNAL_DIRECTORY_STATUS: "visible",
+      TRUST402_EXTERNAL_DIRECTORY_EVIDENCE_URL: "<public listing URL where Trust402 is visible>",
       TRUST402_EXTERNAL_DIRECTORY_NAME: "<directory name>"
     },
     publicSafe: true

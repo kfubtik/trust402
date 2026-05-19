@@ -26,14 +26,25 @@ test("completionAudit can verify manual/external requirements only with explicit
     gitAutoDeployVerified: true,
     gitAutoDeployEvidenceUrl: "https://vercel.com/example/trust402/git-deploy",
     gitAutoDeployCommitSha: "abc123",
-    externalDirectoryStatus: "pending-review",
-    externalDirectoryEvidenceUrl: "https://example.com/trust402-directory-review",
+    externalDirectoryStatus: "visible",
+    externalDirectoryEvidenceUrl: "https://example.com/trust402-directory",
     externalDirectoryName: "Example x402 Directory"
   });
 
   assert.equal(audit.requirements.find((item) => item.id === "git_vercel_auto_deploy")?.status, "verified");
   assert.equal(audit.requirements.find((item) => item.id === "external_x402_directories")?.status, "verified");
   assert.equal(audit.goalComplete, false);
+});
+
+test("completionAudit does not treat pending directory review as visible", () => {
+  const audit = completionAudit({
+    ...config,
+    externalDirectoryStatus: "pending-review",
+    externalDirectoryEvidenceUrl: "https://example.com/trust402-directory-review",
+    externalDirectoryName: "Example x402 Directory"
+  });
+
+  assert.equal(audit.requirements.find((item) => item.id === "external_x402_directories")?.status, "blocked-external");
 });
 
 test("completionAudit explains custom-domain blocker for external directories", () => {

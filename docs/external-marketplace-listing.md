@@ -304,8 +304,8 @@ Future claims that require additional approval:
 
 ## Completion Evidence
 
-After a non-CDP directory visibly lists Trust402 or records a pending curated
-review, record only public-safe evidence in production env:
+After a non-CDP directory visibly lists Trust402, record only public-safe
+evidence in production env:
 
 ```text
 TRUST402_EXTERNAL_DIRECTORY_STATUS=visible
@@ -313,8 +313,8 @@ TRUST402_EXTERNAL_DIRECTORY_EVIDENCE_URL=https://directory.example/trust402
 TRUST402_EXTERNAL_DIRECTORY_NAME=Example x402 Directory
 ```
 
-Use `pending-review` instead of `visible` only when the directory provides a
-review/submission confirmation that can be referenced without exposing private
-material. These flags do not submit listings; they only let
-`/api/completion/audit` stop treating the external-directory requirement as an
-unresolved blocker after real evidence exists.
+Do not use `pending-review` to close this requirement. Review/submission
+confirmations are useful notes, but the completion audit stays blocked until a
+public directory page or search result visibly shows Trust402. These flags do
+not submit listings; they only let `/api/completion/audit` stop treating the
+external-directory requirement as unresolved after visible evidence exists.

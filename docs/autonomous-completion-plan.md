@@ -53,8 +53,7 @@ Goal: list Trust402 outside CDP Bazaar where safe manual submission is allowed.
 Acceptance:
 
 - Trust402 remains 10/10 indexed in CDP Bazaar;
-- at least one external directory shows Trust402 or records a pending curated
-  review;
+- at least one external directory visibly shows Trust402;
 - no private keys, CDP secrets, AgentCash internals, payment headers, or paid
   receipts are submitted.
 - directories that require a custom domain, such as `x402-list.com`, stay
@@ -62,9 +61,9 @@ Acceptance:
 
 Completion evidence:
 
-- set `TRUST402_EXTERNAL_DIRECTORY_STATUS=visible` or `pending-review`;
-- set `TRUST402_EXTERNAL_DIRECTORY_EVIDENCE_URL` to a public listing, search
-  result, or curated-review confirmation;
+- set `TRUST402_EXTERNAL_DIRECTORY_STATUS=visible`;
+- set `TRUST402_EXTERNAL_DIRECTORY_EVIDENCE_URL` to a public listing or search
+  result where Trust402 is visible;
 - set `TRUST402_EXTERNAL_DIRECTORY_NAME` to the non-CDP directory name.
 
 Tracking: https://github.com/kfubtik/trust402/issues/6
