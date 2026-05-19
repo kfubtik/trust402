@@ -194,6 +194,47 @@ Those flags do not enable deployment by themselves. They only let
 `/api/completion/audit` verify the Git/Vercel requirement after the real
 integration has been proven.
 
+### GitHub Actions Fallback Deploy
+
+If the Vercel GitHub App cannot access the private repository yet, the repo also
+contains a fallback production deploy workflow:
+
+```text
+.github/workflows/vercel-production-deploy.yml
+```
+
+It runs on every push to `main` and on manual `workflow_dispatch`. It does not
+store Vercel credentials in the repository. Add these GitHub repository secrets:
+
+```text
+VERCEL_TOKEN
+VERCEL_ORG_ID
+VERCEL_PROJECT_ID
+```
+
+Use the values from the linked local project for the two IDs and create the
+token in Vercel with the least scope that can deploy this project. The workflow
+will fail closed if any secret is missing.
+
+The fallback workflow performs:
+
+```text
+npm test
+npm run privacy:check
+npm audit --omit=dev --audit-level=high
+npx vercel@latest pull --yes --environment=production
+npx vercel@latest build --prod
+npx vercel@latest deploy --prebuilt --prod
+npm run smoke
+npm run smoke:x402
+npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000 --skip-directories --strict
+```
+
+This fallback can produce the Git/Vercel evidence required by
+`/api/completion/audit` if a push to `main` creates a production deployment and
+the workflow checks pass. Record the workflow run URL or Vercel deployment URL
+in `TRUST402_GIT_AUTO_DEPLOY_EVIDENCE_URL`.
+
 ## Live x402 Settlement
 
 The Express middleware bridge protects paid launch resources when

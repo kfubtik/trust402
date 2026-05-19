@@ -11,6 +11,10 @@ paths as done.
 ## 1. Git/Vercel Auto-Deploy
 
 Goal: connect the private repository `kfubtik/trust402` to the Vercel project.
+The preferred path is the Vercel GitHub App integration. A GitHub Actions
+fallback deploy is acceptable evidence only if a push to `main` creates a
+production Vercel deployment and the workflow's smoke, x402 smoke, and launch
+monitor checks pass.
 
 Acceptance:
 
