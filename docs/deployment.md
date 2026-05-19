@@ -174,6 +174,12 @@ Trust402 strips auth, cookie, payment, signature, token, secret, and API-key
 headers before calling the bridge. It does not send private keys or payment
 headers to the bridge.
 
+For preflight, the bridge must explicitly prove dry-run/no-payment behavior by
+returning `dryRun=true`, `mode=dry-run`, `safety.dryRunOnly=true`,
+`payment.paid=false`, or `response.paymentMade=false`. A bare
+`paidSubcallsMade=0` is tracked, but it is not enough by itself to pass the
+preflight.
+
 Before any live spend window, run a dry-run bridge preflight. The local CLI can
 check a candidate URL directly:
 

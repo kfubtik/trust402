@@ -190,7 +190,6 @@ function dryRunConfirmed(body) {
   return body.dryRun === true ||
     body.mode === "dry-run" ||
     body.safety?.dryRunOnly === true ||
-    body.safety?.paidSubcallsMade === 0 ||
     body.payment?.paid === false ||
     body.response?.paymentMade === false;
 }

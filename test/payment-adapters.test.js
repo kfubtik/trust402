@@ -45,6 +45,8 @@ test("paymentBridgeContract documents public-safe bridge request shape", () => {
   assert.equal(contract.endpointEnv, "LIVE_PAYMENT_ADAPTER_URL");
   assert.equal(contract.requestShape.service, "Trust402");
   assert.equal(contract.requestShape.request.headers, "<public headers only; auth/payment/secret headers stripped>");
+  assert.equal(contract.responseShape.dryRun, "<true for preflight responses>");
+  assert.equal(contract.responseShape.safety.paidSubcallsMade, "<0 for preflight responses>");
   assert.equal(contract.safety.trust402SendsPrivateKeys, false);
   assert.equal(paymentBridgeContract("x402-fetch"), null);
 });

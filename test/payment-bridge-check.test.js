@@ -101,3 +101,27 @@ test("paymentBridgeCheck fails if bridge cannot prove no payment happened", asyn
   assert.ok(result.blockers.some((item) => item.id === "payment_bridge_made_payment"));
   assert.ok(result.blockers.some((item) => item.id === "payment_bridge_dry_run_not_confirmed"));
 });
+
+test("paymentBridgeCheck requires explicit dry-run confirmation beyond a zero paid-subcall count", async () => {
+  const result = await paymentBridgeCheck({}, {
+    config: baseConfig,
+    operatorAuthorized: true,
+    fetchImpl: async () => new Response(JSON.stringify({
+      ok: true,
+      safety: { paidSubcallsMade: 0 },
+      response: {
+        status: 402,
+        headers: {},
+        body: { ok: false }
+      }
+    }), {
+      status: 200,
+      headers: { "content-type": "application/json" }
+    })
+  });
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.passed, false);
+  assert.equal(result.safety.paidSubcallsMade, 0);
+  assert.ok(result.blockers.some((item) => item.id === "payment_bridge_dry_run_not_confirmed"));
+});

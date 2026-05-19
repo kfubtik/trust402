@@ -34,6 +34,8 @@ export function paymentBridgeContract(provider = "agentcash-mcp") {
       }
     },
     responseShape: {
+      dryRun: "<true for preflight responses>",
+      mode: "<dry-run for preflight responses>",
       response: {
         status: 200,
         headers: {
@@ -41,6 +43,10 @@ export function paymentBridgeContract(provider = "agentcash-mcp") {
           "payment-response": "<optional public payment receipt header>"
         },
         body: "<downstream response body>"
+      },
+      safety: {
+        dryRunOnly: "<true for preflight responses>",
+        paidSubcallsMade: "<0 for preflight responses>"
       }
     },
     safety: {
