@@ -181,8 +181,7 @@ function nextActions(failedChecks) {
 function isLiveSpendDisabled(runtimeConfig) {
   return runtimeConfig.defaultMode === "dry-run" &&
     runtimeConfig.liveSpendEnabled === false &&
-    runtimeConfig.proof402DelegationMode === "disabled" &&
-    runtimeConfig.proof402MaxSpendUsd === 0;
+    runtimeConfig.proof402DelegationMode !== "live";
 }
 
 function isNonZeroPayTo(payTo) {
