@@ -152,13 +152,14 @@ export function settlementPreflight(options = {}) {
         "TRUST402_PAYWALL_MODE=real",
         "TRUST402_REAL_SETTLEMENT_ENABLED=true",
         "TRUST402_PAID_SMOKE_APPROVED=true",
+        `TRUST402_PAID_SMOKE_RESOURCE_ID=${smokeResource?.id || runtimeConfig.paidSmokeResourceId}`,
         "TRUST402_PAID_SMOKE_MAX_USD"
       ],
       keepFalseUntilReceiptReviewed: ["TRUST402_SUCCESSFUL_SETTLEMENT_OBSERVED=false"]
     },
     checks,
     blockers: blockers.map(({ id, scope, message }) => ({ id, scope, message })),
-    nextActions: preflightNextActions(blockers, runtimeConfig)
+    nextActions: preflightNextActions(blockers, runtimeConfig, smokePriceUsd)
   };
 }
 
@@ -555,14 +556,15 @@ function maxPriceUsd(priceUsd) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function preflightNextActions(blockers, runtimeConfig) {
+function preflightNextActions(blockers, runtimeConfig, smokePriceUsd = 0) {
   const ids = new Set(blockers.map((item) => item.id));
   const actions = nextActions(blockers, runtimeConfig);
   if (ids.has("paid_smoke_approved")) {
     actions.push("For the approved smoke window only, set TRUST402_PAID_SMOKE_APPROVED=true.");
   }
   if (ids.has("paid_smoke_limit_present") || ids.has("paid_smoke_limit_covers_route") || ids.has("paid_smoke_limit_small")) {
-    actions.push("Set TRUST402_PAID_SMOKE_MAX_USD to a small approved value, for example 0.01 or 0.02.");
+    const minimum = smokePriceUsd > 0 ? `$${smokePriceUsd.toFixed(3).replace(/0+$/, "").replace(/\.$/, "")}` : "the selected route price";
+    actions.push(`Set TRUST402_PAID_SMOKE_MAX_USD to at least ${minimum} and at most $0.05 for the approved smoke window.`);
   }
   if (actions.length === 0) {
     actions.push("Run unpaid smoke:x402 first, then perform exactly one paid request and review PAYMENT-RESPONSE before marking settlement observed.");

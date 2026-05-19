@@ -14,7 +14,7 @@ npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10
 
 ## Current Production State
 
-Last checked on 2026-05-19 at 16:59:16 +07:00.
+Last checked on 2026-05-19 at 17:21:35 +07:00.
 
 Production alias:
 
@@ -27,9 +27,9 @@ Use `npm run deployment:preflight -- https://trust402.vercel.app
 deployment id and commit SHA. The alias is the stable buyer-facing endpoint;
 deployment URLs rotate after each production release.
 
-- indexed resources: 10 of 10;
-- CDP Bazaar status: `all-indexed`;
-- missing resources: none;
+- indexed resources: 9 of 10;
+- CDP Bazaar status: `partially-indexed`;
+- missing resources: `trust.compare_resources`;
 - Trust402 live procurement: disabled;
 - Proof402 paid delegation: disabled;
 - live OpenAPI and unpaid x402 challenge expose the updated structured
@@ -41,18 +41,16 @@ Indexed right now:
 - `trust.score_resource`
 - `trust.evaluate_origin`
 - `seller.readiness`
-- `trust.compare_resources`
 - `procurement.plan`
 - `procurement.quote`
 - `monitor.snapshot`
 - `monitor.badge`
 - `reports.x402_diligence`
 
-## Resolved Indexing Blocker
+## Current Indexing Blocker
 
 `trust.compare_resources` was previously indexed, then temporarily dropped from
-CDP Bazaar search results. The current production route is healthy and visible
-again:
+CDP Bazaar search results again. The production route itself is healthy:
 
 - `POST /api/trust/compare-resources` returns an unpaid HTTP 402 challenge;
 - the challenge contains top-level `extensions.bazaar`;
@@ -63,12 +61,25 @@ again:
   `npm audit --omit=dev --audit-level=high`, and Docker build passed after the
   schema fix;
 - `npm run bazaar:indexing:check:all -- https://trust402.vercel.app
-  --timeout-ms=15000` returns `status = all-indexed`,
-  `routeSummary.indexed = 10`, and `routeSummary.missing = []`.
+  --timeout-ms=15000` returns `status = partially-indexed`,
+  `routeSummary.indexed = 9`, and
+  `routeSummary.missing = [trust.compare_resources]`;
+- `npm run smoke:x402 -- https://trust402.vercel.app /api/trust/compare-resources`
+  passes, so the missing catalog row is not caused by a broken unpaid route.
 
-Do not run an extra paid settle only to repair CDP Bazaar indexing while the
-all-resource check remains green. Future paid smokes should be for live
-procurement/proof evidence windows with explicit spend approval.
+CDP Bazaar discovery can be settle-driven and asynchronous. The safe next step
+is one bounded paid settle against
+`https://trust402.vercel.app/api/trust/compare-resources` with:
+
+```text
+TRUST402_PAID_SMOKE_RESOURCE_ID=trust.compare_resources
+TRUST402_PAID_SMOKE_MAX_USD=0.03
+```
+
+Do not run this while `.local/trust402-agentcash-wallet.json` reports zero
+manual smoke budget or a global max below `$0.03`. The current local policy
+blocks that spend until the operator explicitly approves a temporary smoke
+window.
 
 ## Historical Final Paid Smoke Bodies
 
@@ -129,8 +140,8 @@ hashes are stored only in ignored local `.tmp/` files.
 
 ## Completion Gate
 
-The CDP Bazaar portion of the completion gate is currently achieved. To recheck
-the live state:
+The CDP Bazaar portion of the completion gate is not currently achieved. To
+recheck the live state:
 
 ```powershell
 npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10000 --limit=20

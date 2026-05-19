@@ -110,6 +110,31 @@ test("settlementPreflight can become ready for one paid smoke without claiming i
   assert.equal(result.selectedSmokeResource.id, "trust.resource_1");
 });
 
+test("settlementPreflight can target compare-resources with an explicit route cap", () => {
+  const result = settlementPreflight({
+    config: testConfig({
+      realSettlementEnabled: true,
+      paywallMode: "real",
+      publicBaseUrl: "https://trust402.example",
+      payTo: "0x1111111111111111111111111111111111111111",
+      facilitatorUrl: "https://api.cdp.coinbase.com/platform/v2/x402",
+      cdpApiKeyIdConfigured: true,
+      cdpApiKeySecretConfigured: true,
+      paidSmokeApproved: true,
+      paidSmokeMaxUsd: 0.02,
+      paidSmokeResourceId: "trust.compare_resources"
+    }),
+    catalog: { paidLaunchResources: manyResourcesWithCompare() }
+  });
+
+  assert.equal(result.selectedSmokeResource.id, "trust.compare_resources");
+  assert.equal(result.selectedSmokeResource.priceUsd, 0.03);
+  assert.equal(result.readiness.paidSmokeReady, false);
+  assert.ok(result.blockers.some((item) => item.id === "paid_smoke_limit_covers_route"));
+  assert.ok(result.operatorEnv.requiredProduction.includes("TRUST402_PAID_SMOKE_RESOURCE_ID=trust.compare_resources"));
+  assert.ok(result.nextActions.some((action) => action.includes("at least $0.03")));
+});
+
 test("routeConfigFor and paymentChallengeFor expose x402-compatible route metadata", () => {
   const cfg = testConfig({
     publicBaseUrl: "https://trust402.example",
@@ -177,4 +202,20 @@ function manyResources() {
     id: `trust.resource_${index + 1}`,
     path: `/api/trust/resource-${index + 1}`
   }));
+}
+
+function manyResourcesWithCompare() {
+  return [
+    {
+      ...resource,
+      id: "trust.compare_resources",
+      path: "/api/trust/compare-resources",
+      priceUsd: 0.03
+    },
+    ...Array.from({ length: 9 }, (_, index) => ({
+      ...resource,
+      id: `trust.resource_${index + 1}`,
+      path: `/api/trust/resource-${index + 1}`
+    }))
+  ];
 }

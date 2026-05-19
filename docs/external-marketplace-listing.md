@@ -20,14 +20,15 @@ v0.1.0
 CDP Bazaar state:
 
 ```text
-10 of 10 paid launch resources indexed
-status = all-indexed
-missing = none
+9 of 10 paid launch resources indexed
+status = partially-indexed
+missing = trust.compare_resources
 ```
 
-Trust402 is live as a production x402 service and CDP Bazaar currently exposes
-all paid launch resources. Live Trust402 procurement, paid Proof402 delegation,
-and AgentCash auto-refill remain disabled until separately approved.
+Trust402 is live as a production x402 service, but CDP Bazaar currently misses
+`trust.compare_resources` even though its unpaid x402 challenge is healthy.
+Live Trust402 procurement, paid Proof402 delegation, and AgentCash auto-refill
+remain disabled until separately approved.
 
 ## Current External Directory Visibility
 
