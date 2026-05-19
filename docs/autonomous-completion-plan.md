@@ -176,7 +176,10 @@ Acceptance:
 - downstream paid resource origins must also be present in the local allowed
   origins list before a live smoke can spend through the Trust402 wallet;
 - the local policy never enters Git, API responses, or public logs;
-- a read-only policy check explains whether live operator spend is blocked.
+- a read-only policy check explains whether live operator spend is blocked;
+- a read-only MCP observation guard validates observed AgentCash accounts and
+  settings against the local policy without calling AgentCash or sending payment
+  headers.
 - `src/localAgentcashPolicy.js` is the shared local policy guard used by the
   final live evidence runner.
 
@@ -449,6 +452,18 @@ npm run agentcash:policy -- --mode=auto-refill
 
 These modes do not spend funds. They only prove whether the local policy shape
 matches the requested live/refill window.
+
+If AgentCash MCP accounts/settings are observed, validate that public output
+through the Trust402 guard before treating it as wallet-binding evidence:
+
+```powershell
+npm run agentcash:mcp-observation -- `
+  --accounts-json='[{"network":"base","address":"0xf2aB09D8146f453CA86486afEA15D6747B72D0D7","balance":1.283}]' `
+  --settings-json='{"maxAmount":0.01}'
+```
+
+The guard masks addresses and rejects mismatched wallets, non-Base funded
+accounts, unsafe `maxAmount`, or balances below the local reserve.
 
 For the full remaining-blocker checklist, export the public-safe operator
 action pack:

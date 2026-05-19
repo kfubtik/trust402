@@ -225,6 +225,14 @@
       "purpose": "Evaluate AgentCash balance, threshold, daily cap, and refill policy without mutating wallet balance."
     },
     {
+      "id": "agentcash.mcp_observation",
+      "method": "POST",
+      "path": "/api/agentcash/mcp-observation",
+      "priceUsd": 0,
+      "status": "local-policy-helper",
+      "purpose": "Validate observed AgentCash MCP accounts/settings against the Trust402-only local wallet policy without calling AgentCash or sending payment headers."
+    },
+    {
       "id": "payments.bridge_check",
       "method": "POST",
       "path": "/api/payments/bridge-check",

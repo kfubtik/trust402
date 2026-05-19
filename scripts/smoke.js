@@ -18,6 +18,10 @@ async function main() {
     "/api/resources must expose llms.txt discovery"
   );
   assert(
+    resources.freeResources?.some((item) => item.path === "/api/agentcash/mcp-observation"),
+    "/api/resources must expose AgentCash MCP observation guard"
+  );
+  assert(
     resources.freeResources?.some((item) => item.path === "/api/payments/buyer-preflight"),
     "/api/resources must expose CDP buyer preflight"
   );
@@ -261,6 +265,7 @@ async function main() {
   assert(openapi.paths?.["/api/operator/unblock-report"]?.post, "/openapi missing operator unblock report POST");
   assert(openapi.paths?.["/api/operator/action-pack"]?.post, "/openapi missing operator action pack");
   assert(openapi.paths?.["/api/jobs/autonomous-run"]?.post, "/openapi missing autonomous run");
+  assert(openapi.paths?.["/api/agentcash/mcp-observation"]?.post, "/openapi missing AgentCash MCP observation guard");
   assert(openapi.paths?.["/api/monitor/snapshot"]?.post, "/openapi missing monitor snapshot");
 
   const autonomous = await postJson("/api/jobs/autonomous-run", {
@@ -303,6 +308,23 @@ async function main() {
   assert(refill.mode === "dry-run", "/api/agentcash/refill-check must run in dry-run mode");
   assert(refill.decision?.action === "refill", "/api/agentcash/refill-check must plan refill below threshold");
   assert(refill.safety?.mutatesWalletBalance === false, "/api/agentcash/refill-check dry-run must not mutate wallet balance");
+
+  const agentcashObservation = await postJson("/api/agentcash/mcp-observation", {
+    accounts: [
+      {
+        network: "base",
+        address: "0xf2aB09D8146f453CA86486afEA15D6747B72D0D7",
+        balance: 1.283
+      }
+    ],
+    settings: {
+      maxAmount: 0.01
+    }
+  });
+  assert(agentcashObservation.tool === "agentcash.mcp_observation", "/api/agentcash/mcp-observation tool mismatch");
+  assert(agentcashObservation.safety?.callsAgentcashMcp === false, "/api/agentcash/mcp-observation must not call AgentCash MCP");
+  assert(agentcashObservation.safety?.sendsPaymentHeaders === false, "/api/agentcash/mcp-observation must not send payment headers");
+  assert(agentcashObservation.safety?.mutatesWallet === false, "/api/agentcash/mcp-observation must not mutate wallet");
 
   const realProtectedRoutes = settlement.readiness.realSettlementReady === true;
   if (realProtectedRoutes) {

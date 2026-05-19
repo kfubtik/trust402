@@ -500,6 +500,20 @@ npm run agentcash:policy -- --mode=auto-refill
 Those modes are validation-only. They do not send payment headers, mutate
 AgentCash, or change the ignored local policy.
 
+If AgentCash MCP output is collected, validate the public observation through
+Trust402 before using it as live-spend evidence:
+
+```powershell
+npm run agentcash:mcp-observation -- `
+  --accounts-json='[{"network":"base","address":"0xf2aB09D8146f453CA86486afEA15D6747B72D0D7","balance":1.283}]' `
+  --settings-json='{"maxAmount":0.01}'
+```
+
+This guard does not call AgentCash MCP by itself. It only checks the observed
+accounts/settings against `.local/trust402-agentcash-wallet.json`, masks wallet
+addresses in output, and fails if the Base address, per-fetch max amount,
+minimum reserve, or approved network policy does not match.
+
 ## Live x402 Settlement
 
 The Express middleware bridge protects paid launch resources when

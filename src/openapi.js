@@ -271,6 +271,26 @@ export function openApiSpec() {
         }
       }
     },
+    "/api/agentcash/mcp-observation": {
+      post: {
+        operationId: "agentcash_mcp_observation",
+        summary: "Validate observed AgentCash MCP accounts/settings against the Trust402 local wallet policy",
+        tags: ["Trust402"],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: requestSchemaFor("agentcash.mcp_observation"),
+              example: exampleFor("agentcash.mcp_observation")
+            }
+          }
+        },
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse
+        }
+      }
+    },
     "/api/jobs/autonomous-run": {
       post: {
         operationId: "jobs_autonomous_run",
@@ -860,6 +880,31 @@ function requestSchemaFor(id) {
     };
   }
 
+  if (id === "agentcash.mcp_observation") {
+    return {
+      type: "object",
+      properties: {
+        accounts: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              network: { type: "string" },
+              address: { type: "string" },
+              balance: { type: "number" }
+            }
+          }
+        },
+        settings: {
+          type: "object",
+          properties: {
+            maxAmount: { type: "number" }
+          }
+        }
+      }
+    };
+  }
+
   if (id === "payments.bridge_check") {
     return {
       type: "object",
@@ -1195,6 +1240,20 @@ function exampleFor(id) {
       mode: "dry-run",
       currentBalanceUsd: 0.42,
       amountRefilledTodayUsd: 0
+    };
+  }
+  if (id === "agentcash.mcp_observation") {
+    return {
+      accounts: [
+        {
+          network: "base",
+          address: "0xf2aB09D8146f453CA86486afEA15D6747B72D0D7",
+          balance: 1.283
+        }
+      ],
+      settings: {
+        maxAmount: 0.01
+      }
     };
   }
   if (id === "payments.bridge_check") {

@@ -55,6 +55,7 @@ assert(packageJson.scripts?.["live:evidence-smoke"], "package must expose npm ru
 assert(packageJson.scripts?.["live:smoke-window"], "package must expose npm run live:smoke-window");
 assert(packageJson.scripts?.["live:window-plan"], "package must expose npm run live:window-plan");
 assert(packageJson.scripts?.["marketplace:bundle"], "package must expose npm run marketplace:bundle");
+assert(packageJson.scripts?.["agentcash:mcp-observation"], "package must expose npm run agentcash:mcp-observation");
 assert(packageJson.scripts?.["payment:bridge-check"], "package must expose npm run payment:bridge-check");
 assert(packageJson.scripts?.["payment:buyer-preflight"], "package must expose npm run payment:buyer-preflight");
 assert(packageJson.scripts?.["agentcash:policy"], "package must expose npm run agentcash:policy");
@@ -92,6 +93,7 @@ assert(existsSync("src/expressApp.js"), "Express x402 entrypoint bridge must exi
 assert(existsSync("src/autonomousJob.js"), "autonomous job flow module must exist");
 assert(existsSync("src/agentcashRefill.js"), "AgentCash refill workflow module must exist");
 assert(existsSync("src/agentcashPolicyGuard.js"), "AgentCash policy guard module must exist");
+assert(existsSync("src/agentcashMcpObservation.js"), "AgentCash MCP observation guard module must exist");
 assert(existsSync("src/evidenceLedger.js"), "evidence ledger module must exist");
 assert(existsSync("src/localAgentcashPolicy.js"), "local AgentCash policy guard module must exist");
 assert(existsSync("src/liveSmokeWindow.js"), "live smoke window module must exist");
@@ -128,6 +130,7 @@ assert(serverSource.includes("createTrust402ExpressApp"), "node start must use t
 assert(serverSource.includes("x-trust402-operator-key"), "server must require an operator key header for live operator actions");
 assert(existsSync("scripts/check-external-directories.js"), "external directory check script must exist");
 assert(existsSync("scripts/check-agentcash-policy.js"), "AgentCash policy check script must exist");
+assert(existsSync("scripts/agentcash-mcp-observation.js"), "AgentCash MCP observation script must exist");
 assert(existsSync("scripts/agentcash-refill-check.js"), "AgentCash refill check script must exist");
 assert(existsSync("scripts/completion-audit.js"), "completion audit script must exist");
 assert(existsSync("scripts/operator-unblock-check.js"), "operator unblock check script must exist");
@@ -159,6 +162,7 @@ assert(existsSync("scripts/launch-monitor.js"), "production launch monitor scrip
 assert(liveEvidenceSmokeScript.includes("writeEvidenceLedger"), "live evidence smoke CLI must expose evidence ledger write option");
 assert(smokeScript.includes("/api/jobs/autonomous-run"), "smoke script must cover autonomous job dry-run");
 assert(smokeScript.includes("/api/agentcash/refill-check"), "smoke script must cover AgentCash refill dry-run");
+assert(smokeScript.includes("/api/agentcash/mcp-observation"), "smoke script must cover AgentCash MCP observation guard");
 assert(smokeScript.includes("/api/payments/bridge-check"), "smoke script must cover payment bridge authorization gate");
 assert(smokeScript.includes("/api/payments/buyer-preflight"), "smoke script must cover CDP buyer preflight");
 assert(smokeScript.includes("/api/completion/plan"), "smoke script must cover completion plan");
@@ -285,6 +289,10 @@ assert(
   "free autonomous dry-run helper must exist"
 );
 assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/agentcash/mcp-observation" && resource.priceUsd === 0),
+  "free AgentCash MCP observation guard must exist"
+);
+assert(
   catalog.freeResources.some((resource) => resource.path === "/api/payments/bridge-check" && resource.priceUsd === 0),
   "free operator-gated payment bridge check helper must exist"
 );
@@ -329,6 +337,7 @@ assert(openapi.paths?.["/api/operator/action-pack"]?.post, "operator action pack
 assert(JSON.stringify(openapi.paths["/api/live/window-plan"]).includes("liveSpentTodayUsd"), "live window plan OpenAPI must expose spent-today input");
 assert(openapi.paths?.["/api/jobs/autonomous-run"]?.post, "autonomous job flow must be present in OpenAPI");
 assert(openapi.paths?.["/api/agentcash/refill-check"]?.post, "AgentCash refill check must be present in OpenAPI");
+assert(openapi.paths?.["/api/agentcash/mcp-observation"]?.post, "AgentCash MCP observation guard must be present in OpenAPI");
 assert(openapi.paths?.["/api/payments/bridge-check"]?.post, "payment bridge check must be present in OpenAPI");
 assert(openapi.paths?.["/api/payments/buyer-preflight"]?.post, "CDP buyer preflight must be present in OpenAPI");
 assert(openapi.paths?.["/.well-known/x402.json"]?.get, "x402 JSON alias must be present in OpenAPI");
@@ -438,6 +447,10 @@ assert(
   "AgentCash refill dry-run helper must not require payment"
 );
 assert(
+  !openapi.paths["/api/agentcash/mcp-observation"].post["x-payment-info"],
+  "AgentCash MCP observation guard must not require payment"
+);
+assert(
   !openapi.paths["/api/payments/bridge-check"].post["x-payment-info"],
   "payment bridge check helper must not require payment"
 );
@@ -477,6 +490,7 @@ for (const resource of catalog.laterResourcesToPreserve) {
 run("node", ["scripts/privacy-check.js"]);
 run("node", ["scripts/check-agentcash-policy.js"]);
 run("node", ["scripts/agentcash-refill-check.js", "--balance", "1.00"]);
+run("node", ["scripts/agentcash-mcp-observation.js"]);
 run("node", ["scripts/payment-bridge-check.js"]);
 run("node", ["scripts/payment-buyer-preflight.js"]);
 run("node", ["scripts/completion-audit.js"]);

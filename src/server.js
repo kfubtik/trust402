@@ -2,6 +2,7 @@ import { fileURLToPath } from "node:url";
 import { createServer } from "node:http";
 import { config, isMockPaywallEnabled } from "./config.js";
 import { agentcashRefillCheck } from "./agentcashRefill.js";
+import { agentcashMcpObservation } from "./agentcashMcpObservation.js";
 import { paidResourceByPath, publicResources } from "./catalog.js";
 import { ApiError, errorBody } from "./errors.js";
 import { autonomousRun } from "./autonomousJob.js";
@@ -60,6 +61,7 @@ const routes = new Map([
   ["POST /api/operator/action-pack", operatorActionPack],
   ["POST /api/jobs/autonomous-run", autonomousRun],
   ["POST /api/agentcash/refill-check", agentcashRefillCheck],
+  ["POST /api/agentcash/mcp-observation", agentcashMcpObservation],
   ["POST /api/monitor/snapshot", monitorSnapshot],
   ["POST /api/monitor/badge", monitorBadge],
   ["POST /api/trust/check-x402", checkX402],
@@ -107,6 +109,7 @@ export async function handleTrust402Request(req, res) {
           operatorUnblockReport: "/api/operator/unblock-report",
           operatorActionPack: "/api/operator/action-pack",
           agentcashRefillCheck: "/api/agentcash/refill-check",
+          agentcashMcpObservation: "/api/agentcash/mcp-observation",
           autonomousRun: "/api/jobs/autonomous-run",
           resources: "/api/resources",
           proof402Preview: "/api/receipts/notarize-result",
@@ -310,6 +313,7 @@ function statusSummary() {
       operatorUnblockReport: "/api/operator/unblock-report",
       operatorActionPack: "/api/operator/action-pack",
       agentcashRefillCheck: "/api/agentcash/refill-check",
+      agentcashMcpObservation: "/api/agentcash/mcp-observation",
       autonomousRun: "/api/jobs/autonomous-run",
       openapi: "/openapi.json",
       x402WellKnown: "/.well-known/x402",

@@ -25,6 +25,7 @@
     "live:smoke-window": "node scripts/live-smoke-window.js",
     "live:window-plan": "node scripts/live-window-plan.js",
     "marketplace:bundle": "node scripts/export-marketplace-bundle.js",
+    "agentcash:mcp-observation": "node scripts/agentcash-mcp-observation.js",
     "payment:bridge-check": "node scripts/payment-bridge-check.js",
     "payment:buyer-preflight": "node scripts/payment-buyer-preflight.js",
     "agentcash:policy": "node scripts/check-agentcash-policy.js",
