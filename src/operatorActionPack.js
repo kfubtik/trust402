@@ -18,6 +18,7 @@ export function operatorActionPack(input = {}, options = {}) {
   const includeProof = input.includeProof !== false;
   const includeAutonomous = input.includeAutonomous === true;
   const includeAutoRefill = input.includeAutoRefill === true;
+  const localDefaults = localAgentcashPolicyDefaults(options.localAgentcashPolicyResult);
 
   const unblock = operatorUnblockReport({
     baseUrl,
@@ -50,8 +51,12 @@ export function operatorActionPack(input = {}, options = {}) {
     liveMaxPerJobUsd: input.liveMaxPerJobUsd,
     liveDailyLimitUsd: input.liveDailyLimitUsd,
     liveSpentTodayUsd: input.liveSpentTodayUsd,
-    lastVerifiedBalanceUsd: input.lastVerifiedBalanceUsd,
-    minimumReserveUsd: input.minimumReserveUsd
+    lastVerifiedBalanceUsd: hasValue(input.lastVerifiedBalanceUsd)
+      ? input.lastVerifiedBalanceUsd
+      : localDefaults.lastVerifiedBalanceUsd,
+    minimumReserveUsd: hasValue(input.minimumReserveUsd)
+      ? input.minimumReserveUsd
+      : localDefaults.minimumReserveUsd
   }, options);
 
   const actions = [
@@ -382,4 +387,16 @@ function hostOf(value) {
 function numberOr(value, fallback) {
   const parsed = Number.parseFloat(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function localAgentcashPolicyDefaults(policyResult) {
+  const policy = policyResult?.policy;
+  return {
+    lastVerifiedBalanceUsd: policy?.limits?.lastVerifiedBalanceUsd,
+    minimumReserveUsd: policy?.limits?.minimumReserveUsd
+  };
+}
+
+function hasValue(value) {
+  return value !== undefined && value !== null && value !== "";
 }

@@ -26,6 +26,8 @@ test("operatorActionPack turns blockers into public-safe operator actions", () =
   assert.equal(pack.safety.includesSecretValues, false);
   assert.match(pack.actionPackHash, /^sha256:[a-f0-9]{64}$/);
   assert.equal(pack.liveWindowPlan.status, "ready-to-stage");
+  assert.equal(pack.liveWindowPlan.localPolicyPatch.limits.lastVerifiedBalanceUsd, "1.2");
+  assert.equal(pack.liveWindowPlan.localPolicyPatch.limits.minimumReserveUsd, "0.5");
   assert.ok(pack.actions.some((action) => action.id === "git_vercel_auto_deploy"));
   assert.ok(pack.actions.some((action) => action.id === "custom_domain"));
   assert.ok(pack.actions.some((action) => action.id === "live_procurement"));

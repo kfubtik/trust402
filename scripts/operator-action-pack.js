@@ -2,12 +2,14 @@
 import { existsSync, readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { config } from "../src/config.js";
+import { readLocalAgentcashPolicy } from "../src/localAgentcashPolicy.js";
 import { operatorActionPack } from "../src/operatorActionPack.js";
 
 const args = parseArgs(process.argv.slice(2));
 const targetUrl = args.baseUrl || args._.find((item) => /^https?:\/\//.test(item)) || "";
 const baseUrl = targetUrl || config.publicBaseUrl || "https://trust402.vercel.app";
 const vercelProjectLinked = existsSync(".vercel/project.json");
+const localAgentcashPolicyResult = readLocalAgentcashPolicy();
 
 const payload = {
   baseUrl,
@@ -35,18 +37,37 @@ const payload = {
 
 if (targetUrl && args.local !== true) {
   const result = await postRemoteJson(targetUrl, "/api/operator/action-pack", payload);
+  const localOverlay = operatorActionPack(payload, {
+    config,
+    localAgentcashPolicyResult
+  });
   console.log(JSON.stringify({
     ...result,
     remoteContext: {
       baseUrl: targetUrl.replace(/\/$/, ""),
       source: "/api/operator/action-pack"
+    },
+    localExecutionContext: {
+      source: ".local/trust402-agentcash-wallet.json",
+      note: "Production cannot read local AgentCash policy; use this overlay for workstation live-smoke staging.",
+      agentcashPolicy: {
+        present: localAgentcashPolicyResult.present,
+        policyPath: localAgentcashPolicyResult.policyPath,
+        summary: localAgentcashPolicyResult.summary
+      },
+      liveWindowPlan: localOverlay.liveWindowPlan,
+      liveProcurementAction: localOverlay.actions.find((action) => action.id === "live_procurement") || null,
+      paidProof402Action: localOverlay.actions.find((action) => action.id === "paid_proof402_delegation") || null
     }
   }, null, 2));
   if (args.strict === true && result.status !== "ready-for-final-window") process.exit(1);
   process.exit(0);
 }
 
-const result = operatorActionPack(payload, { config });
+const result = operatorActionPack(payload, {
+  config,
+  localAgentcashPolicyResult
+});
 
 console.log(JSON.stringify(result, null, 2));
 if (args.strict === true && result.status !== "ready-for-final-window") process.exit(1);
