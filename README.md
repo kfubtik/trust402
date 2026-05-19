@@ -386,6 +386,15 @@ full Docker gate:
 npm run final:verify -- https://trust402.vercel.app --docker-bin=D:\Programs\Docker\resources\bin\docker.exe
 ```
 
+Plan an approved live evidence window without spending:
+
+```powershell
+npm run live:window-plan -- https://trust402.vercel.app `
+  --candidate-endpoint=https://approved.example/paid `
+  --candidate-price=0.01 `
+  --max-total-usd=0.03
+```
+
 Check the local Trust402-only AgentCash policy without spending:
 
 ```powershell
@@ -477,5 +486,7 @@ Future live procurement must require:
 - `scripts/completion-audit.js` - local or production completion audit runner.
 - `scripts/final-verification.js` - final evidence collector for tests, Docker,
   production smoke, x402, launch monitor, directories, and completion audit.
+- `scripts/live-window-plan.js` - read-only live-window staging plan for
+  approved x402 spend evidence.
 - `scripts/launch-monitor.js` - combined production API, x402, Bazaar, and directory monitor.
 - `test/` - API and engine tests.

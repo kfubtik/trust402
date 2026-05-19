@@ -282,6 +282,29 @@ the local remaining budget, global cap, and minimum reserve. The current local
 policy intentionally has `manualSmokeRemainingBudgetUsd=0`, so live evidence
 smoke remains blocked until a new approved spend window is recorded locally.
 
+## Live Window Planner
+
+Before changing local policy or production env for a live window, generate a
+read-only staging plan:
+
+```powershell
+npm run live:window-plan -- https://trust402.vercel.app `
+  --candidate-endpoint=https://approved.example/paid `
+  --candidate-price=0.01 `
+  --max-total-usd=0.03
+```
+
+The planner proposes:
+
+- non-secret Vercel env values for live procurement, Proof402, and optional
+  AgentCash auto-refill;
+- a local `.local/trust402-agentcash-wallet.json` policy patch to review;
+- the exact `npm run live:evidence-smoke` command for the approved window;
+- blockers when the endpoint, budget, provider, balance, or reserve is unsafe.
+
+It is intentionally read-only: no wallet mutation, no env writes, no payment
+headers, and no secret output.
+
 ## Live x402 Settlement
 
 The Express middleware bridge protects paid launch resources when

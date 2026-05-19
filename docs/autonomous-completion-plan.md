@@ -242,6 +242,22 @@ It consolidates Git/Vercel, custom-domain, external-directory, live spend,
 Proof402, AgentCash refill, autonomous-job, and final-evidence blockers without
 mutating wallets or sending payment headers.
 
+Then generate the read-only live-window plan for the exact approved resource,
+budget, and provider:
+
+```powershell
+npm run live:window-plan -- https://trust402.vercel.app `
+  --candidate-endpoint=https://approved.example/paid `
+  --candidate-price=0.01 `
+  --max-total-usd=0.03
+```
+
+This command does not change `.local/trust402-agentcash-wallet.json`, does not
+set Vercel environment variables, does not send payment headers, and does not
+mutate the wallet. It returns a plan hash, public-safe Vercel env names/values,
+the local policy patch to review, and the final `npm run live:evidence-smoke`
+command for the approved smoke window.
+
 On this workstation the verifier auto-detects Docker Desktop at
 `D:\Programs\Docker\resources\bin\docker.exe`. If Docker is installed elsewhere,
 pass `--docker-bin=<path-to-docker.exe>` or set `TRUST402_DOCKER_BIN`.
