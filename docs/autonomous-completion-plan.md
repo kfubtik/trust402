@@ -231,6 +231,8 @@ Acceptance:
 - default mode is dry-run;
 - live mode delegates to the same spend policy as procurement;
 - result hashes and receipt bundles are returned;
+- when proof preview or paid proof is requested, the job returns both the final
+  report `receiptBundle` and the Proof402 `proofReceiptBundle`;
 - failures explain which gate blocked the run.
 
 Completion evidence:

@@ -50,5 +50,8 @@ test("autonomousRun creates a dry-run quote, execution audit, receipt, and proof
   assert.equal(result.execution.paidSubcallsMade, 0);
   assert.match(result.resultHash, /^sha256:[a-f0-9]{64}$/);
   assert.equal(result.proof.delegation.paidProofCallMade, false);
+  assert.equal(result.proofReceiptBundle.resultHash, result.resultHash);
+  assert.equal(result.proofReceiptBundle.proofStatus, "preview-only");
+  assert.equal(result.proofReceiptBundle.policy.storesPrivatePayload, false);
   assert.ok(result.stages.some((stage) => stage.id === "receipt" && stage.status === "complete"));
 });

@@ -33,6 +33,7 @@ export async function autonomousRun(input = {}, options = {}) {
     subject: finalReport.goal,
     options
   });
+  const proofReceiptBundle = proof?.receiptBundle || null;
 
   return {
     ok: true,
@@ -50,6 +51,7 @@ export async function autonomousRun(input = {}, options = {}) {
     finalReport,
     resultHash,
     receiptBundle: receipt.receiptBundle,
+    proofReceiptBundle,
     proof,
     nextSteps: nextSteps({ mode, proof })
   };
