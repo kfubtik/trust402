@@ -42,6 +42,7 @@ assert(packageJson.scripts?.["marketplace:bundle"], "package must expose npm run
 assert(packageJson.scripts?.["agentcash:policy"], "package must expose npm run agentcash:policy");
 assert(packageJson.scripts?.["agentcash:refill-check"], "package must expose npm run agentcash:refill-check");
 assert(packageJson.scripts?.["completion:audit"], "package must expose npm run completion:audit");
+assert(packageJson.scripts?.["final:verify"], "package must expose npm run final:verify");
 assert(packageJson.scripts?.["privacy:check"], "package must expose npm run privacy:check");
 assert(packageJson.scripts?.["release:check"], "package must expose npm run release:check");
 assert(packageJson.scripts?.["settlement:preflight"], "package must expose npm run settlement:preflight");
@@ -91,6 +92,7 @@ assert(existsSync("scripts/check-external-directories.js"), "external directory 
 assert(existsSync("scripts/check-agentcash-policy.js"), "AgentCash policy check script must exist");
 assert(existsSync("scripts/agentcash-refill-check.js"), "AgentCash refill check script must exist");
 assert(existsSync("scripts/completion-audit.js"), "completion audit script must exist");
+assert(existsSync("scripts/final-verification.js"), "final verification script must exist");
 assert(existsSync("scripts/launch-monitor.js"), "production launch monitor script must exist");
 assert(smokeScript.includes("/api/jobs/autonomous-run"), "smoke script must cover autonomous job dry-run");
 assert(smokeScript.includes("/api/agentcash/refill-check"), "smoke script must cover AgentCash refill dry-run");

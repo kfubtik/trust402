@@ -202,6 +202,12 @@ TRUST402_FINAL_VERIFICATION_OBSERVED=true
 TRUST402_FINAL_VERIFICATION_EVIDENCE_REF=<public-safe final verification ref>
 ```
 
+Use the read-only verifier to produce the evidence ref:
+
+```powershell
+npm run final:verify -- https://trust402.vercel.app --timeout-ms=10000
+```
+
 ## Current Safety Blockers
 
 As of 2026-05-19, the local AgentCash policy has zero remaining manual smoke

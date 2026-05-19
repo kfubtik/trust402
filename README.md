@@ -372,6 +372,13 @@ Live buyer-agent requirements also require public-safe evidence refs:
 `TRUST402_AUTONOMOUS_JOB_SMOKE_OBSERVED`, and
 `TRUST402_FINAL_VERIFICATION_OBSERVED`.
 
+Run the read-only final verifier to collect the current command evidence and a
+public-safe verification hash:
+
+```powershell
+npm run final:verify -- https://trust402.vercel.app --skip-docker --skip-directories
+```
+
 Check the local Trust402-only AgentCash policy without spending:
 
 ```powershell
@@ -456,5 +463,7 @@ Future live procurement must require:
 - `scripts/check-agentcash-policy.js` - local Trust402-only AgentCash policy check.
 - `scripts/agentcash-refill-check.js` - local AgentCash refill dry-run monitor.
 - `scripts/completion-audit.js` - local or production completion audit runner.
+- `scripts/final-verification.js` - final evidence collector for tests, Docker,
+  production smoke, x402, launch monitor, directories, and completion audit.
 - `scripts/launch-monitor.js` - combined production API, x402, Bazaar, and directory monitor.
 - `test/` - API and engine tests.

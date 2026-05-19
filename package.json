@@ -25,6 +25,7 @@
     "agentcash:policy": "node scripts/check-agentcash-policy.js",
     "agentcash:refill-check": "node scripts/agentcash-refill-check.js",
     "completion:audit": "node scripts/completion-audit.js",
+    "final:verify": "node scripts/final-verification.js",
     "privacy:check": "node scripts/privacy-check.js",
     "release:check": "node scripts/release-check.js",
     "settlement:preflight": "node scripts/paid-smoke-preflight.js",

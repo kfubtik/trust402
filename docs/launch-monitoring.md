@@ -138,3 +138,26 @@ Invoke-RestMethod -Method Get -Uri https://trust402.vercel.app/api/completion/au
 The audit intentionally returns `goalComplete=false` until Git/Vercel
 auto-deploy, non-CDP external directory visibility, live procurement, paid
 Proof402 delegation, and final paid-smoke evidence are actually proven.
+
+## Final Verification Evidence
+
+Use the final verifier after blockers are resolved, or as a read-only snapshot
+of what still blocks completion:
+
+```powershell
+npm run final:verify -- https://trust402.vercel.app --timeout-ms=10000
+```
+
+Useful safe modes:
+
+```powershell
+npm run final:verify -- https://trust402.vercel.app --skip-docker --skip-directories
+npm run final:verify -- https://trust402.vercel.app --with-vercel-logs --include-details
+```
+
+The verifier runs local release checks, optional Docker build, production
+smoke, unpaid x402 smoke, AgentCash refill dry-run, launch monitor, optional
+external directory visibility, production completion audit, and optional Vercel
+error-log inspection. It prints a `verificationHash`; only when every non-final
+requirement is already verified does it suggest
+`TRUST402_FINAL_VERIFICATION_OBSERVED=true`.
