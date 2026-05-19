@@ -72,7 +72,7 @@ public directory pages.
 
 ## Latest Verified Baseline
 
-Last checked on 2026-05-19 at 10:36:52 +07:00 with:
+Last checked on 2026-05-19 at 11:04:19 +07:00 with:
 
 ```powershell
 npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000 --skip-directories
@@ -81,7 +81,7 @@ npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000 --skip-
 Trust402's verified launch-monitor state is:
 
 ```text
-status = needs-attention
+status = healthy-cdp-indexed
 api.status = healthy
 api.catalogStatus = production-mvp
 api.paidLaunchResources = 10
@@ -89,19 +89,16 @@ api.anyLiveSpendReady = false
 api.autoRefillReady = false
 x402Challenge.status = challenge-ready
 x402Challenge.httpStatus = 402
-cdpBazaar.status = partially-indexed
+cdpBazaar.status = all-indexed
 cdpBazaar.routeSummary.expected = 10
-cdpBazaar.routeSummary.indexed = 9
-cdpBazaar.routeSummary.missing = [procurement.plan]
+cdpBazaar.routeSummary.indexed = 10
+cdpBazaar.routeSummary.missing = []
 externalDirectories.status = skipped
 ```
 
-That state is production-healthy for API/x402/spend safety, but launch
-attention is still required because CDP Bazaar currently misses
-`procurement.plan`. The missing route costs `$0.02`, while the local AgentCash
-policy allows only `$0.01` per request and has zero remaining manual smoke
-budget, so this route should not be paid-settled until the local spend policy is
-explicitly updated.
+That state is production-healthy for API/x402/spend safety and CDP Bazaar
+indexing. Launch attention is still required for non-CDP external directory
+visibility and for intentionally closed live-spend gates.
 
 ## AgentCash Refill Check
 
@@ -139,5 +136,5 @@ Invoke-RestMethod -Method Get -Uri https://trust402.vercel.app/api/completion/au
 ```
 
 The audit intentionally returns `goalComplete=false` until Git/Vercel
-auto-deploy, external directory/Bazaar requirements, live procurement, paid
+auto-deploy, non-CDP external directory visibility, live procurement, paid
 Proof402 delegation, and final paid-smoke evidence are actually proven.

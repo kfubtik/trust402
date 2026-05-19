@@ -16,7 +16,7 @@ The full final Definition of Done is pinned in
 | Issue | Track | Why it matters | Safe next step |
 | --- | --- | --- | --- |
 | [#5](https://github.com/kfubtik/trust402/issues/5) | Vercel Git auto-deploy | Production currently deploys through manual Vercel CLI runs. Git-backed deploys need the Vercel GitHub App to access the private repo. | Update the Vercel GitHub App installation, then verify a harmless Git-backed production deploy. |
-| [#6](https://github.com/kfubtik/trust402/issues/6) | External x402 directories | CDP Bazaar is currently 9/10 and other directories are curated or delayed. | Submit the public-safe listing pack only where manual listing is allowed, and settle `procurement.plan` only after spend policy approval. |
+| [#6](https://github.com/kfubtik/trust402/issues/6) | External x402 directories | CDP Bazaar is indexed 10/10, but non-CDP directories are curated, delayed, or client-rendered and do not visibly list Trust402 yet. | Submit the public-safe listing pack only where manual listing is allowed, then keep the read-only directory monitor running. |
 | [#7](https://github.com/kfubtik/trust402/issues/7) | AgentCash auto-refill policy | The Trust402-reserved AgentCash wallet is funded and dry-run refill checks exist, but live auto-refill needs provider, caps, audit, and emergency-stop rules. | Approve the refill source, threshold, amount, cap, and log format before enabling live refill. |
 | [#8](https://github.com/kfubtik/trust402/issues/8) | Live procurement policy | Trust402 can plan and quote, but should not autonomously buy downstream resources without spend controls. | Approve allowlists, per-call/job/day caps, receipt storage, and approval thresholds. |
 | [#9](https://github.com/kfubtik/trust402/issues/9) | Paid Proof402 delegation policy | Trust402 can prepare Proof402-ready hashes, but paid delegation is intentionally disabled. | Approve which hashes can be notarized, proof spend caps, retry policy, and receipt fields. |
@@ -25,10 +25,9 @@ The full final Definition of Done is pinned in
 ## Current Safe State
 
 - Production URL: `https://trust402.vercel.app`.
-- CDP Bazaar indexing: 9/10 paid launch resources verified; `procurement.plan`
-  is missing and costs `$0.02`, above the current `$0.01` AgentCash max.
-- External directory visibility: monitored read-only; not required for launch
-  health while CDP Bazaar remains indexed.
+- CDP Bazaar indexing: 10/10 paid launch resources verified; no missing routes.
+- External directory visibility: monitored read-only; latest check found 0/6
+  visible, 4 reachable, and 2 timeout/unreachable directories.
 - Trust402 live procurement: disabled.
 - Paid Proof402 delegation: disabled.
 - AgentCash auto-refill: disabled; dry-run monitor is available through
