@@ -156,6 +156,14 @@
       "purpose": "Generate a public-safe Git/Vercel/custom-domain preflight profile and evidence env without mutating GitHub or Vercel."
     },
     {
+      "id": "deployments.github_actions_setup",
+      "method": "GET/POST",
+      "path": "/api/deployments/github-actions-setup",
+      "priceUsd": 0,
+      "status": "dry-run-helper",
+      "purpose": "Generate exact public-safe GitHub Actions secret setup, trigger, and verification commands without reading secret values or mutating GitHub/Vercel."
+    },
+    {
       "method": "GET",
       "path": "/api/resources",
       "purpose": "Public resource catalog."

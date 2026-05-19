@@ -489,6 +489,25 @@ deploy workflow runs. The Vercel probe checks only sanitized project metadata:
 env key names, latest production deployment id/url, ready state, and Git commit
 metadata. Neither probe prints secret values or mutates GitHub/Vercel.
 
+When the fallback workflow exists but GitHub Actions secrets are not confirmed,
+generate the read-only setup pack:
+
+```powershell
+npm run deployment:github-actions-setup -- https://trust402.vercel.app
+```
+
+The API equivalent is:
+
+```text
+GET /api/deployments/github-actions-setup
+POST /api/deployments/github-actions-setup
+```
+
+The CLI reads `.vercel/project.json` locally when available and prints exact
+`gh secret set`, workflow trigger, and verification commands. `VERCEL_TOKEN`
+stays a paste-only placeholder; the pack never reads, stores, or prints token
+values and never mutates GitHub/Vercel itself.
+
 It returns public-safe action groups for Git/Vercel auto-deploy, custom domain,
 external directory evidence, live procurement, paid Proof402, AgentCash refill,
 autonomous job evidence, and final verification evidence. It does not set env

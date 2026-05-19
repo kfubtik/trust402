@@ -29,6 +29,10 @@ async function main() {
     resources.freeResources?.some((item) => item.path === "/api/proof402/preflight"),
     "/api/resources must expose Proof402 paid preflight"
   );
+  assert(
+    resources.freeResources?.some((item) => item.path === "/api/deployments/github-actions-setup"),
+    "/api/resources must expose GitHub Actions setup pack"
+  );
 
   const wellKnown = await getJson("/.well-known/x402");
   assert(wellKnown.resources?.length === 10, "/.well-known/x402 expected 10 paid resources");
@@ -166,6 +170,15 @@ async function main() {
   assert(deploymentPreflightGet.safety?.mutatesVercel === false, "/api/deployments/preflight must not mutate Vercel");
   assert(deploymentPreflightGet.safety?.mutatesGitHub === false, "/api/deployments/preflight must not mutate GitHub");
 
+  const githubActionsSetupGet = await getJson("/api/deployments/github-actions-setup");
+  assert(githubActionsSetupGet.tool === "deployments.github_actions_setup", "/api/deployments/github-actions-setup GET tool mismatch");
+  assert(githubActionsSetupGet.safety?.readOnly === true, "/api/deployments/github-actions-setup must be read-only");
+  assert(githubActionsSetupGet.safety?.includesSecretValues === false, "/api/deployments/github-actions-setup must not include secret values");
+  assert(
+    githubActionsSetupGet.githubActions?.requiredSecretNames?.includes("VERCEL_TOKEN"),
+    "/api/deployments/github-actions-setup must list Vercel token secret"
+  );
+
   const directoryPackGet = await getJson("/api/directories/submission-pack");
   assert(directoryPackGet.tool === "directories.submission_pack", "/api/directories/submission-pack GET tool mismatch");
   assert(directoryPackGet.safety?.readOnly === true, "/api/directories/submission-pack must be read-only");
@@ -235,6 +248,25 @@ async function main() {
   assert(deploymentPreflightPost.domain?.ready === true, "/api/deployments/preflight must accept bare customDomain");
   assert(deploymentPreflightPost.safety?.readsSecretValues === false, "/api/deployments/preflight must not read secret values");
 
+  const githubActionsSetupPost = await postJson("/api/deployments/github-actions-setup", {
+    baseUrl,
+    gitHead: "abc1234",
+    vercelProject: {
+      projectName: "trust402",
+      projectId: "prj_smoke",
+      orgId: "team_smoke"
+    }
+  });
+  assert(githubActionsSetupPost.status === "ready-to-configure", "/api/deployments/github-actions-setup POST should be ready with project ids");
+  assert(
+    githubActionsSetupPost.githubActions?.commandPlan?.setupSecrets?.some((item) => item.includes("VERCEL_PROJECT_ID")),
+    "/api/deployments/github-actions-setup must include project secret command"
+  );
+  assert(
+    !JSON.stringify(githubActionsSetupPost).includes("real-token"),
+    "/api/deployments/github-actions-setup must not leak token values"
+  );
+
   const unblockPost = await postJson("/api/operator/unblock-report", {
     baseUrl,
     candidatePriceUsd: 0.01,
@@ -273,6 +305,8 @@ async function main() {
   assert(openapi.paths?.["/api/completion/audit"]?.get, "/openapi missing completion audit");
   assert(openapi.paths?.["/api/deployments/preflight"]?.get, "/openapi missing deployment preflight GET");
   assert(openapi.paths?.["/api/deployments/preflight"]?.post, "/openapi missing deployment preflight POST");
+  assert(openapi.paths?.["/api/deployments/github-actions-setup"]?.get, "/openapi missing GitHub Actions setup GET");
+  assert(openapi.paths?.["/api/deployments/github-actions-setup"]?.post, "/openapi missing GitHub Actions setup POST");
   assert(openapi.paths?.["/api/domains/activation-pack"]?.get, "/openapi missing domain activation pack GET");
   assert(openapi.paths?.["/api/domains/activation-pack"]?.post, "/openapi missing domain activation pack POST");
   assert(openapi.paths?.["/api/directories/submission-pack"]?.get, "/openapi missing directory submission pack GET");

@@ -33,6 +33,7 @@ const launchMonitorScript = readFileSync("scripts/launch-monitor.js", "utf8");
 const finalVerificationScript = readFileSync("scripts/final-verification.js", "utf8");
 const operatorActionPackScript = readFileSync("scripts/operator-action-pack.js", "utf8");
 const operatorUnblockCheckScript = readFileSync("scripts/operator-unblock-check.js", "utf8");
+const githubActionsSetupScript = readFileSync("scripts/github-actions-setup-pack.js", "utf8");
 const openapi = openApiSpec();
 const wellKnown = x402WellKnown();
 const checklist = launchChecklist();
@@ -65,6 +66,7 @@ assert(packageJson.scripts?.["completion:audit"], "package must expose npm run c
 assert(packageJson.scripts?.["completion:unblockers"], "package must expose npm run completion:unblockers");
 assert(packageJson.scripts?.["completion:actions"], "package must expose npm run completion:actions");
 assert(packageJson.scripts?.["deployment:preflight"], "package must expose npm run deployment:preflight");
+assert(packageJson.scripts?.["deployment:github-actions-setup"], "package must expose npm run deployment:github-actions-setup");
 assert(packageJson.scripts?.["final:verify"], "package must expose npm run final:verify");
 assert(packageJson.scripts?.["privacy:check"], "package must expose npm run privacy:check");
 assert(packageJson.scripts?.["release:check"], "package must expose npm run release:check");
@@ -102,6 +104,7 @@ assert(existsSync("src/liveWindowPlan.js"), "live window planning module must ex
 assert(existsSync("src/operatorActionPack.js"), "operator action pack module must exist");
 assert(existsSync("src/operatorUnblockReport.js"), "operator unblock report module must exist");
 assert(existsSync("src/deploymentPreflight.js"), "deployment preflight module must exist");
+assert(existsSync("src/githubActionsSetupPack.js"), "GitHub Actions setup pack module must exist");
 assert(existsSync("src/completionAudit.js"), "completion audit module must exist");
 assert(existsSync("src/completionPlan.js"), "completion plan module must exist");
 assert(existsSync("src/domainActivationPack.js"), "domain activation pack module must exist");
@@ -139,6 +142,7 @@ assert(existsSync("scripts/completion-audit.js"), "completion audit script must 
 assert(existsSync("scripts/operator-unblock-check.js"), "operator unblock check script must exist");
 assert(existsSync("scripts/operator-action-pack.js"), "operator action pack script must exist");
 assert(existsSync("scripts/deployment-preflight.js"), "deployment preflight script must exist");
+assert(existsSync("scripts/github-actions-setup-pack.js"), "GitHub Actions setup pack script must exist");
 assert(existsSync("scripts/final-verification.js"), "final verification script must exist");
 assert(existsSync("scripts/live-evidence-smoke.js"), "live evidence smoke script must exist");
 assert(existsSync("scripts/live-smoke-window.js"), "live smoke window script must exist");
@@ -174,6 +178,7 @@ assert(smokeScript.includes("/api/proof402/preflight"), "smoke script must cover
 assert(smokeScript.includes("/api/completion/plan"), "smoke script must cover completion plan");
 assert(smokeScript.includes("/api/completion/audit"), "smoke script must cover completion audit");
 assert(smokeScript.includes("/api/deployments/preflight"), "smoke script must cover deployment preflight API");
+assert(smokeScript.includes("/api/deployments/github-actions-setup"), "smoke script must cover GitHub Actions setup pack API");
 assert(smokeScript.includes("/api/domains/activation-pack"), "smoke script must cover domain activation pack");
 assert(smokeScript.includes("/api/directories/submission-pack"), "smoke script must cover directory submission pack");
 assert(smokeScript.includes("/api/live/window-plan"), "smoke script must cover live window plan");
@@ -202,6 +207,8 @@ assert(readFileSync("src/operatorActionPack.js", "utf8").includes("proof402Prefl
 assert(operatorUnblockCheckScript.includes("/api/operator/unblock-report"), "operator unblock CLI must support production API mode");
 assert(operatorUnblockCheckScript.includes("args.local"), "operator unblock CLI must preserve explicit local mode");
 assert(operatorUnblockCheckScript.includes("localAgentcashPolicyProbe"), "operator unblock CLI must include local AgentCash policy probe context");
+assert(githubActionsSetupScript.includes(".vercel/project.json"), "GitHub Actions setup CLI must read local Vercel project ids when available");
+assert(githubActionsSetupScript.includes("githubActionsSetupPack"), "GitHub Actions setup CLI must use the reusable setup pack");
 assert(productionDeployWorkflow.includes("branches: [main]"), "production deploy workflow must run on main pushes");
 assert(productionDeployWorkflow.includes("VERCEL_TOKEN"), "production deploy workflow must require VERCEL_TOKEN");
 assert(productionDeployWorkflow.includes("VERCEL_ORG_ID"), "production deploy workflow must require VERCEL_ORG_ID");
@@ -266,6 +273,10 @@ assert(
 assert(
   catalog.freeResources.some((resource) => resource.path === "/api/deployments/preflight" && resource.priceUsd === 0),
   "free deployment preflight helper must exist"
+);
+assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/deployments/github-actions-setup" && resource.priceUsd === 0),
+  "free GitHub Actions setup pack helper must exist"
 );
 assert(
   catalog.freeResources.some((resource) => resource.path === "/api/domains/activation-pack" && resource.priceUsd === 0),
@@ -337,6 +348,8 @@ assert(openapi.paths?.["/api/completion/plan"]?.get, "completion plan must be pr
 assert(openapi.paths?.["/api/completion/audit"]?.get, "completion audit must be present in OpenAPI");
 assert(openapi.paths?.["/api/deployments/preflight"]?.get, "deployment preflight GET must be present in OpenAPI");
 assert(openapi.paths?.["/api/deployments/preflight"]?.post, "deployment preflight POST must be present in OpenAPI");
+assert(openapi.paths?.["/api/deployments/github-actions-setup"]?.get, "GitHub Actions setup GET must be present in OpenAPI");
+assert(openapi.paths?.["/api/deployments/github-actions-setup"]?.post, "GitHub Actions setup POST must be present in OpenAPI");
 assert(openapi.paths?.["/api/domains/activation-pack"]?.get, "domain activation pack GET must be present in OpenAPI");
 assert(openapi.paths?.["/api/domains/activation-pack"]?.post, "domain activation pack POST must be present in OpenAPI");
 assert(openapi.paths?.["/api/directories/submission-pack"]?.get, "directory submission pack GET must be present in OpenAPI");
@@ -433,6 +446,10 @@ assert(
 assert(
   !openapi.paths["/api/deployments/preflight"].post["x-payment-info"],
   "deployment preflight helper must not require payment"
+);
+assert(
+  !openapi.paths["/api/deployments/github-actions-setup"].post["x-payment-info"],
+  "GitHub Actions setup pack helper must not require payment"
 );
 assert(
   !openapi.paths["/api/domains/activation-pack"].post["x-payment-info"],

@@ -41,6 +41,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/completion/plan"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/completion/audit"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/deployments/preflight"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/deployments/github-actions-setup"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/domains/activation-pack"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/directories/submission-pack"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/procurement/execute"));
@@ -132,6 +133,13 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(deploymentPreflightGet.body.safety.mutatesVercel, false);
     assert.equal(deploymentPreflightGet.body.safety.mutatesGitHub, false);
 
+    const githubActionsSetupGet = await request(baseUrl, "/api/deployments/github-actions-setup");
+    assert.equal(githubActionsSetupGet.response.status, 200);
+    assert.equal(githubActionsSetupGet.body.tool, "deployments.github_actions_setup");
+    assert.equal(githubActionsSetupGet.body.safety.readOnly, true);
+    assert.equal(githubActionsSetupGet.body.safety.includesSecretValues, false);
+    assert.ok(githubActionsSetupGet.body.githubActions.requiredSecretNames.includes("VERCEL_TOKEN"));
+
     const directoryPackGet = await request(baseUrl, "/api/directories/submission-pack");
     assert.equal(directoryPackGet.response.status, 200);
     assert.equal(directoryPackGet.body.tool, "directories.submission_pack");
@@ -187,6 +195,8 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/api/completion/audit"].get);
     assert.ok(openapi.body.paths["/api/deployments/preflight"].get);
     assert.ok(openapi.body.paths["/api/deployments/preflight"].post);
+    assert.ok(openapi.body.paths["/api/deployments/github-actions-setup"].get);
+    assert.ok(openapi.body.paths["/api/deployments/github-actions-setup"].post);
     assert.ok(openapi.body.paths["/api/domains/activation-pack"].get);
     assert.ok(openapi.body.paths["/api/domains/activation-pack"].post);
     assert.ok(openapi.body.paths["/api/directories/submission-pack"].get);
@@ -333,6 +343,25 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(deploymentPreflightPost.body.tool, "deployment.preflight");
     assert.equal(deploymentPreflightPost.body.domain.ready, true);
     assert.equal(deploymentPreflightPost.body.safety.readsSecretValues, false);
+
+    const githubActionsSetupPost = await request(baseUrl, "/api/deployments/github-actions-setup", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        baseUrl,
+        gitHead: "abc1234",
+        vercelProject: {
+          projectName: "trust402",
+          projectId: "prj_test",
+          orgId: "team_test"
+        }
+      })
+    });
+    assert.equal(githubActionsSetupPost.response.status, 200);
+    assert.equal(githubActionsSetupPost.body.tool, "deployments.github_actions_setup");
+    assert.equal(githubActionsSetupPost.body.status, "ready-to-configure");
+    assert.equal(githubActionsSetupPost.body.safety.mutatesGitHub, false);
+    assert.equal(githubActionsSetupPost.body.evidenceEnv.TRUST402_GIT_AUTO_DEPLOY_COMMIT_SHA, "abc1234");
 
     const unblockPost = await request(baseUrl, "/api/operator/unblock-report", {
       method: "POST",

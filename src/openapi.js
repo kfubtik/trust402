@@ -145,6 +145,34 @@ export function openApiSpec() {
         }
       }
     },
+    "/api/deployments/github-actions-setup": {
+      get: {
+        operationId: "deployments_github_actions_setup_get",
+        summary: "Read public-safe GitHub Actions setup commands for Vercel production deploy",
+        tags: ["Trust402"],
+        responses: {
+          "200": jsonResponse
+        }
+      },
+      post: {
+        operationId: "deployments_github_actions_setup",
+        summary: "Generate public-safe GitHub Actions setup commands from supplied project evidence",
+        tags: ["Trust402"],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: requestSchemaFor("deployments.github_actions_setup"),
+              example: exampleFor("deployments.github_actions_setup")
+            }
+          }
+        },
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse
+        }
+      }
+    },
     "/api/domains/activation-pack": {
       get: {
         operationId: "domains_activation_pack_get",
@@ -635,6 +663,7 @@ export function sitemapXml() {
     "/api/status",
     "/api/marketplace/bundle",
     "/api/directories/submission-pack",
+    "/api/deployments/github-actions-setup",
     "/api/proof402/preflight",
     ...loadCatalog().paidLaunchResources.map((resource) => resource.path)
   ];
@@ -670,6 +699,7 @@ export function capabilities() {
       completionPlan: "/api/completion/plan",
       completionAudit: "/api/completion/audit",
       deploymentPreflight: "/api/deployments/preflight",
+      githubActionsSetup: "/api/deployments/github-actions-setup",
       domainActivationPack: "/api/domains/activation-pack",
       directorySubmissionPack: "/api/directories/submission-pack",
       liveWindowPlan: "/api/live/window-plan",
@@ -1070,6 +1100,27 @@ function requestSchemaFor(id) {
     };
   }
 
+  if (id === "deployments.github_actions_setup") {
+    return {
+      type: "object",
+      properties: {
+        baseUrl: { type: "string", format: "uri" },
+        repo: { type: "string", default: "kfubtik/trust402" },
+        workflowPath: { type: "string", default: ".github/workflows/vercel-production-deploy.yml" },
+        workflowPresent: { type: "boolean", default: true },
+        gitHead: { type: "string" },
+        vercelProject: {
+          type: "object",
+          properties: {
+            projectName: { type: "string", default: "trust402" },
+            projectId: { type: "string" },
+            orgId: { type: "string" }
+          }
+        }
+      }
+    };
+  }
+
   if (id === "operator.action_pack") {
     return operatorPlanningSchema();
   }
@@ -1384,6 +1435,20 @@ function exampleFor(id) {
         orgId: "team_..."
       },
       gitAutoDeployVerified: false
+    };
+  }
+  if (id === "deployments.github_actions_setup") {
+    return {
+      baseUrl: "https://trust402.vercel.app",
+      repo: "kfubtik/trust402",
+      workflowPath: ".github/workflows/vercel-production-deploy.yml",
+      workflowPresent: true,
+      gitHead: "43b96cf",
+      vercelProject: {
+        projectName: "trust402",
+        projectId: "prj_...",
+        orgId: "team_..."
+      }
     };
   }
   if (id === "operator.action_pack") {

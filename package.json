@@ -35,6 +35,7 @@
     "completion:unblockers": "node scripts/operator-unblock-check.js",
     "completion:actions": "node scripts/operator-action-pack.js",
     "deployment:preflight": "node scripts/deployment-preflight.js",
+    "deployment:github-actions-setup": "node scripts/github-actions-setup-pack.js",
     "final:verify": "node scripts/final-verification.js",
     "privacy:check": "node scripts/privacy-check.js",
     "release:check": "node scripts/release-check.js",

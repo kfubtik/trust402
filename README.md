@@ -159,6 +159,17 @@ Invoke-RestMethod -Method Post -Uri https://trust402.vercel.app/api/deployments/
   -Body '{"customDomain":"trust402.dev","gitRemote":"https://github.com/kfubtik/trust402.git","gitHead":"43b96cf"}'
 ```
 
+Generate the exact GitHub Actions setup command pack for the fallback
+production deploy workflow. It prints secret names and local project ids, never
+secret values:
+
+```powershell
+npm run deployment:github-actions-setup -- https://trust402.vercel.app
+Invoke-RestMethod -Method Post -Uri https://trust402.vercel.app/api/deployments/github-actions-setup `
+  -ContentType application/json `
+  -Body '{"vercelProject":{"projectName":"trust402","projectId":"prj_...","orgId":"team_..."}}'
+```
+
 See [docs/external-marketplace-listing.md](docs/external-marketplace-listing.md)
 for public-safe listing copy and directory submission gates.
 
@@ -248,6 +259,8 @@ GET /api/completion/plan
 GET /api/completion/audit
 GET /api/deployments/preflight
 POST /api/deployments/preflight
+GET /api/deployments/github-actions-setup
+POST /api/deployments/github-actions-setup
 GET /api/domains/activation-pack
 POST /api/domains/activation-pack
 GET /api/directories/submission-pack
@@ -506,10 +519,14 @@ service:
 npm run deployment:preflight -- https://trust402.vercel.app
 npm run deployment:preflight -- https://trust402.vercel.app --probe-github-cli
 npm run deployment:preflight -- https://trust402.vercel.app --probe-vercel-api --vercel-scope sergo565456-2815s-projects
+npm run deployment:github-actions-setup -- https://trust402.vercel.app
 ```
 
 The optional probes check GitHub CLI auth/workflow evidence and sanitized Vercel
 deployment metadata. They never print secret values or mutate either service.
+The setup pack turns the same blocker into concrete `gh secret set`, workflow
+trigger, and verification commands while keeping `VERCEL_TOKEN` as a local
+paste-only placeholder.
 
 Check the local Trust402-only AgentCash policy without spending:
 
@@ -546,6 +563,8 @@ MVP guarantees:
 - `/api/deployments/preflight` makes Git/Vercel/custom-domain deployment
   blockers machine-readable without reading secret values or mutating GitHub or
   Vercel;
+- `/api/deployments/github-actions-setup` emits public-safe GitHub Actions setup
+  and verification commands without running them or printing secret values;
 - `/api/domains/activation-pack` plans custom-domain activation but never buys a
   domain, mutates Vercel, sets env vars, or claims availability/pricing;
 - `/api/directories/submission-pack` builds public-safe listing payloads and
@@ -590,6 +609,7 @@ Future live procurement must require:
 - `src/liveWindowPlan.js` - read-only live evidence window planner.
 - `src/operatorActionPack.js` - public-safe action pack for remaining completion blockers.
 - `src/deploymentPreflight.js` - public-safe Git/Vercel/custom-domain preflight profile.
+- `src/githubActionsSetupPack.js` - public-safe GitHub Actions setup command pack.
 - `src/domainActivationPack.js` - public-safe custom-domain activation pack.
 - `src/directorySubmissionPack.js` - public-safe external directory submission pack.
 - `src/monitor.js` - one-shot monitor snapshot and badge logic.

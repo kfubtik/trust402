@@ -388,6 +388,25 @@ The API form accepts public evidence such as `gitRemote`, `gitHead`,
 `customDomain`, workflow snippets, GitHub run metadata, and Vercel deployment
 metadata. It does not read secret values and does not mutate GitHub or Vercel.
 
+For the GitHub Actions fallback, generate the read-only setup command pack:
+
+```powershell
+npm run deployment:github-actions-setup -- https://trust402.vercel.app
+```
+
+Agents can request the same setup pack through:
+
+```text
+GET /api/deployments/github-actions-setup
+POST /api/deployments/github-actions-setup
+```
+
+This pack emits exact `gh secret set`, workflow trigger, and verification
+commands for `.github/workflows/vercel-production-deploy.yml`. It uses local
+`.vercel/project.json` in the CLI when present, keeps `VERCEL_TOKEN` as a
+paste-only placeholder, and does not run GitHub/Vercel commands or print secret
+values.
+
 Then generate the read-only live-window plan for the exact approved resource,
 budget, and provider:
 
