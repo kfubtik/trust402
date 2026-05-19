@@ -53,6 +53,27 @@ export function openApiSpec() {
     "/api/settlement/status": getPath("Real x402 settlement readiness and unpaid challenge status"),
     "/api/settlement/preflight": getPath("Operator preflight for one paid settlement smoke"),
     "/api/policies/spend": getPath("Spend policy gates for live procurement, Proof402 delegation, and AgentCash auto-refill"),
+    "/api/payments/buyer-preflight": {
+      post: {
+        operationId: "payments_buyer_preflight",
+        summary: "Read-only CDP x402 buyer account readiness and optional operator-gated account probe",
+        tags: ["Trust402"],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: requestSchemaFor("payments.buyer_preflight"),
+              example: exampleFor("payments.buyer_preflight")
+            }
+          }
+        },
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse,
+          "403": errorResponse
+        }
+      }
+    },
     "/api/payments/bridge-check": {
       post: {
         operationId: "payments_bridge_check",
@@ -852,6 +873,18 @@ function requestSchemaFor(id) {
     };
   }
 
+  if (id === "payments.buyer_preflight") {
+    return {
+      type: "object",
+      properties: {
+        provider: { type: "string", enum: ["cdp-x402"], default: "cdp-x402" },
+        probeCdp: { type: "boolean", default: false },
+        cdpEvmAccountAddress: { type: "string", pattern: "^0x[a-fA-F0-9]{40}$" },
+        cdpEvmAccountName: { type: "string" }
+      }
+    };
+  }
+
   if (id === "live.window_plan") {
     return {
       type: "object",
@@ -1170,6 +1203,13 @@ function exampleFor(id) {
       candidateEndpoint: "https://proof402.vercel.app/api/proof/notarize",
       method: "POST",
       maxAmountUsd: 0.01
+    };
+  }
+  if (id === "payments.buyer_preflight") {
+    return {
+      provider: "cdp-x402",
+      probeCdp: false,
+      cdpEvmAccountName: "trust402-buyer"
     };
   }
   if (id === "live.window_plan") {

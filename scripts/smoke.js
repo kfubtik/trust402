@@ -17,6 +17,10 @@ async function main() {
     resources.freeResources?.some((item) => item.path === "/llms.txt"),
     "/api/resources must expose llms.txt discovery"
   );
+  assert(
+    resources.freeResources?.some((item) => item.path === "/api/payments/buyer-preflight"),
+    "/api/resources must expose CDP buyer preflight"
+  );
 
   const wellKnown = await getJson("/.well-known/x402");
   assert(wellKnown.resources?.length === 10, "/.well-known/x402 expected 10 paid resources");
@@ -98,6 +102,23 @@ async function main() {
   const bridgeCheckBlocked = await postRaw("/api/payments/bridge-check", {});
   assert(bridgeCheckBlocked.response.status === 403, "/api/payments/bridge-check must require operator authorization");
   assert(bridgeCheckBlocked.body.error?.code === "operator_not_authorized", "/api/payments/bridge-check must block without operator key");
+
+  const buyerPreflight = await postJson("/api/payments/buyer-preflight", {
+    provider: "cdp-x402"
+  });
+  assert(buyerPreflight.tool === "payments.buyer_preflight", "/api/payments/buyer-preflight tool mismatch");
+  assert(buyerPreflight.provider === "cdp-x402", "/api/payments/buyer-preflight provider mismatch");
+  assert(buyerPreflight.mode === "readiness-only", "/api/payments/buyer-preflight must default to readiness-only");
+  assert(buyerPreflight.safety?.readOnly === true, "/api/payments/buyer-preflight must be read-only");
+  assert(buyerPreflight.safety?.createsCdpAccount === false, "/api/payments/buyer-preflight must not create CDP accounts");
+  assert(buyerPreflight.safety?.sendsPaymentHeaders === false, "/api/payments/buyer-preflight must not send payment headers");
+
+  const buyerProbeBlocked = await postRaw("/api/payments/buyer-preflight", {
+    provider: "cdp-x402",
+    probeCdp: true
+  });
+  assert(buyerProbeBlocked.response.status === 403, "/api/payments/buyer-preflight probe must require operator authorization");
+  assert(buyerProbeBlocked.body.error?.code === "operator_not_authorized", "/api/payments/buyer-preflight probe must block without operator key");
 
   const completionPlan = await getJson("/api/completion/plan");
   assert(completionPlan.tool === "completion.plan", "/api/completion/plan tool mismatch");
@@ -226,6 +247,7 @@ async function main() {
   assert(openapi.paths?.["/api/settlement/preflight"]?.get, "/openapi missing settlement preflight");
   assert(openapi.paths?.["/api/policies/spend"]?.get, "/openapi missing spend policy");
   assert(openapi.paths?.["/api/payments/bridge-check"]?.post, "/openapi missing payment bridge check");
+  assert(openapi.paths?.["/api/payments/buyer-preflight"]?.post, "/openapi missing CDP buyer preflight");
   assert(openapi.paths?.["/api/completion/plan"]?.get, "/openapi missing completion plan");
   assert(openapi.paths?.["/api/completion/audit"]?.get, "/openapi missing completion audit");
   assert(openapi.paths?.["/api/deployments/preflight"]?.get, "/openapi missing deployment preflight GET");

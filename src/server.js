@@ -24,6 +24,7 @@ import {
 import { completionAudit } from "./completionAudit.js";
 import { completionPlan } from "./completionPlan.js";
 import { spendPolicyStatus } from "./policies.js";
+import { paymentBuyerPreflight } from "./paymentBuyerPreflight.js";
 import { paymentBridgeCheck } from "./paymentBridgeCheck.js";
 import { procurementExecute, procurementQuote } from "./procurement.js";
 import { notarizeResult } from "./proof402Client.js";
@@ -49,6 +50,7 @@ const routes = new Map([
   ["POST /api/receipts/notarize-result", notarizeResult],
   ["POST /api/procurement/quote", procurementQuote],
   ["POST /api/procurement/execute", procurementExecute],
+  ["POST /api/payments/buyer-preflight", paymentBuyerPreflight],
   ["POST /api/payments/bridge-check", paymentBridgeCheck],
   ["POST /api/deployments/preflight", deploymentPreflight],
   ["POST /api/domains/activation-pack", domainActivationPack],
@@ -94,6 +96,7 @@ export async function handleTrust402Request(req, res) {
           settlementStatus: "/api/settlement/status",
           settlementPreflight: "/api/settlement/preflight",
           spendPolicy: "/api/policies/spend",
+          paymentBuyerPreflight: "/api/payments/buyer-preflight",
           paymentBridgeCheck: "/api/payments/bridge-check",
           completionPlan: "/api/completion/plan",
           completionAudit: "/api/completion/audit",
@@ -297,6 +300,7 @@ function statusSummary() {
       settlementPreflight: "/api/settlement/preflight",
       spendPolicy: "/api/policies/spend",
       paymentBridgeCheck: "/api/payments/bridge-check",
+      paymentBuyerPreflight: "/api/payments/buyer-preflight",
       completionPlan: "/api/completion/plan",
       completionAudit: "/api/completion/audit",
       deploymentPreflight: "/api/deployments/preflight",

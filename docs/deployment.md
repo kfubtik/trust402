@@ -157,6 +157,18 @@ existing account with `cdp.evm.getAccount(...)`; it does not create a CDP
 account implicitly during a paid request. `X402_BUYER_RPC_URL` is optional for
 RPC backfill when x402 extensions need on-chain reads.
 
+Before any `cdp-x402` live window, check the buyer signer without paying:
+
+```powershell
+npm run payment:buyer-preflight -- --provider=cdp-x402 --strict
+```
+
+That command is read-only and only checks configured secret/account gates. To
+confirm the account exists in CDP, add `--probe-cdp --operator-approved`; the
+API equivalent is `POST /api/payments/buyer-preflight` with the operator key.
+The probe calls `cdp.evm.getAccount(...)` only, never creates accounts, never
+sends payment headers, and prints only address previews/hashes.
+
 When `LIVE_PAYMENT_PROVIDER=agentcash-mcp` or `external-adapter`,
 `LIVE_PAYMENT_ADAPTER_URL` is required. Trust402 posts a public-safe bridge
 request to that URL and expects the bridge to perform the paid x402 fetch while

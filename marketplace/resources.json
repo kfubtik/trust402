@@ -231,6 +231,14 @@
       "priceUsd": 0,
       "status": "operator-gated-dry-run-helper",
       "purpose": "Verify the configured live payment bridge in dry-run mode without sending payment headers or exposing the adapter URL."
+    },
+    {
+      "id": "payments.buyer_preflight",
+      "method": "POST",
+      "path": "/api/payments/buyer-preflight",
+      "priceUsd": 0,
+      "status": "operator-gated-dry-run-helper",
+      "purpose": "Verify CDP-backed x402 buyer signer readiness and optionally probe an existing CDP account without creating accounts or sending payment headers."
     }
   ],
   "paidLaunchResources": [

@@ -56,6 +56,7 @@ assert(packageJson.scripts?.["live:smoke-window"], "package must expose npm run 
 assert(packageJson.scripts?.["live:window-plan"], "package must expose npm run live:window-plan");
 assert(packageJson.scripts?.["marketplace:bundle"], "package must expose npm run marketplace:bundle");
 assert(packageJson.scripts?.["payment:bridge-check"], "package must expose npm run payment:bridge-check");
+assert(packageJson.scripts?.["payment:buyer-preflight"], "package must expose npm run payment:buyer-preflight");
 assert(packageJson.scripts?.["agentcash:policy"], "package must expose npm run agentcash:policy");
 assert(packageJson.scripts?.["agentcash:refill-check"], "package must expose npm run agentcash:refill-check");
 assert(packageJson.scripts?.["completion:audit"], "package must expose npm run completion:audit");
@@ -104,6 +105,7 @@ assert(existsSync("src/domainActivationPack.js"), "domain activation pack module
 assert(existsSync("src/directorySubmissionPack.js"), "directory submission pack module must exist");
 assert(existsSync("src/paymentAdapters.js"), "payment adapter module must exist");
 assert(existsSync("src/paymentBridgeCheck.js"), "payment bridge check module must exist");
+assert(existsSync("src/paymentBuyerPreflight.js"), "CDP buyer preflight module must exist");
 assert(existsSync("src/policies.js"), "spend policy status module must exist");
 assert(existsSync("compose.yaml"), "compose.yaml must exist");
 assert(existsSync("docs/deployment.md"), "deployment docs must exist");
@@ -136,6 +138,7 @@ assert(existsSync("scripts/live-evidence-smoke.js"), "live evidence smoke script
 assert(existsSync("scripts/live-smoke-window.js"), "live smoke window script must exist");
 assert(existsSync("scripts/live-window-plan.js"), "live window plan script must exist");
 assert(existsSync("scripts/payment-bridge-check.js"), "payment bridge check script must exist");
+assert(existsSync("scripts/payment-buyer-preflight.js"), "CDP buyer preflight script must exist");
 assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("evaluateLocalAgentcashPolicyForLive"), "live evidence smoke must enforce local AgentCash policy before live mode");
 assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("appendEvidenceLedger"), "live evidence smoke must support local public-safe evidence ledger writes");
 assert(readFileSync("src/liveEvidenceSmoke.js", "utf8").includes("payment_bridge_preflight"), "live evidence smoke must require payment bridge preflight before bridge-backed live spend");
@@ -157,6 +160,7 @@ assert(liveEvidenceSmokeScript.includes("writeEvidenceLedger"), "live evidence s
 assert(smokeScript.includes("/api/jobs/autonomous-run"), "smoke script must cover autonomous job dry-run");
 assert(smokeScript.includes("/api/agentcash/refill-check"), "smoke script must cover AgentCash refill dry-run");
 assert(smokeScript.includes("/api/payments/bridge-check"), "smoke script must cover payment bridge authorization gate");
+assert(smokeScript.includes("/api/payments/buyer-preflight"), "smoke script must cover CDP buyer preflight");
 assert(smokeScript.includes("/api/completion/plan"), "smoke script must cover completion plan");
 assert(smokeScript.includes("/api/completion/audit"), "smoke script must cover completion audit");
 assert(smokeScript.includes("/api/deployments/preflight"), "smoke script must cover deployment preflight API");
@@ -284,6 +288,10 @@ assert(
   catalog.freeResources.some((resource) => resource.path === "/api/payments/bridge-check" && resource.priceUsd === 0),
   "free operator-gated payment bridge check helper must exist"
 );
+assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/payments/buyer-preflight" && resource.priceUsd === 0),
+  "free CDP buyer preflight helper must exist"
+);
 for (const path of [
   "/.well-known/x402.json",
   "/.well-known/agent.json",
@@ -322,6 +330,7 @@ assert(JSON.stringify(openapi.paths["/api/live/window-plan"]).includes("liveSpen
 assert(openapi.paths?.["/api/jobs/autonomous-run"]?.post, "autonomous job flow must be present in OpenAPI");
 assert(openapi.paths?.["/api/agentcash/refill-check"]?.post, "AgentCash refill check must be present in OpenAPI");
 assert(openapi.paths?.["/api/payments/bridge-check"]?.post, "payment bridge check must be present in OpenAPI");
+assert(openapi.paths?.["/api/payments/buyer-preflight"]?.post, "CDP buyer preflight must be present in OpenAPI");
 assert(openapi.paths?.["/.well-known/x402.json"]?.get, "x402 JSON alias must be present in OpenAPI");
 assert(openapi.paths?.["/.well-known/agent.json"]?.get, "agent manifest must be present in OpenAPI");
 assert(openapi.paths?.["/.well-known/agent-services.json"]?.get, "agent services manifest must be present in OpenAPI");
@@ -432,6 +441,10 @@ assert(
   !openapi.paths["/api/payments/bridge-check"].post["x-payment-info"],
   "payment bridge check helper must not require payment"
 );
+assert(
+  !openapi.paths["/api/payments/buyer-preflight"].post["x-payment-info"],
+  "CDP buyer preflight helper must not require payment"
+);
 
 const ids = new Set();
 const paths = new Set();
@@ -465,6 +478,7 @@ run("node", ["scripts/privacy-check.js"]);
 run("node", ["scripts/check-agentcash-policy.js"]);
 run("node", ["scripts/agentcash-refill-check.js", "--balance", "1.00"]);
 run("node", ["scripts/payment-bridge-check.js"]);
+run("node", ["scripts/payment-buyer-preflight.js"]);
 run("node", ["scripts/completion-audit.js"]);
 run("node", ["scripts/settlement-check.js"]);
 run("node", ["--test", "test"]);

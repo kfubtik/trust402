@@ -116,6 +116,9 @@ Acceptance:
 - `cdp-x402` explicitly requires CDP API credentials, `CDP_WALLET_SECRET`, and
   an existing `CDP_EVM_ACCOUNT_ADDRESS` or `CDP_EVM_ACCOUNT_NAME` so x402 buyer
   signing can happen without exporting a private key;
+- `npm run payment:buyer-preflight` and `POST /api/payments/buyer-preflight`
+  expose CDP buyer signer readiness and can operator-probe the existing CDP
+  account without creating accounts or sending payment headers;
 - `npm run payment:bridge-check` and `POST /api/payments/bridge-check` can
   dry-run-probe the configured bridge and require explicit no-payment evidence
   before live spend is enabled;
