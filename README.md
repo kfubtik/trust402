@@ -357,6 +357,9 @@ npm run completion:audit
 Invoke-RestMethod -Method Get -Uri http://127.0.0.1:4032/api/completion/audit
 ```
 
+`goalComplete=true` is reserved for the state where every requirement is
+`verified`; implemented-but-blocked paths do not count as completion.
+
 Check the local Trust402-only AgentCash policy without spending:
 
 ```powershell

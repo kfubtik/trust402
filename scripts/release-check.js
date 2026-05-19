@@ -180,6 +180,14 @@ assert(spendPolicy.policies.liveProcurement.ready === false, "live procurement m
 assert(spendPolicy.policies.proof402Delegation.ready === false, "Proof402 delegation must not be ready by default");
 assert(completion.goalComplete === false, "completion audit must not claim full completion by default");
 assert(
+  completion.goalComplete === completion.requirements.every((item) => item.status === "verified"),
+  "completion audit goalComplete must require every requirement to be verified"
+);
+assert(
+  completion.summary.implementedBlocked > 0,
+  "completion audit must expose implemented-but-blocked live paths"
+);
+assert(
   completion.requirements.some((item) => item.id === "unified_spend_policy" && item.status === "verified"),
   "completion audit must verify unified spend policy"
 );

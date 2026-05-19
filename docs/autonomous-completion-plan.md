@@ -3,9 +3,10 @@
 This is the pinned completion plan for turning Trust402 from a production x402
 trust MVP into a controlled autonomous buyer-agent.
 
-Success means all sections below are either complete or explicitly blocked by a
-third-party/manual approval that cannot be performed safely by code alone. Do
-not close the plan by weakening spend safety.
+Success means every section below is proven complete in the current production
+state. Third-party/manual blockers must stay visible, but they are not success;
+do not close the plan by weakening spend safety or by treating blocked live
+paths as done.
 
 ## 1. Git/Vercel Auto-Deploy
 

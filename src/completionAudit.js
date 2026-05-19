@@ -28,7 +28,7 @@ export function completionAudit(runtimeConfig = config) {
     tool: "completion.audit",
     generatedAt: new Date().toISOString(),
     objective: "Trust402 autonomous buyer-agent success criteria",
-    goalComplete: summary.blocked === 0 && summary.missing === 0 && summary.unverified === 0,
+    goalComplete: isGoalComplete(requirements),
     summary,
     requirements,
     blockers: requirements
@@ -44,6 +44,10 @@ export function completionAudit(runtimeConfig = config) {
       "Manual and external blockers must remain visible until resolved; do not weaken spend safety to make this audit green."
     ]
   };
+}
+
+export function isGoalComplete(requirements) {
+  return requirements.length > 0 && requirements.every((item) => item.status === "verified");
 }
 
 function gitVercelAutoDeploy() {

@@ -83,9 +83,10 @@ blocked, missing, or still unverified.
 
 Price: free.
 
-Reason: final readiness should be machine-readable. This endpoint prevents the
-agent from claiming completion while live procurement, paid Proof402, Git/Vercel
-auto-deploy, Bazaar 10/10, or external directory evidence is still unresolved.
+Reason: final readiness should be machine-readable. This endpoint returns
+`goalComplete=true` only when every requirement is verified; implemented but
+blocked live paths, Git/Vercel auto-deploy blockers, or external directory
+evidence gaps remain explicit blockers.
 
 ### `GET /api/resources`
 
