@@ -36,6 +36,22 @@ test("completionAudit can verify manual/external requirements only with explicit
   assert.equal(audit.goalComplete, false);
 });
 
+test("completionAudit explains custom-domain blocker for external directories", () => {
+  const audit = completionAudit({
+    ...config,
+    publicBaseUrl: "https://trust402.vercel.app",
+    externalDirectoryStatus: "not-visible-yet",
+    externalDirectoryEvidenceUrl: ""
+  });
+  const external = audit.requirements.find((item) => item.id === "external_x402_directories");
+
+  assert.equal(external?.status, "blocked-external");
+  assert.equal(external?.details.hostPolicy.requiresCustomDomain, true);
+  assert.equal(external?.details.hostPolicy.freeHostingSuffix, "vercel.app");
+  assert.ok(external?.evidence.some((item) => item === "customDomainRequiredForSomeDirectories=true"));
+  assert.match(external?.nextAction || "", /custom production domain/);
+});
+
 test("completionAudit requires smoke evidence even when live policies are ready", () => {
   const livePolicyReadyConfig = {
     ...config,

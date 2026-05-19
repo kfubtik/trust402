@@ -75,6 +75,7 @@ function gitVercelAutoDeploy(runtimeConfig) {
 function externalDirectories(runtimeConfig) {
   const accepted = new Set(["visible", "pending-review"]);
   const verified = accepted.has(runtimeConfig.externalDirectoryStatus) && Boolean(runtimeConfig.externalDirectoryEvidenceUrl);
+  const hostPolicy = externalDirectoryHostPolicy(runtimeConfig.publicBaseUrl);
   return requirement({
     id: "external_x402_directories",
     title: "External x402 Directories",
@@ -85,13 +86,20 @@ function externalDirectories(runtimeConfig) {
       `externalDirectoryStatus=${runtimeConfig.externalDirectoryStatus}`,
       `externalDirectoryName=${runtimeConfig.externalDirectoryName || "not-configured"}`,
       `evidenceUrl=${runtimeConfig.externalDirectoryEvidenceUrl || "not-configured"}`,
+      `publicBaseUrlHost=${hostPolicy.host || "not-configured"}`,
+      `customDomainRequiredForSomeDirectories=${hostPolicy.requiresCustomDomain}`,
       verified
         ? "A non-CDP directory is visible or has a recorded curated-review submission."
         : "At least one non-CDP directory must show Trust402 or record a pending curated review before this is complete."
     ],
+    details: {
+      hostPolicy
+    },
     nextAction: verified
       ? "Keep directory evidence fresh with read-only monitoring."
-      : "Run directory checks and submit the public-safe listing pack only where manual submission is allowed."
+      : hostPolicy.requiresCustomDomain
+        ? "Attach a custom production domain, rerun x402 smoke and directory checks, then submit the public-safe listing pack only where manual submission is allowed."
+        : "Run directory checks and submit the public-safe listing pack only where manual submission is allowed."
   });
 }
 
@@ -272,8 +280,8 @@ function finalVerification({ settlement, checklist, spend, runtimeConfig }) {
   });
 }
 
-function requirement({ id, title, status, evidence, nextAction, issue = null }) {
-  return {
+function requirement({ id, title, status, evidence, nextAction, issue = null, details = null }) {
+  const item = {
     id,
     title,
     status,
@@ -281,6 +289,8 @@ function requirement({ id, title, status, evidence, nextAction, issue = null }) 
     evidence,
     nextAction
   };
+  if (details) item.details = details;
+  return item;
 }
 
 function summarize(requirements) {
@@ -302,4 +312,41 @@ function summarize(requirements) {
     total: requirements.length,
     ...counts
   };
+}
+
+function externalDirectoryHostPolicy(publicBaseUrl) {
+  const host = safeHost(publicBaseUrl);
+  const freeHostingSuffix = freeHostingSuffixFor(host);
+  return {
+    publicBaseUrl: publicBaseUrl || "",
+    host,
+    requiresCustomDomain: Boolean(freeHostingSuffix),
+    freeHostingSuffix,
+    reason: freeHostingSuffix
+      ? "Some external directories reject free-hosting and dev-tunnel domains for production service listings."
+      : "Current host is not on the known free-hosting/dev-tunnel blocklist."
+  };
+}
+
+function safeHost(value) {
+  try {
+    return new URL(value).host;
+  } catch {
+    return "";
+  }
+}
+
+function freeHostingSuffixFor(value) {
+  const host = String(value || "").toLowerCase();
+  return [
+    "vercel.app",
+    "workers.dev",
+    "ngrok-free.app",
+    "ngrok.io",
+    "trycloudflare.com",
+    "netlify.app",
+    "pages.dev",
+    "fly.dev",
+    "render.com"
+  ].find((suffix) => host === suffix || host.endsWith(`.${suffix}`)) || null;
 }
