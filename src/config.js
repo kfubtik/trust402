@@ -38,6 +38,7 @@ export const config = {
   agentcashAutoRefillApproved: process.env.AGENTCASH_AUTO_REFILL_APPROVED === "true",
   agentcashAutoRefillEnabled: process.env.AGENTCASH_AUTO_REFILL_ENABLED === "true",
   agentcashAutoRefillProvider: process.env.AGENTCASH_AUTO_REFILL_PROVIDER || "",
+  agentcashAutoRefillAdapterUrl: process.env.AGENTCASH_AUTO_REFILL_ADAPTER_URL || "",
   agentcashWalletBindingRequired: process.env.AGENTCASH_WALLET_BINDING_REQUIRED !== "false",
   agentcashNetwork: process.env.AGENTCASH_NETWORK || "base",
   agentcashAutoRefillThresholdUsd: Number.parseFloat(process.env.AGENTCASH_AUTO_REFILL_THRESHOLD_USD || "0.50"),

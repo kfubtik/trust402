@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { createServer } from "node:http";
 import { config, isMockPaywallEnabled } from "./config.js";
+import { agentcashRefillCheck } from "./agentcashRefill.js";
 import { paidResourceByPath, publicResources } from "./catalog.js";
 import { ApiError, errorBody } from "./errors.js";
 import { autonomousRun } from "./autonomousJob.js";
@@ -29,6 +30,7 @@ const routes = new Map([
   ["POST /api/procurement/quote", procurementQuote],
   ["POST /api/procurement/execute", procurementExecute],
   ["POST /api/jobs/autonomous-run", autonomousRun],
+  ["POST /api/agentcash/refill-check", agentcashRefillCheck],
   ["POST /api/monitor/snapshot", monitorSnapshot],
   ["POST /api/monitor/badge", monitorBadge],
   ["POST /api/trust/check-x402", checkX402],
@@ -65,6 +67,7 @@ export async function handleTrust402Request(req, res) {
           settlementStatus: "/api/settlement/status",
           settlementPreflight: "/api/settlement/preflight",
           spendPolicy: "/api/policies/spend",
+          agentcashRefillCheck: "/api/agentcash/refill-check",
           autonomousRun: "/api/jobs/autonomous-run",
           resources: "/api/resources",
           proof402Preview: "/api/receipts/notarize-result",
@@ -169,6 +172,7 @@ function statusSummary() {
       readyForLiveSpend: false,
       readyForProof402Delegation: false,
       readyForAgentCashAutoRefill: false,
+      readyForAgentCashRefillDryRun: true,
       readyForRealX402Settlement: settlementStatus().readiness.realSettlementReady
     },
     resources: {
@@ -191,6 +195,7 @@ function statusSummary() {
       settlementStatus: "/api/settlement/status",
       settlementPreflight: "/api/settlement/preflight",
       spendPolicy: "/api/policies/spend",
+      agentcashRefillCheck: "/api/agentcash/refill-check",
       autonomousRun: "/api/jobs/autonomous-run",
       openapi: "/openapi.json",
       x402WellKnown: "/.well-known/x402",

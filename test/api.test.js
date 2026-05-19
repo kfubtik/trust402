@@ -40,6 +40,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/policies/spend"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/procurement/execute"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/jobs/autonomous-run"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/agentcash/refill-check"));
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/trust/check-x402"));
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/procurement/quote"));
     assert.ok(resources.body.paidLaunchResources.some((resource) => resource.path === "/api/monitor/snapshot"));
@@ -55,6 +56,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(status.body.launchReadiness.readyForOneShotMonitoring, true);
     assert.equal(status.body.launchReadiness.readyForLiveSpend, false);
     assert.equal(status.body.launchReadiness.readyForAgentCashAutoRefill, false);
+    assert.equal(status.body.launchReadiness.readyForAgentCashRefillDryRun, true);
     assert.equal(status.body.launchReadiness.readyForRealX402Settlement, false);
 
     const settlement = await request(baseUrl, "/api/settlement/status");
@@ -105,6 +107,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/api/settlement/preflight"].get);
     assert.ok(openapi.body.paths["/api/policies/spend"].get);
     assert.ok(openapi.body.paths["/api/jobs/autonomous-run"].post);
+    assert.ok(openapi.body.paths["/api/agentcash/refill-check"].post);
     assert.ok(openapi.body.paths["/api/receipts/hash-result"].post);
     assert.ok(openapi.body.paths["/api/receipts/notarize-result"].post);
     assert.ok(openapi.body.paths["/api/procurement/quote"].post["x-payment-info"]);
@@ -203,6 +206,28 @@ test("hash-result returns a dry-run receipt bundle", async () => {
     assert.equal(notarize.body.tool, "receipts.notarize_result");
     assert.equal(notarize.body.resultHash, body.resultHash);
     assert.equal(notarize.body.delegation.paidProofCallMade, false);
+  });
+});
+
+test("agentcash refill-check returns a dry-run policy decision", async () => {
+  await withServer(async (baseUrl) => {
+    const { response, body } = await request(baseUrl, "/api/agentcash/refill-check", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        mode: "dry-run",
+        currentBalanceUsd: 0.42,
+        amountRefilledTodayUsd: 0
+      })
+    });
+
+    assert.equal(response.status, 200);
+    assert.equal(body.tool, "agentcash.refill_check");
+    assert.equal(body.mode, "dry-run");
+    assert.equal(body.decision.action, "refill");
+    assert.equal(body.decision.status, "dry-run-planned");
+    assert.equal(body.decision.plannedRefillUsd, 1);
+    assert.equal(body.safety.mutatesWalletBalance, false);
   });
 });
 

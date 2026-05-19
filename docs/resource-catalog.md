@@ -121,6 +121,24 @@ allowlist, denylist, caps, and receipt rules as controlled procurement.
 
 Price: free while live spend is disabled.
 
+Reason: this is the top-level buyer-agent workflow. It must be inspectable and
+dry-run-first before it can safely buy downstream resources.
+
+### `POST /api/agentcash/refill-check`
+
+AgentCash balance and refill-policy evaluator. It accepts a current balance,
+compares it against the approved threshold, applies refill amount and daily cap,
+and returns a decision hash plus dry-run receipt bundle.
+
+Price: free.
+
+Reason: auto-refill must be observable before it is live. This endpoint plans or
+blocks refill actions without reading private keys, sending payment headers, or
+mutating wallet balance. Live refill remains gated by approval, provider,
+operator authorization, caps, and emergency stop.
+
+Price: free while live spend is disabled.
+
 Reason: this is the top-level agent workflow. It should be easy to inspect in
 dry-run mode before any autonomous spending is approved.
 

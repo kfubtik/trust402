@@ -67,6 +67,8 @@ Added:
 - `/api/settlement/preflight` and `npm run settlement:preflight` for one paid-smoke readiness check without sending payment.
 - `/api/policies/spend` for read-only live procurement, Proof402 delegation,
   and AgentCash auto-refill policy gates.
+- `/api/agentcash/refill-check` for dry-run AgentCash threshold/refill decisions
+  with receipt hashes and live action gates.
 - `src/expressApp.js` bridge for Vercel/serverless and real-mode Express middleware.
 - fail-closed protected routes when `TRUST402_PAYWALL_MODE=real` is requested
   before all settlement guards pass.
@@ -132,6 +134,8 @@ Implemented:
 - approval payload;
 - `/api/procurement/execute` dry-run audit;
 - `/api/jobs/autonomous-run` dry-run-first top-level workflow;
+- `npm run agentcash:refill-check` and `/api/agentcash/refill-check` dry-run
+  refill monitor;
 - live execution skeleton with operator authorization, allowlist, denylist,
   caps, approval, and receipt bundles.
 

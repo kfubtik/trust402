@@ -93,6 +93,14 @@
       "priceUsd": 0,
       "status": "dry-run-helper",
       "purpose": "Run a dry-run-first autonomous Trust402 job from goal to quote, execution audit, receipt, and optional proof preview."
+    },
+    {
+      "id": "agentcash.refill_check",
+      "method": "POST",
+      "path": "/api/agentcash/refill-check",
+      "priceUsd": 0,
+      "status": "dry-run-helper",
+      "purpose": "Evaluate AgentCash balance, threshold, daily cap, and refill policy without mutating wallet balance."
     }
   ],
   "paidLaunchResources": [

@@ -117,6 +117,12 @@ export function agentcashAutoRefillPolicy(runtimeConfig) {
   if (!runtimeConfig.agentcashAutoRefillApproved) blockers.push(blocker("agentcash_refill_not_approved", "AGENTCASH_AUTO_REFILL_APPROVED is false."));
   if (!runtimeConfig.agentcashAutoRefillEnabled) blockers.push(blocker("agentcash_refill_disabled", "AGENTCASH_AUTO_REFILL_ENABLED is false."));
   if (!runtimeConfig.agentcashAutoRefillProvider) blockers.push(blocker("missing_refill_provider", "AGENTCASH_AUTO_REFILL_PROVIDER is not configured."));
+  if (runtimeConfig.agentcashAutoRefillProvider && !isSupportedRefillProvider(runtimeConfig.agentcashAutoRefillProvider)) {
+    blockers.push(blocker("unsupported_refill_provider", "AGENTCASH_AUTO_REFILL_PROVIDER must be agentcash-mcp, external-adapter, or manual-action."));
+  }
+  if (runtimeConfig.agentcashAutoRefillProvider === "external-adapter" && !runtimeConfig.agentcashAutoRefillAdapterUrl) {
+    blockers.push(blocker("missing_refill_adapter_url", "AGENTCASH_AUTO_REFILL_ADAPTER_URL is required for external-adapter refill."));
+  }
   if (!runtimeConfig.operatorApiKey) blockers.push(blocker("missing_operator_key", "TRUST402_OPERATOR_API_KEY is not configured."));
   if (!(runtimeConfig.agentcashAutoRefillThresholdUsd > 0)) blockers.push(blocker("missing_refill_threshold", "AGENTCASH_AUTO_REFILL_THRESHOLD_USD must be greater than zero."));
   if (!(runtimeConfig.agentcashAutoRefillAmountUsd > 0)) blockers.push(blocker("missing_refill_amount", "AGENTCASH_AUTO_REFILL_AMOUNT_USD must be greater than zero."));
@@ -137,7 +143,9 @@ export function agentcashAutoRefillPolicy(runtimeConfig) {
       thresholdUsd: runtimeConfig.agentcashAutoRefillThresholdUsd,
       refillAmountUsd: runtimeConfig.agentcashAutoRefillAmountUsd,
       dailyCapUsd: runtimeConfig.agentcashAutoRefillDailyCapUsd,
+      provider: runtimeConfig.agentcashAutoRefillProvider || "not-configured",
       providerConfigured: Boolean(runtimeConfig.agentcashAutoRefillProvider),
+      adapterConfigured: Boolean(runtimeConfig.agentcashAutoRefillAdapterUrl),
       walletBindingRequired: runtimeConfig.agentcashWalletBindingRequired,
       network: runtimeConfig.agentcashNetwork,
       operatorApiKeyConfigured: Boolean(runtimeConfig.operatorApiKey),
@@ -162,6 +170,10 @@ function blocker(id, message) {
 
 function isSupportedPaymentProvider(provider) {
   return ["agentcash-mcp", "x402-fetch", "external-adapter"].includes(provider);
+}
+
+function isSupportedRefillProvider(provider) {
+  return ["agentcash-mcp", "external-adapter", "manual-action"].includes(provider);
 }
 
 function publicProvider(provider) {

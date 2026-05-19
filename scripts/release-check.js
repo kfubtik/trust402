@@ -38,6 +38,7 @@ assert(packageJson.scripts?.["directories:check"], "package must expose npm run 
 assert(packageJson.scripts?.["launch:monitor"], "package must expose npm run launch:monitor");
 assert(packageJson.scripts?.["marketplace:bundle"], "package must expose npm run marketplace:bundle");
 assert(packageJson.scripts?.["agentcash:policy"], "package must expose npm run agentcash:policy");
+assert(packageJson.scripts?.["agentcash:refill-check"], "package must expose npm run agentcash:refill-check");
 assert(packageJson.scripts?.["privacy:check"], "package must expose npm run privacy:check");
 assert(packageJson.scripts?.["release:check"], "package must expose npm run release:check");
 assert(packageJson.scripts?.["settlement:preflight"], "package must expose npm run settlement:preflight");
@@ -61,6 +62,7 @@ assert(existsSync("vercel.json"), "vercel.json must exist");
 assert(existsSync("api/index.js"), "Vercel API handler must exist");
 assert(existsSync("src/expressApp.js"), "Express x402 entrypoint bridge must exist");
 assert(existsSync("src/autonomousJob.js"), "autonomous job flow module must exist");
+assert(existsSync("src/agentcashRefill.js"), "AgentCash refill workflow module must exist");
 assert(existsSync("src/policies.js"), "spend policy status module must exist");
 assert(existsSync("compose.yaml"), "compose.yaml must exist");
 assert(existsSync("docs/deployment.md"), "deployment docs must exist");
@@ -83,8 +85,10 @@ assert(serverSource.includes("createTrust402ExpressApp"), "node start must use t
 assert(serverSource.includes("x-trust402-operator-key"), "server must require an operator key header for live operator actions");
 assert(existsSync("scripts/check-external-directories.js"), "external directory check script must exist");
 assert(existsSync("scripts/check-agentcash-policy.js"), "AgentCash policy check script must exist");
+assert(existsSync("scripts/agentcash-refill-check.js"), "AgentCash refill check script must exist");
 assert(existsSync("scripts/launch-monitor.js"), "production launch monitor script must exist");
 assert(smokeScript.includes("/api/jobs/autonomous-run"), "smoke script must cover autonomous job dry-run");
+assert(smokeScript.includes("/api/agentcash/refill-check"), "smoke script must cover AgentCash refill dry-run");
 assert(launchMonitorScript.includes("/api/policies/spend"), "launch monitor must check spend policy");
 assert(workflow.includes("npm audit --omit=dev --audit-level=high"), "CI must run high-severity npm audit");
 assert(workflow.includes("docker build -t trust402:test ."), "CI must build the Docker image");
@@ -150,6 +154,7 @@ assert(openapi.paths?.["/api/settlement/status"]?.get, "settlement status must b
 assert(openapi.paths?.["/api/settlement/preflight"]?.get, "settlement preflight must be present in OpenAPI");
 assert(openapi.paths?.["/api/policies/spend"]?.get, "spend policy status must be present in OpenAPI");
 assert(openapi.paths?.["/api/jobs/autonomous-run"]?.post, "autonomous job flow must be present in OpenAPI");
+assert(openapi.paths?.["/api/agentcash/refill-check"]?.post, "AgentCash refill check must be present in OpenAPI");
 assert(checklist.readiness.dryRunLaunchReady === true, "dry-run launch checklist must pass");
 assert(checklist.readiness.publicMarketplaceReady === false, "public marketplace readiness must remain false for localhost/no-settlement defaults");
 assert(checklist.settlement.realSettlementReady === false, "real settlement must remain disabled by default");
@@ -187,6 +192,10 @@ assert(
   !openapi.paths["/api/jobs/autonomous-run"].post["x-payment-info"],
   "autonomous dry-run helper must not require payment"
 );
+assert(
+  !openapi.paths["/api/agentcash/refill-check"].post["x-payment-info"],
+  "AgentCash refill dry-run helper must not require payment"
+);
 
 const ids = new Set();
 const paths = new Set();
@@ -212,6 +221,7 @@ for (const resource of catalog.laterResourcesToPreserve) {
 
 run("node", ["scripts/privacy-check.js"]);
 run("node", ["scripts/check-agentcash-policy.js"]);
+run("node", ["scripts/agentcash-refill-check.js", "--balance", "1.00"]);
 run("node", ["scripts/settlement-check.js"]);
 run("node", ["--test", "test"]);
 

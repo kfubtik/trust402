@@ -23,6 +23,7 @@
     "launch:monitor": "node scripts/launch-monitor.js",
     "marketplace:bundle": "node scripts/export-marketplace-bundle.js",
     "agentcash:policy": "node scripts/check-agentcash-policy.js",
+    "agentcash:refill-check": "node scripts/agentcash-refill-check.js",
     "privacy:check": "node scripts/privacy-check.js",
     "release:check": "node scripts/release-check.js",
     "settlement:preflight": "node scripts/paid-smoke-preflight.js",

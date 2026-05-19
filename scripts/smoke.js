@@ -86,6 +86,15 @@ async function main() {
   assert(autonomous.quote?.quote?.selectedResources?.length === 1, "/api/jobs/autonomous-run must select a qualified dry-run resource");
   assert(autonomous.execution?.paidSubcallsMade === 0, "/api/jobs/autonomous-run dry-run must not make paid subcalls");
 
+  const refill = await postJson("/api/agentcash/refill-check", {
+    mode: "dry-run",
+    currentBalanceUsd: 0.42,
+    amountRefilledTodayUsd: 0
+  });
+  assert(refill.mode === "dry-run", "/api/agentcash/refill-check must run in dry-run mode");
+  assert(refill.decision?.action === "refill", "/api/agentcash/refill-check must plan refill below threshold");
+  assert(refill.safety?.mutatesWalletBalance === false, "/api/agentcash/refill-check dry-run must not mutate wallet balance");
+
   const realProtectedRoutes = settlement.readiness.realSettlementReady === true;
   if (realProtectedRoutes) {
     await expectPaymentRequired("/api/trust/score-resource", {

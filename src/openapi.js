@@ -46,6 +46,27 @@ export function openApiSpec() {
     "/api/settlement/preflight": getPath("Operator preflight for one paid settlement smoke"),
     "/api/policies/spend": getPath("Spend policy gates for live procurement, Proof402 delegation, and AgentCash auto-refill"),
     "/api/resources": getPath("Public Trust402 resource catalog"),
+    "/api/agentcash/refill-check": {
+      post: {
+        operationId: "agentcash_refill_check",
+        summary: "Evaluate AgentCash auto-refill policy in dry-run mode or create an approved refill action",
+        tags: ["Trust402"],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: requestSchemaFor("agentcash.refill_check"),
+              example: exampleFor("agentcash.refill_check")
+            }
+          }
+        },
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse,
+          "403": errorResponse
+        }
+      }
+    },
     "/api/jobs/autonomous-run": {
       post: {
         operationId: "jobs_autonomous_run",
@@ -216,6 +237,7 @@ export function capabilities() {
       settlementStatus: "/api/settlement/status",
       settlementPreflight: "/api/settlement/preflight",
       spendPolicy: "/api/policies/spend",
+      agentcashRefillCheck: "/api/agentcash/refill-check",
       openapi: "/openapi.json",
       x402WellKnown: "/.well-known/x402"
     }
@@ -348,6 +370,17 @@ function requestSchemaFor(id) {
           maxItems: 10,
           items: { type: "object" }
         }
+      }
+    };
+  }
+
+  if (id === "agentcash.refill_check") {
+    return {
+      type: "object",
+      properties: {
+        mode: { type: "string", enum: ["dry-run", "live"], default: "dry-run" },
+        currentBalanceUsd: { type: "number" },
+        amountRefilledTodayUsd: { type: "number", default: 0 }
       }
     };
   }
@@ -506,6 +539,13 @@ function exampleFor(id) {
         { id: "a", endpoint: "https://example.com/a", priceUsd: 0.01, has402: true, hasInputSchema: true, hasOpenApi: true, hasWellKnown: true },
         { id: "b", endpoint: "https://example.com/b", priceUsd: 0.04, hasInputSchema: false }
       ]
+    };
+  }
+  if (id === "agentcash.refill_check") {
+    return {
+      mode: "dry-run",
+      currentBalanceUsd: 0.42,
+      amountRefilledTodayUsd: 0
     };
   }
   if (id === "monitor.snapshot") {

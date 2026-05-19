@@ -82,6 +82,7 @@ http://127.0.0.1:4032/api/marketplace/bundle
 http://127.0.0.1:4032/api/settlement/status
 http://127.0.0.1:4032/api/policies/spend
 http://127.0.0.1:4032/api/jobs/autonomous-run
+http://127.0.0.1:4032/api/agentcash/refill-check
 http://127.0.0.1:4032/api/resources
 http://127.0.0.1:4032/openapi.json
 http://127.0.0.1:4032/.well-known/x402
@@ -216,6 +217,7 @@ POST /api/receipts/hash-result
 POST /api/receipts/notarize-result
 POST /api/procurement/execute
 POST /api/jobs/autonomous-run
+POST /api/agentcash/refill-check
 ```
 
 ## Paid Launch Resources
@@ -267,6 +269,12 @@ Run the autonomous dry-run workflow:
 
 ```powershell
 Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/jobs/autonomous-run -ContentType application/json -Body '{"mode":"dry-run","goal":"Choose and audit one safe x402 resource.","budgetUsd":0.25,"maxPaidCalls":1,"includeProofPreview":true,"candidates":[{"id":"a","endpoint":"https://example.com/a","priceUsd":0.01,"has402":true,"hasInputSchema":true,"hasOpenApi":true,"hasWellKnown":true},{"id":"b","endpoint":"https://example.com/b","priceUsd":0.04}]}'
+```
+
+Check AgentCash refill policy without mutating wallet balance:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/agentcash/refill-check -ContentType application/json -Body '{"mode":"dry-run","currentBalanceUsd":0.42,"amountRefilledTodayUsd":0}'
 ```
 
 Create a monitor snapshot:
@@ -344,6 +352,8 @@ Check the local Trust402-only AgentCash policy without spending:
 
 ```powershell
 npm run agentcash:policy
+npm run agentcash:refill-check
+npm run agentcash:refill-check -- --balance 0.42
 ```
 
 ## Safety
@@ -358,6 +368,9 @@ MVP guarantees:
 - `/api/procurement/execute` is dry-run only and returns an audit instead of buying;
 - `/api/jobs/autonomous-run` is dry-run by default and uses the same operator
   and spend-policy gates as live procurement;
+- `/api/agentcash/refill-check` can plan refill actions in dry-run mode but
+  cannot mutate wallet balance without approved provider, operator key, caps,
+  and emergency-stop checks;
 - `/api/receipts/notarize-result` never makes a paid Proof402 call in the MVP;
 - `/api/settlement/status` does not claim marketplace indexing readiness until explicit config and paid smoke evidence exist;
 - `/api/settlement/preflight` can plan one paid smoke but never sends payment;
@@ -389,6 +402,7 @@ Future live procurement must require:
 - `src/trustEngine.js` - checks, scoring, planning, and report logic.
 - `src/procurement.js` - quote and dry-run execution audit logic.
 - `src/autonomousJob.js` - dry-run-first autonomous job orchestration.
+- `src/agentcashRefill.js` - AgentCash refill policy decision and adapter-gated live action.
 - `src/monitor.js` - one-shot monitor snapshot and badge logic.
 - `src/proof402Client.js` - Proof402 request preview/probe logic with live calls blocked.
 - `src/settlement.js` - real x402 settlement readiness and unpaid challenge metadata.
@@ -413,5 +427,6 @@ Future live procurement must require:
 - `scripts/check-bazaar-indexing.js` - read-only CDP Bazaar visibility check.
 - `scripts/check-external-directories.js` - read-only external directory visibility check.
 - `scripts/check-agentcash-policy.js` - local Trust402-only AgentCash policy check.
+- `scripts/agentcash-refill-check.js` - local AgentCash refill dry-run monitor.
 - `scripts/launch-monitor.js` - combined production API, x402, Bazaar, and directory monitor.
 - `test/` - API and engine tests.

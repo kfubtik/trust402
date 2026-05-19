@@ -88,6 +88,8 @@ Acceptance:
 - provider is configured before refill can be ready;
 - refill amount and daily cap are enforced;
 - dry-run refill monitor exists before live refill;
+- `/api/agentcash/refill-check` and `npm run agentcash:refill-check` return a
+  threshold/cap decision and receipt hash without mutating wallet balance;
 - live refill is impossible unless `AGENTCASH_AUTO_REFILL_APPROVED=true` and
   `AGENTCASH_AUTO_REFILL_ENABLED=true`.
 

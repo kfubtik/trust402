@@ -72,31 +72,52 @@ public directory pages.
 
 ## Latest Verified Baseline
 
-Last checked on 2026-05-18 at 16:20:50 +07:00 with:
+Last checked on 2026-05-19 at 10:36:52 +07:00 with:
 
 ```powershell
-npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000
+npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000 --skip-directories
 ```
 
 Trust402's verified launch-monitor state is:
 
 ```text
-status = healthy-cdp-indexed
+status = needs-attention
 api.status = healthy
 api.catalogStatus = production-mvp
 api.paidLaunchResources = 10
+api.anyLiveSpendReady = false
+api.autoRefillReady = false
 x402Challenge.status = challenge-ready
 x402Challenge.httpStatus = 402
-cdpBazaar.status = all-indexed
+cdpBazaar.status = partially-indexed
 cdpBazaar.routeSummary.expected = 10
-cdpBazaar.routeSummary.indexed = 10
-cdpBazaar.routeSummary.missing = []
-externalDirectories.status = not-visible-yet
-externalDirectories.checked = 6
-externalDirectories.reachable = 4
-externalDirectories.visible = 0
+cdpBazaar.routeSummary.indexed = 9
+cdpBazaar.routeSummary.missing = [procurement.plan]
+externalDirectories.status = skipped
 ```
 
-That state is launch-healthy because CDP Bazaar is the primary verified x402
-discovery channel. External directory visibility can be pursued separately
-after public outreach is approved.
+That state is production-healthy for API/x402/spend safety, but launch
+attention is still required because CDP Bazaar currently misses
+`procurement.plan`. The missing route costs `$0.02`, while the local AgentCash
+policy allows only `$0.01` per request and has zero remaining manual smoke
+budget, so this route should not be paid-settled until the local spend policy is
+explicitly updated.
+
+## AgentCash Refill Check
+
+Use the refill dry-run monitor to inspect the AgentCash threshold decision
+without mutating wallet balance:
+
+```powershell
+npm run agentcash:refill-check
+npm run agentcash:refill-check -- --balance 0.42
+```
+
+The production API equivalent is:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri https://trust402.vercel.app/api/agentcash/refill-check -ContentType application/json -Body '{"mode":"dry-run","currentBalanceUsd":0.42,"amountRefilledTodayUsd":0}'
+```
+
+Live refill still requires explicit approval, provider config, operator
+authorization, caps, and emergency stop remaining false.
