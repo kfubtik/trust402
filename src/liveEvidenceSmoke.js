@@ -100,7 +100,8 @@ export async function liveEvidenceSmoke(input = {}, options = {}) {
     approval
   }, headers);
   stages.push(stage("procurement_execute", execution.mode === "live" ? "live-complete" : "dry-run-complete", execution.executionHash, {
-    paidSubcallsMade: execution.paidSubcallsMade || 0
+    paidSubcallsMade: execution.paidSubcallsMade || 0,
+    settlementEvidenceComplete: mode === "live" ? liveExecutionEvidenceReady(execution) : null
   }));
 
   let proof = null;
@@ -131,7 +132,8 @@ export async function liveEvidenceSmoke(input = {}, options = {}) {
       includeProofPreview: false
     }, headers);
     stages.push(stage("autonomous_job", autonomous.mode === "live" ? "live-complete" : "dry-run-complete", autonomous.resultHash, {
-      paidSubcallsMade: autonomous.execution?.paidSubcallsMade || 0
+      paidSubcallsMade: autonomous.execution?.paidSubcallsMade || 0,
+      settlementEvidenceComplete: mode === "live" ? liveExecutionEvidenceReady(autonomous.execution) : null
     }));
   }
 
@@ -365,18 +367,36 @@ function parseJsonText(text) {
 
 function evidenceFrom({ mode, execution, proof, autonomous, refill }) {
   return {
-    liveProcurement: execution?.mode === "live" && execution?.paidSubcallsMade > 0
+    liveProcurement: liveExecutionEvidenceReady(execution)
       ? execution.executionHash
       : null,
     proof402: proof?.delegation?.paidProofCallMade
       ? proof.resultHash
       : null,
-    autonomousJob: autonomous?.mode === "live" && autonomous?.execution?.paidSubcallsMade > 0
+    autonomousJob: autonomous?.mode === "live" && liveExecutionEvidenceReady(autonomous.execution)
       ? autonomous.resultHash
       : null,
     agentcashRefill: refill?.decisionHash || null,
     dryRunOnly: mode !== "live"
   };
+}
+
+function liveExecutionEvidenceReady(execution) {
+  if (!execution || execution.mode !== "live" || !(execution.paidSubcallsMade > 0)) return false;
+  const calls = Array.isArray(execution.result?.calls) ? execution.result.calls : [];
+  if (calls.length === 0) return false;
+  return calls.every((call) => callSettlementEvidenceReady(call));
+}
+
+function callSettlementEvidenceReady(call = {}) {
+  return Boolean(
+    call.paymentResponseHash ||
+    call.paymentResponseObserved === true ||
+    call.settlementHash ||
+    call.settlement?.status === "settled" ||
+    call.payment?.paid === true ||
+    call.payment?.status === "settled"
+  );
 }
 
 function suggestedEnv({ mode, evidenceRefs, policies }) {

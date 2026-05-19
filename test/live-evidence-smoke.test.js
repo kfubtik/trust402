@@ -135,10 +135,40 @@ test("liveEvidenceSmoke live mode returns suggested evidence env refs", async ()
   assert.equal(result.suggestedEnv.TRUST402_PROOF402_PAID_SMOKE_OBSERVED, "true");
   assert.equal(result.suggestedEnv.TRUST402_AUTONOMOUS_JOB_SMOKE_OBSERVED, "true");
   assert.ok(result.stages.some((item) => item.id === "payment_bridge_preflight" && item.status === "passed"));
+  assert.equal(result.stages.find((item) => item.id === "procurement_execute")?.details.settlementEvidenceComplete, true);
+  assert.equal(result.stages.find((item) => item.id === "autonomous_job")?.details.settlementEvidenceComplete, true);
   assert.equal(result.safety.paymentBridgePreflightRequired, true);
   assert.equal(result.safety.paymentBridgePreflightPassed, true);
   assert.ok(calls.some((call) => new URL(call.url).pathname === "/api/payments/bridge-check"));
   assert.ok(calls.some((call) => call.headers?.["x-trust402-operator-key"] === "test-operator"));
+});
+
+test("liveEvidenceSmoke does not suggest live evidence env without call-level settlement evidence", async () => {
+  const result = await liveEvidenceSmoke({
+    baseUrl: "https://trust402.example",
+    mode: "live",
+    approved: true,
+    operatorKey: "test-operator",
+    candidateEndpoint: "https://resource.example/paid",
+    candidatePriceUsd: 0.01,
+    maxTotalUsd: 0.05,
+    includeProof: false,
+    includeAutonomous: true
+  }, {
+    fetchImpl: fakeFetch([], {
+      liveExecutionCalls: [],
+      liveAutonomousCalls: []
+    }),
+    localAgentcashPolicyResult: approvedLocalPolicyResult()
+  });
+
+  assert.equal(result.mode, "live");
+  assert.equal(result.evidenceRefs.liveProcurement, null);
+  assert.equal(result.evidenceRefs.autonomousJob, null);
+  assert.equal(result.suggestedEnv, null);
+  assert.equal(result.stages.find((item) => item.id === "procurement_execute")?.details.settlementEvidenceComplete, false);
+  assert.equal(result.stages.find((item) => item.id === "autonomous_job")?.details.settlementEvidenceComplete, false);
+  assert.ok(result.nextActions.some((item) => item.includes("Live procurement evidence was not produced")));
 });
 
 test("liveEvidenceSmoke blocks live mode when bridge preflight cannot prove dry-run safety", async () => {
@@ -232,12 +262,21 @@ function fakeFetch(calls, behavior = {}) {
     }
     if (path === "/api/procurement/execute") {
       const live = JSON.parse(requestOptions.body).mode === "live";
+      const liveCalls = behavior.liveExecutionCalls ?? [{
+        id: "resource",
+        endpoint: "https://resource.example/paid",
+        paymentResponseObserved: true,
+        paymentResponseHash: "sha256:paid-procurement"
+      }];
       return json({
         ok: true,
         mode: live ? "live" : "dry-run",
         executionHash: live ? "sha256:live-execution" : "sha256:dry-execution",
         paidSubcallsMade: live ? 1 : 0,
-        result: { status: live ? "executed" : "not-executed" }
+        result: {
+          status: live ? "executed" : "not-executed",
+          calls: live ? liveCalls : []
+        }
       });
     }
     if (path === "/api/receipts/notarize-result") {
@@ -253,12 +292,22 @@ function fakeFetch(calls, behavior = {}) {
     }
     if (path === "/api/jobs/autonomous-run") {
       const live = JSON.parse(requestOptions.body).mode === "live";
+      const liveCalls = behavior.liveAutonomousCalls ?? [{
+        id: "resource",
+        endpoint: "https://resource.example/paid",
+        paymentResponseObserved: true,
+        paymentResponseHash: "sha256:paid-autonomous"
+      }];
       return json({
         ok: true,
         mode: live ? "live" : "dry-run",
         resultHash: live ? "sha256:live-autonomous" : "sha256:dry-autonomous",
         execution: {
-          paidSubcallsMade: live ? 1 : 0
+          mode: live ? "live" : "dry-run",
+          paidSubcallsMade: live ? 1 : 0,
+          result: {
+            calls: live ? liveCalls : []
+          }
         }
       });
     }
