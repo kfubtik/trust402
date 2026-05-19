@@ -137,7 +137,9 @@ Acceptance:
 - the configured payment bridge has passed a dry-run no-payment preflight;
 - every paid call is within the per-call cap;
 - total planned spend is within job and daily caps;
-- every execution returns an audit/receipt bundle.
+- every execution returns an audit/receipt bundle;
+- downstream `payment-response` headers are recorded only as public-safe
+  `sha256:` hashes, not as raw payment headers.
 
 Completion evidence:
 
@@ -206,6 +208,8 @@ Acceptance:
 - proof spend cap is enforced;
 - paid proof requires operator authorization;
 - proof result is included in the receipt/audit bundle;
+- Proof402 `payment-response` evidence is recorded only as a public-safe
+  `sha256:` hash;
 - `/api/receipts/notarize-result` returns a public-safe `receiptBundle` for
   preview, probe, and live Proof402 outcomes.
 

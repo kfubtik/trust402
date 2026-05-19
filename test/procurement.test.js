@@ -149,6 +149,7 @@ test("procurementExecute can run live through an injected paid fetch inside poli
   assert.equal(result.paidSubcallsMade, 1);
   assert.equal(result.result.status, "executed");
   assert.equal(result.result.calls[0].paymentResponseObserved, true);
+  assert.match(result.result.calls[0].paymentResponseHash, /^sha256:[a-f0-9]{64}$/);
   assert.equal(result.audit.limits.dailyRemainingBeforeUsd, 1);
   assert.equal(result.audit.limits.dailyRemainingAfterEstimatedUsd, 0.99);
   assert.match(result.executionHash, /^sha256:[a-f0-9]{64}$/);

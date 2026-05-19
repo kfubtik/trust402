@@ -1,6 +1,6 @@
 import { config } from "./config.js";
 import { ApiError } from "./errors.js";
-import { sha256Json } from "./hash.js";
+import { sha256Json, sha256Text } from "./hash.js";
 import { createPaidFetch } from "./paymentAdapters.js";
 import { liveProcurementPolicy } from "./policies.js";
 import { receiptBundle } from "./receipts.js";
@@ -389,6 +389,7 @@ async function callPaidResource({ resource, input, fetchImpl, cfg }) {
   const body = await responseBody(response);
   const paymentResponse = response.headers?.get?.("payment-response") || "";
   const paymentRequired = response.headers?.get?.("payment-required") || "";
+  const paymentResponseHash = paymentResponse ? sha256Text(paymentResponse) : null;
   return {
     id: resource.id,
     endpoint: resource.endpoint,
@@ -397,6 +398,7 @@ async function callPaidResource({ resource, input, fetchImpl, cfg }) {
     status: response.status,
     plannedPriceUsd: resource.priceUsd,
     paymentResponseObserved: Boolean(paymentResponse),
+    paymentResponseHash,
     paymentRequiredObserved: Boolean(paymentRequired),
     bodyHash: sha256Json(body ?? {}),
     bodySummary: summarizeBody(body)

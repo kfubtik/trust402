@@ -70,6 +70,7 @@ function receiptDelegationSummary(delegation = {}) {
     paidProofCallMade: Boolean(delegation.paidProofCallMade),
     unpaidProbeMade: Boolean(delegation.unpaidProbeMade),
     paymentResponseObserved: Boolean(delegation.paymentResponseObserved),
+    paymentResponseHash: delegation.paymentResponseHash || null,
     proofLink: delegation.proofLink || null,
     verifyLink: delegation.verifyLink || null,
     reason: delegation.reason || null,
@@ -221,6 +222,7 @@ async function paidProof402Call({ baseUrl, proofRequest, cfg, fetchImpl }) {
   const body = await responseJson(response);
   const paymentRequired = response.headers.get("payment-required") || "";
   const paymentResponse = response.headers.get("payment-response") || "";
+  const paymentResponseHash = paymentResponse ? sha256Text(paymentResponse) : null;
 
   if (response.status === 402 || paymentRequired) {
     throw new ApiError(402, "proof402_payment_required_not_settled", "Proof402 requested payment, but the configured fetch adapter did not settle it.", {
@@ -254,6 +256,7 @@ async function paidProof402Call({ baseUrl, proofRequest, cfg, fetchImpl }) {
     reason: "Paid Proof402 delegation completed through the configured payment adapter.",
     maxProofSpendUsd: cfg.proof402MaxSpendUsd,
     paymentResponseObserved: Boolean(paymentResponse),
+    paymentResponseHash,
     proof,
     verifyLink,
     idempotentReplay: Boolean(body?.idempotentReplay),

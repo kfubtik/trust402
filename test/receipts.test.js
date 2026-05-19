@@ -173,6 +173,7 @@ test("notarizeResult can complete live Proof402 delegation through injected paid
   assert.equal(result.mode, "live");
   assert.equal(result.delegation.paidProofCallMade, true);
   assert.equal(result.delegation.paymentResponseObserved, true);
+  assert.match(result.delegation.paymentResponseHash, /^sha256:[a-f0-9]{64}$/);
   assert.equal(result.proofLink, "https://proof402.vercel.app/proof/mock-proof");
   assert.equal(result.delegation.verifyLink, "https://proof402.vercel.app/api/verify/proofs/mock-proof");
   assert.equal(result.delegation.proof.id, "mock-proof");
@@ -182,6 +183,7 @@ test("notarizeResult can complete live Proof402 delegation through injected paid
   assert.equal(result.receiptBundle.proofLink, "https://proof402.vercel.app/proof/mock-proof");
   assert.equal(result.receiptBundle.delegation.paidProofCallMade, true);
   assert.equal(result.receiptBundle.delegation.paymentResponseObserved, true);
+  assert.equal(result.receiptBundle.delegation.paymentResponseHash, result.delegation.paymentResponseHash);
   assert.equal(result.receiptBundle.policy.liveSpendEnabled, true);
   assert.equal(result.receiptBundle.policy.operatorAuthorized, true);
   assert.equal(result.receiptBundle.policy.storesPrivatePayload, false);
