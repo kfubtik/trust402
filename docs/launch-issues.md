@@ -28,21 +28,19 @@ The full final Definition of Done is pinned in
 - Deployment mode: production is still updated through manual Vercel CLI runs;
   push-triggered Git/Vercel auto-deploy evidence is still not verified.
 - Recent manual production deployment evidence snapshot:
-  `dpl_5KEV3nkrPh91ccCPmTRuMTn8DQB8`, aliased to
-  `https://trust402.vercel.app` as of 2026-05-20 09:25:49 +07:00. This deploy
-  includes commit `33946f7e5a11856e3d7de8d81207fbed86a4a3bf`
-  (`Add AgentCash refill audit bundle`). Treat the latest
+  `dpl_9oUMANMVV69eJqQTzgDyr3tq57WK`, aliased to
+  `https://trust402.vercel.app` as of 2026-05-20 09:49 +07:00. This deploy
+  includes commit `e613f801ac5cdd8d603e25dae78c0c3f5b5888d8`
+  (`Add final verification deployment sync gate`). Treat the latest
   `deployment:preflight` output and `vercel inspect https://trust402.vercel.app`
   as the source of truth after any later deploy.
-- Current GitHub `origin/main` is ahead of the production deployment. It
-  includes `2acd266590fafcba88fb5be028bd8b5f6190430b`
-  (`Split deployment preflight requirement evidence`) and
-  `7ab25d1f7d259e1e114f964aacd49da7c22ee2a3`
-  (`Record deployment lag after preflight split`), while production still
-  serves `33946f7e5a11856e3d7de8d81207fbed86a4a3bf`. Production does not
-  include the newer deployment-preflight contract yet because the follow-up
-  Vercel deploy attempt hit the free-plan daily deployment limit
-  (`more than 100`).
+- Current GitHub `origin/main` and production include the deployment-preflight
+  requirement split from `2acd266590fafcba88fb5be028bd8b5f6190430b`, the
+  deployment-lag ledger update from `7ab25d1f7d259e1e114f964aacd49da7c22ee2a3`,
+  and the final-verifier deployment sync gate from
+  `e613f801ac5cdd8d603e25dae78c0c3f5b5888d8`. Git/Vercel auto-deploy still is
+  not verified because this production update was a manual Vercel CLI deploy,
+  not a push-triggered deployment.
 - Final verification now includes a required `production_deployment_sync`
   check before production smoke. If production is behind the local verification
   contract, `production_smoke` is skipped as a deployment-lag blocker instead
@@ -52,12 +50,13 @@ The full final Definition of Done is pinned in
   CDP discovery latency does not create false launch-monitor timeouts.
 - External directory visibility: monitored read-only; latest final verifier
   checked 13 directories, found 10 reachable, 0 visible, 3 unreachable, and 1
-  custom-domain-blocked as of 2026-05-20 09:28:38 +07:00.
-- Production gates: `node --test test` (178/178), `node scripts/release-check.js`,
+  custom-domain-blocked as of 2026-05-20 09:52 +07:00.
+- Production gates: `node --test test` (180/180), `node scripts/release-check.js`,
   smoke, x402 smoke, Docker build, launch monitor, deployment preflight,
-  AgentCash refill dry-run, and external directory read-only check passed as of
-  2026-05-20 09:28:38 +07:00. Recent final verification hash:
-  `sha256:e6431dfe3a7ca9ad825ee339acf678a94f311826e5f0528858a8ddb3674aca9a`.
+  AgentCash refill dry-run, production deployment sync, and external directory
+  read-only check passed as of 2026-05-20 09:52 +07:00. Recent final
+  verification hash:
+  `sha256:44e39d236930a87c2599113b4844d7eadc2b0e6ea3a5a696239f9186f94fe6f2`.
   `final:verify` remains blocked because Git/Vercel auto-deploy,
   external-directory visibility, live procurement, paid Proof402 delegation,
   AgentCash auto-refill, and autonomous live job evidence are still unresolved.
