@@ -104,6 +104,80 @@ test("operatorReadiness can become ready for live evidence once manual gates are
   assert.equal(report.manualInputs.every((item) => item.status === "ready" || item.status === "not-required"), true);
 });
 
+test("operatorReadiness recommends a concrete payment provider when runtime is disabled", () => {
+  const report = operatorReadiness({
+    baseUrl: "https://trust402.vercel.app",
+    candidateEndpoint: "https://proof402.vercel.app/api/proof/notarize",
+    candidatePriceUsd: 0.005,
+    githubActionsFallbackPresent: true,
+    githubCliAuthenticated: false,
+    vercelProjectLinked: true
+  }, {
+    config: {
+      ...baseConfig(),
+      cdpApiKeyIdConfigured: true,
+      cdpApiKeySecretConfigured: true
+    },
+    envDiagnostics: envDiagnostics({
+      cdpWalletSecret: false,
+      cdpAccountName: false,
+      bridge: false
+    }),
+    localAgentcashPolicyResult: localPolicy({
+      manualSmokeRemainingBudgetUsd: 0,
+      trust402LiveProcurement: "disabled-until-separate-approval",
+      proof402Delegation: "disabled-until-separate-approval"
+    })
+  });
+
+  const paymentRuntime = report.manualInputs.find((item) => item.id === "payment_runtime");
+
+  assert.equal(report.paymentProvider.configured, "disabled");
+  assert.equal(report.paymentProvider.selected, "cdp-x402");
+  assert.equal(report.paymentProvider.source, "recommended");
+  assert.match(report.paymentProvider.recommendation.reason, /CDP credentials/);
+  assert.ok(paymentRuntime.missingNames.includes("CDP_WALLET_SECRET"));
+  assert.ok(paymentRuntime.missingNames.includes("CDP_EVM_ACCOUNT_ADDRESS"));
+  assert.ok(paymentRuntime.missingNames.includes("CDP_EVM_ACCOUNT_NAME"));
+  assert.ok(report.suggestedCommands.some((item) => item.includes("payment:buyer-preflight")));
+  assert.equal(report.suggestedCommands.some((item) => item.includes("--provider=disabled")), false);
+});
+
+test("operatorReadiness does not list payment env as missing when x402-fetch runtime is ready", () => {
+  const report = operatorReadiness({
+    baseUrl: "https://trust402.vercel.app",
+    candidateEndpoint: "https://proof402.vercel.app/api/proof/notarize",
+    candidatePriceUsd: 0.005,
+    paymentProvider: "x402-fetch",
+    githubActionsFallbackPresent: true,
+    githubCliAuthenticated: false,
+    vercelProjectLinked: true
+  }, {
+    config: {
+      ...baseConfig(),
+      livePaymentProvider: "x402-fetch",
+      x402BuyerPrivateKeyConfigured: true,
+      x402BuyerRpcUrl: "https://base.example/rpc"
+    },
+    envDiagnostics: envDiagnostics({
+      cdpWalletSecret: false,
+      cdpAccountName: false,
+      bridge: false
+    }),
+    localAgentcashPolicyResult: localPolicy({
+      manualSmokeRemainingBudgetUsd: 0,
+      trust402LiveProcurement: "disabled-until-separate-approval",
+      proof402Delegation: "disabled-until-separate-approval"
+    })
+  });
+
+  const paymentRuntime = report.manualInputs.find((item) => item.id === "payment_runtime");
+
+  assert.equal(report.paymentProvider.selected, "x402-fetch");
+  assert.equal(paymentRuntime.status, "ready");
+  assert.deepEqual(paymentRuntime.missingNames, []);
+});
+
 function baseConfig() {
   return {
     publicBaseUrl: "https://trust402.vercel.app",
@@ -132,9 +206,9 @@ function baseConfig() {
     proof402DelegationMode: "disabled",
     proof402BaseUrl: "https://proof402.vercel.app",
     proof402MaxSpendUsd: 0,
-      agentcashAutoRefillApproved: true,
-      agentcashAutoRefillEnabled: true,
-      agentcashAutoRefillProvider: "manual-operator-top-up",
+    agentcashAutoRefillApproved: true,
+    agentcashAutoRefillEnabled: true,
+    agentcashAutoRefillProvider: "manual-operator-top-up",
     agentcashAutoRefillThresholdUsd: 0.5,
     agentcashAutoRefillAmountUsd: 1,
     agentcashAutoRefillDailyCapUsd: 2,

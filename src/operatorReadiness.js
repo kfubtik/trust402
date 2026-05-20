@@ -10,6 +10,7 @@ const DEFAULT_BASE_URL = "https://trust402.vercel.app";
 const DEFAULT_CANDIDATE_ENDPOINT = "https://proof402.vercel.app/api/proof/notarize";
 const DEFAULT_CANDIDATE_PRICE_USD = 0.005;
 const DEFAULT_PROOF_RESERVE_USD = 0.005;
+const SUPPORTED_PAYMENT_PROVIDERS = new Set(["agentcash-mcp", "cdp-x402", "x402-fetch", "external-adapter"]);
 
 export function operatorReadiness(input = {}, options = {}) {
   const cfg = options.config || config;
@@ -20,8 +21,9 @@ export function operatorReadiness(input = {}, options = {}) {
   const includeProof = input.includeProof !== false;
   const includeAutonomous = input.includeAutonomous === true;
   const includeAutoRefill = input.includeAutoRefill === true;
-  const paymentProvider = input.paymentProvider || cfg.livePaymentProvider || "agentcash-mcp";
   const env = options.envDiagnostics || localEnvDiagnostics({ cwd: options.cwd });
+  const paymentProviderChoice = choosePaymentProvider(input.paymentProvider, cfg, env);
+  const paymentProvider = paymentProviderChoice.selected;
   const localPolicyResult = options.localAgentcashPolicyResult || readLocalAgentcashPolicy({ cwd: options.cwd });
   const estimatedMaxSpendUsd = estimatedSpend({ candidatePriceUsd, proofReserveUsd, includeProof, includeAutonomous });
   const localPolicy = evaluateLocalAgentcashPolicyForLive({
@@ -127,6 +129,9 @@ export function operatorReadiness(input = {}, options = {}) {
     },
     paymentProvider: {
       selected: paymentProvider,
+      configured: paymentProviderChoice.configured,
+      source: paymentProviderChoice.source,
+      recommendation: paymentProviderChoice.recommendation,
       readiness: providerReadiness,
       alternatives: actionPack.liveWindowPlan.paymentProviderAlternatives
     },
@@ -241,8 +246,12 @@ function paymentEnvRequirement(env, paymentProvider, providerReadiness) {
   return {
     id: "payment_runtime",
     status: providerReadiness.ready ? "ready" : "blocked-config",
-    missingNames: providerReadiness.requiredSecrets || [],
-    nextAction: "Configure the selected payment runtime and run its preflight check."
+    missingNames: providerReadiness.ready
+      ? []
+      : ["LIVE_PAYMENT_PROVIDER", ...(providerReadiness.requiredSecrets || [])],
+    nextAction: providerReadiness.ready
+      ? "Selected payment runtime is configured; run the matching preflight check before live spend."
+      : "Set LIVE_PAYMENT_PROVIDER to agentcash-mcp, cdp-x402, x402-fetch, or external-adapter, then run the matching preflight check."
   };
 }
 
@@ -278,4 +287,37 @@ function numberOr(value, fallback) {
 
 function roundUsd(value) {
   return Math.round(value * 1_000_000) / 1_000_000;
+}
+
+function choosePaymentProvider(inputProvider, cfg, env) {
+  const configured = inputProvider || cfg.livePaymentProvider || "disabled";
+  if (SUPPORTED_PAYMENT_PROVIDERS.has(configured)) {
+    return {
+      selected: configured,
+      configured,
+      source: inputProvider ? "input" : "runtime",
+      recommendation: null
+    };
+  }
+
+  const cdpSignal = hasUsable(env.keys?.CDP_API_KEY_ID) ||
+    hasUsable(env.keys?.CDP_API_KEY_SECRET) ||
+    Boolean(cfg.cdpApiKeyIdConfigured) ||
+    Boolean(cfg.cdpApiKeySecretConfigured);
+  const selected = cdpSignal ? "cdp-x402" : "agentcash-mcp";
+  return {
+    selected,
+    configured,
+    source: "recommended",
+    recommendation: {
+      provider: selected,
+      reason: cdpSignal
+        ? "CDP credentials are partially present, so the shortest unblock path is to finish CDP wallet/account config."
+        : "No configured live payment provider was detected, so start with an external AgentCash-compatible bridge."
+    }
+  };
+}
+
+function hasUsable(status) {
+  return Boolean(status?.present && status.nonEmpty && !status.placeholderLike);
 }
