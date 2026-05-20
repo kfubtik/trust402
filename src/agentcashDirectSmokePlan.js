@@ -4,13 +4,13 @@ import { evaluateLocalAgentcashPolicyForLive, readLocalAgentcashPolicy } from ".
 import { liveWindowPlan } from "./liveWindowPlan.js";
 
 const DEFAULT_BASE_URL = "https://trust402.vercel.app";
-const DEFAULT_COMPARE_ENDPOINT = "https://trust402.vercel.app/api/trust/compare-resources";
+const DEFAULT_COMPARE_PATH = "/api/trust/compare-resources";
 const DEFAULT_COMPARE_PRICE_USD = 0.03;
 
 export function agentcashDirectSmokePlan(input = {}, options = {}) {
   const cfg = options.config || config;
   const baseUrl = normalizeBaseUrl(input.baseUrl || cfg.publicBaseUrl || DEFAULT_BASE_URL);
-  const candidateEndpoint = input.candidateEndpoint || DEFAULT_COMPARE_ENDPOINT;
+  const candidateEndpoint = input.candidateEndpoint || `${baseUrl}${DEFAULT_COMPARE_PATH}`;
   const candidatePriceUsd = numberOr(input.candidatePriceUsd ?? input.priceUsd, DEFAULT_COMPARE_PRICE_USD);
   const maxAmountUsd = numberOr(input.maxAmountUsd ?? input.maxTotalUsd, candidatePriceUsd);
   const localPolicyResult = options.localAgentcashPolicyResult || readLocalAgentcashPolicy({

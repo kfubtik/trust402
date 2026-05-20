@@ -59,6 +59,33 @@ test("agentcashDirectSmokePlan becomes ready only after local policy window is o
   assert.equal(result.safety.doesNotProveRuntimePaymentAdapter, true);
 });
 
+test("agentcashDirectSmokePlan defaults compare-resources to the configured production origin", () => {
+  const result = agentcashDirectSmokePlan({}, {
+    config: {
+      ...baseConfig(),
+      publicBaseUrl: "https://trust402.aztecbeacon.uk"
+    },
+    localAgentcashPolicyResult: localPolicy({
+      trust402LiveProcurement: "disabled-until-separate-approval",
+      proof402Delegation: "disabled-until-separate-approval",
+      agentcashGlobalMaxAmountUsd: 0.01,
+      manualSmokeRemainingBudgetUsd: 0,
+      allowedOrigins: [
+        "https://trust402.aztecbeacon.uk",
+        "https://proof402.vercel.app"
+      ]
+    })
+  });
+
+  assert.equal(result.candidateEndpoint, "https://trust402.aztecbeacon.uk/api/trust/compare-resources");
+  assert.equal(result.targetResource.id, "trust402.compare_resources");
+  assert.equal(result.mcpCallOrder[1].input.url, "https://trust402.aztecbeacon.uk/api/trust/compare-resources");
+  assert.equal(
+    result.mcpCallOrder[1].input.body.candidates.find((candidate) => candidate.id === "trust.check_x402").endpoint,
+    "https://trust402.aztecbeacon.uk/api/trust/check-x402"
+  );
+});
+
 function baseConfig() {
   return {
     publicBaseUrl: "https://trust402.vercel.app",
@@ -96,7 +123,7 @@ function localPolicy(overrides = {}) {
       },
       restrictions: {
         allowedProjectRoot: process.cwd(),
-        allowedOrigins: [
+        allowedOrigins: overrides.allowedOrigins || [
           "https://trust402.vercel.app",
           "https://proof402.vercel.app"
         ],

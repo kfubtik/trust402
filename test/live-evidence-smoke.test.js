@@ -72,8 +72,8 @@ test("liveEvidenceSmoke builds Proof402 candidate body without private payload",
 test("liveEvidenceSmoke builds Trust402 compare-resources body with public candidates", async () => {
   const calls = [];
   const result = await liveEvidenceSmoke({
-    baseUrl: "https://trust402.example",
-    candidateEndpoint: "https://trust402.vercel.app/api/trust/compare-resources",
+    baseUrl: "https://trust402.aztecbeacon.uk",
+    candidateEndpoint: "https://trust402.aztecbeacon.uk/api/trust/compare-resources",
     candidatePriceUsd: 0.03,
     maxTotalUsd: 0.035,
     includeProof: false,
@@ -93,6 +93,10 @@ test("liveEvidenceSmoke builds Trust402 compare-resources body with public candi
     "proof402.notarize",
     "trust.check_x402"
   ]);
+  assert.equal(
+    resource.requestBody.candidates.find((candidate) => candidate.id === "trust.check_x402").endpoint,
+    "https://trust402.aztecbeacon.uk/api/trust/check-x402"
+  );
   assert.equal(JSON.stringify(resource.requestBody).includes("private"), false);
 });
 

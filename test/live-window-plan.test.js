@@ -221,6 +221,34 @@ test("live window plan emits skip-proof for procurement-only smoke windows", () 
   assert.doesNotMatch(result.command, /--include-autonomous-live/);
 });
 
+test("live window plan supports the custom Trust402 production origin for compare-resources", () => {
+  const customConfig = {
+    ...baseConfig,
+    publicBaseUrl: "https://trust402.aztecbeacon.uk"
+  };
+  const result = liveWindowPlan({
+    candidateEndpoint: "https://trust402.aztecbeacon.uk/api/trust/compare-resources",
+    candidatePriceUsd: 0.03,
+    maxTotalUsd: 0.03,
+    manualSmokeBudgetUsd: 0.03,
+    liveMaxPerCallUsd: 0.03,
+    lastVerifiedBalanceUsd: 1.283,
+    minimumReserveUsd: 0.5,
+    includeProof: false
+  }, { config: customConfig });
+
+  assert.equal(result.status, "ready-to-stage");
+  assert.equal(result.downstreamRequestPolicy.schema, "trust402.compare_resources");
+  assert.deepEqual(result.localPolicyPatch.restrictions.allowedOrigins, ["https://trust402.aztecbeacon.uk"]);
+  assert.equal(result.agentcashDirectSmoke.status, "operator-approval-required");
+  assert.equal(result.agentcashDirectSmoke.fetch.input.url, "https://trust402.aztecbeacon.uk/api/trust/compare-resources");
+  assert.equal(
+    result.agentcashDirectSmoke.fetch.input.body.candidates.find((candidate) => candidate.id === "trust.check_x402").endpoint,
+    "https://trust402.aztecbeacon.uk/api/trust/check-x402"
+  );
+  assert.match(result.command, /--candidate-endpoint=https:\/\/trust402\.aztecbeacon\.uk\/api\/trust\/compare-resources/);
+});
+
 test("live window plan can include autonomous and auto-refill staging without enabling mutation", () => {
   const result = liveWindowPlan({
     candidateEndpoint: "https://trusted.example/api/paid",

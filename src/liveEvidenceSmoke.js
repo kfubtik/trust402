@@ -14,7 +14,7 @@ export async function liveEvidenceSmoke(input = {}, options = {}) {
   const includeAutonomous = input.includeAutonomous === true || (mode !== "live" && input.includeAutonomous !== false);
   const includeRefill = input.includeRefill !== false;
   const operatorKey = input.operatorKey || "";
-  const candidate = candidateFrom(input);
+  const candidate = candidateFrom(input, { baseUrl });
   const proofReserveUsd = numberOr(input.proofReserveUsd, 0.01);
   const maxTotalUsd = numberOr(input.maxTotalUsd, 0);
   const estimatedMaxSpendUsd = roundUsd(
@@ -243,11 +243,11 @@ function quoteInput(input, candidate) {
   };
 }
 
-function candidateFrom(input) {
+function candidateFrom(input, { baseUrl } = {}) {
   const endpoint = input.candidateEndpoint || "";
-  const requestBody = candidateRequestBody({ input, endpoint });
+  const requestBody = candidateRequestBody({ input, endpoint, baseUrl });
   const proof402Candidate = isProof402NotarizeEndpoint(endpoint);
-  const compareResourcesCandidate = isTrust402CompareResourcesEndpoint(endpoint);
+  const compareResourcesCandidate = isTrust402CompareResourcesEndpoint(endpoint, baseUrl);
   return {
     id: input.candidateId || (proof402Candidate
       ? "proof402.notarize"
@@ -274,7 +274,7 @@ function candidateFrom(input) {
   };
 }
 
-function candidateRequestBody({ input, endpoint }) {
+function candidateRequestBody({ input, endpoint, baseUrl }) {
   if (input.candidateRequestBody) return input.candidateRequestBody;
   if (isProof402NotarizeEndpoint(endpoint)) {
     const contentHash = validSha256(input.candidateContentHash)
@@ -295,7 +295,8 @@ function candidateRequestBody({ input, endpoint }) {
       }
     };
   }
-  if (isTrust402CompareResourcesEndpoint(endpoint)) {
+  if (isTrust402CompareResourcesEndpoint(endpoint, baseUrl)) {
+    const trustOrigin = normalizeBaseUrl(originOf(endpoint) || baseUrl || DEFAULT_BASE_URL);
     return {
       goal: input.goal || "Rank candidate x402 resources by trust and budget fit.",
       budgetUsd: numberOr(input.budgetUsd, 0.05),
@@ -313,7 +314,7 @@ function candidateRequestBody({ input, endpoint }) {
         },
         {
           id: "trust.check_x402",
-          endpoint: "https://trust402.vercel.app/api/trust/check-x402",
+          endpoint: `${trustOrigin}/api/trust/check-x402`,
           priceUsd: 0.005,
           has402: true,
           hasInputSchema: true,
@@ -508,12 +509,23 @@ function isProof402NotarizeEndpoint(value) {
   }
 }
 
-function isTrust402CompareResourcesEndpoint(value) {
+function isTrust402CompareResourcesEndpoint(value, baseUrl = DEFAULT_BASE_URL) {
   try {
     const url = new URL(value);
-    return url.hostname === "trust402.vercel.app" && url.pathname === "/api/trust/compare-resources";
+    const allowedOrigins = new Set(["https://trust402.vercel.app"]);
+    const baseOrigin = originOf(baseUrl);
+    if (baseOrigin) allowedOrigins.add(baseOrigin);
+    return allowedOrigins.has(url.origin) && url.pathname === "/api/trust/compare-resources";
   } catch {
     return false;
+  }
+}
+
+function originOf(value) {
+  try {
+    return new URL(value).origin;
+  } catch {
+    return "";
   }
 }
 
