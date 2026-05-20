@@ -704,6 +704,7 @@ Future live procurement must require:
 - `scripts/operator-action-pack.js` - public-safe operator action pack exporter;
   with a URL it reads the production API unless `--local` is passed.
 - `scripts/operator-unblock-check.js` - public-safe unblock report runner; with
-  a URL it reads the production API unless `--local` is passed.
+  a URL it reads the production API unless `--local` is passed. Exposed as
+  both `npm run completion:unblockers` and `npm run operator:unblock-report`.
 - `scripts/launch-monitor.js` - combined production API, x402, Bazaar, and directory monitor.
 - `test/` - API and engine tests.

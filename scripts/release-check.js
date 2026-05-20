@@ -64,6 +64,7 @@ assert(packageJson.scripts?.["agentcash:policy"], "package must expose npm run a
 assert(packageJson.scripts?.["agentcash:refill-check"], "package must expose npm run agentcash:refill-check");
 assert(packageJson.scripts?.["completion:audit"], "package must expose npm run completion:audit");
 assert(packageJson.scripts?.["completion:unblockers"], "package must expose npm run completion:unblockers");
+assert(packageJson.scripts?.["operator:unblock-report"], "package must expose npm run operator:unblock-report");
 assert(packageJson.scripts?.["completion:actions"], "package must expose npm run completion:actions");
 assert(packageJson.scripts?.["deployment:preflight"], "package must expose npm run deployment:preflight");
 assert(packageJson.scripts?.["deployment:github-actions-setup"], "package must expose npm run deployment:github-actions-setup");
