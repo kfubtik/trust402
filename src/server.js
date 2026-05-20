@@ -330,7 +330,7 @@ function statusSummary() {
       readyForProof402Preflight: true,
       readyForLiveSpend: false,
       readyForProof402Delegation: false,
-      readyForAgentCashAutoRefill: false,
+      readyForAgentCashAutoRefill: spendPolicyStatus(config).readiness.agentcashAutoRefillReady,
       readyForPaymentBridgeDryRunCheck: true,
       readyForAgentCashRefillDryRun: true,
       readyForRealX402Settlement: settlementStatus().readiness.realSettlementReady

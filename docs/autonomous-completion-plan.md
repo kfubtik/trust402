@@ -258,6 +258,22 @@ Completion evidence:
 - set `TRUST402_AGENTCASH_AUTO_REFILL_EVIDENCE_REF` to the public-safe decision
   hash or reviewed evidence reference.
 
+Current evidence snapshot:
+
+- production policy is approved and enabled with provider `manual-action`;
+- threshold: `$0.50`; refill amount: `$1.00`; daily cap: `$2.00`;
+- current-balance dry-run at `$0.948` returned `action=none` and audit bundle
+  hash `sha256:905672508b62f7fc2551094ed1e720994650ecd6ee32ef84bf1fb300d475a5cf`;
+- below-threshold simulation at `$0.42` returned `action=refill`,
+  `plannedRefillUsd=1`, and audit bundle hash
+  `sha256:a3c5299d48ec326f02727710b7cb9ba13552e65d1714d19c279860480369faf3`;
+- combined evidence ref:
+  `sha256:e1a7d8f73f35e833405e9a53505552102427dcca324c8dc1e9c3347cf57547d7`.
+
+This satisfies the safe auto-refill policy gate for manual-action refill. A
+future external adapter can replace `manual-action` only after a separate
+credential, cap, and emergency-stop review.
+
 Tracking: https://github.com/kfubtik/trust402/issues/7
 
 ## 7. Paid Proof402 Delegation

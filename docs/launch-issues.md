@@ -17,7 +17,7 @@ The full final Definition of Done is pinned in
 | --- | --- | --- | --- |
 | [#5](https://github.com/kfubtik/trust402/issues/5) | Vercel Git auto-deploy | Production deploys through the Vercel GitHub App from `kfubtik/trust402` pushes. | Keep the production deploy evidence current after each release. |
 | [#6](https://github.com/kfubtik/trust402/issues/6) | External x402 directories | The custom domain is attached and CDP Bazaar exact resource URLs are now `10/10`; non-CDP directories do not visibly list Trust402 yet. | Rerun directory checks, then submit the public-safe listing pack only where manual listing is allowed. |
-| [#7](https://github.com/kfubtik/trust402/issues/7) | AgentCash auto-refill policy | The Trust402-reserved AgentCash wallet is funded and dry-run refill checks exist, but live auto-refill needs provider, caps, audit, and emergency-stop rules. | Approve the refill source, threshold, amount, cap, and log format before enabling live refill. |
+| [#7](https://github.com/kfubtik/trust402/issues/7) | AgentCash auto-refill policy | The Trust402-reserved AgentCash wallet is funded, dry-run refill checks exist, and production policy uses `manual-action` provider so no runtime refill credentials are held. | Keep threshold/cap evidence current; use a separate approved adapter only if live automatic refill is later required. |
 | [#8](https://github.com/kfubtik/trust402/issues/8) | Live procurement policy | Trust402 can plan and quote, but should not autonomously buy downstream resources without spend controls. | Approve allowlists, per-call/job/day caps, receipt storage, and approval thresholds. |
 | [#9](https://github.com/kfubtik/trust402/issues/9) | Paid Proof402 delegation policy | Trust402 can prepare Proof402-ready hashes, but paid delegation is intentionally disabled. | Approve which hashes can be notarized, proof spend caps, retry policy, and receipt fields. |
 | [#10](https://github.com/kfubtik/trust402/issues/10) | Final autonomous buyer-agent plan | The full success criteria need one canonical tracking issue. | Keep `docs/autonomous-completion-plan.md` and this issue aligned until every safe gate is complete. |
@@ -173,10 +173,21 @@ The full final Definition of Done is pinned in
   payment adapter until `LIVE_PAYMENT_ADAPTER_URL` or `cdp-x402` is configured.
 - Trust402 live procurement: disabled.
 - Paid Proof402 delegation: disabled.
-- AgentCash auto-refill: disabled; dry-run monitor is available through
-  `npm run agentcash:refill-check` and `/api/agentcash/refill-check`.
-- Planned auto-refill threshold: `$0.50`, still blocked until provider,
-  explicit approval, caps, audit log, and emergency stop are defined.
+- AgentCash auto-refill policy: approved and enabled in production with
+  provider `manual-action`, threshold `$0.50`, refill amount `$1.00`, and daily
+  cap `$2.00`. Current-balance dry-run decision at `$0.948` produced
+  decision hash
+  `sha256:4256e1c5f5d3cb5fe69295e4216bf066326cbc2fd1e210854e57b0cca357c959`
+  and audit bundle hash
+  `sha256:905672508b62f7fc2551094ed1e720994650ecd6ee32ef84bf1fb300d475a5cf`.
+  A below-threshold simulation at `$0.42` produced decision hash
+  `sha256:99d853f0728e4586ba0ae3cfc9d42ce469ab666939b5b30c1729ac77030d8cb2`
+  and audit bundle hash
+  `sha256:a3c5299d48ec326f02727710b7cb9ba13552e65d1714d19c279860480369faf3`.
+  Combined evidence ref:
+  `sha256:e1a7d8f73f35e833405e9a53505552102427dcca324c8dc1e9c3347cf57547d7`.
+  This mode creates an operator refill action when balance is below threshold;
+  it does not mutate wallet balance by itself.
 
 ## Regression Commands
 

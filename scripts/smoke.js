@@ -108,8 +108,17 @@ async function main() {
   assert(preflight.policy?.liveSpendEnabled === false, "/api/settlement/preflight must not enable live spend");
 
   const spendPolicy = await getJson("/api/policies/spend");
-  assert(spendPolicy.readiness?.anyLiveSpendReady === false, "/api/policies/spend must not make live spend ready by default");
-  assert(spendPolicy.policies?.agentcashAutoRefill?.ready === false, "/api/policies/spend must keep auto-refill gated");
+  const autoRefill = spendPolicy.policies?.agentcashAutoRefill;
+  if (isLocalBase) {
+    assert(spendPolicy.readiness?.anyLiveSpendReady === false, "/api/policies/spend must not make live spend ready by local default");
+    assert(autoRefill?.ready === false, "/api/policies/spend must keep auto-refill gated by local default");
+  } else if (autoRefill?.ready === true) {
+    assert(autoRefill.controls?.provider === "manual-action", "/api/policies/spend may only expose ready auto-refill through manual-action");
+    assert(spendPolicy.readiness?.liveProcurementReady === false, "/api/policies/spend must keep live procurement gated during manual auto-refill");
+    assert(spendPolicy.readiness?.proof402DelegationReady === false, "/api/policies/spend must keep Proof402 live delegation gated during manual auto-refill");
+  } else {
+    assert(spendPolicy.readiness?.anyLiveSpendReady === false, "/api/policies/spend must not expose live spend unless a reviewed policy is ready");
+  }
   assert(
     typeof spendPolicy.policies?.liveProcurement?.controls?.dailyRemainingUsd === "number",
     "/api/policies/spend must expose remaining daily capacity"

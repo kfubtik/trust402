@@ -91,7 +91,8 @@ api.status = healthy
 api.catalogStatus = production-mvp
 api.paidLaunchResources = 10
 api.anyLiveSpendReady = false
-api.autoRefillReady = false
+api.autoRefillReady = true when production uses the approved manual-action
+auto-refill policy; false in local/default locked mode.
 x402Challenge.status = challenge-ready
 x402Challenge.httpStatus = 402
 cdpBazaar.status = all-indexed
@@ -151,7 +152,8 @@ Invoke-RestMethod -Method Get -Uri https://trust402.aztecbeacon.uk/api/completio
 
 The audit intentionally returns `goalComplete=false` until Git/Vercel
 auto-deploy, non-CDP external directory visibility, live procurement, paid
-Proof402 delegation, and final paid-smoke evidence are actually proven.
+Proof402 delegation, AgentCash auto-refill evidence, and final paid-smoke
+evidence are actually proven.
 
 ## Final Verification Evidence
 

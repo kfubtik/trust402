@@ -271,7 +271,12 @@ assert(launchIssues.includes("https://github.com/kfubtik/trust402/issues/7"), "l
 assert(launchIssues.includes("https://github.com/kfubtik/trust402/issues/8"), "launch issues must track live procurement policy");
 assert(launchIssues.includes("https://github.com/kfubtik/trust402/issues/9"), "launch issues must track paid Proof402 delegation policy");
 assert(launchIssues.includes("https://github.com/kfubtik/trust402/issues/10"), "launch issues must track final autonomous completion plan");
-assert(launchIssues.includes("AgentCash auto-refill: disabled"), "launch issues must keep AgentCash auto-refill disabled");
+assert(
+  launchIssues.includes("AgentCash auto-refill policy: approved and enabled in production with") &&
+    launchIssues.includes("provider `manual-action`") &&
+    launchIssues.includes("does not mutate wallet balance by itself"),
+  "launch issues must document manual-action AgentCash auto-refill safety"
+);
 assert(launchIssues.includes("Trust402 live procurement: disabled"), "launch issues must keep live procurement disabled");
 assert(launchIssues.includes("Paid Proof402 delegation: disabled"), "launch issues must keep paid Proof402 delegation disabled");
 assert(autonomousPlan.includes("Final Definition Of Done"), "autonomous plan must define final success criteria");
