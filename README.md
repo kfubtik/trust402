@@ -709,8 +709,10 @@ Future live procurement must require:
   approved x402 spend evidence.
 - `scripts/operator-action-pack.js` - public-safe operator action pack exporter;
   with a URL it reads the production API unless `--local` is passed.
-- `scripts/operator-readiness.js` - local operator readiness profile for
-  env, wallet policy, payment runtime, external directory, and final evidence gates.
+- `scripts/operator-readiness.js` - operator readiness profile for env, wallet
+  policy, payment runtime, external directory, and final evidence gates; with a
+  URL it reads the production API unless `--local` is passed, and appends local
+  workstation probes separately.
 - `scripts/operator-unblock-check.js` - public-safe unblock report runner; with
   a URL it reads the production API unless `--local` is passed. Exposed as
   both `npm run completion:unblockers` and `npm run operator:unblock-report`.

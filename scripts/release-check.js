@@ -154,6 +154,8 @@ assert(existsSync("scripts/completion-audit.js"), "completion audit script must 
 assert(existsSync("scripts/operator-unblock-check.js"), "operator unblock check script must exist");
 assert(existsSync("scripts/operator-action-pack.js"), "operator action pack script must exist");
 assert(existsSync("scripts/operator-readiness.js"), "operator readiness script must exist");
+assert(operatorReadinessScript.includes("/api/operator/readiness"), "operator readiness CLI must query remote API when a production URL is supplied");
+assert(operatorReadinessScript.includes("localProbeContext"), "operator readiness CLI must separate local workstation probes from remote runtime readiness");
 assert(existsSync("scripts/deployment-preflight.js"), "deployment preflight script must exist");
 assert(existsSync("scripts/github-actions-setup-pack.js"), "GitHub Actions setup pack script must exist");
 assert(existsSync("scripts/domain-activation-pack.js"), "domain activation pack script must exist");
