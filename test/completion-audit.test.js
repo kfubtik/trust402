@@ -49,6 +49,25 @@ test("completionAudit can verify manual/external requirements only with explicit
   assert.equal(audit.goalComplete, false);
 });
 
+test("completionAudit prefers runtime Vercel commit evidence over stale recorded env", () => {
+  const audit = completionAudit({
+    ...config,
+    gitAutoDeployVerified: true,
+    gitAutoDeployEvidenceUrl: "https://vercel.com/example/trust402/deployments/current",
+    gitAutoDeployCommitSha: "old-recorded-sha",
+    gitAutoDeployRecordedCommitSha: "old-recorded-sha",
+    vercelGitCommitSha: "current-vercel-sha",
+    runtimeGitCommitSha: "current-vercel-sha"
+  });
+  const gitVercel = audit.requirements.find((item) => item.id === "git_vercel_auto_deploy");
+
+  assert.equal(gitVercel?.status, "verified");
+  assert.ok(gitVercel?.evidence.some((item) => item === "commitSha=current-vercel-sha"));
+  assert.ok(gitVercel?.evidence.some((item) => item === "commitShaSource=vercel-runtime"));
+  assert.ok(gitVercel?.evidence.some((item) => item === "recordedCommitSha=old-recorded-sha"));
+  assert.match(gitVercel?.nextAction || "", /runtime commit evidence updates/);
+});
+
 test("completionAudit does not treat non-CDP directory visibility as CDP 10/10 evidence", () => {
   const audit = completionAudit({
     ...config,

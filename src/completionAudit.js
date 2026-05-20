@@ -58,8 +58,8 @@ export function isGoalComplete(requirements) {
 }
 
 function gitVercelAutoDeploy(runtimeConfig) {
-  const hasEvidence = Boolean(runtimeConfig.gitAutoDeployEvidenceUrl || runtimeConfig.gitAutoDeployCommitSha);
-  const verified = runtimeConfig.gitAutoDeployVerified && hasEvidence;
+  const deployEvidence = gitAutoDeployEvidence(runtimeConfig);
+  const verified = runtimeConfig.gitAutoDeployVerified && deployEvidence.hasEvidence;
   return requirement({
     id: "git_vercel_auto_deploy",
     title: "Git/Vercel Auto-Deploy",
@@ -68,15 +68,40 @@ function gitVercelAutoDeploy(runtimeConfig) {
     evidence: [
       `gitAutoDeployVerified=${runtimeConfig.gitAutoDeployVerified}`,
       `evidenceUrl=${runtimeConfig.gitAutoDeployEvidenceUrl || "not-configured"}`,
-      `commitSha=${runtimeConfig.gitAutoDeployCommitSha || "not-configured"}`,
+      `commitSha=${deployEvidence.commitSha || "not-configured"}`,
+      `commitShaSource=${deployEvidence.commitShaSource}`,
+      `recordedCommitSha=${deployEvidence.recordedCommitSha || "not-configured"}`,
       verified
-        ? "A Git-backed production deployment has explicit evidence."
+        ? deployEvidence.commitShaSource === "vercel-runtime"
+          ? "A Git-backed production deployment has runtime Vercel commit evidence."
+          : "A Git-backed production deployment has explicit evidence."
         : "Vercel GitHub App access to the private repo is required before Git-backed deploys can prove this requirement."
     ],
     nextAction: verified
-      ? "Keep Git-backed deploy evidence updated after the next push-triggered production deployment."
+      ? deployEvidence.commitShaSource === "vercel-runtime"
+        ? "Keep Git-backed deploy evidence URL configured; runtime commit evidence updates on each Vercel deploy."
+        : "Keep Git-backed deploy evidence updated after the next push-triggered production deployment."
       : "Grant the Vercel GitHub App access to kfubtik/trust402, then set TRUST402_GIT_AUTO_DEPLOY_VERIFIED=true with evidence from a push-triggered production deployment."
   });
+}
+
+function gitAutoDeployEvidence(runtimeConfig) {
+  const runtimeCommitSha = runtimeConfig.vercelGitCommitSha || runtimeConfig.runtimeGitCommitSha || "";
+  const configuredCommitSha = runtimeConfig.gitAutoDeployCommitSha || "";
+  const recordedCommitSha = runtimeConfig.gitAutoDeployRecordedCommitSha || "";
+  const commitSha = runtimeCommitSha || configuredCommitSha || recordedCommitSha;
+  return {
+    hasEvidence: Boolean(runtimeConfig.gitAutoDeployEvidenceUrl || commitSha),
+    commitSha,
+    recordedCommitSha,
+    commitShaSource: runtimeCommitSha
+      ? "vercel-runtime"
+      : configuredCommitSha
+        ? "configured-env"
+        : recordedCommitSha
+          ? "recorded-env"
+          : "not-configured"
+  };
 }
 
 function externalDirectories(runtimeConfig) {

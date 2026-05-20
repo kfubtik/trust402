@@ -57,7 +57,13 @@ export const config = {
   discoveryRegistryAllowlist: parseList(process.env.TRUST402_DISCOVERY_REGISTRY_ALLOWLIST || ""),
   gitAutoDeployVerified: process.env.TRUST402_GIT_AUTO_DEPLOY_VERIFIED === "true",
   gitAutoDeployEvidenceUrl: process.env.TRUST402_GIT_AUTO_DEPLOY_EVIDENCE_URL || "",
-  gitAutoDeployCommitSha: process.env.TRUST402_GIT_AUTO_DEPLOY_COMMIT_SHA || "",
+  gitAutoDeployRecordedCommitSha: process.env.TRUST402_GIT_AUTO_DEPLOY_COMMIT_SHA || "",
+  runtimeGitCommitSha: process.env.VERCEL_GIT_COMMIT_SHA || process.env.TRUST402_GIT_COMMIT_SHA || "",
+  vercelGitCommitSha: process.env.VERCEL_GIT_COMMIT_SHA || "",
+  gitAutoDeployCommitSha: process.env.VERCEL_GIT_COMMIT_SHA ||
+    process.env.TRUST402_GIT_AUTO_DEPLOY_COMMIT_SHA ||
+    process.env.TRUST402_GIT_COMMIT_SHA ||
+    "",
   cdpBazaarAllResourcesIndexed: process.env.TRUST402_CDP_BAZAAR_ALL_RESOURCES_INDEXED === "true",
   cdpBazaarEvidenceRef: process.env.TRUST402_CDP_BAZAAR_EVIDENCE_REF || "",
   cdpBazaarCheckStatus: process.env.TRUST402_CDP_BAZAAR_CHECK_STATUS || "",
