@@ -155,6 +155,10 @@ async function main() {
     completionPlan.evidenceRules?.allAuditRequirementsMustBeVerified === true,
     "/api/completion/plan must require every audit requirement"
   );
+  assert(
+    completionPlan.postCompletionGates?.some((item) => item.id === "public_release_cleanup"),
+    "/api/completion/plan must expose public release cleanup as a post-completion gate"
+  );
   assert(completionPlan.safety?.readOnly === true, "/api/completion/plan must be read-only");
 
   const completion = await getJson("/api/completion/audit");
@@ -163,10 +167,18 @@ async function main() {
     completion.requirements?.some((item) => item.id === "unified_spend_policy" && item.status === "verified"),
     "/api/completion/audit must verify unified spend policy"
   );
-  assert(
-    completion.blockers?.some((item) => item.id === "git_vercel_auto_deploy"),
-    "/api/completion/audit must expose Git/Vercel blocker"
-  );
+  const gitVercelRequirement = completion.requirements?.find((item) => item.id === "git_vercel_auto_deploy");
+  if (gitVercelRequirement?.status === "verified") {
+    assert(
+      !completion.blockers?.some((item) => item.id === "git_vercel_auto_deploy"),
+      "/api/completion/audit must not keep Git/Vercel as a blocker after verified evidence"
+    );
+  } else {
+    assert(
+      completion.blockers?.some((item) => item.id === "git_vercel_auto_deploy"),
+      "/api/completion/audit must expose Git/Vercel blocker until verified"
+    );
+  }
 
   const deploymentPreflightGet = await getJson("/api/deployments/preflight");
   assert(deploymentPreflightGet.tool === "deployment.preflight", "/api/deployments/preflight GET tool mismatch");
