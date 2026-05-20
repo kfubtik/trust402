@@ -20,18 +20,17 @@ v0.1.0
 CDP Bazaar state:
 
 ```text
-0 of 10 paid launch resources indexed on the new custom-domain URLs
-status = eligible-not-found-yet
-missing = trust.check_x402, trust.score_resource, trust.evaluate_origin, seller.readiness, trust.compare_resources, procurement.plan, procurement.quote, monitor.snapshot, monitor.badge, reports.x402_diligence
-evidence = sha256:25df12ec7547ea74c3ccc8910ffbe2cc252988ffe22b346f35ac82891af9bf3e
+10 of 10 paid launch resources indexed on the custom-domain URLs
+status = all-indexed
+missing =
+evidence = sha256:7f8c5c87c60f6c63e9289b454d331d9481c780498c0d92395c19ca65f62c45af
 ```
 
 Trust402 is live as a production x402 service on the Cloudflare-backed custom
-domain. CDP Bazaar search already finds Trust402, but exact paid resource URLs
-still point at the previous `trust402.vercel.app` origin while the new
-`trust402.aztecbeacon.uk` resources are reindexed. Live Trust402 procurement,
-paid Proof402 delegation, and AgentCash auto-refill remain disabled until
-separately approved.
+domain. CDP Bazaar search now finds every paid resource URL on
+`trust402.aztecbeacon.uk`; some historical `trust402.vercel.app` rows may still
+appear in search results. Live Trust402 procurement, paid Proof402 delegation,
+and AgentCash auto-refill remain disabled until separately approved.
 
 ## Current External Directory Visibility
 
@@ -56,9 +55,8 @@ customDomainBlocked = 0
 Interpretation:
 
 - the custom-domain blocker is removed for monitored directories;
-- CDP Bazaar remains the authoritative x402 discovery signal, but exact
-  resources for the custom-domain origin are currently `0/10` while reindexing
-  catches up;
+- CDP Bazaar remains the authoritative x402 discovery signal, and exact
+  resources for the custom-domain origin are currently verified `10/10`;
 - the requested custom-domain external-directory attempt has been completed;
   no monitored non-CDP directory visibly lists Trust402 yet;
 - Agentic.Market, x402scan, x402Bazaar, x402.org ecosystem, RelAI market,
@@ -109,10 +107,11 @@ verify the exact domain plan later.
 
 ### CDP Bazaar
 
-Status: custom-domain reindex pending.
+Status: custom-domain all-resource indexing verified.
 
-Action: keep the completion gate red for CDP Bazaar until the all-resource
-check returns `10/10` exact matches for `https://trust402.aztecbeacon.uk`.
+Action: keep this evidence current before external submissions and rerun the
+all-resource check if any paid launch route, price, or production origin
+changes.
 
 ```powershell
 npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --limit=20
@@ -205,8 +204,8 @@ Action:
 - run `npm run domains:readiness-check -- https://trust402.aztecbeacon.uk --domain=trust402.aztecbeacon.uk`;
 - rerun `npm run smoke:x402 -- https://trust402.aztecbeacon.uk`;
 - rerun `npm run directories:check -- https://trust402.aztecbeacon.uk --timeout-ms=10000`;
-- submit only the public-safe listing fields from this file after CDP Bazaar
-  exact-resource reindex returns to `10/10`.
+- submit only the public-safe listing fields from this file while CDP Bazaar
+  exact-resource indexing remains verified `10/10`.
 
 Active custom domain configured on 2026-05-20:
 
@@ -225,10 +224,10 @@ npm run domains:readiness-check -- https://trust402.aztecbeacon.uk `
   --domain=trust402.aztecbeacon.uk
 ```
 
-Latest custom-domain CDP Bazaar reindex evidence:
+Latest custom-domain CDP Bazaar all-resource evidence:
 
 ```text
-sha256:25df12ec7547ea74c3ccc8910ffbe2cc252988ffe22b346f35ac82891af9bf3e
+sha256:7f8c5c87c60f6c63e9289b454d331d9481c780498c0d92395c19ca65f62c45af
 ```
 
 Useful public URLs:

@@ -20,7 +20,8 @@ npm run bazaar:indexing:plan -- https://trust402.aztecbeacon.uk --indexed=trust.
 
 ## Current Production State
 
-Last checked on 2026-05-20 at 16:53 +07:00 after the custom-domain switch to
+Last checked on 2026-05-20 at 17:19 +07:00 after route-by-route custom-domain
+paid smokes for every missing paid launch resource.
 `https://trust402.aztecbeacon.uk`.
 
 Production alias:
@@ -34,40 +35,55 @@ Use `npm run deployment:preflight -- https://trust402.aztecbeacon.uk
 deployment id and commit SHA. The alias is the stable buyer-facing endpoint;
 deployment URLs rotate after each production release.
 
-- indexed resources: 1 of 10 exact custom-domain URLs;
-- CDP Bazaar status: `partially-indexed`;
-- missing resources: 9 paid launch routes on the custom-domain origin;
+- indexed resources: 10 of 10 exact custom-domain URLs;
+- CDP Bazaar status: `all-indexed`;
+- missing resources: none;
 - latest custom-domain paid smoke: successful AgentCash x402 fetch against
-  `POST /api/trust/compare-resources` for `$0.03`, transaction
-  `0xb447b8213c9641d200d656945e95b0f5fb5e3ac2565469179c8af742cb42d1df`;
-- post-smoke CDP Bazaar recheck first reported `0/10`, then the next read-only
-  check reported `1/10` with `trust.compare_resources` indexed on the custom
-  domain;
+  every paid launch route on `https://trust402.aztecbeacon.uk`;
+- route-by-route missing-route spend after `trust.compare_resources`: `$0.30`;
+- AgentCash global `maxAmount` was restored to `$0.01` after the route smokes;
+- post-smoke AgentCash balance: `$0.953`, still above the `$0.50` reserve;
+- current evidence ref:
+  `sha256:7f8c5c87c60f6c63e9289b454d331d9481c780498c0d92395c19ca65f62c45af`;
 - Trust402 live procurement: disabled;
 - Proof402 paid delegation: disabled;
 - live OpenAPI and unpaid x402 challenge expose custom-domain resource URLs.
 
 Indexed right now on the custom-domain exact route check:
 
-- `trust.compare_resources`
-
-Missing right now:
-
 - `trust.check_x402`
 - `trust.score_resource`
 - `trust.evaluate_origin`
 - `seller.readiness`
+- `trust.compare_resources`
 - `procurement.plan`
 - `procurement.quote`
 - `monitor.snapshot`
 - `monitor.badge`
 - `reports.x402_diligence`
 
-CDP Bazaar search does find Trust402. Most matched resources still point to the
-previous `trust402.vercel.app` origin, while the paid-smoked
-`trust.compare_resources` route now appears on `trust402.aztecbeacon.uk`.
-Treat the remaining old-origin rows as reindex lag unless a later check proves
-they require separate settlements.
+CDP Bazaar search still returns some historical `trust402.vercel.app` rows, but
+the custom-domain all-resource check now verifies every paid launch URL on
+`trust402.aztecbeacon.uk`.
+
+## 2026-05-20 Custom-Domain Route Smoke Ledger
+
+All entries below used AgentCash on Base USDC through one temporary local policy
+window per route. Each window was closed immediately after the paid fetch, and
+the local Trust402 wallet policy returned to locked mode.
+
+| Resource | Max paid | Transaction |
+| --- | --- | --- |
+| `trust.compare_resources` | `$0.03` | `0xb447b8213c9641d200d656945e95b0f5fb5e3ac2565469179c8af742cb42d1df` |
+| `trust.check_x402` | `$0.005` | `0x9fc2b06668a3a5eb25df7fa38fc4d245b62e47a7a8c90847f1c6cb06268312b1` |
+| `trust.score_resource` | `$0.01` | `0x9860447fc39855c0bf93b43e222d67f3b9807642072639c10df0367feaef10a4` |
+| `trust.evaluate_origin` | `$0.02` | `0x81e17cd1053a1b57391548baf9564e9a081c15cd85a89a64c6b9e48a97946c02` |
+| `seller.readiness` | `$0.02` | `0xbb84eb1e5373ef84ea0c73281f08684d24548b3c650e785656b42c0a7e0b8ac7` |
+| `procurement.plan` | `$0.02` | `0x67e8ff919148e28e4e648ee6a506a95cfeeaec946f1316b9fa6a7af6d7bad901` |
+| `procurement.quote` | `$0.04` | `0x72bdcb93dfef59ae83c866bc4bf9428324517f15967c43462e3bd98f75f4009e` |
+| `monitor.snapshot` | `$0.015` | `0xa420d6469c1c2b42c36b4b8113367838e06d5b7cdbf708f278768fb91c3550f4` |
+| `monitor.badge` | `$0.02` | `0x6c828f10e7aac7e20db8001eab8557451a086b95350292c4219f5330e53dfc98` |
+| `reports.x402_diligence` | `$0.15` | `0x59c54d9d89a27587d686524f7ce2814154700dd5c4745c1018b6c249ef9f8bff` |
 
 ## Historical Resolved Indexing Blocker
 
@@ -115,13 +131,14 @@ blocks that spend until the operator explicitly approves a temporary smoke
 window. The current evidence suggests this kind of settle can index the exact
 route that was paid, but it does not automatically prove all other paid routes.
 
-For the current `1/10` state, the read-only indexing plan reports:
+For the historical `1/10` state after only `trust.compare_resources` was
+settled, the read-only indexing plan reported:
 
 - starter batch: 8 remaining routes at or below `$0.05` each, max combined
   route spend `$0.15`;
 - high-cost batch: `reports.x402_diligence`, max route spend `$0.15`;
 - remaining all-route max: `$0.30`;
-- every paid route still requires its own exact approval text, one open policy
+- every paid route required its own exact approval text, one open policy
   window, one AgentCash schema check, one paid fetch, and immediate window
   close.
 
@@ -188,22 +205,23 @@ Use [x402-diligence.json](../examples/x402-diligence.json).
 
 Expected per-call payment limit: `$0.15`.
 
-Earlier paid smokes settled successfully. Receipts and transaction hashes are
-stored only in ignored local `.tmp/` files. The current custom-domain CDP
-Bazaar route-count evidence is:
+Earlier paid smokes settled successfully. Only public transaction hashes are
+recorded in this document; ignored local files may contain richer operator
+evidence. The current custom-domain CDP Bazaar route-count evidence is:
 
 ```text
-TRUST402_CDP_BAZAAR_EVIDENCE_REF=sha256:25df12ec7547ea74c3ccc8910ffbe2cc252988ffe22b346f35ac82891af9bf3e
-TRUST402_CDP_BAZAAR_CHECK_STATUS=eligible-not-found-yet
+TRUST402_CDP_BAZAAR_EVIDENCE_REF=sha256:7f8c5c87c60f6c63e9289b454d331d9481c780498c0d92395c19ca65f62c45af
+TRUST402_CDP_BAZAAR_CHECK_STATUS=all-indexed
 TRUST402_CDP_BAZAAR_EXPECTED_RESOURCES=10
-TRUST402_CDP_BAZAAR_INDEXED_RESOURCES=0
-TRUST402_CDP_BAZAAR_MISSING_RESOURCES=trust.check_x402,trust.score_resource,trust.evaluate_origin,seller.readiness,trust.compare_resources,procurement.plan,procurement.quote,monitor.snapshot,monitor.badge,reports.x402_diligence
+TRUST402_CDP_BAZAAR_INDEXED_RESOURCES=10
+TRUST402_CDP_BAZAAR_MISSING_RESOURCES=
 ```
 
 ## Completion Gate
 
-The CDP Bazaar portion of the completion gate is currently pending for the
-custom-domain exact resource URLs.
+The CDP Bazaar portion of the completion gate is complete for the custom-domain
+exact resource URLs. Keep rechecking before public submissions or production
+claims because external discovery surfaces can lag or regress.
 To recheck the live state:
 
 ```powershell

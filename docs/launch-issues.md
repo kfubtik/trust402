@@ -16,7 +16,7 @@ The full final Definition of Done is pinned in
 | Issue | Track | Why it matters | Safe next step |
 | --- | --- | --- | --- |
 | [#5](https://github.com/kfubtik/trust402/issues/5) | Vercel Git auto-deploy | Production deploys through the Vercel GitHub App from `kfubtik/trust402` pushes. | Keep the production deploy evidence current after each release. |
-| [#6](https://github.com/kfubtik/trust402/issues/6) | External x402 directories | The custom domain is attached, but CDP Bazaar exact resource URLs are reindexing and non-CDP directories do not visibly list Trust402 yet. | Wait for CDP Bazaar to return `10/10` on `trust402.aztecbeacon.uk`, rerun directory checks, then submit the public-safe listing pack only where manual listing is allowed. |
+| [#6](https://github.com/kfubtik/trust402/issues/6) | External x402 directories | The custom domain is attached and CDP Bazaar exact resource URLs are now `10/10`; non-CDP directories do not visibly list Trust402 yet. | Rerun directory checks, then submit the public-safe listing pack only where manual listing is allowed. |
 | [#7](https://github.com/kfubtik/trust402/issues/7) | AgentCash auto-refill policy | The Trust402-reserved AgentCash wallet is funded and dry-run refill checks exist, but live auto-refill needs provider, caps, audit, and emergency-stop rules. | Approve the refill source, threshold, amount, cap, and log format before enabling live refill. |
 | [#8](https://github.com/kfubtik/trust402/issues/8) | Live procurement policy | Trust402 can plan and quote, but should not autonomously buy downstream resources without spend controls. | Approve allowlists, per-call/job/day caps, receipt storage, and approval thresholds. |
 | [#9](https://github.com/kfubtik/trust402/issues/9) | Paid Proof402 delegation policy | Trust402 can prepare Proof402-ready hashes, but paid delegation is intentionally disabled. | Approve which hashes can be notarized, proof spend caps, retry policy, and receipt fields. |
@@ -60,12 +60,17 @@ The full final Definition of Done is pinned in
   check before production smoke. If production is behind the local verification
   contract, `production_smoke` is skipped as a deployment-lag blocker instead
   of being reported as an application smoke regression.
-- CDP Bazaar indexing: after switching `PUBLIC_BASE_URL` to
-  `https://trust402.aztecbeacon.uk`, search still finds Trust402 but exact
-  resource URLs are only `1/10` on the custom-domain origin as of
-  2026-05-20 16:53 +07:00. `trust.compare_resources` is indexed after the
-  one-shot paid smoke; the other nine paid launch routes still resolve mostly
-  through old `trust402.vercel.app` search rows.
+- CDP Bazaar indexing: after the route-by-route custom-domain paid smokes,
+  `npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk
+  --timeout-ms=10000 --limit=20 --concurrency=8` reports `all-indexed` with
+  `10/10` exact custom-domain paid launch resources as of
+  2026-05-20 17:19 +07:00. Production env now records
+  `TRUST402_CDP_BAZAAR_EVIDENCE_REF=sha256:7f8c5c87c60f6c63e9289b454d331d9481c780498c0d92395c19ca65f62c45af`,
+  `TRUST402_CDP_BAZAAR_CHECK_STATUS=all-indexed`,
+  `TRUST402_CDP_BAZAAR_EXPECTED_RESOURCES=10`, and
+  `TRUST402_CDP_BAZAAR_INDEXED_RESOURCES=10`; the old missing-resource env was
+  removed. A new production deployment is required for `/api/marketplace/bundle`
+  and `/api/settlement/status` to expose those updated env values.
 - AgentCash direct paid smoke: a one-shot x402 fetch against
   `https://trust402.aztecbeacon.uk/api/trust/compare-resources` succeeded for
   `$0.03` on 2026-05-20 at 16:44 +07:00. Public transaction hash:
@@ -73,10 +78,29 @@ The full final Definition of Done is pinned in
   The temporary local policy window was closed immediately after the fetch and
   `npm run agentcash:policy` reports locked mode again.
 - Bazaar indexing plan: `node scripts/bazaar-indexing-plan.js
-  https://trust402.aztecbeacon.uk --indexed=trust.compare_resources` is
-  read-only and reports the remaining 9 routes. Starter route-by-route smokes
-  are capped at `$0.15` combined, and `reports.x402_diligence` is a separate
-  high-cost `$0.15` approval.
+  https://trust402.aztecbeacon.uk --indexed=trust.compare_resources` was the
+  read-only plan used for the now-completed remaining 9 route smokes. Starter
+  route-by-route smokes were capped at `$0.15` combined, and
+  `reports.x402_diligence` used a separate high-cost `$0.15` approval.
+- 2026-05-20 route-by-route paid indexing smokes completed for the remaining
+  nine routes with max spend `$0.30`: `trust.check_x402`
+  (`0x9fc2b06668a3a5eb25df7fa38fc4d245b62e47a7a8c90847f1c6cb06268312b1`),
+  `trust.score_resource`
+  (`0x9860447fc39855c0bf93b43e222d67f3b9807642072639c10df0367feaef10a4`),
+  `trust.evaluate_origin`
+  (`0x81e17cd1053a1b57391548baf9564e9a081c15cd85a89a64c6b9e48a97946c02`),
+  `seller.readiness`
+  (`0xbb84eb1e5373ef84ea0c73281f08684d24548b3c650e785656b42c0a7e0b8ac7`),
+  `procurement.plan`
+  (`0x67e8ff919148e28e4e648ee6a506a95cfeeaec946f1316b9fa6a7af6d7bad901`),
+  `procurement.quote`
+  (`0x72bdcb93dfef59ae83c866bc4bf9428324517f15967c43462e3bd98f75f4009e`),
+  `monitor.snapshot`
+  (`0xa420d6469c1c2b42c36b4b8113367838e06d5b7cdbf708f278768fb91c3550f4`),
+  `monitor.badge`
+  (`0x6c828f10e7aac7e20db8001eab8557451a086b95350292c4219f5330e53dfc98`), and
+  `reports.x402_diligence`
+  (`0x59c54d9d89a27587d686524f7ce2814154700dd5c4745c1018b6c249ef9f8bff`).
 - External directory visibility: monitored read-only; latest check found 13
   monitored directories, 10 reachable, 0 visible, 3 unreachable, and 0
   custom-domain-blocked as of 2026-05-20 16:52 +07:00.
@@ -86,13 +110,14 @@ The full final Definition of Done is pinned in
   read-only check passed as of 2026-05-20 16:53 +07:00. Recent final
   verification hash:
   `sha256:44e39d236930a87c2599113b4844d7eadc2b0e6ea3a5a696239f9186f94fe6f2`.
-  `final:verify` remains blocked because CDP Bazaar custom-domain reindexing,
-  external-directory visibility, live procurement, paid Proof402 delegation,
-  AgentCash auto-refill, and autonomous live job evidence are still unresolved.
-- AgentCash MCP observation: AgentCash settings currently cap requests at
-  `$0.01`; the local Trust402 policy still keeps manual smoke budget at `$0`
-  and leaves live procurement, paid Proof402 delegation, and auto-refill
-  disabled until a bounded operator window is explicitly approved.
+  `final:verify` remains blocked because external-directory visibility, live
+  procurement, paid Proof402 delegation, AgentCash auto-refill, and autonomous
+  live job evidence are still unresolved.
+- AgentCash MCP observation: AgentCash settings were restored to cap requests
+  at `$0.01` after the route smokes; balance was `$0.953` after the `$0.30`
+  route-indexing batch. The local Trust402 policy still keeps manual smoke
+  budget at `$0` and leaves live procurement, paid Proof402 delegation, and
+  auto-refill disabled until a bounded operator window is explicitly approved.
 - Live evidence staging: production action pack now defaults the bounded
   downstream smoke to `https://proof402.vercel.app/api/proof/notarize` at
   `$0.005`, caps the combined procurement/proof window at `$0.015`, and marks

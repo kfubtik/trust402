@@ -136,11 +136,10 @@ Current 2026-05-20 custom-domain and directory snapshot:
 | Vercel domain | attached to project `trust402` |
 | x402 discovery | serves custom-domain resource URLs |
 | External directory host policy | no custom-domain blocker |
-| CDP Bazaar exact resources | `0/10`, reindex pending after origin switch |
-| CDP Bazaar evidence ref | `sha256:25df12ec7547ea74c3ccc8910ffbe2cc252988ffe22b346f35ac82891af9bf3e` |
+| CDP Bazaar exact resources | `10/10`, all-indexed after route-by-route custom-domain smokes |
+| CDP Bazaar evidence ref | `sha256:7f8c5c87c60f6c63e9289b454d331d9481c780498c0d92395c19ca65f62c45af` |
 
-Do not mark the external-directory requirement complete until CDP Bazaar
-returns to `10/10` for the custom-domain resource URLs and a non-CDP directory
+Do not mark the external-directory requirement complete until a non-CDP directory
 visibly lists Trust402.
 
 Tracking: https://github.com/kfubtik/trust402/issues/6

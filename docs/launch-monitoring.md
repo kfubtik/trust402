@@ -94,19 +94,19 @@ api.anyLiveSpendReady = false
 api.autoRefillReady = false
 x402Challenge.status = challenge-ready
 x402Challenge.httpStatus = 402
-cdpBazaar.status = eligible-not-found-yet
+cdpBazaar.status = all-indexed
 cdpBazaar.routeSummary.expected = 10
-cdpBazaar.routeSummary.indexed = 0
-cdpBazaar.routeSummary.missing = [all 10 paid launch resources]
+cdpBazaar.routeSummary.indexed = 10
+cdpBazaar.routeSummary.missing = []
 externalDirectories.status = not-visible-yet
 externalDirectories.visible = 0
 externalDirectories.checked = 13
 ```
 
 That state is production-healthy for API/x402/spend safety, but launch
-attention is required until CDP Bazaar indexes the new custom-domain exact
-resource URLs and at least one non-CDP external directory visibly lists
-Trust402.
+attention is required until the production runtime is redeployed with the
+updated CDP Bazaar env evidence and at least one non-CDP external directory
+visibly lists Trust402.
 
 The earlier final verifier passed local release checks, Docker build,
 production smoke, production x402 smoke, AgentCash refill dry-run, external
