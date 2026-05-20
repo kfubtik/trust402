@@ -25,27 +25,30 @@ The full final Definition of Done is pinned in
 ## Current Safe State
 
 - Production URL: `https://trust402.vercel.app`.
-- Deployment mode: production is still updated through manual Vercel CLI runs.
-  The latest `deployment:preflight` must confirm the production deployment
-  commit matches the current repository HEAD; push-triggered Git/Vercel
-  auto-deploy evidence is still not verified.
+- Deployment mode: production is still updated through manual Vercel CLI runs;
+  push-triggered Git/Vercel auto-deploy evidence is still not verified.
 - Recent manual production deployment evidence snapshot:
-  `dpl_BpPzYqpZToX1cuyK3k4fVzWVxwDH` from commit
-  `4b77712b88ee73d9f4466f400fb9311cd8e62b90`; preflight confirmed it matched
-  repository HEAD as of 2026-05-20 04:44:09 +07:00. Treat the latest
-  `deployment:preflight` output as the source of truth after any later deploy.
+  `dpl_38GRxLRfC5cWXrU6SbGoeAaLWFWd`, aliased to
+  `https://trust402.vercel.app` as of 2026-05-20 09:02:37 +07:00. This deploy
+  includes commit `c024a6a6fe2f18f98ac810684739b302ab71521a`
+  (`Add public procurement audit bundles`). The newer GitHub/local HEAD
+  `801446e02190bf0facc13aa674e6bf4eb58a2143`
+  (`Use remote runtime for operator readiness CLI`) is pushed to `origin/main`
+  but not yet deployed because Vercel returned the free-plan daily deployment
+  limit (`more than 100`) on the follow-up deploy attempt. Treat the latest
+  `deployment:preflight` output and `vercel inspect https://trust402.vercel.app`
+  as the source of truth after any later deploy.
 - CDP Bazaar indexing: 10/10 paid launch resources verified as of
   2026-05-20 04:41:54 +07:00. The checker now uses bounded concurrency so
   CDP discovery latency does not create false launch-monitor timeouts.
-- External directory visibility: monitored read-only; latest check found 0/8
-  visible, 6 reachable, and 2 timeout/unreachable directories as of
-  2026-05-20 04:48:43 +07:00; one directory requires a custom domain before
-  submission.
-- Production gates: `npm test` (156/156), `npm run release:check`, smoke,
-  x402 smoke, Docker build, launch monitor, deployment preflight, AgentCash
-  refill dry-run, and external directory read-only check passed as of
-  2026-05-20 04:48:43 +07:00. Recent final verification hash:
-  `sha256:301ce6f31b220fc1b53900a177b1bd24a94a43debb215f097769b34887bd3273`.
+- External directory visibility: monitored read-only; latest final verifier
+  checked 13 directories, found 10 reachable, 0 visible, 3 unreachable, and 1
+  custom-domain-blocked as of 2026-05-20 09:09:42 +07:00.
+- Production gates: `node --test test` (178/178), `node scripts/release-check.js`,
+  smoke, x402 smoke, Docker build, launch monitor, deployment preflight,
+  AgentCash refill dry-run, and external directory read-only check passed as of
+  2026-05-20 09:09:42 +07:00. Recent final verification hash:
+  `sha256:41e0a918f095cf358d7824449d44d3c381f842962076b3bacb5c895e7a74f6a0`.
   `final:verify` remains blocked because Git/Vercel auto-deploy,
   external-directory visibility, live procurement, paid Proof402 delegation,
   AgentCash auto-refill, and autonomous live job evidence are still unresolved.
@@ -56,12 +59,17 @@ The full final Definition of Done is pinned in
 - Live evidence staging: production action pack now defaults the bounded
   downstream smoke to `https://proof402.vercel.app/api/proof/notarize` at
   `$0.005`, caps the combined procurement/proof window at `$0.015`, and marks
-  the generated downstream request as hash-only/public-safe. The default
-  `agentcash-mcp` payment provider requires `LIVE_PAYMENT_ADAPTER_URL` for the
-  payment bridge plus `TRUST402_OPERATOR_API_KEY`. A `cdp-x402` provider is now
-  available for CDP-managed buyer signing without exporting a private key, but
-  it still requires an approved live window, operator key, caps, allowlist, and
-  existing `CDP_EVM_ACCOUNT_ADDRESS` or `CDP_EVM_ACCOUNT_NAME`.
+  the generated downstream request as hash-only/public-safe. The current
+  configured production provider is `agentcash-mcp`, but it lacks
+  `LIVE_PAYMENT_ADAPTER_URL`. The recommended shortest unblock path is
+  `cdp-x402`: CDP API key fields are present, but production still lacks
+  `CDP_WALLET_SECRET` and either `CDP_EVM_ACCOUNT_ADDRESS` or
+  `CDP_EVM_ACCOUNT_NAME`.
+- Trust402 live procurement responses now include a public-safe
+  `trust402.procurement_audit.v1` `auditBundle` alongside `receiptBundle`.
+  Downstream endpoint URLs are represented with origins and hashes, and any
+  `payment-response` evidence is recorded only as `sha256:` hashes, never as
+  raw payment headers.
 - Payment bridge preflight now requires an explicit dry-run/no-payment signal
   from the bridge. A bare `paidSubcallsMade=0` is logged but does not pass the
   preflight by itself.
