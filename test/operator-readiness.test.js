@@ -35,6 +35,9 @@ test("operatorReadiness combines env, local policy, and action blockers without 
   assert.ok(paymentRuntime.missingNames.includes("CDP_EVM_ACCOUNT_ADDRESS"));
   assert.ok(paymentRuntime.missingNames.includes("CDP_EVM_ACCOUNT_NAME"));
   assert.equal(report.localAgentcashPolicy.ok, false);
+  assert.equal(report.paymentProvider.unblockProfile.profiles.length, 4);
+  assert.ok(report.paymentProvider.unblockProfile.profiles.some((item) => item.provider === "cdp-x402"));
+  assert.ok(report.paymentProvider.unblockProfile.profiles.some((item) => item.provider === "x402-fetch"));
   assert.equal(report.safety.includesSecretValues, false);
   assert.equal(JSON.stringify(report).includes("secret-value"), false);
 });
@@ -135,6 +138,7 @@ test("operatorReadiness recommends a concrete payment provider when runtime is d
   assert.equal(report.paymentProvider.configured, "disabled");
   assert.equal(report.paymentProvider.selected, "cdp-x402");
   assert.equal(report.paymentProvider.source, "recommended");
+  assert.equal(report.summary.recommendedPaymentRuntime, "cdp-x402");
   assert.match(report.paymentProvider.recommendation.reason, /CDP credentials/);
   assert.ok(paymentRuntime.missingNames.includes("CDP_WALLET_SECRET"));
   assert.ok(paymentRuntime.missingNames.includes("CDP_EVM_ACCOUNT_ADDRESS"));
@@ -162,7 +166,8 @@ test("operatorReadiness does not list payment env as missing when x402-fetch run
     envDiagnostics: envDiagnostics({
       cdpWalletSecret: false,
       cdpAccountName: false,
-      bridge: false
+      bridge: false,
+      x402Buyer: true
     }),
     localAgentcashPolicyResult: localPolicy({
       manualSmokeRemainingBudgetUsd: 0,
@@ -174,8 +179,11 @@ test("operatorReadiness does not list payment env as missing when x402-fetch run
   const paymentRuntime = report.manualInputs.find((item) => item.id === "payment_runtime");
 
   assert.equal(report.paymentProvider.selected, "x402-fetch");
+  assert.equal(report.summary.envX402FetchBuyerReady, true);
   assert.equal(paymentRuntime.status, "ready");
   assert.deepEqual(paymentRuntime.missingNames, []);
+  assert.equal(report.paymentProvider.unblockProfile.selectedProfile.ready, true);
+  assert.equal(report.paymentProvider.unblockProfile.recommended.provider, "x402-fetch");
 });
 
 function baseConfig() {
@@ -225,7 +233,7 @@ function baseConfig() {
   };
 }
 
-function envDiagnostics({ cdpWalletSecret, cdpAccountName, bridge }) {
+function envDiagnostics({ cdpWalletSecret, cdpAccountName, bridge, x402Buyer = false }) {
   const key = (present, nonEmpty = present) => ({ present, nonEmpty, placeholderLike: false });
   const keys = {
     CDP_API_KEY_ID: key(true),
@@ -257,6 +265,11 @@ function envDiagnostics({ cdpWalletSecret, cdpAccountName, bridge }) {
       agentcashBridge: {
         ready: bridge,
         missing: bridge ? [] : ["LIVE_PAYMENT_ADAPTER_URL"],
+        missingAny: []
+      },
+      x402FetchBuyer: {
+        ready: x402Buyer,
+        missing: x402Buyer ? [] : ["X402_BUYER_PRIVATE_KEY", "X402_BUYER_RPC_URL"],
         missingAny: []
       },
       liveSpendPolicy: {

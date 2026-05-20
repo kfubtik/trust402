@@ -75,6 +75,12 @@ export function operatorReadiness(input = {}, options = {}) {
     ...cfg,
     livePaymentProvider: paymentProvider
   });
+  const paymentRuntimeProfile = paymentRuntimeProfiles({
+    cfg,
+    env,
+    selectedProvider: paymentProvider,
+    alternatives: actionPack.liveWindowPlan.paymentProviderAlternatives
+  });
   const manualInputs = manualInputPlan({
     env,
     localPolicy,
@@ -117,7 +123,10 @@ export function operatorReadiness(input = {}, options = {}) {
       unblockStatus: unblock.status,
       localAgentcashPolicyReady: localPolicy.ok,
       envCdpBuyerReady: env.readiness.cdpX402Buyer.ready,
-      envAgentcashBridgeReady: env.readiness.agentcashBridge.ready
+      envAgentcashBridgeReady: env.readiness.agentcashBridge.ready,
+      envX402FetchBuyerReady: env.readiness.x402FetchBuyer.ready,
+      recommendedPaymentRuntime: paymentRuntimeProfile.recommended?.provider || null,
+      shortestPaymentRuntimeProviders: paymentRuntimeProfile.shortlist.map((item) => item.provider)
     },
     manualInputs,
     envDiagnostics: env,
@@ -133,6 +142,7 @@ export function operatorReadiness(input = {}, options = {}) {
       source: paymentProviderChoice.source,
       recommendation: paymentProviderChoice.recommendation,
       readiness: providerReadiness,
+      unblockProfile: paymentRuntimeProfile,
       alternatives: actionPack.liveWindowPlan.paymentProviderAlternatives
     },
     actionPack: {
@@ -243,6 +253,14 @@ function paymentEnvRequirement(env, paymentProvider, providerReadiness) {
       nextAction: "Configure LIVE_PAYMENT_ADAPTER_URL and run payment:bridge-check before live spend."
     };
   }
+  if (paymentProvider === "x402-fetch") {
+    return {
+      id: "payment_runtime",
+      status: env.readiness.x402FetchBuyer.ready ? "ready" : "blocked-config",
+      missingNames: env.readiness.x402FetchBuyer.missing,
+      nextAction: "Configure X402_BUYER_PRIVATE_KEY and X402_BUYER_RPC_URL only if runtime private-key custody is explicitly approved."
+    };
+  }
   return {
     id: "payment_runtime",
     status: providerReadiness.ready ? "ready" : "blocked-config",
@@ -271,6 +289,153 @@ function suggestedCommands({ baseUrl, paymentProvider, candidateEndpoint }) {
   ];
 }
 
+function paymentRuntimeProfiles({ cfg, env, selectedProvider, alternatives }) {
+  const profiles = alternatives.map((alternative) => {
+    const readiness = paymentProviderReadiness({
+      ...cfg,
+      livePaymentProvider: alternative.provider
+    });
+    const missingNames = missingPaymentNames(alternative.provider, env, readiness);
+    const blockerIds = readiness.blockers.map((item) => item.id);
+    const score = runtimeUnblockScore({
+      provider: alternative.provider,
+      missingNames,
+      blockerIds,
+      requiresBridgePreflight: alternative.requiresBridgePreflight,
+      privateKeyMaterialRequired: alternative.privateKeyMaterialRequired,
+      env
+    });
+    return {
+      provider: alternative.provider,
+      selected: alternative.provider === selectedProvider,
+      ready: readiness.ready,
+      runtime: readiness.runtime,
+      score,
+      missingNames,
+      blockerIds,
+      requiresBridgePreflight: alternative.requiresBridgePreflight,
+      requiresCdpAccountRef: alternative.requiresCdpAccountRef,
+      privateKeyMaterialRequired: alternative.privateKeyMaterialRequired,
+      preflightCommand: alternative.preflightCommand,
+      probeCommand: alternative.probeCommand,
+      nextAction: nextPaymentRuntimeAction(alternative.provider, readiness.ready),
+      safety: {
+        includesSecretValues: false,
+        sendsPaymentHeadersDuringPreflight: false,
+        mutatesWalletDuringPreflight: false
+      }
+    };
+  });
+  const minScore = Math.min(...profiles.map((item) => item.score));
+  const shortlist = profiles
+    .filter((item) => item.score === minScore)
+    .map(publicRuntimeProfile);
+  const selectedProfile = profiles.find((item) => item.selected);
+  const recommended = selectedProfile?.ready
+    ? selectedProfile
+    : profiles
+        .filter((item) => item.score === minScore)
+        .sort((a, b) => providerPreference(a.provider) - providerPreference(b.provider))[0];
+
+  return {
+    selected: selectedProvider,
+    recommended: publicRuntimeProfile(recommended),
+    selectedProfile: publicRuntimeProfile(selectedProfile),
+    shortlist,
+    profiles: profiles.map(publicRuntimeProfile),
+    scoring: {
+      lowerIsCloser: true,
+      missingNameWeight: 1,
+      blockerWeight: 1,
+      bridgePreflightWeight: 1,
+      privateKeyMaterialWeight: 3,
+      cdpPartialCredentialBonus: -3
+    },
+    safety: {
+      readOnly: true,
+      includesSecretValues: false,
+      mutatesEnv: false,
+      sendsPaymentHeaders: false
+    }
+  };
+}
+
+function publicRuntimeProfile(profile) {
+  if (!profile) return null;
+  return {
+    provider: profile.provider,
+    selected: profile.selected,
+    ready: profile.ready,
+    runtime: profile.runtime,
+    score: profile.score,
+    missingNames: profile.missingNames,
+    blockerIds: profile.blockerIds,
+    requiresBridgePreflight: profile.requiresBridgePreflight,
+    requiresCdpAccountRef: profile.requiresCdpAccountRef,
+    privateKeyMaterialRequired: profile.privateKeyMaterialRequired,
+    preflightCommand: profile.preflightCommand,
+    probeCommand: profile.probeCommand,
+    nextAction: profile.nextAction,
+    safety: profile.safety
+  };
+}
+
+function missingPaymentNames(provider, env, readiness) {
+  if (provider === "cdp-x402") {
+    return uniqueList([
+      ...env.readiness.cdpX402Buyer.missing,
+      ...env.readiness.cdpX402Buyer.missingAny
+    ]);
+  }
+  if (provider === "agentcash-mcp" || provider === "external-adapter") {
+    return uniqueList(env.readiness.agentcashBridge.missing);
+  }
+  if (provider === "x402-fetch") {
+    return uniqueList(env.readiness.x402FetchBuyer.missing);
+  }
+  return uniqueList(readiness.requiredSecrets || []);
+}
+
+function runtimeUnblockScore({
+  provider,
+  missingNames,
+  blockerIds,
+  requiresBridgePreflight,
+  privateKeyMaterialRequired,
+  env
+}) {
+  let score = missingNames.length + blockerIds.length;
+  if (requiresBridgePreflight) score += 1;
+  if (privateKeyMaterialRequired) score += 3;
+  if (provider === "cdp-x402" && (hasUsable(env.keys?.CDP_API_KEY_ID) || hasUsable(env.keys?.CDP_API_KEY_SECRET))) {
+    score -= 3;
+  }
+  return score;
+}
+
+function nextPaymentRuntimeAction(provider, ready) {
+  if (ready) return "Run the provider preflight, then stage the bounded live evidence window.";
+  if (provider === "cdp-x402") {
+    return "Finish CDP_WALLET_SECRET plus an existing CDP_EVM_ACCOUNT_ADDRESS or CDP_EVM_ACCOUNT_NAME, then run payment:buyer-preflight.";
+  }
+  if (provider === "agentcash-mcp" || provider === "external-adapter") {
+    return "Configure LIVE_PAYMENT_ADAPTER_URL and run payment:bridge-check before live spend.";
+  }
+  if (provider === "x402-fetch") {
+    return "Configure X402_BUYER_PRIVATE_KEY and X402_BUYER_RPC_URL only if runtime private-key custody is explicitly approved.";
+  }
+  return "Select a supported LIVE_PAYMENT_PROVIDER and rerun readiness.";
+}
+
+function providerPreference(provider) {
+  return {
+    "cdp-x402": 0,
+    "agentcash-mcp": 1,
+    "external-adapter": 2,
+    "x402-fetch": 3
+  }[provider] ?? 9;
+}
+
 function estimatedSpend({ candidatePriceUsd, proofReserveUsd, includeProof, includeAutonomous }) {
   const candidateMultiplier = includeAutonomous ? 2 : 1;
   return roundUsd(candidatePriceUsd * candidateMultiplier + (includeProof ? proofReserveUsd : 0));
@@ -287,6 +452,10 @@ function numberOr(value, fallback) {
 
 function roundUsd(value) {
   return Math.round(value * 1_000_000) / 1_000_000;
+}
+
+function uniqueList(values) {
+  return Array.from(new Set(values.filter(Boolean)));
 }
 
 function choosePaymentProvider(inputProvider, cfg, env) {

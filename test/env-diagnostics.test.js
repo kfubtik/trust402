@@ -9,14 +9,18 @@ test("localEnvDiagnostics reports readiness without secret values or lengths", (
       "CDP_API_KEY_SECRET=another-secret",
       "CDP_WALLET_SECRET=",
       "CDP_EVM_ACCOUNT_NAME=<paste-account-name>",
-      "LIVE_PAYMENT_ADAPTER_URL=https://bridge.example/pay"
+      "LIVE_PAYMENT_ADAPTER_URL=https://bridge.example/pay",
+      "X402_BUYER_PRIVATE_KEY=0xsecret",
+      "X402_BUYER_RPC_URL=https://base.example/rpc"
     ].join("\n"),
     keys: [
       "CDP_API_KEY_ID",
       "CDP_API_KEY_SECRET",
       "CDP_WALLET_SECRET",
       "CDP_EVM_ACCOUNT_NAME",
-      "LIVE_PAYMENT_ADAPTER_URL"
+      "LIVE_PAYMENT_ADAPTER_URL",
+      "X402_BUYER_PRIVATE_KEY",
+      "X402_BUYER_RPC_URL"
     ]
   });
 
@@ -30,6 +34,7 @@ test("localEnvDiagnostics reports readiness without secret values or lengths", (
   assert.equal(report.keys.CDP_EVM_ACCOUNT_NAME.placeholderLike, true);
   assert.equal(report.readiness.cdpX402Buyer.ready, false);
   assert.equal(report.readiness.agentcashBridge.ready, true);
+  assert.equal(report.readiness.x402FetchBuyer.ready, true);
   assert.equal(report.safety.printsValues, false);
   assert.equal(report.safety.printsLengths, false);
   assert.equal(report.safety.sendsValues, false);
@@ -38,6 +43,8 @@ test("localEnvDiagnostics reports readiness without secret values or lengths", (
   assert.equal(serialized.includes("secret-value"), false);
   assert.equal(serialized.includes("another-secret"), false);
   assert.equal(serialized.includes("https://bridge.example/pay"), false);
+  assert.equal(serialized.includes("0xsecret"), false);
+  assert.equal(serialized.includes("https://base.example/rpc"), false);
 });
 
 test("localEnvDiagnostics handles a missing env file as public-safe missing config", () => {
@@ -61,6 +68,8 @@ test("runtimeEnvDiagnostics reports production readiness without reading env fil
     cdpWalletSecretConfigured: true,
     cdpEvmAccountName: "trust402-buyer",
     livePaymentProvider: "cdp-x402",
+    x402BuyerPrivateKeyConfigured: true,
+    x402BuyerRpcUrl: "https://base.example/rpc",
     liveSpendEnabled: true,
     liveAllowedRegistries: ["https://proof402.vercel.app"],
     operatorApiKey: "configured",
@@ -75,8 +84,10 @@ test("runtimeEnvDiagnostics reports production readiness without reading env fil
   assert.equal(report.safety.readsEnvFile, false);
   assert.equal(report.safety.printsValues, false);
   assert.equal(report.readiness.cdpX402Buyer.ready, true);
+  assert.equal(report.readiness.x402FetchBuyer.ready, true);
   assert.equal(report.readiness.liveSpendPolicy.ready, true);
   assert.equal(report.readiness.proof402Delegation.ready, true);
   assert.equal(report.readiness.agentcashAutoRefill.ready, false);
   assert.equal(JSON.stringify(report).includes("trust402-buyer"), false);
+  assert.equal(JSON.stringify(report).includes("https://base.example/rpc"), false);
 });

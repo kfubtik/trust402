@@ -9,6 +9,8 @@ export const DEFAULT_ENV_DIAGNOSTIC_KEYS = [
   "CDP_EVM_ACCOUNT_NAME",
   "LIVE_PAYMENT_PROVIDER",
   "LIVE_PAYMENT_ADAPTER_URL",
+  "X402_BUYER_PRIVATE_KEY",
+  "X402_BUYER_RPC_URL",
   "LIVE_SPEND_ENABLED",
   "LIVE_ALLOWED_REGISTRIES",
   "TRUST402_OPERATOR_API_KEY",
@@ -45,6 +47,10 @@ export function localEnvDiagnostics(input = {}) {
         "CDP_WALLET_SECRET"
       ], ["CDP_EVM_ACCOUNT_ADDRESS", "CDP_EVM_ACCOUNT_NAME"]),
       agentcashBridge: readinessFor(keyStatus, ["LIVE_PAYMENT_ADAPTER_URL"]),
+      x402FetchBuyer: readinessFor(keyStatus, [
+        "X402_BUYER_PRIVATE_KEY",
+        "X402_BUYER_RPC_URL"
+      ]),
       liveSpendPolicy: readinessFor(keyStatus, [
         "LIVE_SPEND_ENABLED",
         "LIVE_ALLOWED_REGISTRIES",
@@ -80,6 +86,8 @@ export function runtimeEnvDiagnostics(runtimeConfig = {}) {
     CDP_EVM_ACCOUNT_NAME: runtimeStatus(Boolean(runtimeConfig.cdpEvmAccountName)),
     LIVE_PAYMENT_PROVIDER: runtimeStatus(isLivePaymentProvider(runtimeConfig.livePaymentProvider)),
     LIVE_PAYMENT_ADAPTER_URL: runtimeStatus(Boolean(runtimeConfig.livePaymentAdapterUrl)),
+    X402_BUYER_PRIVATE_KEY: runtimeStatus(Boolean(runtimeConfig.x402BuyerPrivateKeyConfigured)),
+    X402_BUYER_RPC_URL: runtimeStatus(Boolean(runtimeConfig.x402BuyerRpcUrl)),
     LIVE_SPEND_ENABLED: runtimeStatus(runtimeConfig.liveSpendEnabled === true),
     LIVE_ALLOWED_REGISTRIES: runtimeStatus(Array.isArray(runtimeConfig.liveAllowedRegistries) && runtimeConfig.liveAllowedRegistries.length > 0),
     TRUST402_OPERATOR_API_KEY: runtimeStatus(Boolean(runtimeConfig.operatorApiKey)),
@@ -104,6 +112,10 @@ export function runtimeEnvDiagnostics(runtimeConfig = {}) {
         "CDP_WALLET_SECRET"
       ], ["CDP_EVM_ACCOUNT_ADDRESS", "CDP_EVM_ACCOUNT_NAME"]),
       agentcashBridge: readinessFor(keyStatus, ["LIVE_PAYMENT_ADAPTER_URL"]),
+      x402FetchBuyer: readinessFor(keyStatus, [
+        "X402_BUYER_PRIVATE_KEY",
+        "X402_BUYER_RPC_URL"
+      ]),
       liveSpendPolicy: readinessFor(keyStatus, [
         "LIVE_SPEND_ENABLED",
         "LIVE_ALLOWED_REGISTRIES",
