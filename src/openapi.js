@@ -203,6 +203,34 @@ export function openApiSpec() {
         }
       }
     },
+    "/api/domains/readiness-check": {
+      get: {
+        operationId: "domains_readiness_check_get",
+        summary: "Read custom-domain readiness check for the configured public base URL",
+        tags: ["Trust402"],
+        responses: {
+          "200": jsonResponse
+        }
+      },
+      post: {
+        operationId: "domains_readiness_check",
+        summary: "Verify a custom domain through DNS, HTTPS health, x402 discovery, and unpaid x402 challenge checks",
+        tags: ["Trust402"],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: requestSchemaFor("domains.readiness_check"),
+              example: exampleFor("domains.readiness_check")
+            }
+          }
+        },
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse
+        }
+      }
+    },
     "/api/directories/profile": getPath("Public-safe directory profile JSON for crawlers and external listings"),
     "/api/directories/submission-pack": {
       get: {
@@ -1195,6 +1223,21 @@ function requestSchemaFor(id) {
     };
   }
 
+  if (id === "domains.readiness_check") {
+    return {
+      type: "object",
+      properties: {
+        domain: { type: "string" },
+        customDomain: { type: "string" },
+        selectedDomain: { type: "string" },
+        baseUrl: { type: "string", format: "uri" },
+        expectedBaseUrl: { type: "string", format: "uri" },
+        timeoutMs: { type: "integer", default: 6000 },
+        skipDns: { type: "boolean", default: false }
+      }
+    };
+  }
+
   if (id === "deployments.preflight") {
     return {
       type: "object",
@@ -1562,6 +1605,13 @@ function exampleFor(id) {
       selectedDomainPeriodYears: 1,
       selectedDomainPurchaseUrl: "https://vercel.com/domains/search?q=trust402.dev",
       availabilitySource: "vercel-domain-check"
+    };
+  }
+  if (id === "domains.readiness_check") {
+    return {
+      domain: "trust402.dev",
+      expectedBaseUrl: "https://trust402.dev",
+      timeoutMs: 6000
     };
   }
   if (id === "deployments.preflight") {

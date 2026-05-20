@@ -68,6 +68,7 @@ assert(packageJson.scripts?.["completion:actions"], "package must expose npm run
 assert(packageJson.scripts?.["deployment:preflight"], "package must expose npm run deployment:preflight");
 assert(packageJson.scripts?.["deployment:github-actions-setup"], "package must expose npm run deployment:github-actions-setup");
 assert(packageJson.scripts?.["domains:activation-pack"], "package must expose npm run domains:activation-pack");
+assert(packageJson.scripts?.["domains:readiness-check"], "package must expose npm run domains:readiness-check");
 assert(packageJson.scripts?.["directories:submission-pack"], "package must expose npm run directories:submission-pack");
 assert(packageJson.scripts?.["final:verify"], "package must expose npm run final:verify");
 assert(packageJson.scripts?.["privacy:check"], "package must expose npm run privacy:check");
@@ -111,6 +112,7 @@ assert(existsSync("src/githubActionsSetupPack.js"), "GitHub Actions setup pack m
 assert(existsSync("src/completionAudit.js"), "completion audit module must exist");
 assert(existsSync("src/completionPlan.js"), "completion plan module must exist");
 assert(existsSync("src/domainActivationPack.js"), "domain activation pack module must exist");
+assert(existsSync("src/domainReadinessCheck.js"), "domain readiness check module must exist");
 assert(existsSync("src/directorySubmissionPack.js"), "directory submission pack module must exist");
 assert(existsSync("src/paymentAdapters.js"), "payment adapter module must exist");
 assert(existsSync("src/paymentBridgeCheck.js"), "payment bridge check module must exist");
@@ -147,6 +149,7 @@ assert(existsSync("scripts/operator-action-pack.js"), "operator action pack scri
 assert(existsSync("scripts/deployment-preflight.js"), "deployment preflight script must exist");
 assert(existsSync("scripts/github-actions-setup-pack.js"), "GitHub Actions setup pack script must exist");
 assert(existsSync("scripts/domain-activation-pack.js"), "domain activation pack script must exist");
+assert(existsSync("scripts/domain-readiness-check.js"), "domain readiness check script must exist");
 assert(existsSync("scripts/directory-submission-pack.js"), "directory submission pack script must exist");
 assert(existsSync("scripts/final-verification.js"), "final verification script must exist");
 assert(existsSync("scripts/live-evidence-smoke.js"), "live evidence smoke script must exist");
@@ -293,6 +296,10 @@ assert(
   "free domain activation pack helper must exist"
 );
 assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/domains/readiness-check" && resource.priceUsd === 0),
+  "free domain readiness check helper must exist"
+);
+assert(
   catalog.freeResources.some((resource) => resource.path === "/api/directories/submission-pack" && resource.priceUsd === 0),
   "free directory submission pack helper must exist"
 );
@@ -366,6 +373,8 @@ assert(openapi.paths?.["/api/deployments/github-actions-setup"]?.get, "GitHub Ac
 assert(openapi.paths?.["/api/deployments/github-actions-setup"]?.post, "GitHub Actions setup POST must be present in OpenAPI");
 assert(openapi.paths?.["/api/domains/activation-pack"]?.get, "domain activation pack GET must be present in OpenAPI");
 assert(openapi.paths?.["/api/domains/activation-pack"]?.post, "domain activation pack POST must be present in OpenAPI");
+assert(openapi.paths?.["/api/domains/readiness-check"]?.get, "domain readiness check GET must be present in OpenAPI");
+assert(openapi.paths?.["/api/domains/readiness-check"]?.post, "domain readiness check POST must be present in OpenAPI");
 assert(openapi.paths?.["/api/directories/submission-pack"]?.get, "directory submission pack GET must be present in OpenAPI");
 assert(openapi.paths?.["/api/directories/submission-pack"]?.post, "directory submission pack POST must be present in OpenAPI");
 assert(openapi.paths?.["/api/live/window-plan"]?.post, "live window plan must be present in OpenAPI");
@@ -470,6 +479,10 @@ assert(
 assert(
   !openapi.paths["/api/domains/activation-pack"].post["x-payment-info"],
   "domain activation pack helper must not require payment"
+);
+assert(
+  !openapi.paths["/api/domains/readiness-check"].post["x-payment-info"],
+  "domain readiness check helper must not require payment"
 );
 assert(
   !openapi.paths["/api/directories/submission-pack"].post["x-payment-info"],

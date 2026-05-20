@@ -420,6 +420,18 @@ public-safe availability evidence is included in the `activationPackHash`, so a
 later operator can verify that the selected domain, price, period, and purchase
 URL match the reviewed plan.
 
+After the domain is bought or attached, verify the custom-domain runtime itself:
+
+```powershell
+npm run domains:readiness-check -- https://trust402.vercel.app `
+  --domain=trust402.dev
+```
+
+This check is also read-only. It verifies DNS records, HTTPS `/health`, x402
+discovery URLs, and the unpaid protected-route 402 challenge from the custom
+origin. It returns the evidence env names for `PUBLIC_BASE_URL` and custom
+domain readiness, but does not set them.
+
 For the Git/Vercel and custom-domain portion specifically, run:
 
 ```powershell

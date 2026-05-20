@@ -172,6 +172,14 @@
       "purpose": "Generate a public-safe custom-domain activation plan, Vercel env plan, verification commands, and directory evidence fields without buying a domain."
     },
     {
+      "id": "domains.readiness_check",
+      "method": "GET/POST",
+      "path": "/api/domains/readiness-check",
+      "priceUsd": 0,
+      "status": "dry-run-helper",
+      "purpose": "Verify an attached custom domain through DNS, HTTPS health, x402 discovery, and unpaid x402 challenge checks without mutating Vercel or submitting directory forms."
+    },
+    {
       "id": "deployments.preflight",
       "method": "GET/POST",
       "path": "/api/deployments/preflight",

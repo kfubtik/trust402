@@ -142,6 +142,20 @@ claiming unverified availability/pricing. When fresh registrar/Vercel evidence
 is supplied, the selected-domain status and price are included in the
 `activationPackHash`.
 
+### `GET/POST /api/domains/readiness-check`
+
+Read-only post-attachment verifier for the custom-domain blocker. It checks
+DNS records, HTTPS `/health`, `/.well-known/x402`, and the unpaid x402
+challenge on the selected domain.
+
+Price: free.
+
+Reason: after a domain is bought/attached, Trust402 needs machine-readable
+proof that the domain really serves Trust402, that discovery URLs no longer
+point at `vercel.app`, and that the protected x402 route challenges from the
+custom HTTPS origin. This endpoint never buys domains, mutates Vercel, sets env
+vars, submits directory forms, or sends payment headers.
+
 ### `GET/POST /api/deployments/preflight`
 
 Public-safe Git/Vercel/custom-domain deployment preflight profile. It returns

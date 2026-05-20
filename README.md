@@ -160,6 +160,14 @@ npm run domains:activation-pack -- https://trust402.vercel.app `
   --availability-source=vercel-domain-check
 ```
 
+After the domain is bought/attached, verify the custom-domain blocker without
+mutating Vercel or submitting directory forms:
+
+```powershell
+npm run domains:readiness-check -- https://trust402.vercel.app `
+  --domain=trust402.dev
+```
+
 Generate the Git/Vercel/custom-domain preflight pack without mutating GitHub or
 Vercel:
 
@@ -608,6 +616,10 @@ MVP guarantees:
 - `/api/domains/activation-pack` plans custom-domain activation but never buys a
   domain, mutates Vercel, sets env vars, or claims availability/pricing without
   supplied fresh public-safe evidence;
+- `/api/domains/readiness-check` verifies DNS, HTTPS health, x402 discovery,
+  and unpaid x402 challenge for an attached custom domain without mutating
+  Vercel, setting env vars, submitting directory forms, or sending payment
+  headers;
 - `/api/directories/submission-pack` builds public-safe listing payloads and
   directory blockers but never submits forms or sets evidence env;
 - `bazaar:indexing:check` only reads public CDP discovery endpoints and never sends payment;

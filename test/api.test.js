@@ -43,6 +43,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/deployments/preflight"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/deployments/github-actions-setup"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/domains/activation-pack"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/domains/readiness-check"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/directories/submission-pack"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/procurement/execute"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/live/window-plan"));
@@ -209,6 +210,8 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/api/deployments/github-actions-setup"].post);
     assert.ok(openapi.body.paths["/api/domains/activation-pack"].get);
     assert.ok(openapi.body.paths["/api/domains/activation-pack"].post);
+    assert.ok(openapi.body.paths["/api/domains/readiness-check"].get);
+    assert.ok(openapi.body.paths["/api/domains/readiness-check"].post);
     assert.ok(openapi.body.paths["/api/directories/submission-pack"].get);
     assert.ok(openapi.body.paths["/api/directories/submission-pack"].post);
     assert.ok(openapi.body.paths["/api/live/window-plan"].post);

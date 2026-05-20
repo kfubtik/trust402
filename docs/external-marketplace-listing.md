@@ -195,6 +195,7 @@ is attached.
 Action:
 
 - attach a custom domain to the Vercel project;
+- run `npm run domains:readiness-check -- https://trust402.vercel.app --domain=<custom-domain>`;
 - rerun `npm run smoke:x402 -- https://<custom-domain>`;
 - rerun `npm run directories:check -- https://<custom-domain> --timeout-ms=10000`;
 - submit only the public-safe listing fields from this file after the custom

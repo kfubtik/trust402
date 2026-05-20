@@ -7,6 +7,7 @@ import { paidResourceByPath, publicResources } from "./catalog.js";
 import { ApiError, errorBody } from "./errors.js";
 import { autonomousRun } from "./autonomousJob.js";
 import { domainActivationPack } from "./domainActivationPack.js";
+import { domainReadinessCheck } from "./domainReadinessCheck.js";
 import { deploymentPreflight } from "./deploymentPreflight.js";
 import { githubActionsSetupPack } from "./githubActionsSetupPack.js";
 import { marketplaceBundle } from "./marketplace.js";
@@ -61,6 +62,7 @@ const routes = new Map([
   ["POST /api/deployments/preflight", deploymentPreflight],
   ["POST /api/deployments/github-actions-setup", githubActionsSetupPack],
   ["POST /api/domains/activation-pack", domainActivationPack],
+  ["POST /api/domains/readiness-check", domainReadinessCheck],
   ["POST /api/live/window-plan", liveWindowPlan],
   ["POST /api/directories/submission-pack", directorySubmissionPack],
   ["POST /api/operator/unblock-report", operatorUnblockReport],
@@ -113,6 +115,7 @@ export async function handleTrust402Request(req, res) {
           deploymentPreflight: "/api/deployments/preflight",
           githubActionsSetup: "/api/deployments/github-actions-setup",
           domainActivationPack: "/api/domains/activation-pack",
+          domainReadinessCheck: "/api/domains/readiness-check",
           directoryProfile: "/directory",
           directoryProfileJson: "/directory.json",
           apiDirectoryProfile: "/api/directories/profile",
@@ -208,6 +211,10 @@ export async function handleTrust402Request(req, res) {
 
     if (req.method === "GET" && path === "/api/domains/activation-pack") {
       return sendJson(res, 200, domainActivationPack());
+    }
+
+    if (req.method === "GET" && path === "/api/domains/readiness-check") {
+      return sendJson(res, 200, await domainReadinessCheck());
     }
 
     if (req.method === "GET" && path === "/api/directories/submission-pack") {
@@ -340,6 +347,7 @@ function statusSummary() {
       deploymentPreflight: "/api/deployments/preflight",
       githubActionsSetup: "/api/deployments/github-actions-setup",
       domainActivationPack: "/api/domains/activation-pack",
+      domainReadinessCheck: "/api/domains/readiness-check",
       directoryProfile: "/directory",
       directoryProfileJson: "/directory.json",
       apiDirectoryProfile: "/api/directories/profile",
