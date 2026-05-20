@@ -20,6 +20,7 @@
     "env:doctor": "node scripts/env-doctor.js",
     "bazaar:indexing:check": "node scripts/check-bazaar-indexing.js",
     "bazaar:indexing:check:all": "node scripts/check-bazaar-indexing.js --all-resources",
+    "bazaar:indexing:plan": "node scripts/bazaar-indexing-plan.js",
     "directories:check": "node scripts/check-external-directories.js",
     "launch:monitor": "node scripts/launch-monitor.js",
     "live:evidence-smoke": "node scripts/live-evidence-smoke.js",

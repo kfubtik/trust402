@@ -12,6 +12,12 @@ The CDP Bazaar indexing check is read-only and never sends payment headers:
 npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --limit=20 --concurrency=8
 ```
 
+The route-by-route indexing plan is also read-only:
+
+```powershell
+npm run bazaar:indexing:plan -- https://trust402.aztecbeacon.uk --indexed=trust.compare_resources
+```
+
 ## Current Production State
 
 Last checked on 2026-05-20 at 16:53 +07:00 after the custom-domain switch to
@@ -108,6 +114,16 @@ manual smoke budget or a global max below `$0.03`. The current local policy
 blocks that spend until the operator explicitly approves a temporary smoke
 window. The current evidence suggests this kind of settle can index the exact
 route that was paid, but it does not automatically prove all other paid routes.
+
+For the current `1/10` state, the read-only indexing plan reports:
+
+- starter batch: 8 remaining routes at or below `$0.05` each, max combined
+  route spend `$0.15`;
+- high-cost batch: `reports.x402_diligence`, max route spend `$0.15`;
+- remaining all-route max: `$0.30`;
+- every paid route still requires its own exact approval text, one open policy
+  window, one AgentCash schema check, one paid fetch, and immediate window
+  close.
 
 The read-only action pack for this no-Proof smoke window is:
 

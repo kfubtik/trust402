@@ -260,7 +260,7 @@ function agentcashDirectSmokePlan({
     return {
       ...common,
       status: "unsupported-candidate",
-      blocker: "AgentCash direct smoke bodies are only generated for Trust402 compare-resources and Proof402 notarize candidates.",
+      blocker: "AgentCash direct smoke bodies are only generated for Trust402 paid launch resources and Proof402 notarize candidates.",
       evidenceAfterSuccess: {
         note: "For generic resources, use the runtime live evidence smoke path so the request body can be reviewed for that resource first."
       }
@@ -364,7 +364,8 @@ function agentcashDirectSmokeBody(candidateEndpoint, baseUrl) {
     };
   }
 
-  return null;
+  const trustOrigin = normalizeBaseUrl(originOf(candidateEndpoint) || baseUrl || DEFAULT_BASE_URL);
+  return trust402RouteSmokeBody(pathOf(candidateEndpoint), trustOrigin);
 }
 
 function planBlockers(input) {
@@ -410,6 +411,16 @@ function requestPolicyForCandidate(candidateEndpoint, baseUrl) {
       privatePayloadAllowed: false,
       generatedBy: "scripts/live-evidence-smoke.js",
       note: "The live evidence runner sends two public-safe candidate resource summaries so compare-resources receives a valid body."
+    };
+  }
+  const schema = trust402RouteSchema(pathOf(candidateEndpoint));
+  if (schema) {
+    return {
+      schema,
+      sendsOnly: trust402RouteSmokeFields(schema),
+      privatePayloadAllowed: false,
+      generatedBy: "scripts/live-evidence-smoke.js",
+      note: "The live evidence runner sends a small public-safe sample body for this Trust402 paid launch route."
     };
   }
   return {
@@ -528,6 +539,127 @@ function isTrust402CompareResourcesEndpoint(value, baseUrl = DEFAULT_BASE_URL) {
   } catch {
     return false;
   }
+}
+
+function pathOf(value) {
+  try {
+    return new URL(value).pathname;
+  } catch {
+    return "";
+  }
+}
+
+function trust402RouteSchema(path) {
+  return {
+    "/api/trust/check-x402": "trust.check_x402",
+    "/api/trust/score-resource": "trust.score_resource",
+    "/api/trust/evaluate-origin": "trust.evaluate_origin",
+    "/api/seller/readiness": "seller.readiness",
+    "/api/procurement/plan": "procurement.plan",
+    "/api/procurement/quote": "procurement.quote",
+    "/api/monitor/snapshot": "monitor.snapshot",
+    "/api/monitor/badge": "monitor.badge",
+    "/api/reports/x402-diligence": "reports.x402_diligence"
+  }[path] || null;
+}
+
+function trust402RouteSmokeBody(path, trustOrigin) {
+  const candidate = sampleTrust402Candidate(trustOrigin);
+  const proofCandidate = sampleProof402Candidate();
+  if (path === "/api/trust/check-x402") {
+    return {
+      endpoint: `${trustOrigin}/api/trust/score-resource`,
+      method: "POST",
+      expectedPriceUsd: 0.01
+    };
+  }
+  if (path === "/api/trust/score-resource") return candidate;
+  if (path === "/api/trust/evaluate-origin") return { origin: trustOrigin };
+  if (path === "/api/seller/readiness") {
+    return {
+      origin: trustOrigin,
+      ...candidate
+    };
+  }
+  if (path === "/api/procurement/plan") {
+    return {
+      goal: "Plan a bounded Trust402 buyer workflow for marketplace indexing evidence.",
+      budgetUsd: 0.05,
+      maxPaidCalls: 2,
+      riskTolerance: "low",
+      allowedRegistries: ["https://api.cdp.coinbase.com/platform/v2/x402/discovery"],
+      requireProofReceipts: true
+    };
+  }
+  if (path === "/api/procurement/quote") {
+    return {
+      goal: "Quote a bounded Trust402 buyer workflow for marketplace indexing evidence.",
+      budgetUsd: 0.08,
+      maxPaidCalls: 2,
+      riskTolerance: "low",
+      allowedRegistries: ["https://api.cdp.coinbase.com/platform/v2/x402/discovery"],
+      requireProofReceipts: true,
+      candidates: [proofCandidate, candidate]
+    };
+  }
+  if (path === "/api/monitor/snapshot" || path === "/api/monitor/badge") {
+    return {
+      endpoint: `${trustOrigin}/api/trust/check-x402`,
+      method: "POST",
+      expectedPriceUsd: 0.005
+    };
+  }
+  if (path === "/api/reports/x402-diligence") {
+    return {
+      origin: trustOrigin,
+      endpoint: `${trustOrigin}/api/trust/check-x402`,
+      method: "POST",
+      expectedPriceUsd: 0.005
+    };
+  }
+  return null;
+}
+
+function sampleTrust402Candidate(trustOrigin) {
+  return {
+    id: "trust.check_x402",
+    endpoint: `${trustOrigin}/api/trust/check-x402`,
+    priceUsd: 0.005,
+    has402: true,
+    hasInputSchema: true,
+    hasOpenApi: true,
+    hasWellKnown: true,
+    receiptReady: true,
+    description: "Trust402 x402 challenge probe for payment-flow readiness."
+  };
+}
+
+function sampleProof402Candidate() {
+  return {
+    id: "proof402.notarize",
+    endpoint: "https://proof402.vercel.app/api/proof/notarize",
+    priceUsd: 0.005,
+    has402: true,
+    hasInputSchema: true,
+    hasOpenApi: true,
+    hasWellKnown: true,
+    receiptReady: true,
+    description: "Proof402 paid notarization endpoint for hash-only proof receipts."
+  };
+}
+
+function trust402RouteSmokeFields(schema) {
+  return {
+    "trust.check_x402": ["endpoint", "method", "expectedPriceUsd"],
+    "trust.score_resource": ["id", "endpoint", "priceUsd", "has402", "hasInputSchema", "hasOpenApi", "hasWellKnown", "receiptReady", "description"],
+    "trust.evaluate_origin": ["origin"],
+    "seller.readiness": ["origin", "id", "endpoint", "priceUsd", "has402", "hasInputSchema", "hasOpenApi", "hasWellKnown", "receiptReady", "description"],
+    "procurement.plan": ["goal", "budgetUsd", "maxPaidCalls", "riskTolerance", "allowedRegistries", "requireProofReceipts"],
+    "procurement.quote": ["goal", "budgetUsd", "maxPaidCalls", "riskTolerance", "allowedRegistries", "requireProofReceipts", "candidates"],
+    "monitor.snapshot": ["endpoint", "method", "expectedPriceUsd"],
+    "monitor.badge": ["endpoint", "method", "expectedPriceUsd"],
+    "reports.x402_diligence": ["origin", "endpoint", "method", "expectedPriceUsd"]
+  }[schema] || ["goal"];
 }
 
 function originOf(value) {

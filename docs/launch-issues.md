@@ -72,6 +72,11 @@ The full final Definition of Done is pinned in
   `0xb447b8213c9641d200d656945e95b0f5fb5e3ac2565469179c8af742cb42d1df`.
   The temporary local policy window was closed immediately after the fetch and
   `npm run agentcash:policy` reports locked mode again.
+- Bazaar indexing plan: `node scripts/bazaar-indexing-plan.js
+  https://trust402.aztecbeacon.uk --indexed=trust.compare_resources` is
+  read-only and reports the remaining 9 routes. Starter route-by-route smokes
+  are capped at `$0.15` combined, and `reports.x402_diligence` is a separate
+  high-cost `$0.15` approval.
 - External directory visibility: monitored read-only; latest check found 13
   monitored directories, 10 reachable, 0 visible, 3 unreachable, and 0
   custom-domain-blocked as of 2026-05-20 16:52 +07:00.

@@ -86,6 +86,38 @@ test("agentcashDirectSmokePlan defaults compare-resources to the configured prod
   );
 });
 
+test("agentcashDirectSmokePlan supports remaining Trust402 paid launch resources", () => {
+  const result = agentcashDirectSmokePlan({
+    candidateEndpoint: "https://trust402.aztecbeacon.uk/api/procurement/quote",
+    candidatePriceUsd: 0.04,
+    maxAmountUsd: 0.04
+  }, {
+    config: {
+      ...baseConfig(),
+      publicBaseUrl: "https://trust402.aztecbeacon.uk"
+    },
+    localAgentcashPolicyResult: localPolicy({
+      trust402LiveProcurement: "approved-for-manual-smoke",
+      proof402Delegation: "disabled-until-separate-approval",
+      agentcashGlobalMaxAmountUsd: 0.04,
+      manualSmokeRemainingBudgetUsd: 0.04,
+      allowedOrigins: [
+        "https://trust402.aztecbeacon.uk",
+        "https://proof402.vercel.app"
+      ]
+    })
+  });
+
+  assert.equal(result.status, "ready-for-explicit-paid-fetch-approval");
+  assert.equal(result.targetResource.id, "procurement.quote");
+  assert.equal(result.mcpCallOrder[1].input.url, "https://trust402.aztecbeacon.uk/api/procurement/quote");
+  assert.equal(result.mcpCallOrder[1].input.maxAmount, 0.04);
+  assert.equal(result.mcpCallOrder[1].input.body.candidates.length, 2);
+  assert.equal(result.mcpCallOrder[1].input.body.candidates[1].endpoint, "https://trust402.aztecbeacon.uk/api/trust/check-x402");
+  assert.equal(result.mcpCallOrder[1].input.body.allowedRegistries[0], "https://api.cdp.coinbase.com/platform/v2/x402/discovery");
+  assert.equal(result.safety.privatePayloadAllowed, false);
+});
+
 function baseConfig() {
   return {
     publicBaseUrl: "https://trust402.vercel.app",

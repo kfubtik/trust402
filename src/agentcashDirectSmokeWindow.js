@@ -103,7 +103,9 @@ function openWindow({
   if (state && input.force !== true) blockers.push("A direct smoke policy window is already open; close it before opening another.");
   if (!policyResult.present || !policyResult.policy) blockers.push(`${policyPath} must exist and parse before opening a direct smoke policy window.`);
   if (!approvalMatches(input, plan)) blockers.push("Exact one-line approval text is required before opening a direct smoke policy window.");
-  if (plan.targetResource?.id !== "trust402.compare_resources") blockers.push("The current direct smoke window helper is scoped to trust402.compare_resources.");
+  if (!plan.safety?.paidFetchWouldPayIfExecuted || !plan.mcpCallOrder?.length) {
+    blockers.push("The current direct smoke window helper requires a supported generated AgentCash paid-fetch body.");
+  }
 
   if (blockers.length > 0) {
     throw new ApiError(403, "agentcash_direct_smoke_window_blocked", "AgentCash direct smoke policy window is blocked.", {
