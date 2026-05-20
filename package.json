@@ -17,6 +17,7 @@
     "dev": "node src/server.js",
     "dev:detached": "node scripts/start-detached.js",
     "doctor": "node scripts/doctor.js",
+    "env:doctor": "node scripts/env-doctor.js",
     "bazaar:indexing:check": "node scripts/check-bazaar-indexing.js",
     "bazaar:indexing:check:all": "node scripts/check-bazaar-indexing.js --all-resources",
     "directories:check": "node scripts/check-external-directories.js",

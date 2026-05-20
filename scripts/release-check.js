@@ -48,6 +48,7 @@ assert(packageJson.license === "MIT", "package license must be MIT");
 assert(packageJson.main === "src/server.js", "package main must point at src/server.js for Vercel entrypoint inference");
 assert(packageJson.scripts?.test, "package must expose npm test");
 assert(packageJson.scripts?.doctor, "package must expose npm run doctor");
+assert(packageJson.scripts?.["env:doctor"], "package must expose npm run env:doctor");
 assert(packageJson.scripts?.["bazaar:indexing:check"], "package must expose npm run bazaar:indexing:check");
 assert(packageJson.scripts?.["bazaar:indexing:check:all"], "package must expose npm run bazaar:indexing:check:all");
 assert(packageJson.scripts?.["directories:check"], "package must expose npm run directories:check");
@@ -141,6 +142,7 @@ assert(apiIndex.includes("createTrust402ExpressApp"), "Vercel API handler must u
 assert(serverSource.includes("createTrust402ExpressApp"), "node start must use the Express bridge in real paywall mode");
 assert(serverSource.includes("x-trust402-operator-key"), "server must require an operator key header for live operator actions");
 assert(existsSync("scripts/check-external-directories.js"), "external directory check script must exist");
+assert(existsSync("scripts/env-doctor.js"), "env doctor script must exist");
 assert(existsSync("scripts/check-agentcash-policy.js"), "AgentCash policy check script must exist");
 assert(existsSync("scripts/agentcash-mcp-observation.js"), "AgentCash MCP observation script must exist");
 assert(existsSync("scripts/agentcash-refill-check.js"), "AgentCash refill check script must exist");

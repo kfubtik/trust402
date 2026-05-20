@@ -692,6 +692,8 @@ Future live procurement must require:
 - `docs/github-release-checklist.md` - public release checklist.
 - `scripts/check-bazaar-indexing.js` - read-only CDP Bazaar visibility check.
 - `scripts/check-external-directories.js` - read-only external directory visibility check.
+- `scripts/env-doctor.js` - local `.env` shape checker that reports only
+  `present`, `nonEmpty`, and `placeholderLike` flags, never values or lengths.
 - `scripts/check-agentcash-policy.js` - local Trust402-only AgentCash policy check.
 - `scripts/agentcash-direct-smoke-plan.js` - local approval packet for a bounded AgentCash direct smoke.
 - `scripts/agentcash-direct-smoke-window.js` - local status/open/close helper for that approved direct smoke window.
