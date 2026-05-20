@@ -663,6 +663,8 @@ Future live procurement must require:
 - `src/evidenceLedger.js` - local public-safe JSONL ledger for evidence hashes and refs.
 - `src/liveWindowPlan.js` - read-only live evidence window planner.
 - `src/operatorActionPack.js` - public-safe action pack for remaining completion blockers.
+- `src/operatorReadiness.js` - public-safe readiness profile that combines
+  env diagnostics, local AgentCash policy, and manual live-evidence gates.
 - `src/deploymentPreflight.js` - public-safe Git/Vercel/custom-domain preflight profile.
 - `src/githubActionsSetupPack.js` - public-safe GitHub Actions setup command pack.
 - `src/domainActivationPack.js` - public-safe custom-domain activation pack.
@@ -705,6 +707,8 @@ Future live procurement must require:
   approved x402 spend evidence.
 - `scripts/operator-action-pack.js` - public-safe operator action pack exporter;
   with a URL it reads the production API unless `--local` is passed.
+- `scripts/operator-readiness.js` - local operator readiness profile for
+  env, wallet policy, payment runtime, external directory, and final evidence gates.
 - `scripts/operator-unblock-check.js` - public-safe unblock report runner; with
   a URL it reads the production API unless `--local` is passed. Exposed as
   both `npm run completion:unblockers` and `npm run operator:unblock-report`.

@@ -37,6 +37,7 @@
     "completion:audit": "node scripts/completion-audit.js",
     "completion:unblockers": "node scripts/operator-unblock-check.js",
     "operator:unblock-report": "node scripts/operator-unblock-check.js",
+    "operator:readiness": "node scripts/operator-readiness.js",
     "completion:actions": "node scripts/operator-action-pack.js",
     "deployment:preflight": "node scripts/deployment-preflight.js",
     "deployment:github-actions-setup": "node scripts/github-actions-setup-pack.js",

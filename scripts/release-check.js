@@ -32,6 +32,7 @@ const liveWindowPlanSource = readFileSync("src/liveWindowPlan.js", "utf8");
 const launchMonitorScript = readFileSync("scripts/launch-monitor.js", "utf8");
 const finalVerificationScript = readFileSync("scripts/final-verification.js", "utf8");
 const operatorActionPackScript = readFileSync("scripts/operator-action-pack.js", "utf8");
+const operatorReadinessScript = readFileSync("scripts/operator-readiness.js", "utf8");
 const operatorUnblockCheckScript = readFileSync("scripts/operator-unblock-check.js", "utf8");
 const githubActionsSetupScript = readFileSync("scripts/github-actions-setup-pack.js", "utf8");
 const openapi = openApiSpec();
@@ -66,6 +67,7 @@ assert(packageJson.scripts?.["agentcash:refill-check"], "package must expose npm
 assert(packageJson.scripts?.["completion:audit"], "package must expose npm run completion:audit");
 assert(packageJson.scripts?.["completion:unblockers"], "package must expose npm run completion:unblockers");
 assert(packageJson.scripts?.["operator:unblock-report"], "package must expose npm run operator:unblock-report");
+assert(packageJson.scripts?.["operator:readiness"], "package must expose npm run operator:readiness");
 assert(packageJson.scripts?.["completion:actions"], "package must expose npm run completion:actions");
 assert(packageJson.scripts?.["deployment:preflight"], "package must expose npm run deployment:preflight");
 assert(packageJson.scripts?.["deployment:github-actions-setup"], "package must expose npm run deployment:github-actions-setup");
@@ -108,6 +110,7 @@ assert(existsSync("src/localAgentcashPolicy.js"), "local AgentCash policy guard 
 assert(existsSync("src/liveSmokeWindow.js"), "live smoke window module must exist");
 assert(existsSync("src/liveWindowPlan.js"), "live window planning module must exist");
 assert(existsSync("src/operatorActionPack.js"), "operator action pack module must exist");
+assert(existsSync("src/operatorReadiness.js"), "operator readiness module must exist");
 assert(existsSync("src/operatorUnblockReport.js"), "operator unblock report module must exist");
 assert(existsSync("src/deploymentPreflight.js"), "deployment preflight module must exist");
 assert(existsSync("src/githubActionsSetupPack.js"), "GitHub Actions setup pack module must exist");
@@ -149,6 +152,7 @@ assert(existsSync("scripts/agentcash-refill-check.js"), "AgentCash refill check 
 assert(existsSync("scripts/completion-audit.js"), "completion audit script must exist");
 assert(existsSync("scripts/operator-unblock-check.js"), "operator unblock check script must exist");
 assert(existsSync("scripts/operator-action-pack.js"), "operator action pack script must exist");
+assert(existsSync("scripts/operator-readiness.js"), "operator readiness script must exist");
 assert(existsSync("scripts/deployment-preflight.js"), "deployment preflight script must exist");
 assert(existsSync("scripts/github-actions-setup-pack.js"), "GitHub Actions setup pack script must exist");
 assert(existsSync("scripts/domain-activation-pack.js"), "domain activation pack script must exist");
@@ -216,6 +220,9 @@ assert(operatorActionPackScript.includes("args.local"), "operator action pack CL
 assert(readFileSync("src/operatorActionPack.js", "utf8").includes("evidenceCollectionPlan"), "operator action pack must aggregate final evidence collection steps");
 assert(readFileSync("src/operatorActionPack.js", "utf8").includes("nextBlockingActionId"), "operator action pack must expose the next blocking action");
 assert(readFileSync("src/operatorActionPack.js", "utf8").includes("proof402PreflightCommand"), "operator action pack must include Proof402 preflight in evidence collection");
+assert(operatorReadinessScript.includes("operatorReadiness"), "operator readiness CLI must call the reusable readiness module");
+assert(readFileSync("src/operatorReadiness.js", "utf8").includes("manualInputs"), "operator readiness must expose manual input gates");
+assert(readFileSync("src/operatorReadiness.js", "utf8").includes("localEnvDiagnostics"), "operator readiness must include local env diagnostics");
 assert(readFileSync("src/autonomousJob.js", "utf8").includes("candidatesForAutonomousRun"), "autonomous job must resolve candidates before quote when none are supplied");
 assert(readFileSync("src/resourceDiscovery.js", "utf8").includes("proof402.notarize"), "resource discovery must include Proof402 trusted seed candidate");
 assert(operatorUnblockCheckScript.includes("/api/operator/unblock-report"), "operator unblock CLI must support production API mode");
