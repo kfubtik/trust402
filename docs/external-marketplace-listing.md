@@ -33,7 +33,7 @@ approved.
 
 ## Current External Directory Visibility
 
-Last checked on 2026-05-20 at 14:34 +07:00 with:
+Last checked on 2026-05-20 at 14:50 +07:00 with:
 
 ```powershell
 npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
@@ -55,6 +55,8 @@ Interpretation:
 
 - CDP Bazaar remains the authoritative discovery signal for Trust402 right now
   and is currently `10/10` indexed;
+- the requested `trust402.vercel.app` external-directory attempt has been
+  completed; no monitored non-CDP directory visibly lists Trust402 yet;
 - Agentic.Market, x402scan, x402Bazaar, x402.org ecosystem, RelAI market,
   x402list.fun, Orbis API Marketplace, World.fun x402 Market, x402agency,
   Agent Bazaar, the402, x402-list.com, and Agora402 are monitored for public
