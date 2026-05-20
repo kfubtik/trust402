@@ -247,7 +247,8 @@ assert(githubActionsSetupScript.includes(".vercel/project.json"), "GitHub Action
 assert(githubActionsSetupScript.includes("githubActionsSetupPack"), "GitHub Actions setup CLI must use the reusable setup pack");
 assert(readFileSync("scripts/domain-activation-pack.js", "utf8").includes("/api/domains/activation-pack"), "domain activation CLI must support production API mode");
 assert(readFileSync("scripts/directory-submission-pack.js", "utf8").includes("/api/directories/submission-pack"), "directory submission CLI must support production API mode");
-assert(productionDeployWorkflow.includes("branches: [main]"), "production deploy workflow must run on main pushes");
+assert(productionDeployWorkflow.includes("workflow_dispatch"), "production deploy fallback workflow must be manually runnable");
+assert(!productionDeployWorkflow.includes("branches: [main]"), "production deploy fallback workflow must not run on every main push");
 assert(productionDeployWorkflow.includes("VERCEL_TOKEN"), "production deploy workflow must require VERCEL_TOKEN");
 assert(productionDeployWorkflow.includes("VERCEL_ORG_ID"), "production deploy workflow must require VERCEL_ORG_ID");
 assert(productionDeployWorkflow.includes("VERCEL_PROJECT_ID"), "production deploy workflow must require VERCEL_PROJECT_ID");

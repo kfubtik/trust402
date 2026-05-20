@@ -1,8 +1,9 @@
 name: vercel-production-deploy
 
 on:
-  push:
-    branches: [main]
+  # Manual fallback only. Production auto-deploys through the Vercel GitHub App;
+  # keeping this off push avoids failed checks when GitHub Actions deploy secrets
+  # are not configured.
   workflow_dispatch:
 
 concurrency:

@@ -297,15 +297,19 @@ not read secret values and does not mutate GitHub or Vercel.
 
 ### GitHub Actions Fallback Deploy
 
-If the Vercel GitHub App cannot access the private repository yet, the repo also
-contains a fallback production deploy workflow:
+If the Vercel GitHub App cannot access the private repository or a manual
+evidence deploy is needed, the repo also contains a fallback production deploy
+workflow:
 
 ```text
 .github/workflows/vercel-production-deploy.yml
 ```
 
-It runs on every push to `main` and on manual `workflow_dispatch`. It does not
-store Vercel credentials in the repository. Add these GitHub repository secrets:
+It runs only on manual `workflow_dispatch`; the normal push path is handled by
+the Vercel GitHub App. Keeping the fallback off push prevents missing GitHub
+Actions deploy secrets from turning every commit red. It does not store Vercel
+credentials in the repository. Add these GitHub repository secrets before using
+the manual fallback:
 
 ```text
 VERCEL_TOKEN
@@ -331,9 +335,10 @@ npm run smoke:x402
 npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000 --skip-directories --strict
 ```
 
-This fallback can produce the Git/Vercel evidence required by
-`/api/completion/audit` if a push to `main` creates a production deployment and
-the workflow checks pass. The workflow writes a public-safe
+This fallback can produce additional Git/Vercel evidence required by
+`/api/completion/audit` if a manual workflow run from `main` creates a
+production deployment and the workflow checks pass. The workflow writes a
+public-safe
 `deployment-evidence.json` file with schema
 `trust402.github_actions_deploy_evidence.v1` and uploads it in the
 `trust402-deployment-evidence` artifact only after the production smoke, x402

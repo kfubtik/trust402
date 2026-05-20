@@ -68,7 +68,7 @@ export function githubActionsSetupPack(input = {}, options = {}) {
       path: workflowPath,
       file: workflowFile,
       present: hasWorkflow,
-      expectedTrigger: "push to main and workflow_dispatch",
+      expectedTrigger: "manual workflow_dispatch only",
       productionAlias: baseUrl
     },
     vercelProject: {
@@ -112,12 +112,12 @@ export function githubActionsSetupPack(input = {}, options = {}) {
     },
     evidenceEnv: {
       TRUST402_GIT_AUTO_DEPLOY_VERIFIED: "true",
-      TRUST402_GIT_AUTO_DEPLOY_EVIDENCE_URL: "<GitHub Actions run URL or push-triggered Vercel deployment URL>",
-      TRUST402_GIT_AUTO_DEPLOY_COMMIT_SHA: gitHead || "<commit sha from the successful push-triggered run>"
+      TRUST402_GIT_AUTO_DEPLOY_EVIDENCE_URL: "<GitHub Actions run URL or Git-backed Vercel deployment URL>",
+      TRUST402_GIT_AUTO_DEPLOY_COMMIT_SHA: gitHead || "<commit sha from the successful deployment run>"
     },
     blockers: blockersFor({ hasProjectIds, hasWorkflow }),
     nextAction: hasProjectIds
-      ? "Add the three GitHub Actions secrets, trigger the workflow from main or push a commit, then record the run URL and commit SHA after production smoke passes."
+      ? "Add the three GitHub Actions secrets, trigger the workflow manually from main, then record the run URL and commit SHA after production smoke passes."
       : "Link the project with Vercel first or pass vercelProject.projectId and vercelProject.orgId from .vercel/project.json.",
     safety: {
       readOnly: true,

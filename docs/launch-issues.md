@@ -25,8 +25,9 @@ The full final Definition of Done is pinned in
 ## Current Safe State
 
 - Production URL: `https://trust402.vercel.app`.
-- Deployment mode: production is still updated through manual Vercel CLI runs;
-  push-triggered Git/Vercel auto-deploy evidence is still not verified.
+- Deployment mode: production now auto-deploys through the Vercel GitHub App
+  from `kfubtik/trust402` pushes to `main`. The Git/Vercel auto-deploy
+  requirement is verified in production audit.
 - Recent manual production deployment evidence snapshot:
   `dpl_9oUMANMVV69eJqQTzgDyr3tq57WK`, aliased to
   `https://trust402.vercel.app` as of 2026-05-20 09:49 +07:00. This deploy
@@ -38,20 +39,19 @@ The full final Definition of Done is pinned in
   split from `2acd266590fafcba88fb5be028bd8b5f6190430b`, the deployment-lag
   ledger update from `7ab25d1f7d259e1e114f964aacd49da7c22ee2a3`, and the
   final-verifier deployment sync gate from
-  `e613f801ac5cdd8d603e25dae78c0c3f5b5888d8`. Source-only evidence commits may
-  be ahead of production until the next successful deploy. Current GitHub HEAD
-  includes `42d08f8098281a542751de9c09f46645d47d0ca9`
-  (`Expose deployment metadata in health checks`), which has not reached
-  production yet because the follow-up Vercel deploy hit the free-plan daily
-  deployment limit (`more than 100`). Git/Vercel auto-deploy still is not
-  verified because the last successful production update was a manual Vercel CLI
-  deploy, not a push-triggered deployment.
-- The GitHub Actions fallback workflow now writes
+  `e613f801ac5cdd8d603e25dae78c0c3f5b5888d8`. Production has since advanced
+  through a Git-backed deploy from `kfubtik/trust402` to
+  `cf8bd96832c3fb38c0d3248381c054710278c1f9`
+  (`Record Git auto deploy evidence`), exposed by `/health` and recorded in
+  `TRUST402_GIT_AUTO_DEPLOY_*` production evidence env.
+- The GitHub Actions fallback workflow now runs only by manual
+  `workflow_dispatch`, writes
   `deployment-evidence.json` with schema
   `trust402.github_actions_deploy_evidence.v1` and uploads it as the
   `trust402-deployment-evidence` artifact after production smoke, x402 smoke,
   and launch monitor pass. After Actions secrets are configured, that artifact
-  should supply the run URL and head SHA for `TRUST402_GIT_AUTO_DEPLOY_*`.
+  can supply an extra run URL and head SHA for `TRUST402_GIT_AUTO_DEPLOY_*`
+  without running on every push.
 - Source HEAD now also exposes public-safe deployment metadata from `/health`
   when the runtime provides `VERCEL_GIT_COMMIT_SHA`, and the final verifier
   compares that SHA to the local HEAD when available. Production will expose
