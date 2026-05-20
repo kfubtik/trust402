@@ -437,11 +437,11 @@ Or from the CLI after rechecking candidate availability:
 
 ```powershell
 npm run domains:activation-pack -- https://trust402.vercel.app `
-  --selected-domain=trust402.dev `
+  --selected-domain=trust402.org `
   --selected-domain-available=true `
-  --selected-domain-price-usd=9.99 `
+  --selected-domain-price-usd=8.99 `
   --selected-domain-period-years=1 `
-  --selected-domain-purchase-url=https://vercel.com/domains/search?q=trust402.dev `
+  --selected-domain-purchase-url=https://vercel.com/domains/search?q=trust402.org `
   --availability-source=vercel-domain-check
 ```
 

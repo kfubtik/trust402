@@ -1630,12 +1630,12 @@ function exampleFor(id) {
   if (id === "domains.activation_pack") {
     return {
       baseUrl: "https://trust402.vercel.app",
-      selectedDomain: "trust402.dev",
-      candidateDomains: ["trust402.dev", "trust402.xyz", "trust402.org"],
+      selectedDomain: "trust402.org",
+      candidateDomains: ["trust402.org", "trust402.dev", "trust402.xyz"],
       selectedDomainAvailable: true,
-      selectedDomainPriceUsd: 9.99,
+      selectedDomainPriceUsd: 8.99,
       selectedDomainPeriodYears: 1,
-      selectedDomainPurchaseUrl: "https://vercel.com/domains/search?q=trust402.dev",
+      selectedDomainPurchaseUrl: "https://vercel.com/domains/search?q=trust402.org",
       availabilitySource: "vercel-domain-check"
     };
   }

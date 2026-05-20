@@ -3,9 +3,12 @@ import { sha256Json } from "./hash.js";
 
 const DEFAULT_BASE_URL = "https://trust402.vercel.app";
 const DEFAULT_CANDIDATES = [
+  "trust402.org",
   "trust402.dev",
   "trust402.xyz",
-  "trust402.org",
+  "trust402.net",
+  "trust402.io",
+  "trust402.ai",
   "gettrust402.com",
   "trust402agent.com"
 ];
@@ -35,8 +38,14 @@ export function domainActivationPack(input = {}, options = {}) {
   const candidates = candidateDomains.map((domain) => candidatePlan(domain, availability.byDomain));
   const selected = selectedDomain
     ? candidatePlan(selectedDomain, availability.byDomain)
-    : candidates.find((candidate) => candidate.acceptedByPolicy) || null;
-  const desiredBaseUrl = selected?.acceptedByPolicy ? `https://${selected.domain}` : "https://<custom-trust402-domain>";
+    : currentHost.ready
+      ? null
+      : candidates.find((candidate) => candidate.acceptedByPolicy) || null;
+  const desiredBaseUrl = currentHost.ready && !selected
+    ? baseUrl
+    : selected?.acceptedByPolicy
+      ? `https://${selected.domain}`
+      : "https://<custom-trust402-domain>";
   const blockers = blockersFor({ currentHost, selected, selectedDomain });
   const packCore = {
     baseUrl,

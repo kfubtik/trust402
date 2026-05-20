@@ -33,10 +33,10 @@ approved.
 
 ## Current External Directory Visibility
 
-Last checked on 2026-05-20 at 07:03:14 +07:00 with:
+Last checked on 2026-05-20 at 14:34 +07:00 with:
 
 ```powershell
-npm run directories:check -- https://trust402.vercel.app --timeout-ms=5000
+npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
 ```
 
 Result:
@@ -202,13 +202,14 @@ Action:
   domain passes x402 smoke.
 
 Custom domain candidates checked through the Vercel domain tool on 2026-05-20
-at 07:29 +07:
+at 14:38 +07:
 
 | Domain | Status | Price / period | Purchase URL |
 | --- | --- | --- | --- |
-| `trust402.dev` | available, recommended | `$9.99 / 1 year` | `https://vercel.com/domains/search?q=trust402.dev` |
 | `trust402.xyz` | available, cheapest | `$1.99 / 1 year` | `https://vercel.com/domains/search?q=trust402.xyz` |
-| `trust402.app` | available | `$9.99 / 1 year` | `https://vercel.com/domains/search?q=trust402.app` |
+| `trust402.org` | available, recommended balance | `$8.99 / 1 year` | `https://vercel.com/domains/search?q=trust402.org` |
+| `trust402.dev` | available, developer-oriented | `$9.99 / 1 year` | `https://vercel.com/domains/search?q=trust402.dev` |
+| `trust402.net` | available | `$13.50 / 1 year` | `https://vercel.com/domains/search?q=trust402.net` |
 | `trust402.io` | available | `$37.99 / 1 year` | `https://vercel.com/domains/search?q=trust402.io` |
 | `trust402.ai` | available | `$160 / 2 years` | `https://vercel.com/domains/search?q=trust402.ai` |
 
@@ -218,12 +219,18 @@ Read-only activation pack for the preferred candidate:
 
 ```powershell
 npm run domains:activation-pack -- https://trust402.vercel.app `
-  --selected-domain=trust402.dev `
+  --selected-domain=trust402.org `
   --selected-domain-available=true `
-  --selected-domain-price-usd=9.99 `
+  --selected-domain-price-usd=8.99 `
   --selected-domain-period-years=1 `
-  --selected-domain-purchase-url=https://vercel.com/domains/search?q=trust402.dev `
+  --selected-domain-purchase-url=https://vercel.com/domains/search?q=trust402.org `
   --availability-source=vercel-domain-check
+```
+
+Latest read-only activation pack hash for `trust402.org`:
+
+```text
+sha256:b3dbbbc0d944621f864debb0bf0b32f72dd8f3bac27cbc2a7a5a34d1249accab
 ```
 
 Useful public URLs:
