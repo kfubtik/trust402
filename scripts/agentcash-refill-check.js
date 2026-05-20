@@ -61,7 +61,12 @@ const output = {
 };
 
 console.log(JSON.stringify(output, null, 2));
-if (failures.length > 0 || output.decision.action === "collect-balance") process.exit(1);
+
+const localPolicyRequired = Boolean(policy) ||
+  args.requireLocalPolicy === "true" ||
+  args.strictLocalPolicy === "true" ||
+  args.mode === "live";
+if ((localPolicyRequired && failures.length > 0) || output.decision.action === "collect-balance") process.exit(1);
 
 function parseArgs(values) {
   const parsed = {};
