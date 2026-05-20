@@ -34,6 +34,12 @@ The full final Definition of Done is pinned in
   (`Add AgentCash refill audit bundle`). Treat the latest
   `deployment:preflight` output and `vercel inspect https://trust402.vercel.app`
   as the source of truth after any later deploy.
+- Current GitHub `origin/main` includes commit
+  `2acd266590fafcba88fb5be028bd8b5f6190430b`
+  (`Split deployment preflight requirement evidence`), which separates
+  Git/Vercel auto-deploy evidence from custom-domain evidence. Production does
+  not include that commit yet because the follow-up Vercel deploy attempt hit
+  the free-plan daily deployment limit (`more than 100`).
 - CDP Bazaar indexing: 10/10 paid launch resources verified as of
   2026-05-20 04:41:54 +07:00. The checker now uses bounded concurrency so
   CDP discovery latency does not create false launch-monitor timeouts.
