@@ -333,8 +333,20 @@ npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000 --skip-
 
 This fallback can produce the Git/Vercel evidence required by
 `/api/completion/audit` if a push to `main` creates a production deployment and
-the workflow checks pass. Record the workflow run URL or Vercel deployment URL
-in `TRUST402_GIT_AUTO_DEPLOY_EVIDENCE_URL`.
+the workflow checks pass. The workflow writes a public-safe
+`deployment-evidence.json` file with schema
+`trust402.github_actions_deploy_evidence.v1` and uploads it in the
+`trust402-deployment-evidence` artifact only after the production smoke, x402
+smoke, and launch monitor pass. Use its `runUrl` and `headSha` fields for:
+
+```text
+TRUST402_GIT_AUTO_DEPLOY_VERIFIED=true
+TRUST402_GIT_AUTO_DEPLOY_EVIDENCE_URL=<deployment-evidence.json runUrl>
+TRUST402_GIT_AUTO_DEPLOY_COMMIT_SHA=<deployment-evidence.json headSha>
+```
+
+The same values are also printed in the GitHub Actions job summary. Do not set
+them from a failed or cancelled workflow run.
 
 ## Operator Unblock Check
 

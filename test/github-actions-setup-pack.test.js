@@ -25,6 +25,13 @@ test("githubActionsSetupPack emits exact setup commands without secret values", 
     "VERCEL_ORG_ID",
     "VERCEL_PROJECT_ID"
   ]);
+  assert.equal(pack.githubActions.deploymentEvidenceArtifact.name, "trust402-deployment-evidence");
+  assert.equal(pack.githubActions.deploymentEvidenceArtifact.schema, "trust402.github_actions_deploy_evidence.v1");
+  assert.ok(pack.githubActions.deploymentEvidenceArtifact.requiredFields.includes("headSha"));
+  assert.equal(
+    pack.githubActions.deploymentEvidenceArtifact.evidenceEnvMapping.TRUST402_GIT_AUTO_DEPLOY_COMMIT_SHA,
+    "deployment-evidence.json headSha"
+  );
   assert.ok(pack.githubActions.commandPlan.setupSecrets.includes(
     'gh secret set VERCEL_ORG_ID --repo kfubtik/trust402 --body "team_123"'
   ));
@@ -36,6 +43,9 @@ test("githubActionsSetupPack emits exact setup commands without secret values", 
   ));
   assert.ok(pack.githubActions.commandPlan.triggerAndVerify.some((item) =>
     item.includes("gh workflow run vercel-production-deploy.yml")
+  ));
+  assert.ok(pack.githubActions.commandPlan.evidenceCapture.some((item) =>
+    item.includes("gh run download") && item.includes("trust402-deployment-evidence")
   ));
   assert.equal(pack.evidenceEnv.TRUST402_GIT_AUTO_DEPLOY_COMMIT_SHA, "abc1234");
   assert.equal(JSON.stringify(pack).includes("real-token-value"), false);

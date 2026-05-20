@@ -9,6 +9,8 @@ const REQUIRED_SECRET_NAMES = [
   "VERCEL_ORG_ID",
   "VERCEL_PROJECT_ID"
 ];
+const DEPLOYMENT_EVIDENCE_ARTIFACT = "trust402-deployment-evidence";
+const DEPLOYMENT_EVIDENCE_SCHEMA = "trust402.github_actions_deploy_evidence.v1";
 
 export function githubActionsSetupPack(input = {}, options = {}) {
   const cfg = options.config || config;
@@ -38,6 +40,7 @@ export function githubActionsSetupPack(input = {}, options = {}) {
     ],
     evidenceCapture: [
       `gh run list --repo ${repo} --workflow ${workflowFile} --limit 1 --json url,headSha,status,conclusion,event`,
+      `gh run download --repo ${repo} --name ${DEPLOYMENT_EVIDENCE_ARTIFACT} --dir .local/github-actions-evidence`,
       `npm run deployment:preflight -- ${baseUrl} --probe-github-cli --probe-vercel-api`
     ]
   };
@@ -48,6 +51,8 @@ export function githubActionsSetupPack(input = {}, options = {}) {
     status,
     projectKnown: hasProjectIds,
     requiredSecretNames: REQUIRED_SECRET_NAMES,
+    deploymentEvidenceArtifact: DEPLOYMENT_EVIDENCE_ARTIFACT,
+    deploymentEvidenceSchema: DEPLOYMENT_EVIDENCE_SCHEMA,
     gitHead: gitHead || null
   };
 
@@ -76,6 +81,26 @@ export function githubActionsSetupPack(input = {}, options = {}) {
     },
     githubActions: {
       requiredSecretNames: REQUIRED_SECRET_NAMES,
+      deploymentEvidenceArtifact: {
+        name: DEPLOYMENT_EVIDENCE_ARTIFACT,
+        files: [
+          "deployment-url.txt",
+          "deployment-evidence.json"
+        ],
+        schema: DEPLOYMENT_EVIDENCE_SCHEMA,
+        requiredFields: [
+          "schema",
+          "runUrl",
+          "headSha",
+          "deploymentUrl",
+          "productionAlias"
+        ],
+        evidenceEnvMapping: {
+          TRUST402_GIT_AUTO_DEPLOY_VERIFIED: "true after the workflow completes and production smoke passes",
+          TRUST402_GIT_AUTO_DEPLOY_EVIDENCE_URL: "deployment-evidence.json runUrl",
+          TRUST402_GIT_AUTO_DEPLOY_COMMIT_SHA: "deployment-evidence.json headSha"
+        }
+      },
       secretValuePolicy: {
         VERCEL_TOKEN: "never print; paste locally into GitHub secret storage",
         VERCEL_ORG_ID: "non-secret project link id from .vercel/project.json",

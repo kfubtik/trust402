@@ -37,6 +37,7 @@ const operatorActionPackScript = readFileSync("scripts/operator-action-pack.js",
 const operatorReadinessScript = readFileSync("scripts/operator-readiness.js", "utf8");
 const operatorUnblockCheckScript = readFileSync("scripts/operator-unblock-check.js", "utf8");
 const githubActionsSetupScript = readFileSync("scripts/github-actions-setup-pack.js", "utf8");
+const githubActionsSetupSource = readFileSync("src/githubActionsSetupPack.js", "utf8");
 const openapi = openApiSpec();
 const wellKnown = x402WellKnown();
 const checklist = launchChecklist();
@@ -253,6 +254,10 @@ assert(productionDeployWorkflow.includes("vercel@latest deploy --prebuilt --prod
 assert(productionDeployWorkflow.includes("npm run release:check"), "production deploy workflow must run release checks before deploying");
 assert(productionDeployWorkflow.includes("npm run smoke:x402 -- https://trust402.vercel.app"), "production deploy workflow must run production x402 smoke");
 assert(productionDeployWorkflow.includes("npm run launch:monitor -- https://trust402.vercel.app"), "production deploy workflow must run production launch monitor");
+assert(productionDeployWorkflow.includes("deployment-evidence.json"), "production deploy workflow must write machine-readable deployment evidence");
+assert(productionDeployWorkflow.includes("trust402.github_actions_deploy_evidence.v1"), "production deploy workflow must version deployment evidence schema");
+assert(productionDeployWorkflow.includes("actions/upload-artifact@v4"), "production deploy workflow must upload deployment evidence artifact");
+assert(githubActionsSetupSource.includes("trust402-deployment-evidence"), "GitHub Actions setup pack must describe deployment evidence artifact retrieval");
 assert(dependabot.includes("package-ecosystem: npm"), "Dependabot must monitor npm dependencies");
 assert(dependabot.includes("package-ecosystem: github-actions"), "Dependabot must monitor GitHub Actions");
 assert(launchIssues.includes("https://github.com/kfubtik/trust402/issues/5"), "launch issues must track Vercel Git auto-deploy");

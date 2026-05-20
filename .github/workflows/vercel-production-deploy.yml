@@ -47,9 +47,30 @@ jobs:
         id: deploy
         run: |
           set -euo pipefail
-          npx vercel@latest deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} | tee deployment-output.txt
-          tail -n 1 deployment-output.txt > deployment-url.txt
-          echo "url=$(cat deployment-url.txt)" >> "$GITHUB_OUTPUT"
+          deployment_url="$(npx vercel@latest deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} | tee deployment-output.txt | grep -Eo 'https://[^ ]+\.vercel\.app' | tail -n 1)"
+          test -n "$deployment_url"
+          printf "%s\n" "$deployment_url" > deployment-url.txt
+          echo "url=$deployment_url" >> "$GITHUB_OUTPUT"
+
+      - name: Record deployment evidence
+        run: |
+          node -e "const fs=require('fs'); const deploymentUrl=fs.readFileSync('deployment-url.txt','utf8').trim(); const evidence={schema:'trust402.github_actions_deploy_evidence.v1', repository:process.env.GITHUB_REPOSITORY, workflow:process.env.GITHUB_WORKFLOW, runId:process.env.GITHUB_RUN_ID, runAttempt:process.env.GITHUB_RUN_ATTEMPT, runUrl:process.env.GITHUB_SERVER_URL+'/'+process.env.GITHUB_REPOSITORY+'/actions/runs/'+process.env.GITHUB_RUN_ID, event:process.env.GITHUB_EVENT_NAME, ref:process.env.GITHUB_REF, headSha:process.env.GITHUB_SHA, deploymentUrl, productionAlias:'https://trust402.vercel.app', generatedAt:new Date().toISOString()}; fs.writeFileSync('deployment-evidence.json', JSON.stringify(evidence,null,2));"
+          {
+            echo "### Trust402 production deploy evidence"
+            echo ""
+            echo "- Run URL: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "- Commit SHA: $GITHUB_SHA"
+            echo "- Deployment URL: $(cat deployment-url.txt)"
+            echo "- Production alias: https://trust402.vercel.app"
+            echo ""
+            echo "Suggested production env after all checks pass:"
+            echo ""
+            echo '```text'
+            echo "TRUST402_GIT_AUTO_DEPLOY_VERIFIED=true"
+            echo "TRUST402_GIT_AUTO_DEPLOY_EVIDENCE_URL=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "TRUST402_GIT_AUTO_DEPLOY_COMMIT_SHA=$GITHUB_SHA"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Smoke deployment URL
         run: npm run smoke -- "${{ steps.deploy.outputs.url }}"
@@ -61,3 +82,13 @@ jobs:
 
       - name: Production launch monitor
         run: npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000 --skip-directories --strict
+
+      - name: Upload deployment evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: trust402-deployment-evidence
+          path: |
+            deployment-url.txt
+            deployment-evidence.json
+          if-no-files-found: error
+          retention-days: 30
