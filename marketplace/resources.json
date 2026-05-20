@@ -249,6 +249,14 @@
       "purpose": "Expose the current public-safe completion blockers and next actions directly from the production runtime."
     },
     {
+      "id": "operator.readiness",
+      "method": "GET/POST",
+      "path": "/api/operator/readiness",
+      "priceUsd": 0,
+      "status": "dry-run-helper",
+      "purpose": "Expose a production-safe readiness profile for env gates, wallet policy, payment runtime, directory evidence, and final live-evidence blockers."
+    },
+    {
       "id": "jobs.autonomous_run",
       "method": "POST",
       "path": "/api/jobs/autonomous-run",

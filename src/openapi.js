@@ -288,6 +288,34 @@ export function openApiSpec() {
         }
       }
     },
+    "/api/operator/readiness": {
+      get: {
+        operationId: "operator_readiness_get",
+        summary: "Read a public-safe production readiness profile for live evidence blockers",
+        tags: ["Trust402"],
+        responses: {
+          "200": jsonResponse
+        }
+      },
+      post: {
+        operationId: "operator_readiness",
+        summary: "Generate a public-safe operator readiness profile for a proposed live evidence window",
+        tags: ["Trust402"],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: requestSchemaFor("operator.readiness"),
+              example: exampleFor("operator.readiness")
+            }
+          }
+        },
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse
+        }
+      }
+    },
     "/api/resources": getPath("Public Trust402 resource catalog"),
     "/api/live/window-plan": {
       post: {
@@ -1289,6 +1317,10 @@ function requestSchemaFor(id) {
     return operatorPlanningSchema();
   }
 
+  if (id === "operator.readiness") {
+    return operatorPlanningSchema();
+  }
+
   if (id === "monitor.snapshot") {
     return {
       type: "object",
@@ -1662,6 +1694,16 @@ function exampleFor(id) {
       proofReserveUsd: 0.01,
       includeProof: true,
       includeAutonomous: false
+    };
+  }
+  if (id === "operator.readiness") {
+    return {
+      baseUrl: "https://trust402.vercel.app",
+      candidateEndpoint: "https://proof402.vercel.app/api/proof/notarize",
+      candidatePriceUsd: 0.005,
+      proofReserveUsd: 0.005,
+      includeProof: true,
+      paymentProvider: "cdp-x402"
     };
   }
   if (id === "monitor.snapshot") {

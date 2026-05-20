@@ -71,6 +71,65 @@ export function localEnvDiagnostics(input = {}) {
   };
 }
 
+export function runtimeEnvDiagnostics(runtimeConfig = {}) {
+  const keyStatus = {
+    CDP_API_KEY_ID: runtimeStatus(runtimeConfig.cdpApiKeyIdConfigured),
+    CDP_API_KEY_SECRET: runtimeStatus(runtimeConfig.cdpApiKeySecretConfigured),
+    CDP_WALLET_SECRET: runtimeStatus(runtimeConfig.cdpWalletSecretConfigured),
+    CDP_EVM_ACCOUNT_ADDRESS: runtimeStatus(Boolean(runtimeConfig.cdpEvmAccountAddress)),
+    CDP_EVM_ACCOUNT_NAME: runtimeStatus(Boolean(runtimeConfig.cdpEvmAccountName)),
+    LIVE_PAYMENT_PROVIDER: runtimeStatus(isLivePaymentProvider(runtimeConfig.livePaymentProvider)),
+    LIVE_PAYMENT_ADAPTER_URL: runtimeStatus(Boolean(runtimeConfig.livePaymentAdapterUrl)),
+    LIVE_SPEND_ENABLED: runtimeStatus(runtimeConfig.liveSpendEnabled === true),
+    LIVE_ALLOWED_REGISTRIES: runtimeStatus(Array.isArray(runtimeConfig.liveAllowedRegistries) && runtimeConfig.liveAllowedRegistries.length > 0),
+    TRUST402_OPERATOR_API_KEY: runtimeStatus(Boolean(runtimeConfig.operatorApiKey)),
+    PROOF402_DELEGATION_MODE: runtimeStatus(runtimeConfig.proof402DelegationMode === "live"),
+    PROOF402_MAX_SPEND_USD: runtimeStatus(Number(runtimeConfig.proof402MaxSpendUsd) > 0),
+    AGENTCASH_AUTO_REFILL_APPROVED: runtimeStatus(runtimeConfig.agentcashAutoRefillApproved === true),
+    AGENTCASH_AUTO_REFILL_ENABLED: runtimeStatus(runtimeConfig.agentcashAutoRefillEnabled === true),
+    AGENTCASH_AUTO_REFILL_PROVIDER: runtimeStatus(Boolean(runtimeConfig.agentcashAutoRefillProvider))
+  };
+
+  return {
+    ok: true,
+    tool: "runtime.env_diagnostics",
+    generatedAt: new Date().toISOString(),
+    source: "runtime-config",
+    present: true,
+    keys: keyStatus,
+    readiness: {
+      cdpX402Buyer: readinessFor(keyStatus, [
+        "CDP_API_KEY_ID",
+        "CDP_API_KEY_SECRET",
+        "CDP_WALLET_SECRET"
+      ], ["CDP_EVM_ACCOUNT_ADDRESS", "CDP_EVM_ACCOUNT_NAME"]),
+      agentcashBridge: readinessFor(keyStatus, ["LIVE_PAYMENT_ADAPTER_URL"]),
+      liveSpendPolicy: readinessFor(keyStatus, [
+        "LIVE_SPEND_ENABLED",
+        "LIVE_ALLOWED_REGISTRIES",
+        "TRUST402_OPERATOR_API_KEY"
+      ]),
+      proof402Delegation: readinessFor(keyStatus, [
+        "PROOF402_DELEGATION_MODE",
+        "PROOF402_MAX_SPEND_USD"
+      ]),
+      agentcashAutoRefill: readinessFor(keyStatus, [
+        "AGENTCASH_AUTO_REFILL_APPROVED",
+        "AGENTCASH_AUTO_REFILL_ENABLED",
+        "AGENTCASH_AUTO_REFILL_PROVIDER"
+      ])
+    },
+    safety: {
+      printsValues: false,
+      printsLengths: false,
+      sendsValues: false,
+      storesValues: false,
+      mutatesEnvFile: false,
+      readsEnvFile: false
+    }
+  };
+}
+
 function parseEnvFile(text) {
   const values = {};
   for (const line of String(text || "").split(/\r?\n/)) {
@@ -93,6 +152,18 @@ function statusFor(values, key) {
     nonEmpty: present && value.length > 0,
     placeholderLike: present && isPlaceholderLike(value)
   };
+}
+
+function runtimeStatus(usable) {
+  return {
+    present: Boolean(usable),
+    nonEmpty: Boolean(usable),
+    placeholderLike: false
+  };
+}
+
+function isLivePaymentProvider(value) {
+  return ["agentcash-mcp", "cdp-x402", "x402-fetch", "external-adapter"].includes(value);
 }
 
 function readinessFor(status, requiredAll = [], requiredAny = []) {

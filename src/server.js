@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { createServer } from "node:http";
 import { config, isMockPaywallEnabled } from "./config.js";
+import { runtimeEnvDiagnostics } from "./envDiagnostics.js";
 import { agentcashRefillCheck } from "./agentcashRefill.js";
 import { agentcashMcpObservation } from "./agentcashMcpObservation.js";
 import { paidResourceByPath, publicResources } from "./catalog.js";
@@ -40,6 +41,7 @@ import { directorySubmissionPack } from "./directorySubmissionPack.js";
 import { directoryProfile, directoryProfileHtml } from "./directoryProfile.js";
 import { liveWindowPlan } from "./liveWindowPlan.js";
 import { operatorActionPack } from "./operatorActionPack.js";
+import { operatorReadiness } from "./operatorReadiness.js";
 import { operatorUnblockReport } from "./operatorUnblockReport.js";
 import {
   checkX402,
@@ -67,6 +69,7 @@ const routes = new Map([
   ["POST /api/directories/submission-pack", directorySubmissionPack],
   ["POST /api/operator/unblock-report", operatorUnblockReport],
   ["POST /api/operator/action-pack", operatorActionPack],
+  ["POST /api/operator/readiness", operatorReadinessHandler],
   ["POST /api/jobs/autonomous-run", autonomousRun],
   ["POST /api/registries/candidates", discoverResourceCandidates],
   ["POST /api/agentcash/refill-check", agentcashRefillCheck],
@@ -123,6 +126,7 @@ export async function handleTrust402Request(req, res) {
           liveWindowPlan: "/api/live/window-plan",
           operatorUnblockReport: "/api/operator/unblock-report",
           operatorActionPack: "/api/operator/action-pack",
+          operatorReadiness: "/api/operator/readiness",
           agentcashRefillCheck: "/api/agentcash/refill-check",
           agentcashMcpObservation: "/api/agentcash/mcp-observation",
           autonomousRun: "/api/jobs/autonomous-run",
@@ -233,6 +237,10 @@ export async function handleTrust402Request(req, res) {
       return sendJson(res, 200, operatorUnblockReport());
     }
 
+    if (req.method === "GET" && path === "/api/operator/readiness") {
+      return sendJson(res, 200, operatorReadinessHandler());
+    }
+
     if (req.method === "GET" && path === "/api/registries/candidates") {
       return sendJson(res, 200, await discoverResourceCandidates());
     }
@@ -294,6 +302,13 @@ export async function handleTrust402Request(req, res) {
     const status = error instanceof ApiError ? error.status : 500;
     return sendJson(res, status, errorBody(error));
   }
+}
+
+function operatorReadinessHandler(input = {}) {
+  return operatorReadiness(input, {
+    config,
+    envDiagnostics: runtimeEnvDiagnostics(config)
+  });
 }
 
 function statusSummary() {

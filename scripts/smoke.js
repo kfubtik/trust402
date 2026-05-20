@@ -208,6 +208,13 @@ async function main() {
     "/api/operator/unblock-report must include external directory check"
   );
 
+  const readinessGet = await getJson("/api/operator/readiness");
+  assert(readinessGet.tool === "operator.readiness", "/api/operator/readiness GET tool mismatch");
+  assert(readinessGet.envDiagnostics?.tool === "runtime.env_diagnostics", "/api/operator/readiness must use runtime diagnostics");
+  assert(readinessGet.safety?.readOnly === true, "/api/operator/readiness must be read-only");
+  assert(readinessGet.safety?.includesSecretValues === false, "/api/operator/readiness must not include secrets");
+  assert(readinessGet.safety?.sendsPaymentHeaders === false, "/api/operator/readiness must not send payment headers");
+
   const registryCandidatesGet = await getJson("/api/registries/candidates");
   assert(registryCandidatesGet.tool === "registries.candidates", "/api/registries/candidates GET tool mismatch");
   assert(registryCandidatesGet.safety?.readOnly === true, "/api/registries/candidates must be read-only");
@@ -299,6 +306,19 @@ async function main() {
   assert(unblockPost.safety?.readOnly === true, "/api/operator/unblock-report POST must be read-only");
   assert(unblockPost.safety?.mutatesWallet === false, "/api/operator/unblock-report POST must not mutate wallet");
 
+  const readinessPost = await postJson("/api/operator/readiness", {
+    baseUrl,
+    candidateEndpoint: "https://proof402.vercel.app/api/proof/notarize",
+    candidatePriceUsd: 0.005,
+    proofReserveUsd: 0.005,
+    includeProof: true,
+    paymentProvider: "cdp-x402"
+  });
+  assert(readinessPost.tool === "operator.readiness", "/api/operator/readiness POST tool mismatch");
+  assert(readinessPost.paymentProvider?.selected === "cdp-x402", "/api/operator/readiness must accept selected payment provider");
+  assert(readinessPost.safety?.includesPrivateKeys === false, "/api/operator/readiness must not include private keys");
+  assert(readinessPost.safety?.mutatesWallet === false, "/api/operator/readiness POST must not mutate wallet");
+
   const actionPack = await postJson("/api/operator/action-pack", {
     candidateEndpoint: "https://trusted.example/api/paid",
     candidatePriceUsd: 0.01,
@@ -337,6 +357,8 @@ async function main() {
   assert(openapi.paths?.["/api/operator/unblock-report"]?.get, "/openapi missing operator unblock report GET");
   assert(openapi.paths?.["/api/operator/unblock-report"]?.post, "/openapi missing operator unblock report POST");
   assert(openapi.paths?.["/api/operator/action-pack"]?.post, "/openapi missing operator action pack");
+  assert(openapi.paths?.["/api/operator/readiness"]?.get, "/openapi missing operator readiness GET");
+  assert(openapi.paths?.["/api/operator/readiness"]?.post, "/openapi missing operator readiness POST");
   assert(openapi.paths?.["/api/registries/candidates"]?.get, "/openapi missing registry candidates GET");
   assert(openapi.paths?.["/api/registries/candidates"]?.post, "/openapi missing registry candidates POST");
   assert(openapi.paths?.["/api/jobs/autonomous-run"]?.post, "/openapi missing autonomous run");

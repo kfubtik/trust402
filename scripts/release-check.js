@@ -199,6 +199,7 @@ assert(smokeScript.includes("/api/directories/submission-pack"), "smoke script m
 assert(smokeScript.includes("/api/live/window-plan"), "smoke script must cover live window plan");
 assert(smokeScript.includes("/api/operator/unblock-report"), "smoke script must cover operator unblock report");
 assert(smokeScript.includes("/api/operator/action-pack"), "smoke script must cover operator action pack");
+assert(smokeScript.includes("/api/operator/readiness"), "smoke script must cover operator readiness profile");
 assert(smokeScript.includes("/api/registries/candidates"), "smoke script must cover registry candidate discovery");
 assert(smokeScript.includes("/.well-known/agent.json"), "smoke script must cover agent manifest discovery");
 assert(smokeScript.includes("/llms.txt"), "smoke script must cover llms.txt discovery");
@@ -223,6 +224,8 @@ assert(readFileSync("src/operatorActionPack.js", "utf8").includes("proof402Prefl
 assert(operatorReadinessScript.includes("operatorReadiness"), "operator readiness CLI must call the reusable readiness module");
 assert(readFileSync("src/operatorReadiness.js", "utf8").includes("manualInputs"), "operator readiness must expose manual input gates");
 assert(readFileSync("src/operatorReadiness.js", "utf8").includes("localEnvDiagnostics"), "operator readiness must include local env diagnostics");
+assert(readFileSync("src/envDiagnostics.js", "utf8").includes("runtimeEnvDiagnostics"), "env diagnostics must expose a runtime-safe variant");
+assert(readFileSync("src/server.js", "utf8").includes("runtimeEnvDiagnostics(config)"), "operator readiness API must use runtime env diagnostics");
 assert(readFileSync("src/autonomousJob.js", "utf8").includes("candidatesForAutonomousRun"), "autonomous job must resolve candidates before quote when none are supplied");
 assert(readFileSync("src/resourceDiscovery.js", "utf8").includes("proof402.notarize"), "resource discovery must include Proof402 trusted seed candidate");
 assert(operatorUnblockCheckScript.includes("/api/operator/unblock-report"), "operator unblock CLI must support production API mode");
@@ -330,6 +333,10 @@ assert(
   "free operator action pack helper must exist"
 );
 assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/operator/readiness" && resource.priceUsd === 0),
+  "free operator readiness helper must exist"
+);
+assert(
   catalog.freeResources.some((resource) => resource.path === "/api/jobs/autonomous-run" && resource.priceUsd === 0),
   "free autonomous dry-run helper must exist"
 );
@@ -391,6 +398,8 @@ assert(openapi.paths?.["/api/live/window-plan"]?.post, "live window plan must be
 assert(openapi.paths?.["/api/operator/unblock-report"]?.get, "operator unblock report GET must be present in OpenAPI");
 assert(openapi.paths?.["/api/operator/unblock-report"]?.post, "operator unblock report POST must be present in OpenAPI");
 assert(openapi.paths?.["/api/operator/action-pack"]?.post, "operator action pack must be present in OpenAPI");
+assert(openapi.paths?.["/api/operator/readiness"]?.get, "operator readiness GET must be present in OpenAPI");
+assert(openapi.paths?.["/api/operator/readiness"]?.post, "operator readiness POST must be present in OpenAPI");
 assert(openapi.paths?.["/api/registries/candidates"]?.get, "registry candidates GET must be present in OpenAPI");
 assert(openapi.paths?.["/api/registries/candidates"]?.post, "registry candidates POST must be present in OpenAPI");
 assert(JSON.stringify(openapi.paths["/api/live/window-plan"]).includes("liveSpentTodayUsd"), "live window plan OpenAPI must expose spent-today input");
@@ -505,6 +514,10 @@ assert(
 assert(
   !openapi.paths["/api/operator/action-pack"].post["x-payment-info"],
   "operator action pack helper must not require payment"
+);
+assert(
+  !openapi.paths["/api/operator/readiness"].post["x-payment-info"],
+  "operator readiness helper must not require payment"
 );
 assert(
   !openapi.paths["/api/registries/candidates"].post["x-payment-info"],

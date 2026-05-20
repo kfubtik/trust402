@@ -49,6 +49,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/live/window-plan"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/operator/unblock-report"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/operator/action-pack"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/operator/readiness"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/jobs/autonomous-run"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/registries/candidates"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/agentcash/refill-check"));
@@ -166,6 +167,14 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(unblockGet.body.safety.sendsPaymentHeaders, false);
     assert.ok(unblockGet.body.checks.some((item) => item.id === "external_x402_directories"));
 
+    const readinessGet = await request(baseUrl, "/api/operator/readiness");
+    assert.equal(readinessGet.response.status, 200);
+    assert.equal(readinessGet.body.tool, "operator.readiness");
+    assert.equal(readinessGet.body.envDiagnostics.tool, "runtime.env_diagnostics");
+    assert.equal(readinessGet.body.safety.readOnly, true);
+    assert.equal(readinessGet.body.safety.includesSecretValues, false);
+    assert.equal(readinessGet.body.safety.mutatesWallet, false);
+
     const registryCandidatesGet = await request(baseUrl, "/api/registries/candidates");
     assert.equal(registryCandidatesGet.response.status, 200);
     assert.equal(registryCandidatesGet.body.tool, "registries.candidates");
@@ -218,6 +227,8 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/api/operator/unblock-report"].get);
     assert.ok(openapi.body.paths["/api/operator/unblock-report"].post);
     assert.ok(openapi.body.paths["/api/operator/action-pack"].post);
+    assert.ok(openapi.body.paths["/api/operator/readiness"].get);
+    assert.ok(openapi.body.paths["/api/operator/readiness"].post);
     assert.ok(openapi.body.paths["/api/registries/candidates"].get);
     assert.ok(openapi.body.paths["/api/registries/candidates"].post);
     assert.ok(openapi.body.paths["/api/jobs/autonomous-run"].post);
@@ -433,6 +444,22 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(unblockPost.body.tool, "operator.unblock_report");
     assert.equal(unblockPost.body.safety.readOnly, true);
     assert.equal(unblockPost.body.safety.mutatesWallet, false);
+
+    const readinessPost = await request(baseUrl, "/api/operator/readiness", {
+      method: "POST",
+      body: JSON.stringify({
+        candidateEndpoint: "https://proof402.vercel.app/api/proof/notarize",
+        candidatePriceUsd: 0.005,
+        proofReserveUsd: 0.005,
+        includeProof: true,
+        paymentProvider: "cdp-x402"
+      })
+    });
+    assert.equal(readinessPost.response.status, 200);
+    assert.equal(readinessPost.body.tool, "operator.readiness");
+    assert.equal(readinessPost.body.paymentProvider.selected, "cdp-x402");
+    assert.equal(readinessPost.body.safety.sendsPaymentHeaders, false);
+    assert.equal(readinessPost.body.safety.includesPrivateKeys, false);
 
     const actionPack = await request(baseUrl, "/api/operator/action-pack", {
       method: "POST",

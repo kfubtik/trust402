@@ -291,6 +291,8 @@ POST /api/live/window-plan
 GET /api/operator/unblock-report
 POST /api/operator/unblock-report
 POST /api/operator/action-pack
+GET /api/operator/readiness
+POST /api/operator/readiness
 POST /api/jobs/autonomous-run
 GET /api/registries/candidates
 POST /api/registries/candidates
