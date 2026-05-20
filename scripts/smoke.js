@@ -385,6 +385,8 @@ async function main() {
   assert(refill.mode === "dry-run", "/api/agentcash/refill-check must run in dry-run mode");
   assert(refill.decision?.action === "refill", "/api/agentcash/refill-check must plan refill below threshold");
   assert(refill.safety?.mutatesWalletBalance === false, "/api/agentcash/refill-check dry-run must not mutate wallet balance");
+  assert(refill.auditBundle?.schema === "trust402.agentcash_refill_audit.v1", "/api/agentcash/refill-check must expose a refill audit bundle");
+  assert(refill.auditBundle?.safety?.includesSecretValues === false, "/api/agentcash/refill-check audit bundle must not expose secrets");
 
   const agentcashObservation = await postJson("/api/agentcash/mcp-observation", {
     accounts: [

@@ -359,6 +359,10 @@ Check AgentCash refill policy without mutating wallet balance:
 Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4032/api/agentcash/refill-check -ContentType application/json -Body '{"mode":"dry-run","currentBalanceUsd":0.42,"amountRefilledTodayUsd":0}'
 ```
 
+The response includes a versioned public-safe `auditBundle` with the refill
+decision hash, threshold/cap state, adapter evidence hashes, and wallet-policy
+requirements; it does not include wallet secrets or raw adapter responses.
+
 Check a candidate payment bridge in dry-run mode before using it for live
 procurement:
 

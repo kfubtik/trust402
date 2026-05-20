@@ -34,6 +34,12 @@ test("agentcashRefillCheck plans a dry-run refill below threshold without mutati
   assert.equal(result.decision.plannedRefillUsd, 1);
   assert.equal(result.safety.mutatesWalletBalance, false);
   assert.match(result.decisionHash, /^sha256:[a-f0-9]{64}$/);
+  assert.equal(result.auditBundle.schema, "trust402.agentcash_refill_audit.v1");
+  assert.equal(result.auditBundle.mode, "dry-run");
+  assert.equal(result.auditBundle.decision.action, "refill");
+  assert.equal(result.auditBundle.safety.mutatesWalletBalance, false);
+  assert.equal(result.auditBundle.safety.adapterResponseStoredAs, "not-observed");
+  assert.match(result.auditBundle.auditBundleHash, /^sha256:[a-f0-9]{64}$/);
 });
 
 test("agentcashRefillCheck blocks live refill without approval policy", async () => {
@@ -45,7 +51,12 @@ test("agentcashRefillCheck blocks live refill without approval policy", async ()
       config: baseConfig,
       operatorAuthorized: false
     }),
-    /AgentCash auto-refill is blocked by policy/
+    (error) => {
+      assert.equal(error.code, "agentcash_refill_policy_blocked");
+      assert.equal(error.details?.auditBundle?.schema, "trust402.agentcash_refill_audit.v1");
+      assert.equal(error.details?.auditBundle?.safety?.includesSecretValues, false);
+      return true;
+    }
   );
 });
 
@@ -68,6 +79,8 @@ test("agentcashRefillCheck creates an operator action when manual-action policy 
   assert.equal(result.decision.status, "operator-action-required");
   assert.equal(result.decision.liveRefillExecuted, false);
   assert.equal(result.decision.providerAction.amountUsd, 1);
+  assert.equal(result.auditBundle.decision.status, "operator-action-required");
+  assert.equal(result.auditBundle.localWalletPolicy.required, true);
 });
 
 test("agentcashRefillCheck can execute through an injected external adapter inside policy", async () => {
@@ -98,4 +111,10 @@ test("agentcashRefillCheck can execute through an injected external adapter insi
   assert.equal(result.decision.status, "sent-to-refill-adapter");
   assert.equal(result.decision.liveRefillExecuted, true);
   assert.equal(result.safety.mutatesWalletBalance, true);
+  assert.equal(result.auditBundle.mode, "live");
+  assert.equal(result.auditBundle.adapter.urlOrigin, "https://refill.example");
+  assert.match(result.auditBundle.adapter.bodyHash, /^sha256:[a-f0-9]{64}$/);
+  assert.equal(result.auditBundle.safety.rawAdapterResponseStored, false);
+  assert.equal(result.auditBundle.safety.adapterResponseStoredAs, "sha256-only");
+  assert.equal(JSON.stringify(result.auditBundle).includes("refill_123"), false);
 });

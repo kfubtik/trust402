@@ -1,6 +1,6 @@
 import { config } from "./config.js";
 import { ApiError } from "./errors.js";
-import { sha256Json } from "./hash.js";
+import { sha256Json, sha256Text } from "./hash.js";
 import { agentcashAutoRefillPolicy } from "./policies.js";
 import { receiptBundle } from "./receipts.js";
 
@@ -35,6 +35,28 @@ export async function agentcashRefillCheck(input = {}, options = {}) {
     plannedRefillUsd,
     blockers
   });
+  const decision = refillDecision({
+    hasBalance,
+    belowThreshold,
+    plannedRefillUsd,
+    blockers,
+    mode
+  });
+  const auditBundle = buildAgentcashRefillAuditBundle({
+    mode,
+    cfg,
+    currentBalanceUsd,
+    amountRefilledTodayUsd,
+    thresholdUsd,
+    refillAmountUsd,
+    remainingDailyCapUsd,
+    plannedRefillUsd,
+    operatorAuthorized,
+    policy,
+    blockers,
+    decision,
+    decisionHash
+  });
 
   const base = {
     ok: true,
@@ -59,14 +81,9 @@ export async function agentcashRefillCheck(input = {}, options = {}) {
       emergencyStop: cfg.emergencyStop,
       blockers: policy.blockers
     },
-    decision: refillDecision({
-      hasBalance,
-      belowThreshold,
-      plannedRefillUsd,
-      blockers,
-      mode
-    }),
+    decision,
     decisionHash,
+    auditBundle,
     receiptBundle: receiptBundle({
       subject: "AgentCash auto-refill decision",
       resultHash: decisionHash,
@@ -88,18 +105,35 @@ export async function agentcashRefillCheck(input = {}, options = {}) {
     throw new ApiError(403, "agentcash_refill_policy_blocked", "AgentCash auto-refill is blocked by policy.", {
       decisionHash,
       blockers,
-      liveRefillExecuted: false
+      liveRefillExecuted: false,
+      auditBundle
     });
   }
 
   if (!belowThreshold) {
+    const noRefillDecision = {
+      ...base.decision,
+      status: "no-refill-needed",
+      liveRefillExecuted: false
+    };
     return {
       ...base,
-      decision: {
-        ...base.decision,
-        status: "no-refill-needed",
-        liveRefillExecuted: false
-      }
+      decision: noRefillDecision,
+      auditBundle: buildAgentcashRefillAuditBundle({
+        mode,
+        cfg,
+        currentBalanceUsd,
+        amountRefilledTodayUsd,
+        thresholdUsd,
+        refillAmountUsd,
+        remainingDailyCapUsd,
+        plannedRefillUsd,
+        operatorAuthorized,
+        policy,
+        blockers,
+        decision: noRefillDecision,
+        decisionHash
+      })
     };
   }
 
@@ -112,14 +146,31 @@ export async function agentcashRefillCheck(input = {}, options = {}) {
       plannedRefillUsd,
       thresholdUsd
     });
+    const liveDecision = {
+      ...base.decision,
+      status: "sent-to-refill-adapter",
+      liveRefillExecuted: adapterResult.ok,
+      adapterResult
+    };
     return {
       ...base,
-      decision: {
-        ...base.decision,
-        status: "sent-to-refill-adapter",
-        liveRefillExecuted: adapterResult.ok,
+      decision: liveDecision,
+      auditBundle: buildAgentcashRefillAuditBundle({
+        mode,
+        cfg,
+        currentBalanceUsd,
+        amountRefilledTodayUsd,
+        thresholdUsd,
+        refillAmountUsd,
+        remainingDailyCapUsd,
+        plannedRefillUsd,
+        operatorAuthorized,
+        policy,
+        blockers,
+        decision: liveDecision,
+        decisionHash,
         adapterResult
-      },
+      }),
       safety: {
         ...base.safety,
         mutatesWalletBalance: adapterResult.ok
@@ -127,19 +178,140 @@ export async function agentcashRefillCheck(input = {}, options = {}) {
     };
   }
 
+  const manualDecision = {
+    ...base.decision,
+    status: "operator-action-required",
+    liveRefillExecuted: false,
+    providerAction: {
+      provider: cfg.agentcashAutoRefillProvider,
+      network: cfg.agentcashNetwork,
+      amountUsd: plannedRefillUsd,
+      reason: "Provider is approved, but this runtime creates a safe refill action instead of holding refill credentials."
+    }
+  };
+
   return {
     ...base,
+    decision: manualDecision,
+    auditBundle: buildAgentcashRefillAuditBundle({
+      mode,
+      cfg,
+      currentBalanceUsd,
+      amountRefilledTodayUsd,
+      thresholdUsd,
+      refillAmountUsd,
+      remainingDailyCapUsd,
+      plannedRefillUsd,
+      operatorAuthorized,
+      policy,
+      blockers,
+      decision: manualDecision,
+      decisionHash
+    })
+  };
+}
+
+function buildAgentcashRefillAuditBundle({
+  mode,
+  cfg,
+  currentBalanceUsd,
+  amountRefilledTodayUsd,
+  thresholdUsd,
+  refillAmountUsd,
+  remainingDailyCapUsd,
+  plannedRefillUsd,
+  operatorAuthorized,
+  policy,
+  blockers,
+  decision,
+  decisionHash,
+  adapterResult = null
+}) {
+  const core = {
+    schema: "trust402.agentcash_refill_audit.v1",
+    tool: "agentcash.refill_audit_bundle",
+    mode,
+    decisionHash,
     decision: {
-      ...base.decision,
-      status: "operator-action-required",
-      liveRefillExecuted: false,
-      providerAction: {
-        provider: cfg.agentcashAutoRefillProvider,
-        network: cfg.agentcashNetwork,
-        amountUsd: plannedRefillUsd,
-        reason: "Provider is approved, but this runtime creates a safe refill action instead of holding refill credentials."
-      }
+      action: decision.action,
+      status: decision.status,
+      plannedRefillUsd: decision.plannedRefillUsd,
+      liveRefillExecuted: decision.liveRefillExecuted === true
+    },
+    balance: {
+      currentBalanceUsd,
+      thresholdUsd,
+      belowThreshold: currentBalanceUsd === null ? null : currentBalanceUsd < thresholdUsd,
+      amountRefilledTodayUsd,
+      remainingDailyCapUsd
+    },
+    policy: {
+      approved: cfg.agentcashAutoRefillApproved,
+      enabled: cfg.agentcashAutoRefillEnabled,
+      provider: cfg.agentcashAutoRefillProvider || "not-configured",
+      network: cfg.agentcashNetwork,
+      refillAmountUsd,
+      dailyCapUsd: cfg.agentcashAutoRefillDailyCapUsd,
+      operatorAuthorized,
+      emergencyStop: cfg.emergencyStop,
+      blockers: blockers.map((item) => ({
+        id: item.id,
+        message: item.message
+      }))
+    },
+    adapter: refillAdapterAudit({ cfg, adapterResult }),
+    localWalletPolicy: {
+      required: cfg.agentcashWalletBindingRequired,
+      file: ".local/trust402-agentcash-wallet.json",
+      publicOutputIncludesWalletSecret: false,
+      publicOutputIncludesPrivateKey: false
+    },
+    safety: {
+      publicSafe: true,
+      paidSubcallsMade: 0,
+      readsPrivateKeys: false,
+      storesPrivateKeys: false,
+      sendsPaymentHeaders: false,
+      includesSecretValues: false,
+      includesWalletPrivateKey: false,
+      mutatesWalletBalance: adapterResult?.ok === true,
+      rawAdapterResponseStored: false,
+      adapterResponseStoredAs: adapterResult ? "sha256-only" : "not-observed"
     }
+  };
+
+  return {
+    ...core,
+    generatedAt: new Date().toISOString(),
+    auditBundleHash: sha256Json(core),
+    nextAction: mode === "live" && adapterResult?.ok === true
+      ? "Store this public-safe refill audit bundle before marking AgentCash auto-refill evidence observed."
+      : mode === "live"
+        ? "Review blockers or manual provider action before retrying an approved refill window."
+        : "Review this dry-run refill audit bundle before approving any live auto-refill policy."
+  };
+}
+
+function refillAdapterAudit({ cfg, adapterResult }) {
+  if (cfg.agentcashAutoRefillProvider !== "external-adapter") {
+    return {
+      provider: cfg.agentcashAutoRefillProvider || "not-configured",
+      adapterConfigured: Boolean(cfg.agentcashAutoRefillAdapterUrl),
+      urlOrigin: null,
+      urlHash: null,
+      resultObserved: false
+    };
+  }
+
+  return {
+    provider: "external-adapter",
+    adapterConfigured: Boolean(cfg.agentcashAutoRefillAdapterUrl),
+    urlOrigin: safeOrigin(cfg.agentcashAutoRefillAdapterUrl),
+    urlHash: cfg.agentcashAutoRefillAdapterUrl ? sha256Text(cfg.agentcashAutoRefillAdapterUrl) : null,
+    resultObserved: Boolean(adapterResult),
+    ok: adapterResult?.ok === true,
+    status: adapterResult?.status ?? null,
+    bodyHash: adapterResult?.bodyHash || null
   };
 }
 
@@ -251,4 +423,12 @@ function numberOrNull(value) {
 
 function roundUsd(value) {
   return Math.round(value * 1_000_000) / 1_000_000;
+}
+
+function safeOrigin(value) {
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
 }
