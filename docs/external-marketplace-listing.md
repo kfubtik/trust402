@@ -20,43 +20,47 @@ v0.1.0
 CDP Bazaar state:
 
 ```text
-10 of 10 paid launch resources indexed
-status = indexed
+9 of 10 paid launch resources indexed
+status = partially-indexed
+missing = trust.compare_resources
 evidence = sha256:523857cf9d44c0bb01b6e993d92c7329b118df95f11e229359a5d616a663a608
 ```
 
-Trust402 is live as a production x402 service and CDP Bazaar indexing evidence
-is recorded in production env. Live Trust402 procurement, paid Proof402
-delegation, and AgentCash auto-refill remain disabled until separately
-approved.
+Trust402 is live as a production x402 service, but CDP Bazaar all-resource
+evidence is not complete until `trust.compare_resources` is indexed again.
+Live Trust402 procurement, paid Proof402 delegation, and AgentCash auto-refill
+remain disabled until separately approved.
 
 ## Current External Directory Visibility
 
-Last checked on 2026-05-20 at 04:48:43 +07:00 with:
+Last checked on 2026-05-20 at 06:54:32 +07:00 with:
 
 ```powershell
-npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
+npm run directories:check -- https://trust402.vercel.app --timeout-ms=5000
 ```
 
 Result:
 
 ```text
 status = not-visible-yet
-checked = 8
-reachable = 6
+checked = 13
+reachable = 10
 visible = 0
-notVisibleYet = 6
-unreachable = 2
+notVisibleYet = 10
+unreachable = 3
 customDomainBlocked = 1
 ```
 
 Interpretation:
 
-- CDP Bazaar remains the authoritative discovery signal for Trust402 right now;
-- Agentic.Market, x402scan, x402Bazaar, RelAI market, x402list,
-  x402-list.com, and Agora402 are monitored for public Trust402 visibility;
-- x402.org ecosystem and Agora402 were not reliably reachable within the
-  10-second read-only check window;
+- CDP Bazaar remains the authoritative discovery signal for Trust402 right now,
+  and it is still blocked at `9/10` until `trust.compare_resources` appears;
+- Agentic.Market, x402scan, x402Bazaar, x402.org ecosystem, RelAI market,
+  x402list.fun, Orbis API Marketplace, World.fun x402 Market, x402agency,
+  Agent Bazaar, the402, x402-list.com, and Agora402 are monitored for public
+  Trust402 visibility;
+- x402scan, x402.org ecosystem, and Agora402 were not reliably reachable within
+  the 5-second read-only check window;
 - `not-visible-yet` is not proof of absence because several directories are
   client-rendered, asynchronously indexed, curated, or rate-limited.
 
@@ -94,9 +98,10 @@ Vercel, set env vars, or claim availability/pricing without a fresh check.
 
 ### CDP Bazaar
 
-Status: complete.
+Status: blocked at `9/10`.
 
-Action: keep the existing verification gate green.
+Action: restore the missing `trust.compare_resources` Bazaar indexing evidence
+with an approved paid smoke, then keep the verification gate green.
 
 ```powershell
 npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10000 --limit=20
@@ -143,12 +148,28 @@ Reference:
 
 - https://www.x402.org/ecosystem
 
-### x402scan, x402.direct, x402bazaar, RelAI, x402list, Agent402, Agora402
+### Monitored Directories
 
 Status: monitor or submit when a safe form/API is available.
 
 These directories may crawl x402 endpoints, aggregate indexed services, or
 require a manual listing. Use this document as the public-safe payload.
+
+Current monitor set:
+
+- Agentic.Market
+- x402scan
+- x402Bazaar
+- x402.org ecosystem
+- RelAI market
+- x402list.fun
+- Orbis API Marketplace
+- World.fun x402 Market
+- x402agency
+- Agent Bazaar
+- the402
+- x402 List
+- Agora402
 
 Action:
 

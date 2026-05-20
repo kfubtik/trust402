@@ -1,102 +1,8 @@
 import { loadCatalog } from "./catalog.js";
 import { config } from "./config.js";
 import { cdpBazaarEvidenceStatus } from "./cdpBazaarEvidence.js";
+import { EXTERNAL_DIRECTORY_TARGETS, freeHostingSuffixFor, searchUrlFor } from "./externalDirectoryTargets.js";
 import { sha256Json } from "./hash.js";
-
-const FREE_HOST_SUFFIXES = [
-  "vercel.app",
-  "workers.dev",
-  "ngrok-free.app",
-  "ngrok.io",
-  "trycloudflare.com",
-  "netlify.app",
-  "pages.dev",
-  "fly.dev",
-  "render.com"
-];
-
-const DIRECTORY_TARGETS = [
-  {
-    id: "agentic_market",
-    name: "Agentic.Market",
-    mode: "crawler-or-search",
-    url: "https://agentic.market",
-    submissionUrl: null,
-    manualSubmissionAllowed: false,
-    requiresCustomDomain: false,
-    note: "Monitor search and CDP Bazaar-derived discovery before making visibility claims."
-  },
-  {
-    id: "x402scan",
-    name: "x402scan",
-    mode: "crawler-or-directory",
-    url: "https://www.x402scan.com/resources",
-    submissionUrl: null,
-    manualSubmissionAllowed: false,
-    requiresCustomDomain: false,
-    note: "Monitor public resources/search pages for Trust402 visibility."
-  },
-  {
-    id: "x402bazaar",
-    name: "x402Bazaar",
-    mode: "directory-or-search",
-    url: "https://x402bazaar.org",
-    submissionUrl: null,
-    manualSubmissionAllowed: false,
-    requiresCustomDomain: false,
-    note: "Submit only if a public-safe form/API is confirmed."
-  },
-  {
-    id: "x402_ecosystem",
-    name: "x402.org ecosystem",
-    mode: "curated-manual-submission",
-    url: "https://www.x402.org/ecosystem",
-    submissionUrl: "https://www.x402.org/ecosystem",
-    manualSubmissionAllowed: true,
-    requiresCustomDomain: false,
-    note: "Curated ecosystem outreach requires operator approval."
-  },
-  {
-    id: "relai_market",
-    name: "RelAI market",
-    mode: "directory-or-search",
-    url: "https://relai.fi/market",
-    submissionUrl: null,
-    manualSubmissionAllowed: false,
-    requiresCustomDomain: false,
-    note: "Monitor or submit only after a safe public form is confirmed."
-  },
-  {
-    id: "x402list_fun",
-    name: "x402list.fun",
-    mode: "directory-or-search",
-    url: "https://x402list.fun",
-    submissionUrl: null,
-    manualSubmissionAllowed: false,
-    requiresCustomDomain: false,
-    note: "Monitor public directory/search results for Trust402 visibility."
-  },
-  {
-    id: "x402_list_com",
-    name: "x402 List",
-    mode: "manual-review-custom-domain-required",
-    url: "https://x402-list.com",
-    submissionUrl: "https://x402-list.com/submit",
-    manualSubmissionAllowed: true,
-    requiresCustomDomain: true,
-    note: "This target rejects free-hosting/dev-tunnel domains; submit after custom domain is active."
-  },
-  {
-    id: "agora402",
-    name: "Agora402",
-    mode: "registry-or-search",
-    url: "https://agora402.io",
-    submissionUrl: null,
-    manualSubmissionAllowed: false,
-    requiresCustomDomain: false,
-    note: "Monitor or submit only after a safe public form/API is confirmed."
-  }
-];
 
 export function directorySubmissionPack(input = {}, options = {}) {
   const cfg = options.config || config;
@@ -106,7 +12,7 @@ export function directorySubmissionPack(input = {}, options = {}) {
   const cdpBazaar = cdpBazaarEvidenceStatus(cfg);
   const cdpBazaarReady = cdpBazaar.verified;
   const userApprovedOutreach = input.userApprovedOutreach === true;
-  const directoryTargets = DIRECTORY_TARGETS.map((target) =>
+  const directoryTargets = EXTERNAL_DIRECTORY_TARGETS.map((target) =>
     targetPlan(target, { baseUrl, hostPolicy, cdpBazaarReady, userApprovedOutreach })
   );
   const readyTargets = directoryTargets.filter((target) => target.status === "ready-to-submit");
@@ -122,6 +28,7 @@ export function directorySubmissionPack(input = {}, options = {}) {
     baseUrl,
     cdpBazaarReady,
     host: hostPolicy.host,
+    directoryTargetIds: directoryTargets.map((target) => target.id),
     readyTargets: readyTargets.map((target) => target.id),
     listingCopy
   };
@@ -282,20 +189,6 @@ function nextActionFor({ target, status, blockers, blockedByCustomDomain }) {
   return "Resolve blockers before submission.";
 }
 
-function searchUrlFor(target, term) {
-  const value = String(term || "").trim();
-  if (!value) return null;
-  const encoded = encodeURIComponent(value);
-  if (target.id === "agentic_market") return `https://agentic.market/search?q=${encoded}`;
-  if (target.id === "x402scan") return `https://www.x402scan.com/search?q=${encoded}`;
-  if (target.id === "x402bazaar") return `https://x402bazaar.org/search?q=${encoded}`;
-  if (target.id === "relai_market") return `https://relai.fi/market?search=${encoded}`;
-  if (target.id === "x402list_fun") return `https://x402list.fun/?q=${encoded}`;
-  if (target.id === "x402_list_com") return `https://x402-list.com/api/v1/services?q=${encoded}`;
-  if (target.id === "agora402") return `https://agora402.io/search?q=${encoded}`;
-  return target.url;
-}
-
 function hostPolicyFor(baseUrl) {
   let host = "";
   try {
@@ -309,7 +202,7 @@ function hostPolicyFor(baseUrl) {
       reason: "Base URL is not valid."
     };
   }
-  const freeHostingSuffix = FREE_HOST_SUFFIXES.find((suffix) => host === suffix || host.endsWith(`.${suffix}`)) || null;
+  const freeHostingSuffix = freeHostingSuffixFor(host);
   return {
     baseUrl,
     host,

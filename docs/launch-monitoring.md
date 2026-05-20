@@ -95,28 +95,29 @@ api.anyLiveSpendReady = false
 api.autoRefillReady = false
 x402Challenge.status = challenge-ready
 x402Challenge.httpStatus = 402
-cdpBazaar.status = all-indexed
+cdpBazaar.status = partially-indexed
 cdpBazaar.routeSummary.expected = 10
-cdpBazaar.routeSummary.indexed = 10
-cdpBazaar.routeSummary.missing = []
+cdpBazaar.routeSummary.indexed = 9
+cdpBazaar.routeSummary.missing = [trust.compare_resources]
 externalDirectories.status = not-visible-yet
 externalDirectories.visible = 0
-externalDirectories.checked = 8
+externalDirectories.checked = 13
 finalVerification.status = blocked
-finalVerification.commandsPassed = true
+finalVerification.commandsPassed = false
 finalVerification.nonFinalOpenRequirements = 6
 finalVerification.verificationHash = sha256:138d70754768114b2c3127fcf6b03a336d3a16eafedb9d33d9fc4443b5ba5478
 ```
 
 That state is production-healthy for API/x402/spend safety, but launch
-attention is still required for non-CDP external directory visibility,
-Git/Vercel auto-deploy evidence, and intentionally closed live-spend gates.
+attention is still required for CDP Bazaar `trust.compare_resources`, non-CDP
+external directory visibility, Git/Vercel auto-deploy evidence, and
+intentionally closed live-spend gates.
 
 The latest final verifier passed local release checks, Docker build,
 production smoke, production x402 smoke, AgentCash refill dry-run, external
-directory read-only check, launch monitor, and production completion audit.
-It remains blocked only because non-final completion requirements are still
-open, not because a command gate failed.
+directory read-only check, and production completion audit. It remains blocked
+because the strict launch monitor fails until CDP Bazaar returns `10/10`, and
+because non-final completion requirements are still open.
 
 ## AgentCash Refill Check
 

@@ -1,4 +1,5 @@
 import { config } from "../src/config.js";
+import { EXTERNAL_DIRECTORY_TARGETS, isFreeHostingHost, monitorUrlsFor } from "../src/externalDirectoryTargets.js";
 
 const baseUrl = (process.argv.find((arg) => /^https?:\/\//.test(arg)) || config.publicBaseUrl).replace(/\/$/, "");
 const strict = process.argv.includes("--strict");
@@ -13,93 +14,11 @@ const terms = Array.from(new Set([
   "/api/reports/x402-diligence"
 ].filter(Boolean)));
 
-const directories = [
-  {
-    id: "agentic_market",
-    name: "Agentic.Market",
-    status: "auto-indexed-or-search",
-    urls: [
-      "https://agentic.market",
-      "https://agentic.market/about",
-      "https://agentic.market/search?q=Trust402",
-      `https://agentic.market/search?q=${encodeURIComponent(host)}`
-    ]
-  },
-  {
-    id: "x402scan",
-    name: "x402scan",
-    status: "crawler-or-directory",
-    urls: [
-      "https://www.x402scan.com/",
-      "https://www.x402scan.com/resources",
-      "https://www.x402scan.com/search?q=Trust402",
-      `https://www.x402scan.com/search?q=${encodeURIComponent(host)}`
-    ]
-  },
-  {
-    id: "x402bazaar",
-    name: "x402Bazaar",
-    status: "directory-or-search",
-    urls: [
-      "https://x402bazaar.org/",
-      "https://x402bazaar.org/search?q=Trust402",
-      `https://x402bazaar.org/search?q=${encodeURIComponent(host)}`
-    ]
-  },
-  {
-    id: "x402_ecosystem",
-    name: "x402.org ecosystem",
-    status: "curated-manual-submission",
-    urls: [
-      "https://www.x402.org/ecosystem"
-    ]
-  },
-  {
-    id: "relai_market",
-    name: "RelAI market",
-    status: "directory-or-search",
-    urls: [
-      "https://relai.fi/market",
-      "https://relai.fi/market?search=Trust402",
-      `https://relai.fi/market?search=${encodeURIComponent(host)}`
-    ]
-  },
-  {
-    id: "x402list",
-    name: "x402list",
-    status: "directory-or-search",
-    urls: [
-      "https://x402list.fun/",
-      "https://x402list.fun/?q=Trust402",
-      `https://x402list.fun/?q=${encodeURIComponent(host)}`
-    ]
-  },
-  {
-    id: "x402_list_com",
-    name: "x402 List",
-    status: "manual-review-custom-domain-required",
-    requiresCustomDomain: true,
-    urls: [
-      "https://x402-list.com/",
-      "https://x402-list.com/submit",
-      "https://x402-list.com/api",
-      `https://x402-list.com/api/v1/services?q=${encodeURIComponent("Trust402")}`,
-      `https://x402-list.com/api/v1/services?q=${encodeURIComponent(host)}`
-    ]
-  },
-  {
-    id: "agora402",
-    name: "Agora402",
-    status: "registry-or-search",
-    urls: [
-      "https://agora402.io/",
-      "https://agora402.io/search?q=Trust402",
-      `https://agora402.io/search?q=${encodeURIComponent(host)}`,
-      `https://agora402.io/api/v1/discover?query=${encodeURIComponent("Trust402")}`,
-      `https://agora402.io/api/v1/discover?query=${encodeURIComponent(host)}`
-    ]
-  }
-];
+const directories = EXTERNAL_DIRECTORY_TARGETS.map((target) => ({
+  ...target,
+  status: target.mode,
+  urls: monitorUrlsFor(target, host)
+}));
 
 async function main() {
   const results = [];
@@ -250,21 +169,6 @@ function safeHost(value) {
   } catch {
     return "";
   }
-}
-
-function isFreeHostingHost(value) {
-  const hostValue = String(value || "").toLowerCase();
-  return [
-    "vercel.app",
-    "workers.dev",
-    "ngrok-free.app",
-    "ngrok.io",
-    "trycloudflare.com",
-    "netlify.app",
-    "pages.dev",
-    "fly.dev",
-    "render.com"
-  ].some((suffix) => hostValue === suffix || hostValue.endsWith(`.${suffix}`));
 }
 
 main().catch((error) => {

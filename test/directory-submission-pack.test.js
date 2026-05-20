@@ -27,6 +27,9 @@ test("directorySubmissionPack exposes a public-safe custom-domain blocker", () =
     target.status === "blocked-manual" &&
     target.blockers.includes("custom_domain_required")
   ));
+  assert.ok(pack.directoryTargets.some((target) => target.id === "orbis_api_marketplace"));
+  assert.ok(pack.directoryTargets.some((target) => target.id === "world_fun_x402_market"));
+  assert.ok(pack.directoryTargets.some((target) => target.id === "x402agency"));
 });
 
 test("directorySubmissionPack can become ready for approved custom-domain outreach", () => {
@@ -38,6 +41,7 @@ test("directorySubmissionPack can become ready for approved custom-domain outrea
   assert.equal(pack.status, "ready-to-submit");
   assert.equal(pack.hostPolicy.requiresCustomDomain, false);
   assert.ok(pack.summary.readyToSubmit >= 1);
+  assert.equal(pack.summary.targets >= 12, true);
   assert.ok(pack.directoryTargets.some((target) =>
     target.id === "x402_ecosystem" &&
     target.status === "ready-to-submit"

@@ -622,9 +622,10 @@ pass `--docker-bin=<path-to-docker.exe>` or set `TRUST402_DOCKER_BIN`.
 
 ## Current Safety Blockers
 
-As of 2026-05-19, the local AgentCash policy has zero remaining manual smoke
-budget and marks live procurement, Proof402 delegation, and auto-refill as
-disabled until separate approval. Code may implement and test gates, but real
-paid calls must remain blocked until that policy changes. The policy checker
-now supports separate locked, live-window, and auto-refill modes so an approved
-window can be validated without weakening the default locked posture.
+As of 2026-05-20, the local AgentCash policy keeps the default spend window
+closed, has zero remaining manual smoke budget, and marks live procurement,
+Proof402 delegation, and auto-refill as disabled until separate approval. Code
+may implement and test gates, but real paid calls must remain blocked until
+that policy changes. The policy checker now supports separate locked,
+live-window, and auto-refill modes so an approved window can be validated
+without weakening the default locked posture.
