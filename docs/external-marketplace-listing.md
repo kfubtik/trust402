@@ -34,7 +34,7 @@ and AgentCash auto-refill remain disabled until separately approved.
 
 ## Current External Directory Visibility
 
-Last checked on 2026-05-20 at 15:14 +07:00 with:
+Last checked on 2026-05-20 at 17:30 +07:00 with:
 
 ```powershell
 npm run directories:check -- https://trust402.aztecbeacon.uk --timeout-ms=10000
@@ -191,7 +191,7 @@ Action:
 
 ### x402 List (`x402-list.com`)
 
-Status: manual review, custom domain now available.
+Status: manual review, custom domain now available, contact email required.
 
 `x402-list.com` exposes a submit page and API, but its public requirements say
 that `vercel.app`, `workers.dev`, `ngrok`, `trycloudflare`, and similar
@@ -206,6 +206,16 @@ Action:
 - rerun `npm run directories:check -- https://trust402.aztecbeacon.uk --timeout-ms=10000`;
 - submit only the public-safe listing fields from this file while CDP Bazaar
   exact-resource indexing remains verified `10/10`.
+
+The programmatic submission endpoint is documented as:
+
+```text
+POST https://x402-list.com/api/v1/submit
+```
+
+Required fields include `url`, `email`, `notes`, and `endpoint_paths`. Do not
+submit until the operator provides an email address approved for public
+directory review.
 
 Active custom domain configured on 2026-05-20:
 

@@ -103,13 +103,15 @@ The full final Definition of Done is pinned in
   (`0x59c54d9d89a27587d686524f7ce2814154700dd5c4745c1018b6c249ef9f8bff`).
 - External directory visibility: monitored read-only; latest check found 13
   monitored directories, 10 reachable, 0 visible, 3 unreachable, and 0
-  custom-domain-blocked as of 2026-05-20 16:52 +07:00.
-- Production gates: `node --test test` (184/184), `node scripts/release-check.js`,
-  smoke, x402 smoke, Docker build, launch monitor, deployment preflight,
-  AgentCash refill dry-run, production deployment sync, and external directory
-  read-only check passed as of 2026-05-20 16:53 +07:00. Recent final
-  verification hash:
-  `sha256:44e39d236930a87c2599113b4844d7eadc2b0e6ea3a5a696239f9186f94fe6f2`.
+  custom-domain-blocked as of 2026-05-20 17:30 +07:00. `x402-list.com` exposes
+  `POST /api/v1/submit`, but it requires a public contact email; do not submit
+  until the operator approves which email to use.
+- Production gates: `node --test test` (187/187),
+  `node scripts/release-check.js`, `node scripts/privacy-check.js`, production
+  smoke, production x402 smoke, launch monitor `healthy-cdp-indexed`, CDP
+  Bazaar all-resource check, and external directory read-only check passed as
+  of 2026-05-20 17:30 +07:00. Previous Docker build evidence remains valid for
+  the current app code because this update changed docs and Vercel env only.
   `final:verify` remains blocked because external-directory visibility, live
   procurement, paid Proof402 delegation, AgentCash auto-refill, and autonomous
   live job evidence are still unresolved.
