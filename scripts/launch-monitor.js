@@ -89,7 +89,11 @@ async function checkProductionApi() {
   if (settlement.body?.readiness?.marketplaceIndexingReady !== true) failures.push("/api/settlement/status marketplaceIndexingReady must be true in production");
   if ((settlement.body?.blockers || []).length > 0) failures.push("/api/settlement/status must not expose blockers in production");
   if (!spendPolicy.ok) failures.push("/api/policies/spend failed");
-  if (spendPolicy.body?.readiness?.anyLiveSpendReady !== false) failures.push("/api/policies/spend anyLiveSpendReady must remain false until live buyer policy is approved");
+  if (!isAllowedSpendReadiness(spendPolicy.body)) {
+    failures.push(
+      "/api/policies/spend may only expose live spend readiness for approved manual-action AgentCash auto-refill while buyer spend remains gated"
+    );
+  }
   if (spendPolicy.body?.emergencyStop === true) failures.push("/api/policies/spend emergencyStop is active");
 
   return {
@@ -122,10 +126,25 @@ async function checkProductionApi() {
         emergencyStop: spendPolicy.body?.emergencyStop ?? null,
         liveProcurementReady: spendPolicy.body?.readiness?.liveProcurementReady ?? null,
         proof402DelegationReady: spendPolicy.body?.readiness?.proof402DelegationReady ?? null,
-        agentcashAutoRefillReady: spendPolicy.body?.readiness?.agentcashAutoRefillReady ?? null
+        agentcashAutoRefillReady: spendPolicy.body?.readiness?.agentcashAutoRefillReady ?? null,
+        agentcashAutoRefillProvider: spendPolicy.body?.policies?.agentcashAutoRefill?.controls?.provider ?? null
       }
     }
   };
+}
+
+function isAllowedSpendReadiness(spendPolicy) {
+  const readiness = spendPolicy?.readiness || {};
+  if (readiness.anyLiveSpendReady === false) return true;
+  const autoRefill = spendPolicy?.policies?.agentcashAutoRefill;
+  return (
+    readiness.anyLiveSpendReady === true &&
+    readiness.liveProcurementReady === false &&
+    readiness.proof402DelegationReady === false &&
+    readiness.agentcashAutoRefillReady === true &&
+    autoRefill?.ready === true &&
+    autoRefill?.controls?.provider === "manual-action"
+  );
 }
 
 async function checkX402Challenge(realSettlementReady) {

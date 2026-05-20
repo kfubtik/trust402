@@ -90,7 +90,9 @@ status = needs-attention
 api.status = healthy
 api.catalogStatus = production-mvp
 api.paidLaunchResources = 10
-api.anyLiveSpendReady = false
+api.anyLiveSpendReady = true only when production uses the approved
+manual-action auto-refill policy and buyer spend remains gated; false in
+local/default locked mode.
 api.autoRefillReady = true when production uses the approved manual-action
 auto-refill policy; false in local/default locked mode.
 x402Challenge.status = challenge-ready
