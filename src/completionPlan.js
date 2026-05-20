@@ -197,6 +197,30 @@ const OPERATOR_PINNED_CHECKLIST = [
   }
 ];
 
+export const POST_COMPLETION_GATES = [
+  {
+    id: "public_release_cleanup",
+    title: "Public Release Cleanup Gate",
+    phase: "after-product-complete-before-public-visibility",
+    requiredBeforePublicRepository: true,
+    doesNotReplaceProductCompletion: true,
+    success: "Create a clean public release commit only after every Trust402 completion requirement is verified and the user explicitly approves making the repository public.",
+    steps: [
+      "Keep the private development history intact while product work continues.",
+      "After goalComplete=true, review failed Actions logs, secret exposure risk, and noisy iteration history.",
+      "Create an operator-reviewed clean public release commit from a squash or orphan release branch.",
+      "Verify the clean release with tests, release check, Docker build, production smoke, x402 smoke, directory checks, and final verification.",
+      "Only then change repository visibility to public."
+    ],
+    prohibitedNow: [
+      "Do not delete Actions runs during product development.",
+      "Do not rewrite main history while the private repo is still the active production source.",
+      "Do not make the repository public before the cleanup gate is explicitly approved."
+    ],
+    document: "docs/github-release-checklist.md#public-release-cleanup-gate"
+  }
+];
+
 export function completionPlan() {
   const planCore = {
     document: "docs/autonomous-completion-plan.md",
@@ -205,6 +229,7 @@ export function completionPlan() {
     requirementIds: COMPLETION_REQUIREMENTS.map((item) => item.id),
     requirements: COMPLETION_REQUIREMENTS,
     operatorChecklist: OPERATOR_PINNED_CHECKLIST,
+    postCompletionGates: POST_COMPLETION_GATES,
     successCriteria: [
       "Trust402 chooses x402 resources for a goal.",
       "Trust402 buys only approved resources.",
@@ -229,7 +254,8 @@ export function completionPlan() {
       allAuditRequirementsMustBeVerified: true,
       manualExternalOrLiveEvidenceCannotBeInferred: true,
       implementedButBlockedDoesNotCountAsDone: true,
-      operatorChecklistCannotBeWeakenedByImplementation: true
+      operatorChecklistCannotBeWeakenedByImplementation: true,
+      publicReleaseCleanupDoesNotReplaceProductCompletion: true
     },
     safety: {
       readOnly: true,

@@ -8,10 +8,12 @@ test("completionPlan pins all autonomous success criteria without side effects",
   assert.equal(plan.tool, "completion.plan");
   assert.equal(plan.requirements.length, 10);
   assert.equal(plan.operatorChecklist.length, 10);
+  assert.equal(plan.postCompletionGates.length, 1);
   assert.equal(plan.pinnedAt, "2026-05-20");
   assert.equal(plan.evidenceRules.allAuditRequirementsMustBeVerified, true);
   assert.equal(plan.evidenceRules.implementedButBlockedDoesNotCountAsDone, true);
   assert.equal(plan.evidenceRules.operatorChecklistCannotBeWeakenedByImplementation, true);
+  assert.equal(plan.evidenceRules.publicReleaseCleanupDoesNotReplaceProductCompletion, true);
   assert.equal(plan.safety.readOnly, true);
   assert.equal(plan.safety.includesSecretValues, false);
   assert.match(plan.planHash, /^sha256:[a-f0-9]{64}$/);
@@ -33,4 +35,7 @@ test("completionPlan pins all autonomous success criteria without side effects",
   );
   assert.ok(plan.successCriteria.some((item) => item.includes("buys only approved resources")));
   assert.ok(plan.operatorChecklist.some((item) => item.success.includes("0.50 USD threshold")));
+  assert.equal(plan.postCompletionGates[0].id, "public_release_cleanup");
+  assert.equal(plan.postCompletionGates[0].requiredBeforePublicRepository, true);
+  assert.equal(plan.postCompletionGates[0].doesNotReplaceProductCompletion, true);
 });

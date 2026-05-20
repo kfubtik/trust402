@@ -70,7 +70,8 @@ export function operatorActionPack(input = {}, options = {}) {
     proof402Action(livePlan, cfg),
     agentcashRefillAction(livePlan, includeAutoRefill, cfg),
     autonomousJobAction(livePlan, cfg),
-    finalVerificationAction(baseUrl, cfg)
+    finalVerificationAction(baseUrl, cfg),
+    publicReleaseCleanupAction()
   ];
   const evidenceCollection = evidenceCollectionPlan(actions, livePlan);
 
@@ -432,6 +433,31 @@ function finalVerificationAction(baseUrl, cfg) {
       TRUST402_FINAL_VERIFICATION_OBSERVED: "true",
       TRUST402_FINAL_VERIFICATION_EVIDENCE_REF: "<public-safe final verification hash or run URL>"
     },
+    publicSafe: true
+  };
+}
+
+function publicReleaseCleanupAction() {
+  return {
+    id: "public_release_cleanup",
+    title: "Prepare clean public release history",
+    required: false,
+    status: "informational",
+    phase: "after-product-complete-before-public-visibility",
+    trigger: "Run only after /api/completion/audit returns goalComplete=true and the user approves public release.",
+    steps: [
+      "Leave current private development history and failed checks untouched while product work continues.",
+      "Review the private history for failed Actions logs, accidental sensitive output, and noisy iteration commits.",
+      "Create a clean public release commit from an operator-reviewed squash or orphan release branch.",
+      "Run final verification against the clean release before changing repository visibility."
+    ],
+    prohibitedNow: [
+      "Do not delete Actions runs as part of normal product work.",
+      "Do not rewrite main while it is the active private production branch.",
+      "Do not make the repository public before this gate is explicitly approved."
+    ],
+    evidenceEnv: {},
+    document: "docs/github-release-checklist.md#public-release-cleanup-gate",
     publicSafe: true
   };
 }

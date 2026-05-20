@@ -48,6 +48,11 @@ test("operatorActionPack turns blockers into public-safe operator actions", () =
   assert.ok(pack.actions.some((action) => action.id === "custom_domain"));
   assert.ok(pack.actions.some((action) => action.id === "live_procurement"));
   assert.ok(pack.actions.some((action) => action.id === "final_verification"));
+  const publicReleaseCleanup = pack.actions.find((action) => action.id === "public_release_cleanup");
+  assert.equal(publicReleaseCleanup.status, "informational");
+  assert.equal(publicReleaseCleanup.required, false);
+  assert.equal(publicReleaseCleanup.phase, "after-product-complete-before-public-visibility");
+  assert.match(publicReleaseCleanup.trigger, /goalComplete=true/);
   const customDomain = pack.actions.find((action) => action.id === "custom_domain");
   assert.equal(customDomain.activationPack.selectedDomain.status, "available-to-purchase");
   assert.equal(customDomain.activationPack.selectedDomain.priceUsd, 9.99);
@@ -138,6 +143,7 @@ test("operatorActionPack can become ready except final evidence when runtime fla
   assert.equal(pack.actions.find((action) => action.id === "agentcash_auto_refill").status, "ready");
   assert.equal(pack.actions.find((action) => action.id === "autonomous_job_flow").status, "ready");
   assert.equal(pack.actions.find((action) => action.id === "final_verification").status, "blocked-evidence");
+  assert.equal(pack.actions.find((action) => action.id === "public_release_cleanup").status, "informational");
   assert.deepEqual(pack.evidenceCollection.blockingActionIds, [
     "final_verification"
   ]);
