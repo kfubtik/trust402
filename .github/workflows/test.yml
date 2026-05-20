@@ -19,14 +19,20 @@ jobs:
       - run: docker compose config
       - name: Smoke Docker image
         run: |
-          docker run -d --name trust402-test -p 4032:4032 -e PUBLIC_BASE_URL=http://127.0.0.1:4032 trust402:test
-          node -e "let tries=0; const wait=async()=>{try{const r=await fetch('http://127.0.0.1:4032/health'); if(r.ok) return;}catch{} if(++tries>30) process.exit(1); setTimeout(wait, 1000)}; wait()"
-          npm run smoke -- http://127.0.0.1:4032
+          set -euo pipefail
+          docker run -d --name trust402-test -p 127.0.0.1::4032 -e PUBLIC_BASE_URL=http://127.0.0.1:4032 trust402:test
+          TRUST402_TEST_PORT="$(docker port trust402-test 4032/tcp | awk -F: '{print $NF}')"
+          TRUST402_TEST_URL="http://127.0.0.1:${TRUST402_TEST_PORT}"
+          node -e "const url=process.argv[1]; let tries=0; const wait=async()=>{try{const r=await fetch(url + '/health'); if(r.ok) return;}catch{} if(++tries>30) process.exit(1); setTimeout(wait, 1000)}; wait()" "$TRUST402_TEST_URL"
+          npm run smoke -- "$TRUST402_TEST_URL"
       - name: Smoke mock x402 challenge
         run: |
-          docker run -d --name trust402-x402-test -p 4036:4032 -e PUBLIC_BASE_URL=http://127.0.0.1:4036 -e TRUST402_PAYWALL_MODE=mock -e PAY_TO=0x1111111111111111111111111111111111111111 trust402:test
-          node -e "let tries=0; const wait=async()=>{try{const r=await fetch('http://127.0.0.1:4036/health'); if(r.ok) return;}catch{} if(++tries>30) process.exit(1); setTimeout(wait, 1000)}; wait()"
-          npm run smoke:x402 -- http://127.0.0.1:4036
+          set -euo pipefail
+          docker run -d --name trust402-x402-test -p 127.0.0.1::4032 -e PUBLIC_BASE_URL=http://127.0.0.1:4036 -e TRUST402_PAYWALL_MODE=mock -e PAY_TO=0x1111111111111111111111111111111111111111 trust402:test
+          TRUST402_X402_TEST_PORT="$(docker port trust402-x402-test 4032/tcp | awk -F: '{print $NF}')"
+          TRUST402_X402_TEST_URL="http://127.0.0.1:${TRUST402_X402_TEST_PORT}"
+          node -e "const url=process.argv[1]; let tries=0; const wait=async()=>{try{const r=await fetch(url + '/health'); if(r.ok) return;}catch{} if(++tries>30) process.exit(1); setTimeout(wait, 1000)}; wait()" "$TRUST402_X402_TEST_URL"
+          npm run smoke:x402 -- "$TRUST402_X402_TEST_URL"
       - name: Docker logs
         if: failure()
         run: |

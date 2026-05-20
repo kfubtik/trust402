@@ -220,8 +220,10 @@ assert(launchMonitorScript.includes('status: "script-timeout"'), "launch monitor
 assert(workflow.includes("npm audit --omit=dev --audit-level=high"), "CI must run high-severity npm audit");
 assert(workflow.includes("docker build -t trust402:test ."), "CI must build the Docker image");
 assert(workflow.includes("docker compose config"), "CI must validate docker compose config");
-assert(workflow.includes("npm run smoke -- http://127.0.0.1:4032"), "CI must smoke test the Docker image");
-assert(workflow.includes("npm run smoke:x402 -- http://127.0.0.1:4036"), "CI must smoke test mock x402 challenge");
+assert(workflow.includes("docker port trust402-test 4032/tcp"), "CI must map the Docker smoke test to an isolated host port");
+assert(workflow.includes("npm run smoke -- \"$TRUST402_TEST_URL\""), "CI must smoke test the Docker image through the mapped host port");
+assert(workflow.includes("docker port trust402-x402-test 4032/tcp"), "CI must map the x402 Docker smoke test to an isolated host port");
+assert(workflow.includes("npm run smoke:x402 -- \"$TRUST402_X402_TEST_URL\""), "CI must smoke test mock x402 challenge through the mapped host port");
 assert(launchMonitorWorkflow.includes("workflow_dispatch"), "launch monitor workflow must be manual");
 assert(launchMonitorWorkflow.includes("npm run launch:monitor"), "launch monitor workflow must run npm run launch:monitor");
 assert(launchMonitorWorkflow.includes("--strict"), "launch monitor workflow must fail on required production monitor failures");
