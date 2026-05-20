@@ -1,4 +1,5 @@
 import { config } from "./config.js";
+import { domainActivationPack } from "./domainActivationPack.js";
 import { sha256Json } from "./hash.js";
 import { liveWindowPlan } from "./liveWindowPlan.js";
 import { operatorUnblockReport } from "./operatorUnblockReport.js";
@@ -63,7 +64,7 @@ export function operatorActionPack(input = {}, options = {}) {
 
   const actions = [
     gitVercelAction(cfg, input),
-    customDomainAction(baseUrl),
+    customDomainAction(baseUrl, input),
     externalDirectoryAction(cfg, baseUrl),
     liveProcurementAction(livePlan, cfg),
     proof402Action(livePlan, cfg),
@@ -196,15 +197,41 @@ function gitVercelAction(cfg, input) {
   };
 }
 
-function customDomainAction(baseUrl) {
+function customDomainAction(baseUrl, input = {}) {
   const host = hostOf(baseUrl);
   const needsDomain = host.endsWith(".vercel.app");
+  const activationPack = domainActivationPack({
+    baseUrl,
+    selectedDomain: input.selectedDomain || input.domain,
+    candidateDomains: input.candidateDomains,
+    domainAvailability: input.domainAvailability,
+    availabilityResults: input.availabilityResults,
+    selectedDomainAvailable: input.selectedDomainAvailable,
+    selectedDomainPriceUsd: input.selectedDomainPriceUsd,
+    selectedDomainPeriodYears: input.selectedDomainPeriodYears,
+    selectedDomainPurchaseUrl: input.selectedDomainPurchaseUrl,
+    selectedDomainAvailabilityMessage: input.selectedDomainAvailabilityMessage,
+    availabilityCheckedAt: input.availabilityCheckedAt,
+    availabilitySource: input.availabilitySource,
+    vercelProjectName: input.vercelProjectName
+  });
   return {
     id: "custom_domain",
     title: "Attach accepted production domain",
     required: true,
     status: needsDomain ? "blocked-manual" : "ready",
     currentHost: host,
+    activationPack: {
+      status: activationPack.status,
+      activationPackHash: activationPack.activationPackHash,
+      selectedDomain: activationPack.selectedDomain,
+      availability: activationPack.availability,
+      candidateDomains: activationPack.candidateDomains,
+      blockers: activationPack.blockers,
+      vercelPlan: activationPack.vercelPlan,
+      directoryImpact: activationPack.directoryImpact,
+      safety: activationPack.safety
+    },
     steps: needsDomain
       ? [
           "Choose a non-free-hosting HTTPS domain for Trust402.",

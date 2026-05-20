@@ -152,7 +152,12 @@ Invoke-RestMethod -Method Post -Uri https://trust402.vercel.app/api/domains/acti
   -ContentType application/json `
   -Body '{"selectedDomain":"trust402.dev"}'
 npm run domains:activation-pack -- https://trust402.vercel.app `
-  --selected-domain=trust402.dev
+  --selected-domain=trust402.dev `
+  --selected-domain-available=true `
+  --selected-domain-price-usd=9.99 `
+  --selected-domain-period-years=1 `
+  --selected-domain-purchase-url=https://vercel.com/domains/search?q=trust402.dev `
+  --availability-source=vercel-domain-check
 ```
 
 Generate the Git/Vercel/custom-domain preflight pack without mutating GitHub or
@@ -601,7 +606,8 @@ MVP guarantees:
 - `/api/deployments/github-actions-setup` emits public-safe GitHub Actions setup
   and verification commands without running them or printing secret values;
 - `/api/domains/activation-pack` plans custom-domain activation but never buys a
-  domain, mutates Vercel, sets env vars, or claims availability/pricing;
+  domain, mutates Vercel, sets env vars, or claims availability/pricing without
+  supplied fresh public-safe evidence;
 - `/api/directories/submission-pack` builds public-safe listing payloads and
   directory blockers but never submits forms or sets evidence env;
 - `bazaar:indexing:check` only reads public CDP discovery endpoints and never sends payment;

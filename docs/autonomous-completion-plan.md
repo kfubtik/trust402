@@ -404,13 +404,21 @@ Or from the CLI after rechecking candidate availability:
 
 ```powershell
 npm run domains:activation-pack -- https://trust402.vercel.app `
-  --selected-domain=trust402.dev
+  --selected-domain=trust402.dev `
+  --selected-domain-available=true `
+  --selected-domain-price-usd=9.99 `
+  --selected-domain-period-years=1 `
+  --selected-domain-purchase-url=https://vercel.com/domains/search?q=trust402.dev `
+  --availability-source=vercel-domain-check
 ```
 
 The pack checks whether the current host still blocks external directories,
 prepares `PUBLIC_BASE_URL`, Vercel verification commands, and directory
 evidence fields, but it does not buy a domain, mutate Vercel, set env vars, or
-claim availability/pricing without a fresh registrar/Vercel check.
+claim availability/pricing without a fresh registrar/Vercel check. Supplied
+public-safe availability evidence is included in the `activationPackHash`, so a
+later operator can verify that the selected domain, price, period, and purchase
+URL match the reviewed plan.
 
 For the Git/Vercel and custom-domain portion specifically, run:
 

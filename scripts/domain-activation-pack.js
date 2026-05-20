@@ -9,7 +9,15 @@ const payload = {
   baseUrl: args.currentBaseUrl || args.baseUrl || apiBaseUrl,
   selectedDomain: args.selectedDomain || args.domain,
   candidateDomains: args.candidateDomains,
-  vercelProjectName: args.vercelProjectName
+  vercelProjectName: args.vercelProjectName,
+  selectedDomainAvailable: args.selectedDomainAvailable,
+  selectedDomainPriceUsd: args.selectedDomainPriceUsd,
+  selectedDomainPeriodYears: args.selectedDomainPeriodYears,
+  selectedDomainPurchaseUrl: args.selectedDomainPurchaseUrl,
+  selectedDomainAvailabilityMessage: args.selectedDomainAvailabilityMessage,
+  availabilityCheckedAt: args.availabilityCheckedAt,
+  availabilitySource: args.availabilitySource,
+  domainAvailability: parseJsonArg(args.domainAvailabilityJson)
 };
 
 if (targetUrl && args.local !== true) {
@@ -55,13 +63,14 @@ function parseArgs(values) {
     const raw = item.slice(2);
     const eq = raw.indexOf("=");
     if (eq !== -1) {
-      parsed[toCamel(raw.slice(0, eq))] = parseValue(raw.slice(eq + 1));
+      const key = toCamel(raw.slice(0, eq));
+      parsed[key] = key === "domainAvailabilityJson" ? raw.slice(eq + 1) : parseValue(raw.slice(eq + 1));
       continue;
     }
     const key = toCamel(raw);
     const next = values[index + 1];
     if (next && !next.startsWith("--")) {
-      parsed[key] = parseValue(next);
+      parsed[key] = key === "domainAvailabilityJson" ? next : parseValue(next);
       index += 1;
     } else {
       parsed[key] = true;
@@ -75,6 +84,16 @@ function parseValue(value) {
     return value.split(",").map((item) => item.trim()).filter(Boolean);
   }
   return value;
+}
+
+function parseJsonArg(value) {
+  if (!value) return undefined;
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    console.error(`Invalid --domain-availability-json: ${error.message}`);
+    process.exit(1);
+  }
 }
 
 function toCamel(value) {

@@ -129,15 +129,18 @@ payment headers, mutates wallets, sets env vars, or submits external forms.
 ### `GET/POST /api/domains/activation-pack`
 
 Public-safe custom-domain activation plan for the external-directory blocker.
-It returns the current host policy, candidate-domain policy checks, Vercel env
-plan, verification commands, and evidence fields.
+It returns the current host policy, candidate-domain policy checks, optional
+public-safe availability/price evidence, Vercel env plan, verification commands,
+and evidence fields.
 
 Price: free.
 
 Reason: several directories reject `vercel.app` and similar free-hosting
 domains. This endpoint makes the domain step agent-readable without buying a
 domain, mutating Vercel, setting env vars, submitting directory forms, or
-claiming unverified availability/pricing.
+claiming unverified availability/pricing. When fresh registrar/Vercel evidence
+is supplied, the selected-domain status and price are included in the
+`activationPackHash`.
 
 ### `GET/POST /api/deployments/preflight`
 

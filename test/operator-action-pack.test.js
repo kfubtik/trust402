@@ -9,6 +9,11 @@ test("operatorActionPack turns blockers into public-safe operator actions", () =
     candidatePriceUsd: 0.01,
     maxTotalUsd: 0.03,
     includeProof: true,
+    selectedDomain: "trust402.dev",
+    selectedDomainAvailable: true,
+    selectedDomainPriceUsd: 9.99,
+    selectedDomainPeriodYears: 1,
+    selectedDomainPurchaseUrl: "https://vercel.com/domains/search?q=trust402.dev",
     githubActionsFallbackPresent: true,
     githubCliAuthenticated: false,
     vercelProjectLinked: true
@@ -43,6 +48,11 @@ test("operatorActionPack turns blockers into public-safe operator actions", () =
   assert.ok(pack.actions.some((action) => action.id === "custom_domain"));
   assert.ok(pack.actions.some((action) => action.id === "live_procurement"));
   assert.ok(pack.actions.some((action) => action.id === "final_verification"));
+  const customDomain = pack.actions.find((action) => action.id === "custom_domain");
+  assert.equal(customDomain.activationPack.selectedDomain.status, "available-to-purchase");
+  assert.equal(customDomain.activationPack.selectedDomain.priceUsd, 9.99);
+  assert.equal(customDomain.activationPack.availability.checked, true);
+  assert.equal(customDomain.activationPack.safety.buysDomain, false);
   const directoryAction = pack.actions.find((action) => action.id === "external_x402_directories");
   assert.ok(directoryAction.listingInputs.directoryProfile.endsWith("/directory"));
   assert.ok(directoryAction.listingInputs.directoryProfileJson.endsWith("/directory.json"));

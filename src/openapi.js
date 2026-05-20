@@ -1169,6 +1169,27 @@ function requestSchemaFor(id) {
             { type: "array", items: { type: "string" } }
           ]
         },
+        selectedDomainAvailable: { type: "boolean" },
+        selectedDomainPriceUsd: { type: "number" },
+        selectedDomainPeriodYears: { type: "number" },
+        selectedDomainPurchaseUrl: { type: "string", format: "uri" },
+        selectedDomainAvailabilityMessage: { type: "string" },
+        availabilityCheckedAt: { type: "string", format: "date-time" },
+        availabilitySource: { type: "string" },
+        domainAvailability: {
+          type: "array",
+          items: {
+            type: "object",
+            additionalProperties: true,
+            properties: {
+              name: { type: "string" },
+              available: { type: "boolean" },
+              price: { type: "number" },
+              period: { type: "number" },
+              purchaseUrl: { type: "string", format: "uri" }
+            }
+          }
+        },
         vercelProjectName: { type: "string", default: "trust402" }
       }
     };
@@ -1343,7 +1364,21 @@ function operatorPlanningSchema() {
       includeAutonomous: { type: "boolean", default: false },
       includeAutoRefill: { type: "boolean", default: false },
       includeRefillLive: { type: "boolean", default: false },
-      liveSpentTodayUsd: { type: "number", default: 0 }
+      liveSpentTodayUsd: { type: "number", default: 0 },
+      selectedDomain: { type: "string" },
+      candidateDomains: {
+        oneOf: [
+          { type: "string" },
+          { type: "array", items: { type: "string" } }
+        ]
+      },
+      selectedDomainAvailable: { type: "boolean" },
+      selectedDomainPriceUsd: { type: "number" },
+      selectedDomainPeriodYears: { type: "number" },
+      selectedDomainPurchaseUrl: { type: "string", format: "uri" },
+      availabilityCheckedAt: { type: "string", format: "date-time" },
+      availabilitySource: { type: "string" },
+      domainAvailability: { type: "array", items: { type: "object", additionalProperties: true } }
     }
   };
 }
@@ -1521,7 +1556,12 @@ function exampleFor(id) {
     return {
       baseUrl: "https://trust402.vercel.app",
       selectedDomain: "trust402.dev",
-      candidateDomains: ["trust402.dev", "trust402.xyz", "trust402.org"]
+      candidateDomains: ["trust402.dev", "trust402.xyz", "trust402.org"],
+      selectedDomainAvailable: true,
+      selectedDomainPriceUsd: 9.99,
+      selectedDomainPeriodYears: 1,
+      selectedDomainPurchaseUrl: "https://vercel.com/domains/search?q=trust402.dev",
+      availabilitySource: "vercel-domain-check"
     };
   }
   if (id === "deployments.preflight") {
@@ -1558,7 +1598,11 @@ function exampleFor(id) {
       candidateEndpoint: "https://approved.example/paid",
       candidatePriceUsd: 0.01,
       maxTotalUsd: 0.03,
-      includeProof: true
+      includeProof: true,
+      selectedDomain: "trust402.dev",
+      selectedDomainAvailable: true,
+      selectedDomainPriceUsd: 9.99,
+      selectedDomainPeriodYears: 1
     };
   }
   if (id === "operator.unblock_report") {

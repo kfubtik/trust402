@@ -94,7 +94,10 @@ Use `POST /api/directories/submission-pack` with `baseUrl` and
 `userApprovedOutreach` when planning a custom-domain submission window. The
 endpoint is read-only; it does not submit directory forms or set evidence env.
 The domain activation pack is also read-only: it does not buy domains, mutate
-Vercel, set env vars, or claim availability/pricing without a fresh check.
+Vercel, set env vars, or claim availability/pricing without a fresh check. When
+fresh public-safe registrar evidence is supplied, the pack includes the
+availability, price, purchase URL, and `activationPackHash` so the operator can
+verify the exact domain plan later.
 
 ### CDP Bazaar
 
@@ -197,20 +200,30 @@ Action:
 - submit only the public-safe listing fields from this file after the custom
   domain passes x402 smoke.
 
-Custom domain candidates checked through Vercel on 2026-05-19 at 16:45 +07:
+Custom domain candidates checked through the Vercel domain tool on 2026-05-20
+at 07:29 +07:
 
-| Domain | Status | First-year price |
-| --- | --- | --- |
-| `trust402.com` | unavailable | n/a |
-| `trust402.dev` | available, recommended | `$9.99` |
-| `trust402.xyz` | available, cheapest | `$1.99` |
-| `trust402.org` | available | `$8.99` |
-| `trust402.net` | available | `$13.50` |
-| `trust402.io` | available | `$37.99` |
-| `gettrust402.com` | available | `$11.25` |
-| `trust402agent.com` | available | `$11.25` |
+| Domain | Status | Price / period | Purchase URL |
+| --- | --- | --- | --- |
+| `trust402.dev` | available, recommended | `$9.99 / 1 year` | `https://vercel.com/domains/search?q=trust402.dev` |
+| `trust402.xyz` | available, cheapest | `$1.99 / 1 year` | `https://vercel.com/domains/search?q=trust402.xyz` |
+| `trust402.app` | available | `$9.99 / 1 year` | `https://vercel.com/domains/search?q=trust402.app` |
+| `trust402.io` | available | `$37.99 / 1 year` | `https://vercel.com/domains/search?q=trust402.io` |
+| `trust402.ai` | available | `$160 / 2 years` | `https://vercel.com/domains/search?q=trust402.ai` |
 
 Prices and availability can change; recheck before purchase.
+
+Read-only activation pack for the preferred candidate:
+
+```powershell
+npm run domains:activation-pack -- https://trust402.vercel.app `
+  --selected-domain=trust402.dev `
+  --selected-domain-available=true `
+  --selected-domain-price-usd=9.99 `
+  --selected-domain-period-years=1 `
+  --selected-domain-purchase-url=https://vercel.com/domains/search?q=trust402.dev `
+  --availability-source=vercel-domain-check
+```
 
 Useful public URLs:
 

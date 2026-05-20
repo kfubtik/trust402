@@ -29,6 +29,16 @@ const payload = {
   liveMaxPerJobUsd: args.liveMaxPerJobUsd,
   liveDailyLimitUsd: args.liveDailyLimitUsd,
   liveSpentTodayUsd: args.liveSpentTodayUsd || args.liveSpentToday,
+  selectedDomain: args.selectedDomain || args.domain,
+  candidateDomains: args.candidateDomains,
+  selectedDomainAvailable: args.selectedDomainAvailable,
+  selectedDomainPriceUsd: args.selectedDomainPriceUsd,
+  selectedDomainPeriodYears: args.selectedDomainPeriodYears,
+  selectedDomainPurchaseUrl: args.selectedDomainPurchaseUrl,
+  selectedDomainAvailabilityMessage: args.selectedDomainAvailabilityMessage,
+  availabilityCheckedAt: args.availabilityCheckedAt,
+  availabilitySource: args.availabilitySource,
+  domainAvailability: parseJsonArg(args.domainAvailabilityJson),
   githubActionsFallbackPresent: existsSync(".github/workflows/vercel-production-deploy.yml"),
   githubCliAuthenticated: commandOk("gh", ["auth", "status"]),
   vercelProjectLinked,
@@ -98,19 +108,37 @@ function parseArgs(values) {
     const raw = item.slice(2);
     const eq = raw.indexOf("=");
     if (eq !== -1) {
-      parsed[toCamel(raw.slice(0, eq))] = raw.slice(eq + 1);
+      const key = toCamel(raw.slice(0, eq));
+      parsed[key] = key === "domainAvailabilityJson" ? raw.slice(eq + 1) : parseValue(raw.slice(eq + 1));
       continue;
     }
     const key = toCamel(raw);
     const next = values[index + 1];
     if (next && !next.startsWith("--")) {
-      parsed[key] = next;
+      parsed[key] = key === "domainAvailabilityJson" ? next : parseValue(next);
       index += 1;
     } else {
       parsed[key] = true;
     }
   }
   return parsed;
+}
+
+function parseValue(value) {
+  if (typeof value === "string" && value.includes(",") && !/^https?:\/\//.test(value)) {
+    return value.split(",").map((item) => item.trim()).filter(Boolean);
+  }
+  return value;
+}
+
+function parseJsonArg(value) {
+  if (!value) return undefined;
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    console.error(`Invalid --domain-availability-json: ${error.message}`);
+    process.exit(1);
+  }
 }
 
 function commandOk(command, commandArgs) {
