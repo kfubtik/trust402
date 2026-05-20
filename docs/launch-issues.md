@@ -28,14 +28,10 @@ The full final Definition of Done is pinned in
 - Deployment mode: production is still updated through manual Vercel CLI runs;
   push-triggered Git/Vercel auto-deploy evidence is still not verified.
 - Recent manual production deployment evidence snapshot:
-  `dpl_38GRxLRfC5cWXrU6SbGoeAaLWFWd`, aliased to
-  `https://trust402.vercel.app` as of 2026-05-20 09:02:37 +07:00. This deploy
-  includes commit `c024a6a6fe2f18f98ac810684739b302ab71521a`
-  (`Add public procurement audit bundles`). The newer GitHub/local HEAD
-  `801446e02190bf0facc13aa674e6bf4eb58a2143`
-  (`Use remote runtime for operator readiness CLI`) is pushed to `origin/main`
-  but not yet deployed because Vercel returned the free-plan daily deployment
-  limit (`more than 100`) on the follow-up deploy attempt. Treat the latest
+  `dpl_5KEV3nkrPh91ccCPmTRuMTn8DQB8`, aliased to
+  `https://trust402.vercel.app` as of 2026-05-20 09:25:49 +07:00. This deploy
+  includes commit `33946f7e5a11856e3d7de8d81207fbed86a4a3bf`
+  (`Add AgentCash refill audit bundle`). Treat the latest
   `deployment:preflight` output and `vercel inspect https://trust402.vercel.app`
   as the source of truth after any later deploy.
 - CDP Bazaar indexing: 10/10 paid launch resources verified as of
@@ -43,12 +39,12 @@ The full final Definition of Done is pinned in
   CDP discovery latency does not create false launch-monitor timeouts.
 - External directory visibility: monitored read-only; latest final verifier
   checked 13 directories, found 10 reachable, 0 visible, 3 unreachable, and 1
-  custom-domain-blocked as of 2026-05-20 09:09:42 +07:00.
+  custom-domain-blocked as of 2026-05-20 09:28:38 +07:00.
 - Production gates: `node --test test` (178/178), `node scripts/release-check.js`,
   smoke, x402 smoke, Docker build, launch monitor, deployment preflight,
   AgentCash refill dry-run, and external directory read-only check passed as of
-  2026-05-20 09:09:42 +07:00. Recent final verification hash:
-  `sha256:41e0a918f095cf358d7824449d44d3c381f842962076b3bacb5c895e7a74f6a0`.
+  2026-05-20 09:28:38 +07:00. Recent final verification hash:
+  `sha256:e6431dfe3a7ca9ad825ee339acf678a94f311826e5f0528858a8ddb3674aca9a`.
   `final:verify` remains blocked because Git/Vercel auto-deploy,
   external-directory visibility, live procurement, paid Proof402 delegation,
   AgentCash auto-refill, and autonomous live job evidence are still unresolved.
@@ -70,6 +66,11 @@ The full final Definition of Done is pinned in
   Downstream endpoint URLs are represented with origins and hashes, and any
   `payment-response` evidence is recorded only as `sha256:` hashes, never as
   raw payment headers.
+- AgentCash refill checks now include a public-safe
+  `trust402.agentcash_refill_audit.v1` `auditBundle` with threshold/cap state,
+  adapter evidence hashes, local wallet-policy requirements, and no wallet
+  secrets or raw adapter responses. Production dry-run audit hash observed:
+  `sha256:478323725819162c98733c30879ffbf0578e22e584b181cfcab6d7726c8e62c0`.
 - Payment bridge preflight now requires an explicit dry-run/no-payment signal
   from the bridge. A bare `paidSubcallsMade=0` is logged but does not pass the
   preflight by itself.
