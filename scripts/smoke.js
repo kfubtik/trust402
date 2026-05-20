@@ -173,6 +173,8 @@ async function main() {
   assert(deploymentPreflightGet.safety?.readOnly === true, "/api/deployments/preflight must be read-only");
   assert(deploymentPreflightGet.safety?.mutatesVercel === false, "/api/deployments/preflight must not mutate Vercel");
   assert(deploymentPreflightGet.safety?.mutatesGitHub === false, "/api/deployments/preflight must not mutate GitHub");
+  assert(deploymentPreflightGet.requirementStatus?.gitVercelAutoDeploy, "/api/deployments/preflight must expose Git/Vercel requirement status");
+  assert(deploymentPreflightGet.requirementStatus?.customDomain, "/api/deployments/preflight must expose custom-domain requirement status");
 
   const githubActionsSetupGet = await getJson("/api/deployments/github-actions-setup");
   assert(githubActionsSetupGet.tool === "deployments.github_actions_setup", "/api/deployments/github-actions-setup GET tool mismatch");

@@ -137,6 +137,8 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(deploymentPreflightGet.body.safety.readOnly, true);
     assert.equal(deploymentPreflightGet.body.safety.mutatesVercel, false);
     assert.equal(deploymentPreflightGet.body.safety.mutatesGitHub, false);
+    assert.ok(deploymentPreflightGet.body.requirementStatus.gitVercelAutoDeploy);
+    assert.ok(deploymentPreflightGet.body.requirementStatus.customDomain);
 
     const githubActionsSetupGet = await request(baseUrl, "/api/deployments/github-actions-setup");
     assert.equal(githubActionsSetupGet.response.status, 200);

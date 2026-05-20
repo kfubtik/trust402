@@ -490,6 +490,13 @@ workflow, launch-monitor workflow, expected Vercel secret names, and whether
 the current host is a custom production domain. It does not read secret values,
 connect GitHub, mutate Vercel, or submit directory forms.
 
+The top-level `status` is intentionally stricter than the Git/Vercel item
+alone because it also includes the custom-domain blocker used by external
+directories. For the Git/Vercel auto-deploy requirement specifically, read
+`requirementStatus.gitVercelAutoDeploy`: it can be `verified` from a
+push-triggered GitHub Actions or Vercel Git deploy even while
+`requirementStatus.customDomain` remains blocked.
+
 Optional read-only probes can make that check stronger when the local CLIs are
 authenticated:
 

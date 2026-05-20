@@ -70,6 +70,13 @@ export function deploymentPreflight(input = {}, options = {}) {
     vercelProject,
     vercelDeployment
   });
+  const requirementStatus = requirementStatusFor({
+    blockers,
+    autoDeployEvidence,
+    fallback,
+    gitHubApp,
+    domain
+  });
   const status = autoDeployEvidence.verified && blockers.length === 0
     ? "verified"
     : fallback.readyToConfigure || gitHubApp.connected
@@ -84,6 +91,7 @@ export function deploymentPreflight(input = {}, options = {}) {
     baseUrl,
     summary: {
       gitAutoDeployVerified: autoDeployEvidence.verified,
+      gitAutoDeployRequirementStatus: requirementStatus.gitVercelAutoDeploy.status,
       fallbackReadyToConfigure: fallback.readyToConfigure,
       githubActionsSecretsConfigured: fallback.secretsConfigured,
       vercelGitConnected: gitHubApp.connected,
@@ -101,6 +109,7 @@ export function deploymentPreflight(input = {}, options = {}) {
     githubCli,
     vercelDeployment,
     domain,
+    requirementStatus,
     autoDeployEvidence,
     blockers,
     evidenceEnv: {
@@ -252,7 +261,8 @@ function blockersFor(input) {
   }
   if (!input.gitHubApp.connected &&
     input.gitHubApp.connectAttempted &&
-    input.gitHubApp.connectFailureKind === "private_repo_access_denied") {
+    input.gitHubApp.connectFailureKind === "private_repo_access_denied" &&
+    !input.autoDeployEvidence.verified) {
     blockers.push(blocker(
       "vercel_git_connect_private_repo_access_denied",
       "Vercel CLI could not connect kfubtik/trust402; the Vercel GitHub App needs access to the private repository."
@@ -282,7 +292,7 @@ function blockersFor(input) {
       "Neither Vercel GitHub App connection nor GitHub Actions fallback is ready to configure."
     ));
   }
-  if (input.fallback.readyToConfigure && input.fallback.secretsConfigured !== true) {
+  if (!input.autoDeployEvidence.verified && input.fallback.readyToConfigure && input.fallback.secretsConfigured !== true) {
     blockers.push(blocker(
       "github_actions_secrets_unverified",
       "GitHub Actions fallback exists, but Vercel secret values are not confirmed."
@@ -325,6 +335,53 @@ function blockersFor(input) {
     ));
   }
   return blockers;
+}
+
+function requirementStatusFor({ blockers, autoDeployEvidence, fallback, gitHubApp, domain }) {
+  const gitBlockerIds = new Set([
+    "git_auto_deploy_evidence_missing",
+    "vercel_git_connect_private_repo_access_denied",
+    "git_auto_deploy_commit_stale",
+    "latest_vercel_deploy_commit_mismatch",
+    "no_ready_git_deploy_path",
+    "github_actions_secrets_unverified",
+    "production_deploy_monitor_not_strict",
+    "production_deploy_capture_not_pipefail_safe",
+    "launch_monitor_workflow_missing",
+    "git_remote_not_trust402",
+    "vercel_project_not_linked"
+  ]);
+  const gitBlockers = blockers.filter((item) => gitBlockerIds.has(item.id));
+  const domainBlockers = blockers.filter((item) => item.id === "custom_domain_required");
+  const gitVerified = autoDeployEvidence.verified && gitBlockers.length === 0;
+
+  return {
+    gitVercelAutoDeploy: {
+      id: "git_vercel_auto_deploy",
+      status: gitVerified
+        ? "verified"
+        : fallback.readyToConfigure || gitHubApp.connected
+          ? "blocked-manual-evidence"
+          : "blocked-setup",
+      verified: gitVerified,
+      evidenceUrl: autoDeployEvidence.evidenceUrl || "",
+      commitSha: autoDeployEvidence.commitSha || "",
+      blockers: gitBlockers,
+      nextAction: gitVerified
+        ? "Record TRUST402_GIT_AUTO_DEPLOY_* evidence and keep it fresh after the next push-triggered deploy."
+        : "Configure Vercel GitHub App access or GitHub Actions Vercel secrets, then capture a push-triggered production deploy run."
+    },
+    customDomain: {
+      id: "custom_domain",
+      status: domain.ready ? "verified" : "blocked-manual",
+      verified: domain.ready,
+      host: domain.host,
+      blockers: domainBlockers,
+      nextAction: domain.ready
+        ? "Use this domain for PUBLIC_BASE_URL and external directory submission evidence."
+        : "Attach a non-free-hosting HTTPS domain before final external directory completion."
+    }
+  };
 }
 
 function nextActions({ blockers, fallback, gitHubApp, domain }) {

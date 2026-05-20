@@ -50,7 +50,10 @@ test("deploymentPreflight exposes fallback readiness and custom-domain blocker",
 
   assert.equal(result.status, "blocked-manual-evidence");
   assert.equal(result.summary.fallbackReadyToConfigure, true);
+  assert.equal(result.summary.gitAutoDeployRequirementStatus, "blocked-manual-evidence");
   assert.equal(result.summary.customDomainReady, false);
+  assert.equal(result.requirementStatus.gitVercelAutoDeploy.verified, false);
+  assert.equal(result.requirementStatus.customDomain.status, "blocked-manual");
   assert.ok(result.blockers.some((item) => item.id === "github_actions_secrets_unverified"));
   assert.ok(result.blockers.some((item) => item.id === "custom_domain_required"));
   assert.equal(result.safety.readsSecretValues, false);
@@ -85,6 +88,8 @@ test("deploymentPreflight verifies when evidence, secrets, Git link, and domain 
 
   assert.equal(result.status, "verified");
   assert.equal(result.blockers.length, 0);
+  assert.equal(result.requirementStatus.gitVercelAutoDeploy.status, "verified");
+  assert.equal(result.requirementStatus.customDomain.status, "verified");
   assert.equal(result.summary.customDomainReady, true);
   assert.equal(result.domain.host, "trust402.example");
   assert.equal(result.evidenceEnv.TRUST402_GIT_AUTO_DEPLOY_COMMIT_SHA, "abc1234");
@@ -146,10 +151,56 @@ test("deploymentPreflight can verify from GitHub CLI probe evidence without secr
 
   assert.equal(result.status, "verified");
   assert.equal(result.summary.githubCliAuthenticated, true);
+  assert.equal(result.requirementStatus.gitVercelAutoDeploy.status, "verified");
   assert.equal(result.summary.latestVercelDeploymentCommitSha, "abc1234deadbeef");
   assert.equal(result.githubCli.safety.readsSecretValues, false);
   assert.equal(result.vercelDeployment.safety.printsSecretValues, false);
   assert.equal(JSON.stringify(result).includes("secret-value"), false);
+});
+
+test("deploymentPreflight separates verified Git auto-deploy from custom-domain blocker", () => {
+  const result = deploymentPreflight({
+    baseUrl: "https://trust402.vercel.app",
+    gitRemote: "https://github.com/kfubtik/trust402.git",
+    gitHead: "abc1234",
+    vercelProject: {
+      projectName: "trust402",
+      projectId: "prj_123",
+      orgId: "team_123"
+    },
+    productionDeployWorkflowText: productionWorkflow,
+    launchMonitorWorkflowText: launchWorkflow,
+    vercelGitConnectAttempted: true,
+    vercelGitConnectError:
+      "Failed to connect kfubtik/trust402 to project. Make sure there aren't any typos and that you have access to the repository if it's private.",
+    githubCli: {
+      probed: true,
+      available: true,
+      authenticated: true,
+      secretsConfigured: true,
+      workflowsVisible: true,
+      latestSuccessfulDeployRunForHead: true,
+      autoDeployEvidenceUrl: "https://github.com/kfubtik/trust402/actions/runs/42",
+      autoDeployCommitSha: "abc1234",
+      latestDeployRun: {
+        status: "completed",
+        conclusion: "success",
+        event: "push",
+        headSha: "abc1234",
+        url: "https://github.com/kfubtik/trust402/actions/runs/42"
+      }
+    }
+  }, {
+    config: baseConfig()
+  });
+
+  assert.equal(result.status, "blocked-manual-evidence");
+  assert.equal(result.requirementStatus.gitVercelAutoDeploy.status, "verified");
+  assert.equal(result.requirementStatus.gitVercelAutoDeploy.verified, true);
+  assert.equal(result.requirementStatus.customDomain.status, "blocked-manual");
+  assert.deepEqual(result.requirementStatus.gitVercelAutoDeploy.blockers, []);
+  assert.ok(result.blockers.some((item) => item.id === "custom_domain_required"));
+  assert.equal(result.blockers.some((item) => item.id === "vercel_git_connect_private_repo_access_denied"), false);
 });
 
 test("deploymentPreflight blocks stale recorded auto-deploy evidence", () => {
