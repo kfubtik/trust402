@@ -14,8 +14,8 @@ npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10
 
 ## Current Production State
 
-Last checked on 2026-05-20 at 06:40:14 +07:00 after production commit
-`6249e59`.
+Last checked on 2026-05-20 at 07:02:43 +07:00 after production commit
+`fc4ff8a`.
 
 Production alias:
 
@@ -28,9 +28,9 @@ Use `npm run deployment:preflight -- https://trust402.vercel.app
 deployment id and commit SHA. The alias is the stable buyer-facing endpoint;
 deployment URLs rotate after each production release.
 
-- indexed resources: 9 of 10;
-- CDP Bazaar status: `partially-indexed`;
-- missing resources: `trust.compare_resources`;
+- indexed resources: 10 of 10;
+- CDP Bazaar status: `all-indexed`;
+- missing resources: none;
 - Trust402 live procurement: disabled;
 - Proof402 paid delegation: disabled;
 - live OpenAPI and unpaid x402 challenge expose the updated structured
@@ -44,20 +44,18 @@ Indexed right now:
 - `seller.readiness`
 - `procurement.plan`
 - `procurement.quote`
+- `trust.compare_resources`
 - `monitor.snapshot`
 - `monitor.badge`
 - `reports.x402_diligence`
 
-Missing right now:
+Missing right now: none.
 
-- `trust.compare_resources`
+## Resolved Indexing Blocker
 
-## Current Indexing Blocker
-
-`trust.compare_resources` is healthy as an unpaid x402 route, but it is not
-currently visible in CDP Bazaar all-resource search. This keeps the completion
-audit red until a current `10/10` check is observed. The production route itself
-remains healthy:
+`trust.compare_resources` temporarily dropped from CDP Bazaar all-resource
+search, but the current production check now confirms all ten launch routes are
+indexed again. The production route itself remains healthy:
 
 - `POST /api/trust/compare-resources` returns an unpaid HTTP 402 challenge;
 - the challenge contains top-level `extensions.bazaar`;
@@ -69,8 +67,8 @@ remains healthy:
   schema fix;
 - `npm run bazaar:indexing:check:all -- https://trust402.vercel.app
   --timeout-ms=10000 --limit=20 --concurrency=8` returns
-  `status = partially-indexed`, `routeSummary.indexed = 9`, and
-  `routeSummary.missing = [trust.compare_resources]`;
+  `status = all-indexed`, `routeSummary.indexed = 10`, and
+  `routeSummary.missing = []`;
 - `npm run smoke:x402 -- https://trust402.vercel.app /api/trust/compare-resources`
   passes, so the missing catalog row is not caused by a broken unpaid route.
 - a direct unpaid 402 probe confirms the `PAYMENT-REQUIRED` header includes
@@ -161,13 +159,20 @@ Use [x402-diligence.json](../examples/x402-diligence.json).
 Expected per-call payment limit: `$0.15`.
 
 Earlier paid smokes settled successfully. Receipts and transaction hashes are
-stored only in ignored local `.tmp/` files. The current missing
-`trust.compare_resources` route still needs fresh all-resource evidence before
-the completion gate can pass.
+stored only in ignored local `.tmp/` files. The current CDP Bazaar route-count
+evidence is:
+
+```text
+TRUST402_CDP_BAZAAR_EVIDENCE_REF=sha256:e3cca6c84414ab215c67432ab5e858143bae9e7a4787ebfd1acb5d9dcce066d9
+TRUST402_CDP_BAZAAR_CHECK_STATUS=all-indexed
+TRUST402_CDP_BAZAAR_EXPECTED_RESOURCES=10
+TRUST402_CDP_BAZAAR_INDEXED_RESOURCES=10
+TRUST402_CDP_BAZAAR_MISSING_RESOURCES=
+```
 
 ## Completion Gate
 
-The CDP Bazaar portion of the completion gate is currently blocked at `9/10`.
+The CDP Bazaar portion of the completion gate is currently achieved at `10/10`.
 To recheck the live state:
 
 ```powershell

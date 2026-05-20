@@ -20,20 +20,20 @@ v0.1.0
 CDP Bazaar state:
 
 ```text
-9 of 10 paid launch resources indexed
-status = partially-indexed
-missing = trust.compare_resources
-evidence = sha256:523857cf9d44c0bb01b6e993d92c7329b118df95f11e229359a5d616a663a608
+10 of 10 paid launch resources indexed
+status = all-indexed
+missing = none
+evidence = sha256:e3cca6c84414ab215c67432ab5e858143bae9e7a4787ebfd1acb5d9dcce066d9
 ```
 
-Trust402 is live as a production x402 service, but CDP Bazaar all-resource
-evidence is not complete until `trust.compare_resources` is indexed again.
-Live Trust402 procurement, paid Proof402 delegation, and AgentCash auto-refill
-remain disabled until separately approved.
+Trust402 is live as a production x402 service and CDP Bazaar all-resource
+evidence is currently complete. Live Trust402 procurement, paid Proof402
+delegation, and AgentCash auto-refill remain disabled until separately
+approved.
 
 ## Current External Directory Visibility
 
-Last checked on 2026-05-20 at 06:54:32 +07:00 with:
+Last checked on 2026-05-20 at 07:03:14 +07:00 with:
 
 ```powershell
 npm run directories:check -- https://trust402.vercel.app --timeout-ms=5000
@@ -53,8 +53,8 @@ customDomainBlocked = 1
 
 Interpretation:
 
-- CDP Bazaar remains the authoritative discovery signal for Trust402 right now,
-  and it is still blocked at `9/10` until `trust.compare_resources` appears;
+- CDP Bazaar remains the authoritative discovery signal for Trust402 right now
+  and is currently `10/10` indexed;
 - Agentic.Market, x402scan, x402Bazaar, x402.org ecosystem, RelAI market,
   x402list.fun, Orbis API Marketplace, World.fun x402 Market, x402agency,
   Agent Bazaar, the402, x402-list.com, and Agora402 are monitored for public
@@ -98,10 +98,10 @@ Vercel, set env vars, or claim availability/pricing without a fresh check.
 
 ### CDP Bazaar
 
-Status: blocked at `9/10`.
+Status: complete at `10/10`.
 
-Action: restore the missing `trust.compare_resources` Bazaar indexing evidence
-with an approved paid smoke, then keep the verification gate green.
+Action: keep the verification gate green and rerun the all-resource check after
+any production release or paid-route metadata change.
 
 ```powershell
 npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10000 --limit=20
