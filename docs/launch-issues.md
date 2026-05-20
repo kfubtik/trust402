@@ -34,13 +34,14 @@ The full final Definition of Done is pinned in
   (`Add final verification deployment sync gate`). Treat the latest
   `deployment:preflight` output and `vercel inspect https://trust402.vercel.app`
   as the source of truth after any later deploy.
-- Current GitHub `origin/main` and production include the deployment-preflight
-  requirement split from `2acd266590fafcba88fb5be028bd8b5f6190430b`, the
-  deployment-lag ledger update from `7ab25d1f7d259e1e114f964aacd49da7c22ee2a3`,
-  and the final-verifier deployment sync gate from
-  `e613f801ac5cdd8d603e25dae78c0c3f5b5888d8`. Git/Vercel auto-deploy still is
-  not verified because this production update was a manual Vercel CLI deploy,
-  not a push-triggered deployment.
+- The current deployed runtime includes the deployment-preflight requirement
+  split from `2acd266590fafcba88fb5be028bd8b5f6190430b`, the deployment-lag
+  ledger update from `7ab25d1f7d259e1e114f964aacd49da7c22ee2a3`, and the
+  final-verifier deployment sync gate from
+  `e613f801ac5cdd8d603e25dae78c0c3f5b5888d8`. Source-only evidence commits may
+  be ahead of production until the next successful deploy. Git/Vercel
+  auto-deploy still is not verified because this production update was a manual
+  Vercel CLI deploy, not a push-triggered deployment.
 - Final verification now includes a required `production_deployment_sync`
   check before production smoke. If production is behind the local verification
   contract, `production_smoke` is skipped as a deployment-lag blocker instead
