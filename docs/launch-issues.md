@@ -40,8 +40,8 @@ The full final Definition of Done is pinned in
   final-verifier deployment sync gate from
   `e613f801ac5cdd8d603e25dae78c0c3f5b5888d8`. Source-only evidence commits may
   be ahead of production until the next successful deploy. Current GitHub HEAD
-  includes `9a42be966b380107f4f1a13bb7aec1f79a531f0f`
-  (`Add GitHub Actions deploy evidence artifact`), which has not reached
+  includes `42d08f8098281a542751de9c09f46645d47d0ca9`
+  (`Expose deployment metadata in health checks`), which has not reached
   production yet because the follow-up Vercel deploy hit the free-plan daily
   deployment limit (`more than 100`). Git/Vercel auto-deploy still is not
   verified because the last successful production update was a manual Vercel CLI
@@ -52,6 +52,10 @@ The full final Definition of Done is pinned in
   `trust402-deployment-evidence` artifact after production smoke, x402 smoke,
   and launch monitor pass. After Actions secrets are configured, that artifact
   should supply the run URL and head SHA for `TRUST402_GIT_AUTO_DEPLOY_*`.
+- Source HEAD now also exposes public-safe deployment metadata from `/health`
+  when the runtime provides `VERCEL_GIT_COMMIT_SHA`, and the final verifier
+  compares that SHA to the local HEAD when available. Production will expose
+  this after the next successful deploy.
 - Final verification now includes a required `production_deployment_sync`
   check before production smoke. If production is behind the local verification
   contract, `production_smoke` is skipped as a deployment-lag blocker instead
