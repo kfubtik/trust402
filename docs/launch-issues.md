@@ -62,9 +62,10 @@ The full final Definition of Done is pinned in
   of being reported as an application smoke regression.
 - CDP Bazaar indexing: after switching `PUBLIC_BASE_URL` to
   `https://trust402.aztecbeacon.uk`, search still finds Trust402 but exact
-  resource URLs are `0/10` on the custom-domain origin as of
-  2026-05-20 16:47 +07:00. Evidence:
-  `sha256:25df12ec7547ea74c3ccc8910ffbe2cc252988ffe22b346f35ac82891af9bf3e`.
+  resource URLs are only `1/10` on the custom-domain origin as of
+  2026-05-20 16:53 +07:00. `trust.compare_resources` is indexed after the
+  one-shot paid smoke; the other nine paid launch routes still resolve mostly
+  through old `trust402.vercel.app` search rows.
 - AgentCash direct paid smoke: a one-shot x402 fetch against
   `https://trust402.aztecbeacon.uk/api/trust/compare-resources` succeeded for
   `$0.03` on 2026-05-20 at 16:44 +07:00. Public transaction hash:
@@ -73,11 +74,11 @@ The full final Definition of Done is pinned in
   `npm run agentcash:policy` reports locked mode again.
 - External directory visibility: monitored read-only; latest check found 13
   monitored directories, 10 reachable, 0 visible, 3 unreachable, and 0
-  custom-domain-blocked as of 2026-05-20 16:47 +07:00.
+  custom-domain-blocked as of 2026-05-20 16:52 +07:00.
 - Production gates: `node --test test` (184/184), `node scripts/release-check.js`,
   smoke, x402 smoke, Docker build, launch monitor, deployment preflight,
   AgentCash refill dry-run, production deployment sync, and external directory
-  read-only check passed as of 2026-05-20 09:52 +07:00. Recent final
+  read-only check passed as of 2026-05-20 16:53 +07:00. Recent final
   verification hash:
   `sha256:44e39d236930a87c2599113b4844d7eadc2b0e6ea3a5a696239f9186f94fe6f2`.
   `final:verify` remains blocked because CDP Bazaar custom-domain reindexing,

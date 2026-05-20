@@ -14,7 +14,7 @@ npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-m
 
 ## Current Production State
 
-Last checked on 2026-05-20 at 16:47 +07:00 after the custom-domain switch to
+Last checked on 2026-05-20 at 16:53 +07:00 after the custom-domain switch to
 `https://trust402.aztecbeacon.uk`.
 
 Production alias:
@@ -28,19 +28,22 @@ Use `npm run deployment:preflight -- https://trust402.aztecbeacon.uk
 deployment id and commit SHA. The alias is the stable buyer-facing endpoint;
 deployment URLs rotate after each production release.
 
-- indexed resources: 0 of 10 exact custom-domain URLs;
-- CDP Bazaar status: `eligible-not-found-yet`;
-- missing resources: all 10 paid launch routes on the custom-domain origin;
+- indexed resources: 1 of 10 exact custom-domain URLs;
+- CDP Bazaar status: `partially-indexed`;
+- missing resources: 9 paid launch routes on the custom-domain origin;
 - latest custom-domain paid smoke: successful AgentCash x402 fetch against
   `POST /api/trust/compare-resources` for `$0.03`, transaction
   `0xb447b8213c9641d200d656945e95b0f5fb5e3ac2565469179c8af742cb42d1df`;
-- post-smoke CDP Bazaar recheck still reports `0/10`, so the custom-domain
-  route discovery remains pending;
+- post-smoke CDP Bazaar recheck first reported `0/10`, then the next read-only
+  check reported `1/10` with `trust.compare_resources` indexed on the custom
+  domain;
 - Trust402 live procurement: disabled;
 - Proof402 paid delegation: disabled;
 - live OpenAPI and unpaid x402 challenge expose custom-domain resource URLs.
 
-Indexed right now on the custom-domain exact route check: none.
+Indexed right now on the custom-domain exact route check:
+
+- `trust.compare_resources`
 
 Missing right now:
 
@@ -48,16 +51,17 @@ Missing right now:
 - `trust.score_resource`
 - `trust.evaluate_origin`
 - `seller.readiness`
-- `trust.compare_resources`
 - `procurement.plan`
 - `procurement.quote`
 - `monitor.snapshot`
 - `monitor.badge`
 - `reports.x402_diligence`
 
-CDP Bazaar search does find Trust402, but the matched resources still point to
-the previous `trust402.vercel.app` origin. Treat that as reindex lag, not final
-custom-domain evidence.
+CDP Bazaar search does find Trust402. Most matched resources still point to the
+previous `trust402.vercel.app` origin, while the paid-smoked
+`trust.compare_resources` route now appears on `trust402.aztecbeacon.uk`.
+Treat the remaining old-origin rows as reindex lag unless a later check proves
+they require separate settlements.
 
 ## Historical Resolved Indexing Blocker
 
@@ -102,7 +106,8 @@ settled successfully. Do not repeat it while
 `.local/trust402-agentcash-wallet.json` reports zero
 manual smoke budget or a global max below `$0.03`. The current local policy
 blocks that spend until the operator explicitly approves a temporary smoke
-window.
+window. The current evidence suggests this kind of settle can index the exact
+route that was paid, but it does not automatically prove all other paid routes.
 
 The read-only action pack for this no-Proof smoke window is:
 
