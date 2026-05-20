@@ -41,8 +41,11 @@ deployment URLs rotate after each production release.
 - latest custom-domain paid smoke: successful AgentCash x402 fetch against
   every paid launch route on `https://trust402.aztecbeacon.uk`;
 - route-by-route missing-route spend after `trust.compare_resources`: `$0.30`;
-- AgentCash global `maxAmount` was restored to `$0.01` after the route smokes;
-- post-smoke AgentCash balance: `$0.953`, still above the `$0.50` reserve;
+- AgentCash global `maxAmount` was restored to `$0.01` after the route smokes
+  and after the later Proof402 direct smoke;
+- post-route-smoke AgentCash balance: `$0.953`; after the later `$0.005`
+  Proof402 direct smoke the verified balance was `$0.948`, still above the
+  `$0.50` reserve;
 - current evidence ref:
   `sha256:7f8c5c87c60f6c63e9289b454d331d9481c780498c0d92395c19ca65f62c45af`;
 - Trust402 live procurement: disabled;
@@ -222,6 +225,10 @@ TRUST402_CDP_BAZAAR_MISSING_RESOURCES=
 The CDP Bazaar portion of the completion gate is complete for the custom-domain
 exact resource URLs. Keep rechecking before public submissions or production
 claims because external discovery surfaces can lag or regress.
+The later Proof402 direct paid smoke evidence ref is
+`sha256:00d01bc39d1fe520dbeb6e76433554b2ccf163dc8e8f8c315a4b92cd7abefae8`;
+that smoke is independent of CDP Bazaar indexing and does not change the
+`10/10` route-count evidence ref above.
 To recheck the live state:
 
 ```powershell

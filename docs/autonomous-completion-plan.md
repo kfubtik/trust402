@@ -290,6 +290,23 @@ Completion evidence:
   after live Proof402 policy is ready; it sends only hashes and public-safe
   metadata.
 
+Current evidence snapshot:
+
+- direct AgentCash Proof402 smoke succeeded on 2026-05-20 at 17:47 +07:00 for
+  approved content hash
+  `sha256:4af397d773634de7b4b2fd60c4a1bc07b53f4b198bd577d127f2524115c8c84a`;
+- public proof id: `proof_4527023b4c7c1bf5c5b88e94`;
+- public transaction hash:
+  `0xf01fd6c543227924712cd26083a61c34c5222ee3fe674bfc82fed4e745a5292a`;
+- evidence ref:
+  `sha256:00d01bc39d1fe520dbeb6e76433554b2ccf163dc8e8f8c315a4b92cd7abefae8`;
+- the local policy window was closed and AgentCash `maxAmount` restored to
+  `$0.01` immediately after the paid call.
+
+This evidence is intentionally recorded as a direct AgentCash smoke. The
+requirement must remain unverified until production policy is live and the
+configured Trust402 payment adapter performs the paid Proof402 delegation.
+
 Tracking: https://github.com/kfubtik/trust402/issues/9
 
 ## 8. Autonomous Job Flow
@@ -656,10 +673,11 @@ pass `--docker-bin=<path-to-docker.exe>` or set `TRUST402_DOCKER_BIN`.
 
 ## Current Safety Blockers
 
-As of 2026-05-20, the local AgentCash policy keeps the default spend window
-closed, has zero remaining manual smoke budget, and marks live procurement,
-Proof402 delegation, and auto-refill as disabled until separate approval. Code
-may implement and test gates, but real paid calls must remain blocked until
-that policy changes. The policy checker now supports separate locked,
-live-window, and auto-refill modes so an approved window can be validated
-without weakening the default locked posture.
+As of 2026-05-20 at 17:48 +07:00, the local AgentCash policy keeps the default
+spend window closed, has zero remaining manual smoke budget, and marks live
+procurement, Proof402 delegation, and auto-refill as disabled until separate
+approval. The Trust402 AgentCash balance was verified at `$0.948`, above the
+`$0.50` reserve. Code may implement and test gates, but real paid calls must
+remain blocked until that policy changes. The policy checker now supports
+separate locked, live-window, and auto-refill modes so an approved window can
+be validated without weakening the default locked posture.

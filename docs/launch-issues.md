@@ -119,8 +119,9 @@ The full final Definition of Done is pinned in
   procurement, paid Proof402 delegation, AgentCash auto-refill, and autonomous
   live job evidence are still unresolved.
 - AgentCash MCP observation: AgentCash settings were restored to cap requests
-  at `$0.01` after the route smokes; balance was `$0.953` after the `$0.30`
-  route-indexing batch. The local Trust402 policy still keeps manual smoke
+  at `$0.01` after the route smokes. Balance was `$0.953` after the `$0.30`
+  route-indexing batch and `$0.948` after the later `$0.005` Proof402 direct
+  smoke. The local Trust402 policy still keeps manual smoke
   budget at `$0` and leaves live procurement, paid Proof402 delegation, and
   auto-refill disabled until a bounded operator window is explicitly approved.
 - Live evidence staging: production action pack now defaults the bounded
@@ -157,6 +158,19 @@ The full final Definition of Done is pinned in
   `contentHash`, `label`, and `idempotencyKey`; price observed through
   AgentCash schema discovery is `$0.005` on Base USDC. Trust402 sends only
   hashes and public-safe metadata.
+- Proof402 direct paid smoke: a one-shot AgentCash x402 fetch against
+  `https://proof402.vercel.app/api/proof/notarize` succeeded for `$0.005` on
+  2026-05-20 at 17:47 +07:00. Public transaction hash:
+  `0xf01fd6c543227924712cd26083a61c34c5222ee3fe674bfc82fed4e745a5292a`.
+  Public proof id: `proof_4527023b4c7c1bf5c5b88e94`; verification endpoint
+  returned `verified=true` for content hash
+  `sha256:4af397d773634de7b4b2fd60c4a1bc07b53f4b198bd577d127f2524115c8c84a`.
+  Evidence ref:
+  `sha256:00d01bc39d1fe520dbeb6e76433554b2ccf163dc8e8f8c315a4b92cd7abefae8`.
+  The temporary local policy window was closed immediately after the fetch,
+  and AgentCash `maxAmount` was restored to `$0.01`. This proves an
+  out-of-band paid Proof402 smoke; it does not prove Trust402's production
+  payment adapter until `LIVE_PAYMENT_ADAPTER_URL` or `cdp-x402` is configured.
 - Trust402 live procurement: disabled.
 - Paid Proof402 delegation: disabled.
 - AgentCash auto-refill: disabled; dry-run monitor is available through
