@@ -60,23 +60,32 @@ The full final Definition of Done is pinned in
   check before production smoke. If production is behind the local verification
   contract, `production_smoke` is skipped as a deployment-lag blocker instead
   of being reported as an application smoke regression.
-- CDP Bazaar indexing: after the route-by-route custom-domain paid smokes,
+- CDP Bazaar indexing: after the latest production redeploy and a bounded paid
+  retry against `trust.compare_resources`,
   `npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk
-  --timeout-ms=10000 --limit=20 --concurrency=8` reports `all-indexed` with
-  `10/10` exact custom-domain paid launch resources as of
-  2026-05-20 17:19 +07:00. Production env now records
-  `TRUST402_CDP_BAZAAR_EVIDENCE_REF=sha256:7f8c5c87c60f6c63e9289b454d331d9481c780498c0d92395c19ca65f62c45af`,
-  `TRUST402_CDP_BAZAAR_CHECK_STATUS=all-indexed`,
-  `TRUST402_CDP_BAZAAR_EXPECTED_RESOURCES=10`, and
-  `TRUST402_CDP_BAZAAR_INDEXED_RESOURCES=10`; the old missing-resource env was
-  removed. A new production deployment is required for `/api/marketplace/bundle`
-  and `/api/settlement/status` to expose those updated env values.
+  --timeout-ms=10000 --limit=20 --concurrency=8` reports
+  `partially-indexed` with `9/10` exact custom-domain paid launch resources as
+  of 2026-05-20 21:46 +07:00. Production env now records
+  `TRUST402_CDP_BAZAAR_EVIDENCE_REF=sha256:2029ef06b92daa9b730260c96bcdb7516666a49067fc7c997e4a8729f755f204`,
+  `TRUST402_CDP_BAZAAR_CHECK_STATUS=partially-indexed`,
+  `TRUST402_CDP_BAZAAR_EXPECTED_RESOURCES=10`,
+  `TRUST402_CDP_BAZAAR_INDEXED_RESOURCES=9`, and
+  `TRUST402_CDP_BAZAAR_MISSING_RESOURCES=trust.compare_resources`.
 - AgentCash direct paid smoke: a one-shot x402 fetch against
   `https://trust402.aztecbeacon.uk/api/trust/compare-resources` succeeded for
   `$0.03` on 2026-05-20 at 16:44 +07:00. Public transaction hash:
   `0xb447b8213c9641d200d656945e95b0f5fb5e3ac2565469179c8af742cb42d1df`.
   The temporary local policy window was closed immediately after the fetch and
   `npm run agentcash:policy` reports locked mode again.
+- AgentCash direct paid smoke retry: a second one-shot x402 fetch against
+  `https://trust402.aztecbeacon.uk/api/trust/compare-resources` succeeded for
+  `$0.03` on 2026-05-20 at 21:45 +07:00. Public transaction hash:
+  `0xfe2c3ccdd70a78fe5602e3e49139a3da1b05d8188552104ee1baddffb442eeb1`.
+  The temporary local policy window was closed immediately after the fetch,
+  AgentCash `maxAmount` was restored to `$0.01`, and
+  `npm run agentcash:policy` reports locked mode again. A follow-up CDP Bazaar
+  check still reported `9/10`, so this is now treated as an async/external
+  indexing blocker.
 - Bazaar indexing plan: `node scripts/bazaar-indexing-plan.js
   https://trust402.aztecbeacon.uk --indexed=trust.compare_resources` was the
   read-only plan used for the now-completed remaining 9 route smokes. Starter
@@ -103,14 +112,15 @@ The full final Definition of Done is pinned in
   (`0x59c54d9d89a27587d686524f7ce2814154700dd5c4745c1018b6c249ef9f8bff`).
 - External directory visibility: monitored read-only; latest check found 13
   monitored directories, 10 reachable, 0 visible, 3 unreachable, and 0
-  custom-domain-blocked as of 2026-05-20 17:30 +07:00. `x402-list.com` exposes
-  `POST /api/v1/submit`, but it requires a public contact email; do not submit
-  until the operator approves which email to use.
+  custom-domain-blocked as of 2026-05-20 21:43 +07:00. `x402-list.com`
+  submission `a6c3be52-dbd9-4d86-999e-5b497443b357` is pending and its probe
+  found 10 endpoints without errors.
 - Production gates: `node --test test` (187/187),
   `node scripts/release-check.js`, `node scripts/privacy-check.js`, production
-  smoke, production x402 smoke, launch monitor `healthy-cdp-indexed`, CDP
-  Bazaar all-resource check, Docker build, AgentCash refill dry-run, and
-  external directory read-only check passed as of 2026-05-20 17:38 +07:00.
+  smoke, production x402 smoke, Docker build, AgentCash refill dry-run, and
+  external directory read-only check passed in the earlier green window. The
+  current launch monitor is `needs-attention` because CDP Bazaar is back to
+  `9/10` and non-CDP directory visibility remains 0.
   Final verifier hash:
   `sha256:fcfecb8933aadd88979daecd931d5ec9faf356bf4fb806d784997e17938d0c7c`.
   Docker on this workstation requires `D:\Programs\Docker\resources\bin` in
@@ -121,18 +131,20 @@ The full final Definition of Done is pinned in
 - AgentCash MCP observation: AgentCash settings were restored to cap requests
   at `$0.01` after the route smokes. Balance was `$0.953` after the `$0.30`
   route-indexing batch and `$0.948` after the later `$0.005` Proof402 direct
-  smoke. The local Trust402 policy still keeps manual smoke
+  smoke. Balance was `$0.918` after the latest `$0.03` compare-resources retry.
+  The local Trust402 policy still keeps manual smoke
   budget at `$0` and leaves live procurement, paid Proof402 delegation, and
   auto-refill disabled until a bounded operator window is explicitly approved.
 - Live evidence staging: production action pack now defaults the bounded
   downstream smoke to `https://proof402.vercel.app/api/proof/notarize` at
   `$0.005`, caps the combined procurement/proof window at `$0.015`, and marks
   the generated downstream request as hash-only/public-safe. The current
-  configured production provider is `agentcash-mcp`, but it lacks
-  `LIVE_PAYMENT_ADAPTER_URL`. The recommended shortest unblock path is
-  `cdp-x402`: CDP API key fields are present, but production still lacks
-  `CDP_WALLET_SECRET` and either `CDP_EVM_ACCOUNT_ADDRESS` or
-  `CDP_EVM_ACCOUNT_NAME`.
+  configured production provider is `cdp-x402`; production has
+  `CDP_API_KEY_ID`, `CDP_API_KEY_SECRET`, `CDP_WALLET_SECRET`, and the
+  `trust402-buyer` EVM account reference. The buyer address
+  `0xaC451Dd067f0f246Fe59eA4a0707f1c99F11342B` currently has `0` Base USDC,
+  so do not enable `LIVE_SPEND_ENABLED=true` until it is funded and a bounded
+  live window is staged.
 - Trust402 live procurement responses now include a public-safe
   `trust402.procurement_audit.v1` `auditBundle` alongside `receiptBundle`.
   Downstream endpoint URLs are represented with origins and hashes, and any
@@ -187,7 +199,9 @@ The full final Definition of Done is pinned in
   Combined evidence ref:
   `sha256:e1a7d8f73f35e833405e9a53505552102427dcca324c8dc1e9c3347cf57547d7`.
   This mode creates an operator refill action when balance is below threshold;
-  it does not mutate wallet balance by itself.
+  it does not mutate wallet balance by itself. The latest AgentCash balance is
+  `$0.918`, still above threshold; refresh the dry-run evidence if this value
+  becomes part of the final verification package.
 
 ## Regression Commands
 
