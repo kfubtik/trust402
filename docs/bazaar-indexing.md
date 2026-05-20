@@ -3,59 +3,62 @@
 Trust402 production is live at:
 
 ```text
-https://trust402.vercel.app
+https://trust402.aztecbeacon.uk
 ```
 
 The CDP Bazaar indexing check is read-only and never sends payment headers:
 
 ```powershell
-npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10000 --limit=20 --concurrency=8
+npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --limit=20 --concurrency=8
 ```
 
 ## Current Production State
 
-Last checked on 2026-05-20 at 07:02:43 +07:00 after production commit
-`fc4ff8a`.
+Last checked on 2026-05-20 at 15:16 +07:00 after the custom-domain switch to
+`https://trust402.aztecbeacon.uk`.
 
 Production alias:
 
 ```text
-https://trust402.vercel.app
+https://trust402.aztecbeacon.uk
 ```
 
-Use `npm run deployment:preflight -- https://trust402.vercel.app
+Use `npm run deployment:preflight -- https://trust402.aztecbeacon.uk
 --probe-vercel-api --vercel-scope sergo565456-2815s-projects` for the current
 deployment id and commit SHA. The alias is the stable buyer-facing endpoint;
 deployment URLs rotate after each production release.
 
-- indexed resources: 10 of 10;
-- CDP Bazaar status: `all-indexed`;
-- missing resources: none;
+- indexed resources: 0 of 10 exact custom-domain URLs;
+- CDP Bazaar status: `eligible-not-found-yet`;
+- missing resources: all 10 paid launch routes on the custom-domain origin;
 - Trust402 live procurement: disabled;
 - Proof402 paid delegation: disabled;
-- live OpenAPI and unpaid x402 challenge expose the updated structured
-  candidate schema for `trust.compare_resources`.
+- live OpenAPI and unpaid x402 challenge expose custom-domain resource URLs.
 
-Indexed right now:
+Indexed right now on the custom-domain exact route check: none.
+
+Missing right now:
 
 - `trust.check_x402`
 - `trust.score_resource`
 - `trust.evaluate_origin`
 - `seller.readiness`
+- `trust.compare_resources`
 - `procurement.plan`
 - `procurement.quote`
-- `trust.compare_resources`
 - `monitor.snapshot`
 - `monitor.badge`
 - `reports.x402_diligence`
 
-Missing right now: none.
+CDP Bazaar search does find Trust402, but the matched resources still point to
+the previous `trust402.vercel.app` origin. Treat that as reindex lag, not final
+custom-domain evidence.
 
-## Resolved Indexing Blocker
+## Historical Resolved Indexing Blocker
 
 `trust.compare_resources` temporarily dropped from CDP Bazaar all-resource
-search, but the current production check now confirms all ten launch routes are
-indexed again. The production route itself remains healthy:
+search before the custom-domain switch, and the previous production origin was
+later confirmed `10/10`. The production route itself remains healthy:
 
 - `POST /api/trust/compare-resources` returns an unpaid HTTP 402 challenge;
 - the challenge contains top-level `extensions.bazaar`;
@@ -65,19 +68,18 @@ indexed again. The production route itself remains healthy:
 - `node --test test`, `node scripts/release-check.js`,
   `npm audit --omit=dev --audit-level=high`, and Docker build passed after the
   schema fix;
-- `npm run bazaar:indexing:check:all -- https://trust402.vercel.app
-  --timeout-ms=10000 --limit=20 --concurrency=8` returns
+- the previous `trust402.vercel.app` route-count check returned
   `status = all-indexed`, `routeSummary.indexed = 10`, and
   `routeSummary.missing = []`;
-- `npm run smoke:x402 -- https://trust402.vercel.app /api/trust/compare-resources`
+- `npm run smoke:x402 -- https://trust402.aztecbeacon.uk /api/trust/compare-resources`
   passes, so the missing catalog row is not caused by a broken unpaid route.
 - a direct unpaid 402 probe confirms the `PAYMENT-REQUIRED` header includes
-  the `https://trust402.vercel.app/api/trust/compare-resources` resource URL,
+  the `https://trust402.aztecbeacon.uk/api/trust/compare-resources` resource URL,
   Base USDC payment fields, and top-level `extensions.bazaar`.
 
 CDP Bazaar discovery can be settle-driven and asynchronous. If this route drops
 again, the safe recovery step is one bounded paid settle against
-`https://trust402.vercel.app/api/trust/compare-resources` with:
+`https://trust402.aztecbeacon.uk/api/trust/compare-resources` with:
 
 ```text
 TRUST402_PAID_SMOKE_RESOURCE_ID=trust.compare_resources
@@ -120,7 +122,7 @@ estimatedMaxSpendUsd = 0.03
   "candidates": [
     {
       "id": "trust402-score",
-      "endpoint": "https://trust402.vercel.app/api/trust/score-resource",
+      "endpoint": "https://trust402.aztecbeacon.uk/api/trust/score-resource",
       "priceUsd": 0.01,
       "has402": true,
       "hasInputSchema": true,
@@ -134,7 +136,7 @@ estimatedMaxSpendUsd = 0.03
     },
     {
       "id": "trust402-check",
-      "endpoint": "https://trust402.vercel.app/api/trust/check-x402",
+      "endpoint": "https://trust402.aztecbeacon.uk/api/trust/check-x402",
       "priceUsd": 0.005,
       "has402": true,
       "hasInputSchema": true,
@@ -159,27 +161,28 @@ Use [x402-diligence.json](../examples/x402-diligence.json).
 Expected per-call payment limit: `$0.15`.
 
 Earlier paid smokes settled successfully. Receipts and transaction hashes are
-stored only in ignored local `.tmp/` files. The current CDP Bazaar route-count
-evidence is:
+stored only in ignored local `.tmp/` files. The current custom-domain CDP
+Bazaar route-count evidence is:
 
 ```text
-TRUST402_CDP_BAZAAR_EVIDENCE_REF=sha256:e3cca6c84414ab215c67432ab5e858143bae9e7a4787ebfd1acb5d9dcce066d9
-TRUST402_CDP_BAZAAR_CHECK_STATUS=all-indexed
+TRUST402_CDP_BAZAAR_EVIDENCE_REF=sha256:25df12ec7547ea74c3ccc8910ffbe2cc252988ffe22b346f35ac82891af9bf3e
+TRUST402_CDP_BAZAAR_CHECK_STATUS=eligible-not-found-yet
 TRUST402_CDP_BAZAAR_EXPECTED_RESOURCES=10
-TRUST402_CDP_BAZAAR_INDEXED_RESOURCES=10
-TRUST402_CDP_BAZAAR_MISSING_RESOURCES=
+TRUST402_CDP_BAZAAR_INDEXED_RESOURCES=0
+TRUST402_CDP_BAZAAR_MISSING_RESOURCES=trust.check_x402,trust.score_resource,trust.evaluate_origin,seller.readiness,trust.compare_resources,procurement.plan,procurement.quote,monitor.snapshot,monitor.badge,reports.x402_diligence
 ```
 
 ## Completion Gate
 
-The CDP Bazaar portion of the completion gate is currently achieved at `10/10`.
+The CDP Bazaar portion of the completion gate is currently pending for the
+custom-domain exact resource URLs.
 To recheck the live state:
 
 ```powershell
-npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10000 --limit=20 --concurrency=8
-npm run smoke -- https://trust402.vercel.app
-npm run smoke:x402 -- https://trust402.vercel.app
-npx vercel@latest logs https://trust402.vercel.app --since 30m --level error
+npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --limit=20 --concurrency=8
+npm run smoke -- https://trust402.aztecbeacon.uk
+npm run smoke:x402 -- https://trust402.aztecbeacon.uk
+npx vercel@latest logs https://trust402.aztecbeacon.uk --since 30m --level error
 npm run release:check
 ```
 

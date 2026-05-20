@@ -197,9 +197,10 @@ Implemented:
 
 ## Phase 7 - Marketplace Metadata
 
-Status: complete for dry-run metadata export and production CDP Bazaar
-indexing. External catalog visibility is checked separately as a regression
-gate.
+Status: complete for dry-run metadata export. Production CDP Bazaar indexing
+was verified on the previous `trust402.vercel.app` origin, and is reindexing
+after the 2026-05-20 custom-domain switch to `trust402.aztecbeacon.uk`.
+External catalog visibility is checked separately as a regression gate.
 
 Implemented:
 
@@ -213,8 +214,8 @@ Implemented:
 - dynamic per-resource listing blockers that disappear only in a real
   settlement-ready production environment.
 - `npm run bazaar:indexing:check` for read-only CDP discovery visibility checks.
-- `npm run bazaar:indexing:check:all` verified all 10 production paid launch
-  resources as indexed.
+- `npm run bazaar:indexing:check:all` verifies whether all 10 production paid
+  launch resources are indexed for the current production origin.
 
 ## Phase 8 - Service Packaging
 

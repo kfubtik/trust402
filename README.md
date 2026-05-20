@@ -17,6 +17,9 @@ Trust before you pay. Proof after you buy.
 This folder contains a working public MVP API. It keeps Trust402's own live
 procurement and Proof402 delegation disabled, while production can run a
 guarded real x402 Express middleware bridge for paid launch resources.
+Production currently serves from `https://trust402.aztecbeacon.uk`. CDP Bazaar
+search finds Trust402, but exact custom-domain paid resource URLs are still
+reindexing from the earlier `trust402.vercel.app` origin.
 
 Implemented:
 
@@ -121,8 +124,8 @@ Check whether CDP Bazaar has externally indexed Trust402 after a successful
 settle. This is read-only and never sends payment:
 
 ```powershell
-npm run bazaar:indexing:check -- https://trust402.vercel.app
-npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10000 --limit=20
+npm run bazaar:indexing:check -- https://trust402.aztecbeacon.uk
+npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --limit=20
 ```
 
 See [docs/bazaar-indexing.md](docs/bazaar-indexing.md) for the current
@@ -131,50 +134,37 @@ production indexing state and verification commands.
 Check external directory visibility without submitting forms:
 
 ```powershell
-npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
+npm run directories:check -- https://trust402.aztecbeacon.uk --timeout-ms=10000
 ```
 
 Generate public-safe directory submission copy, target blockers, and evidence
 env names without submitting forms:
 
 ```powershell
-Invoke-RestMethod -Method Get -Uri https://trust402.vercel.app/api/directories/submission-pack
-npm run directories:submission-pack -- https://trust402.vercel.app `
-  --listing-base-url=https://trust402.dev `
+Invoke-RestMethod -Method Get -Uri https://trust402.aztecbeacon.uk/api/directories/submission-pack
+npm run directories:submission-pack -- https://trust402.aztecbeacon.uk `
+  --listing-base-url=https://trust402.aztecbeacon.uk `
   --user-approved-outreach
 ```
 
-Generate the custom-domain activation plan without buying a domain or changing
-Vercel:
+The custom domain is already attached. Verify it without mutating Vercel or
+submitting directory forms:
 
 ```powershell
-Invoke-RestMethod -Method Post -Uri https://trust402.vercel.app/api/domains/activation-pack `
+Invoke-RestMethod -Method Post -Uri https://trust402.aztecbeacon.uk/api/domains/readiness-check `
   -ContentType application/json `
-  -Body '{"selectedDomain":"trust402.dev"}'
-npm run domains:activation-pack -- https://trust402.vercel.app `
-  --selected-domain=trust402.dev `
-  --selected-domain-available=true `
-  --selected-domain-price-usd=9.99 `
-  --selected-domain-period-years=1 `
-  --selected-domain-purchase-url=https://vercel.com/domains/search?q=trust402.dev `
-  --availability-source=vercel-domain-check
-```
-
-After the domain is bought/attached, verify the custom-domain blocker without
-mutating Vercel or submitting directory forms:
-
-```powershell
-npm run domains:readiness-check -- https://trust402.vercel.app `
-  --domain=trust402.dev
+  -Body '{"domain":"trust402.aztecbeacon.uk","expectedBaseUrl":"https://trust402.aztecbeacon.uk"}'
+npm run domains:readiness-check -- https://trust402.aztecbeacon.uk `
+  --domain=trust402.aztecbeacon.uk
 ```
 
 Generate the Git/Vercel/custom-domain preflight pack without mutating GitHub or
 Vercel:
 
 ```powershell
-Invoke-RestMethod -Method Post -Uri https://trust402.vercel.app/api/deployments/preflight `
+Invoke-RestMethod -Method Post -Uri https://trust402.aztecbeacon.uk/api/deployments/preflight `
   -ContentType application/json `
-  -Body '{"customDomain":"trust402.dev","gitRemote":"https://github.com/kfubtik/trust402.git","gitHead":"43b96cf"}'
+  -Body '{"customDomain":"trust402.aztecbeacon.uk","gitRemote":"https://github.com/kfubtik/trust402.git","gitHead":"43b96cf"}'
 ```
 
 Generate the exact GitHub Actions setup command pack for the fallback
@@ -182,8 +172,8 @@ production deploy workflow. It prints secret names and local project ids, never
 secret values:
 
 ```powershell
-npm run deployment:github-actions-setup -- https://trust402.vercel.app
-Invoke-RestMethod -Method Post -Uri https://trust402.vercel.app/api/deployments/github-actions-setup `
+npm run deployment:github-actions-setup -- https://trust402.aztecbeacon.uk
+Invoke-RestMethod -Method Post -Uri https://trust402.aztecbeacon.uk/api/deployments/github-actions-setup `
   -ContentType application/json `
   -Body '{"vercelProject":{"projectName":"trust402","projectId":"prj_...","orgId":"team_..."}}'
 ```
@@ -194,7 +184,7 @@ for public-safe listing copy and directory submission gates.
 Run the combined production launch monitor:
 
 ```powershell
-npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000
+npm run launch:monitor -- https://trust402.aztecbeacon.uk --timeout-ms=10000
 ```
 
 See [docs/launch-monitoring.md](docs/launch-monitoring.md) for status meanings
@@ -376,7 +366,7 @@ operator action-pack outputs include `paymentProviderAlternatives` for
 required secret names and preflight commands without printing secret values:
 
 ```powershell
-npm run live:window-plan -- https://trust402.vercel.app --payment-provider=cdp-x402 --candidate-endpoint=https://proof402.vercel.app/api/proof/notarize --candidate-price=0.005 --max-total-usd=0.015
+npm run live:window-plan -- https://trust402.aztecbeacon.uk --payment-provider=cdp-x402 --candidate-endpoint=https://proof402.vercel.app/api/proof/notarize --candidate-price=0.005 --max-total-usd=0.015
 npm run payment:buyer-preflight -- --provider=cdp-x402 --strict
 ```
 
@@ -436,7 +426,7 @@ Invoke-RestMethod -Method Get -Uri http://127.0.0.1:4032/api/marketplace/bundle
 Check asynchronous CDP Bazaar discovery visibility:
 
 ```powershell
-npm run bazaar:indexing:check -- https://trust402.vercel.app
+npm run bazaar:indexing:check -- https://trust402.aztecbeacon.uk
 ```
 
 Inspect real-settlement blockers:
@@ -492,20 +482,20 @@ Run the read-only final verifier to collect the current command evidence and a
 public-safe verification hash:
 
 ```powershell
-npm run final:verify -- https://trust402.vercel.app --skip-docker --skip-directories
+npm run final:verify -- https://trust402.aztecbeacon.uk --skip-docker --skip-directories
 ```
 
 On this Windows workstation, use the installed Docker Desktop binary for the
 full Docker gate:
 
 ```powershell
-npm run final:verify -- https://trust402.vercel.app --docker-bin=D:\Programs\Docker\resources\bin\docker.exe
+npm run final:verify -- https://trust402.aztecbeacon.uk --docker-bin=D:\Programs\Docker\resources\bin\docker.exe
 ```
 
 Plan an approved live evidence window without spending:
 
 ```powershell
-npm run live:window-plan -- https://trust402.vercel.app `
+npm run live:window-plan -- https://trust402.aztecbeacon.uk `
   --candidate-endpoint=https://approved.example/paid `
   --candidate-price=0.01 `
   --max-total-usd=0.03
@@ -515,7 +505,7 @@ Write a public-safe local evidence ledger during dry-run or approved live
 evidence collection:
 
 ```powershell
-npm run live:evidence-smoke -- https://trust402.vercel.app --write-evidence
+npm run live:evidence-smoke -- https://trust402.aztecbeacon.uk --write-evidence
 ```
 
 Ledger entries go under `.local/evidence-ledger/`, which is ignored by Git.
@@ -532,7 +522,7 @@ local AgentCash policy patch is restored after the run:
 
 ```powershell
 $env:TRUST402_LIVE_SMOKE_WINDOW_APPROVED="true"
-npm run live:smoke-window -- https://trust402.vercel.app `
+npm run live:smoke-window -- https://trust402.aztecbeacon.uk `
   --live `
   --apply-local-policy `
   --candidate-endpoint=https://approved.example/paid `
@@ -546,7 +536,7 @@ writes nothing.
 Export the public-safe operator action pack for all remaining blockers:
 
 ```powershell
-npm run completion:actions -- https://trust402.vercel.app `
+npm run completion:actions -- https://trust402.aztecbeacon.uk `
   --candidate-endpoint=https://approved.example/paid `
   --candidate-price=0.01 `
   --max-total-usd=0.03
@@ -556,10 +546,10 @@ Check Git/Vercel auto-deploy and custom-domain readiness without mutating either
 service:
 
 ```powershell
-npm run deployment:preflight -- https://trust402.vercel.app
-npm run deployment:preflight -- https://trust402.vercel.app --probe-github-cli
-npm run deployment:preflight -- https://trust402.vercel.app --probe-vercel-api --vercel-scope sergo565456-2815s-projects
-npm run deployment:github-actions-setup -- https://trust402.vercel.app
+npm run deployment:preflight -- https://trust402.aztecbeacon.uk
+npm run deployment:preflight -- https://trust402.aztecbeacon.uk --probe-github-cli
+npm run deployment:preflight -- https://trust402.aztecbeacon.uk --probe-vercel-api --vercel-scope sergo565456-2815s-projects
+npm run deployment:github-actions-setup -- https://trust402.aztecbeacon.uk
 ```
 
 The optional probes check GitHub CLI auth/workflow evidence and sanitized Vercel
@@ -572,7 +562,7 @@ Check the local Trust402-only AgentCash policy without spending:
 
 ```powershell
 npm run agentcash:policy
-npm run agentcash:direct-smoke-plan -- https://trust402.vercel.app
+npm run agentcash:direct-smoke-plan -- https://trust402.aztecbeacon.uk
 npm run agentcash:direct-smoke-window -- --status
 npm run agentcash:refill-check
 npm run agentcash:refill-check -- --balance 0.42

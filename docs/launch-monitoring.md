@@ -4,7 +4,7 @@ Use the production launch monitor after deployments and before making public
 directory claims.
 
 ```powershell
-npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000
+npm run launch:monitor -- https://trust402.aztecbeacon.uk --timeout-ms=10000
 ```
 
 The monitor is read-only. It never sends payment headers, never settles a paid
@@ -40,19 +40,19 @@ It is still required for the final autonomous completion audit.
 Fast production API and x402 check only:
 
 ```powershell
-npm run launch:monitor -- https://trust402.vercel.app --skip-bazaar --skip-directories
+npm run launch:monitor -- https://trust402.aztecbeacon.uk --skip-bazaar --skip-directories
 ```
 
 Include full raw child-check payloads for deep debugging:
 
 ```powershell
-npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000 --include-raw
+npm run launch:monitor -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --include-raw
 ```
 
 Fail non-zero if required checks fail:
 
 ```powershell
-npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000 --strict
+npm run launch:monitor -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --strict
 ```
 
 ## GitHub Workflow
@@ -71,23 +71,22 @@ and CDP Bazaar gate.
 The workflow does not need secrets. It calls only public production URLs and
 public directory pages.
 
-## Latest Verified Baseline
+## Current Custom-Domain Baseline
 
-Last checked on 2026-05-20 at 00:14:56 +07:00 after production commit
-`04f0f73` with:
+Last checked on 2026-05-20 at 15:16 +07:00 after switching production to
+`https://trust402.aztecbeacon.uk` with:
 
 ```powershell
-npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=15000 --limit=20 --concurrency=8
-npm run smoke -- https://trust402.vercel.app
-npm run smoke:x402 -- https://trust402.vercel.app
-npm run directories:check -- https://trust402.vercel.app --timeout-ms=15000
-npm run final:verify -- https://trust402.vercel.app --timeout-ms=15000 --docker-bin=D:\Programs\Docker\resources\bin\docker.exe --include-details
+npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --limit=20 --concurrency=8
+npm run smoke -- https://trust402.aztecbeacon.uk
+npm run smoke:x402 -- https://trust402.aztecbeacon.uk
+npm run directories:check -- https://trust402.aztecbeacon.uk --timeout-ms=10000
 ```
 
 Trust402's verified production/discovery state is:
 
 ```text
-status = healthy-cdp-indexed
+status = needs-attention
 api.status = healthy
 api.catalogStatus = production-mvp
 api.paidLaunchResources = 10
@@ -95,27 +94,25 @@ api.anyLiveSpendReady = false
 api.autoRefillReady = false
 x402Challenge.status = challenge-ready
 x402Challenge.httpStatus = 402
-cdpBazaar.status = all-indexed
+cdpBazaar.status = eligible-not-found-yet
 cdpBazaar.routeSummary.expected = 10
-cdpBazaar.routeSummary.indexed = 10
-cdpBazaar.routeSummary.missing = []
+cdpBazaar.routeSummary.indexed = 0
+cdpBazaar.routeSummary.missing = [all 10 paid launch resources]
 externalDirectories.status = not-visible-yet
 externalDirectories.visible = 0
 externalDirectories.checked = 13
-finalVerification.status = blocked
-finalVerification.commandsPassed = true
-finalVerification.nonFinalOpenRequirements = 6
-finalVerification.verificationHash = sha256:eb29da005d1833f2d98a3e101338560028df696058f8c8560eb732de8ee7280b
 ```
 
 That state is production-healthy for API/x402/spend safety, but launch
-attention is still required for non-CDP external directory visibility,
-Git/Vercel auto-deploy evidence, and intentionally closed live-spend gates.
+attention is required until CDP Bazaar indexes the new custom-domain exact
+resource URLs and at least one non-CDP external directory visibly lists
+Trust402.
 
-The latest final verifier passed local release checks, Docker build,
+The earlier final verifier passed local release checks, Docker build,
 production smoke, production x402 smoke, AgentCash refill dry-run, external
-directory read-only check, launch monitor, and production completion audit. It
-remains blocked because non-final completion requirements are still open.
+directory read-only check, launch monitor, and production completion audit on
+the previous production origin. Re-run final verification only after the
+custom-domain deploy/env evidence is live.
 
 ## AgentCash Refill Check
 
@@ -130,7 +127,7 @@ npm run agentcash:refill-check -- --balance 0.42
 The production API equivalent is:
 
 ```powershell
-Invoke-RestMethod -Method Post -Uri https://trust402.vercel.app/api/agentcash/refill-check -ContentType application/json -Body '{"mode":"dry-run","currentBalanceUsd":0.42,"amountRefilledTodayUsd":0}'
+Invoke-RestMethod -Method Post -Uri https://trust402.aztecbeacon.uk/api/agentcash/refill-check -ContentType application/json -Body '{"mode":"dry-run","currentBalanceUsd":0.42,"amountRefilledTodayUsd":0}'
 ```
 
 Live refill still requires explicit approval, provider config, operator
@@ -143,13 +140,13 @@ implemented-but-blocked, externally blocked, missing, or unverified:
 
 ```powershell
 npm run completion:audit
-npm run completion:audit -- https://trust402.vercel.app
+npm run completion:audit -- https://trust402.aztecbeacon.uk
 ```
 
 The API form is:
 
 ```powershell
-Invoke-RestMethod -Method Get -Uri https://trust402.vercel.app/api/completion/audit
+Invoke-RestMethod -Method Get -Uri https://trust402.aztecbeacon.uk/api/completion/audit
 ```
 
 The audit intentionally returns `goalComplete=false` until Git/Vercel
@@ -162,27 +159,27 @@ Use the final verifier after blockers are resolved, or as a read-only snapshot
 of what still blocks completion:
 
 ```powershell
-npm run final:verify -- https://trust402.vercel.app --timeout-ms=10000
+npm run final:verify -- https://trust402.aztecbeacon.uk --timeout-ms=10000
 ```
 
 On this Windows workstation, pass the Docker Desktop binary explicitly so the
 Docker credential helper directory is available to the verifier:
 
 ```powershell
-npm run final:verify -- https://trust402.vercel.app --timeout-ms=10000 --docker-bin=D:\Programs\Docker\resources\bin\docker.exe
+npm run final:verify -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --docker-bin=D:\Programs\Docker\resources\bin\docker.exe
 ```
 
 If CDP discovery is slow, the Bazaar checker supports bounded concurrency:
 
 ```powershell
-npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=15000 --limit=20 --concurrency=8
+npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-ms=15000 --limit=20 --concurrency=8
 ```
 
 Useful safe modes:
 
 ```powershell
-npm run final:verify -- https://trust402.vercel.app --skip-docker --skip-directories
-npm run final:verify -- https://trust402.vercel.app --with-vercel-logs --include-details
+npm run final:verify -- https://trust402.aztecbeacon.uk --skip-docker --skip-directories
+npm run final:verify -- https://trust402.aztecbeacon.uk --with-vercel-logs --include-details
 ```
 
 The verifier runs local release checks, optional Docker build, production

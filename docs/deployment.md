@@ -68,8 +68,8 @@ npm run settlement:check
 npm run settlement:preflight
 npm run doctor
 npm run marketplace:bundle
-npm run bazaar:indexing:check -- https://trust402.vercel.app
-npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10000 --limit=20
+npm run bazaar:indexing:check -- https://trust402.aztecbeacon.uk
+npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --limit=20
 ```
 
 Use `npm run settlement:preflight -- --strict` only for the approved paid-smoke
@@ -94,8 +94,12 @@ window, when a non-zero exit should block the smoke.
 - Use `/api/launch/checklist` or `npm run doctor` before marketplace submission.
 - Use `/api/marketplace/bundle` or `npm run marketplace:bundle` to inspect Bazaar-style resource metadata before submitting anywhere.
 - Use `/api/settlement/preflight` or `npm run settlement:preflight` before the one approved paid smoke.
-- Use `npm run bazaar:indexing:check -- https://trust402.vercel.app` after a successful paid smoke to check asynchronous CDP Bazaar visibility.
-- Use `npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10000 --limit=20` before public launch claims about every paid resource.
+- Use `npm run bazaar:indexing:check -- https://trust402.aztecbeacon.uk` after a successful paid smoke to check asynchronous CDP Bazaar visibility.
+- Use `npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --limit=20` before public launch claims about every paid resource.
+- After the 2026-05-20 custom-domain switch, CDP Bazaar search finds Trust402
+  but exact paid resource URLs are still reindexing from the old
+  `trust402.vercel.app` origin; keep the completion gate blocked until the
+  custom-domain all-resource check returns `10/10`.
 - See `docs/bazaar-indexing.md` for the current production indexing state and completion gate.
 
 ## Vercel
@@ -103,13 +107,13 @@ window, when a non-zero exit should block the smoke.
 Current production URL:
 
 ```text
-https://trust402.vercel.app
+https://trust402.aztecbeacon.uk
 ```
 
 The safe default environment profile is:
 
 ```text
-PUBLIC_BASE_URL=https://trust402.vercel.app
+PUBLIC_BASE_URL=https://trust402.aztecbeacon.uk
 PROOF402_BASE_URL=https://proof402.vercel.app
 PROOF402_DELEGATION_MODE=disabled
 PROOF402_MAX_SPEND_USD=0
@@ -228,7 +232,7 @@ The production API form is operator-gated and only uses the configured
 
 ```powershell
 Invoke-RestMethod -Method Post `
-  -Uri https://trust402.vercel.app/api/payments/bridge-check `
+  -Uri https://trust402.aztecbeacon.uk/api/payments/bridge-check `
   -Headers @{"x-trust402-operator-key"="<operator-key>"} `
   -ContentType application/json `
   -Body '{"provider":"agentcash-mcp","candidateEndpoint":"https://proof402.vercel.app/api/proof/notarize","maxAmountUsd":0.01}'
@@ -332,7 +336,7 @@ npx vercel@latest build --prod
 npx vercel@latest deploy --prebuilt --prod
 npm run smoke
 npm run smoke:x402
-npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000 --skip-directories --strict
+npm run launch:monitor -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --skip-directories --strict
 ```
 
 This fallback can produce additional Git/Vercel evidence required by
@@ -358,7 +362,7 @@ them from a failed or cancelled workflow run.
 Use this read-only command before an approved final/live window:
 
 ```powershell
-npm run completion:unblockers -- https://trust402.vercel.app
+npm run completion:unblockers -- https://trust402.aztecbeacon.uk
 ```
 
 It does not set secrets, mutate wallets, submit directory forms, or send payment
@@ -371,7 +375,7 @@ AgentCash refill, autonomous-job evidence, and final verification evidence.
 Trust402 includes a local runner for the final live evidence window:
 
 ```powershell
-npm run live:evidence-smoke -- https://trust402.vercel.app
+npm run live:evidence-smoke -- https://trust402.aztecbeacon.uk
 ```
 
 Without `--live`, it is dry-run only. For live mode it refuses to run unless all
@@ -380,7 +384,7 @@ local runner gates are present:
 ```powershell
 $env:TRUST402_LIVE_EVIDENCE_SMOKE_APPROVED='true'
 $env:TRUST402_OPERATOR_API_KEY='<operator key already configured in Vercel>'
-npm run live:evidence-smoke -- https://trust402.vercel.app `
+npm run live:evidence-smoke -- https://trust402.aztecbeacon.uk `
   --live `
   --candidate-endpoint=https://proof402.vercel.app/api/proof/notarize `
   --candidate-price=0.005 `
@@ -425,7 +429,7 @@ smoke remains blocked until a new approved spend window is recorded locally.
 To keep a local public-safe evidence trail, add `--write-evidence`:
 
 ```powershell
-npm run live:evidence-smoke -- https://trust402.vercel.app --write-evidence
+npm run live:evidence-smoke -- https://trust402.aztecbeacon.uk --write-evidence
 ```
 
 The runner appends JSONL entries under `.local/evidence-ledger/`. Those entries
@@ -439,7 +443,7 @@ Before changing local policy or production env for a live window, generate a
 read-only staging plan:
 
 ```powershell
-npm run live:window-plan -- https://trust402.vercel.app `
+npm run live:window-plan -- https://trust402.aztecbeacon.uk `
   --candidate-endpoint=https://proof402.vercel.app/api/proof/notarize `
   --candidate-price=0.005 `
   --proof-reserve-usd=0.005 `
@@ -462,7 +466,7 @@ After the plan is approved, prefer the guarded smoke-window wrapper:
 
 ```powershell
 $env:TRUST402_LIVE_SMOKE_WINDOW_APPROVED="true"
-npm run live:smoke-window -- https://trust402.vercel.app `
+npm run live:smoke-window -- https://trust402.aztecbeacon.uk `
   --live `
   --apply-local-policy `
   --candidate-endpoint=https://proof402.vercel.app/api/proof/notarize `
@@ -484,7 +488,7 @@ POST /api/live/window-plan
 For all remaining operator blockers at once, use:
 
 ```powershell
-npm run completion:actions -- https://trust402.vercel.app
+npm run completion:actions -- https://trust402.aztecbeacon.uk
 ```
 
 or call the free API helper:
@@ -499,7 +503,7 @@ Use the read-only deployment preflight before trying to close Git/Vercel
 auto-deploy or external-directory requirements:
 
 ```powershell
-npm run deployment:preflight -- https://trust402.vercel.app
+npm run deployment:preflight -- https://trust402.aztecbeacon.uk
 ```
 
 It checks the local Vercel project link, Git remote, GitHub Actions fallback
@@ -518,8 +522,8 @@ Optional read-only probes can make that check stronger when the local CLIs are
 authenticated:
 
 ```powershell
-npm run deployment:preflight -- https://trust402.vercel.app --probe-github-cli
-npm run deployment:preflight -- https://trust402.vercel.app --probe-vercel-api --vercel-scope sergo565456-2815s-projects
+npm run deployment:preflight -- https://trust402.aztecbeacon.uk --probe-github-cli
+npm run deployment:preflight -- https://trust402.aztecbeacon.uk --probe-vercel-api --vercel-scope sergo565456-2815s-projects
 ```
 
 The GitHub probe checks CLI auth, secret names, workflow visibility, and recent
@@ -531,7 +535,7 @@ When the fallback workflow exists but GitHub Actions secrets are not confirmed,
 generate the read-only setup pack:
 
 ```powershell
-npm run deployment:github-actions-setup -- https://trust402.vercel.app
+npm run deployment:github-actions-setup -- https://trust402.aztecbeacon.uk
 ```
 
 The API equivalent is:

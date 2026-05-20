@@ -14,11 +14,11 @@ npm run verify
 npm run doctor
 npm run settlement:preflight
 npm run marketplace:bundle
-npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10000 --limit=20
-npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
-npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000
-npm run smoke -- https://trust402.vercel.app
-npm run smoke:x402 -- https://trust402.vercel.app
+npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --limit=20
+npm run directories:check -- https://trust402.aztecbeacon.uk --timeout-ms=10000
+npm run launch:monitor -- https://trust402.aztecbeacon.uk --timeout-ms=10000
+npm run smoke -- https://trust402.aztecbeacon.uk
+npm run smoke:x402 -- https://trust402.aztecbeacon.uk
 npm run smoke -- http://127.0.0.1:4032
 npm run smoke:x402 -- http://127.0.0.1:4032
 docker build -t trust402:local .
@@ -26,7 +26,7 @@ docker compose config
 ```
 
 After pushing, run the manual GitHub Actions workflow `launch-monitor` against
-`https://trust402.vercel.app` when you want a remote production/Bazaar snapshot
+`https://trust402.aztecbeacon.uk` when you want a remote production/Bazaar snapshot
 from GitHub. It uses public URLs only and does not require secrets.
 
 `smoke:x402` expects `TRUST402_PAYWALL_MODE=mock` or approved `real` mode. Do not
@@ -122,7 +122,7 @@ Before submitting to a marketplace, check:
 ```powershell
 npm run doctor
 npm run marketplace:bundle
-npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10000 --limit=20
+npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --limit=20
 ```
 
 `dryRunLaunchReady` may be `true` locally. `publicMarketplaceReady` should stay
@@ -132,9 +132,11 @@ approved CDP/facilitator credentials, and a successful paid settlement smoke.
 `/api/settlement/status` should show no blockers only after explicit operator
 approval, CDP/facilitator setup, and a paid smoke plan. Marketplace indexing
 readiness should still stay false until paid settlement evidence exists.
-Production CDP Bazaar indexing is currently verified for all 10 launch
-resources, but local default configs should not claim readiness without the
-matching environment and receipt evidence.
+After the 2026-05-20 custom-domain switch, production CDP Bazaar search finds
+Trust402 but exact launch resources are still reindexing from the old
+`trust402.vercel.app` origin to `trust402.aztecbeacon.uk`. Local default
+configs should not claim marketplace readiness without current `10/10`
+custom-domain evidence and matching receipt evidence.
 
 Use [external-marketplace-listing.md](external-marketplace-listing.md) as the
 public-safe payload for external directories after the user approves public

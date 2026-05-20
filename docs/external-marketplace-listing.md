@@ -8,7 +8,7 @@ outside the CDP Bazaar indexing check.
 Production:
 
 ```text
-https://trust402.vercel.app
+https://trust402.aztecbeacon.uk
 ```
 
 Release marker:
@@ -20,23 +20,25 @@ v0.1.0
 CDP Bazaar state:
 
 ```text
-10 of 10 paid launch resources indexed
-status = all-indexed
-missing = none
-evidence = sha256:e3cca6c84414ab215c67432ab5e858143bae9e7a4787ebfd1acb5d9dcce066d9
+0 of 10 paid launch resources indexed on the new custom-domain URLs
+status = eligible-not-found-yet
+missing = trust.check_x402, trust.score_resource, trust.evaluate_origin, seller.readiness, trust.compare_resources, procurement.plan, procurement.quote, monitor.snapshot, monitor.badge, reports.x402_diligence
+evidence = sha256:25df12ec7547ea74c3ccc8910ffbe2cc252988ffe22b346f35ac82891af9bf3e
 ```
 
-Trust402 is live as a production x402 service and CDP Bazaar all-resource
-evidence is currently complete. Live Trust402 procurement, paid Proof402
-delegation, and AgentCash auto-refill remain disabled until separately
-approved.
+Trust402 is live as a production x402 service on the Cloudflare-backed custom
+domain. CDP Bazaar search already finds Trust402, but exact paid resource URLs
+still point at the previous `trust402.vercel.app` origin while the new
+`trust402.aztecbeacon.uk` resources are reindexed. Live Trust402 procurement,
+paid Proof402 delegation, and AgentCash auto-refill remain disabled until
+separately approved.
 
 ## Current External Directory Visibility
 
-Last checked on 2026-05-20 at 14:50 +07:00 with:
+Last checked on 2026-05-20 at 15:14 +07:00 with:
 
 ```powershell
-npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
+npm run directories:check -- https://trust402.aztecbeacon.uk --timeout-ms=10000
 ```
 
 Result:
@@ -48,21 +50,23 @@ reachable = 10
 visible = 0
 notVisibleYet = 10
 unreachable = 3
-customDomainBlocked = 1
+customDomainBlocked = 0
 ```
 
 Interpretation:
 
-- CDP Bazaar remains the authoritative discovery signal for Trust402 right now
-  and is currently `10/10` indexed;
-- the requested `trust402.vercel.app` external-directory attempt has been
-  completed; no monitored non-CDP directory visibly lists Trust402 yet;
+- the custom-domain blocker is removed for monitored directories;
+- CDP Bazaar remains the authoritative x402 discovery signal, but exact
+  resources for the custom-domain origin are currently `0/10` while reindexing
+  catches up;
+- the requested custom-domain external-directory attempt has been completed;
+  no monitored non-CDP directory visibly lists Trust402 yet;
 - Agentic.Market, x402scan, x402Bazaar, x402.org ecosystem, RelAI market,
   x402list.fun, Orbis API Marketplace, World.fun x402 Market, x402agency,
   Agent Bazaar, the402, x402-list.com, and Agora402 are monitored for public
   Trust402 visibility;
 - x402scan, x402.org ecosystem, and Agora402 were not reliably reachable within
-  the 5-second read-only check window;
+  the 10-second read-only check window;
 - `not-visible-yet` is not proof of absence because several directories are
   client-rendered, asynchronously indexed, curated, or rate-limited.
 
@@ -71,7 +75,7 @@ Interpretation:
 Run the read-only directory visibility monitor:
 
 ```powershell
-npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
+npm run directories:check -- https://trust402.aztecbeacon.uk --timeout-ms=10000
 ```
 
 Use `--strict` only for a gate that should fail until at least one external
@@ -81,15 +85,17 @@ not submit forms, send payment headers, or use secrets.
 Generate the machine-readable public-safe submission pack:
 
 ```powershell
-Invoke-RestMethod -Method Get -Uri https://trust402.vercel.app/api/directories/submission-pack
+Invoke-RestMethod -Method Get -Uri https://trust402.aztecbeacon.uk/api/directories/submission-pack
 ```
 
-Generate the machine-readable custom-domain activation pack:
+The custom domain is already attached. Use the readiness check when validating
+DNS/HTTPS/x402 state, and keep the activation pack only for future domain
+changes:
 
 ```powershell
-Invoke-RestMethod -Method Post -Uri https://trust402.vercel.app/api/domains/activation-pack `
+Invoke-RestMethod -Method Post -Uri https://trust402.aztecbeacon.uk/api/domains/readiness-check `
   -ContentType application/json `
-  -Body '{"selectedDomain":"trust402.dev"}'
+  -Body '{"domain":"trust402.aztecbeacon.uk","expectedBaseUrl":"https://trust402.aztecbeacon.uk"}'
 ```
 
 Use `POST /api/directories/submission-pack` with `baseUrl` and
@@ -103,13 +109,13 @@ verify the exact domain plan later.
 
 ### CDP Bazaar
 
-Status: complete at `10/10`.
+Status: custom-domain reindex pending.
 
-Action: keep the verification gate green and rerun the all-resource check after
-any production release or paid-route metadata change.
+Action: keep the completion gate red for CDP Bazaar until the all-resource
+check returns `10/10` exact matches for `https://trust402.aztecbeacon.uk`.
 
 ```powershell
-npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10000 --limit=20
+npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --limit=20
 ```
 
 ### Agentic.Market
@@ -123,7 +129,7 @@ be no separate registration step for basic discovery.
 Action:
 
 - monitor `https://agentic.market` search for `Trust402` and
-  `trust402.vercel.app`;
+  `trust402.aztecbeacon.uk`;
 - keep Bazaar metadata, live x402 challenges, and real paid settlement receipts
   healthy;
 - do not create a public marketing claim until Trust402 appears or the
@@ -178,7 +184,7 @@ Current monitor set:
 
 Action:
 
-- search each directory for `Trust402`, `trust402.vercel.app`, and the paid
+- search each directory for `Trust402`, `trust402.aztecbeacon.uk`, and the paid
   endpoint URLs;
 - if a submission form exists, submit only public metadata from this file;
 - never paste `.env`, CDP secrets, wallet policy files, private keys, payment
@@ -186,73 +192,63 @@ Action:
 
 ### x402 List (`x402-list.com`)
 
-Status: manual review, custom domain required.
+Status: manual review, custom domain now available.
 
 `x402-list.com` exposes a submit page and API, but its public requirements say
 that `vercel.app`, `workers.dev`, `ngrok`, `trycloudflare`, and similar
-free-hosting/dev-tunnel domains are not accepted. Trust402 currently runs on
-`trust402.vercel.app`, so this path is blocked until a custom production domain
-is attached.
+free-hosting/dev-tunnel domains are not accepted. Trust402 now runs on
+`trust402.aztecbeacon.uk`, so this path is no longer blocked by the production
+host policy.
 
 Action:
 
-- attach a custom domain to the Vercel project;
-- run `npm run domains:readiness-check -- https://trust402.vercel.app --domain=<custom-domain>`;
-- rerun `npm run smoke:x402 -- https://<custom-domain>`;
-- rerun `npm run directories:check -- https://<custom-domain> --timeout-ms=10000`;
-- submit only the public-safe listing fields from this file after the custom
-  domain passes x402 smoke.
+- run `npm run domains:readiness-check -- https://trust402.aztecbeacon.uk --domain=trust402.aztecbeacon.uk`;
+- rerun `npm run smoke:x402 -- https://trust402.aztecbeacon.uk`;
+- rerun `npm run directories:check -- https://trust402.aztecbeacon.uk --timeout-ms=10000`;
+- submit only the public-safe listing fields from this file after CDP Bazaar
+  exact-resource reindex returns to `10/10`.
 
-Custom domain candidates checked through the Vercel domain tool on 2026-05-20
-at 14:38 +07:
+Active custom domain configured on 2026-05-20:
 
-| Domain | Status | Price / period | Purchase URL |
+| Domain | DNS | Vercel | Production env |
 | --- | --- | --- | --- |
-| `trust402.xyz` | available, cheapest | `$1.99 / 1 year` | `https://vercel.com/domains/search?q=trust402.xyz` |
-| `trust402.org` | available, recommended balance | `$8.99 / 1 year` | `https://vercel.com/domains/search?q=trust402.org` |
-| `trust402.dev` | available, developer-oriented | `$9.99 / 1 year` | `https://vercel.com/domains/search?q=trust402.dev` |
-| `trust402.net` | available | `$13.50 / 1 year` | `https://vercel.com/domains/search?q=trust402.net` |
-| `trust402.io` | available | `$37.99 / 1 year` | `https://vercel.com/domains/search?q=trust402.io` |
-| `trust402.ai` | available | `$160 / 2 years` | `https://vercel.com/domains/search?q=trust402.ai` |
+| `trust402.aztecbeacon.uk` | A `76.76.21.21`, DNS-only in Cloudflare | attached to project `trust402` | `PUBLIC_BASE_URL=https://trust402.aztecbeacon.uk` |
 
-Prices and availability can change; recheck before purchase.
+The earlier `trust402.org` / `trust402.dev` purchase candidates are kept as
+historical research only. Do not buy another domain unless this Cloudflare
+subdomain is rejected by a target directory.
 
-Read-only activation pack for the preferred candidate:
+Read-only readiness check for the active domain:
 
 ```powershell
-npm run domains:activation-pack -- https://trust402.vercel.app `
-  --selected-domain=trust402.org `
-  --selected-domain-available=true `
-  --selected-domain-price-usd=8.99 `
-  --selected-domain-period-years=1 `
-  --selected-domain-purchase-url=https://vercel.com/domains/search?q=trust402.org `
-  --availability-source=vercel-domain-check
+npm run domains:readiness-check -- https://trust402.aztecbeacon.uk `
+  --domain=trust402.aztecbeacon.uk
 ```
 
-Latest read-only activation pack hash for `trust402.org`:
+Latest custom-domain CDP Bazaar reindex evidence:
 
 ```text
-sha256:b3dbbbc0d944621f864debb0bf0b32f72dd8f3bac27cbc2a7a5a34d1249accab
+sha256:25df12ec7547ea74c3ccc8910ffbe2cc252988ffe22b346f35ac82891af9bf3e
 ```
 
 Useful public URLs:
 
 ```text
-https://trust402.vercel.app
-https://trust402.vercel.app/openapi.json
-https://trust402.vercel.app/.well-known/x402
-https://trust402.vercel.app/.well-known/x402.json
-https://trust402.vercel.app/.well-known/agent.json
-https://trust402.vercel.app/.well-known/agent-services.json
-https://trust402.vercel.app/.well-known/ai-plugin.json
-https://trust402.vercel.app/.well-known/mcp.json
-https://trust402.vercel.app/llms.txt
-https://trust402.vercel.app/robots.txt
-https://trust402.vercel.app/sitemap.xml
-https://trust402.vercel.app/api/resources
-https://trust402.vercel.app/api/marketplace/bundle
-https://trust402.vercel.app/api/settlement/status
-https://trust402.vercel.app/api/launch/checklist
+https://trust402.aztecbeacon.uk
+https://trust402.aztecbeacon.uk/openapi.json
+https://trust402.aztecbeacon.uk/.well-known/x402
+https://trust402.aztecbeacon.uk/.well-known/x402.json
+https://trust402.aztecbeacon.uk/.well-known/agent.json
+https://trust402.aztecbeacon.uk/.well-known/agent-services.json
+https://trust402.aztecbeacon.uk/.well-known/ai-plugin.json
+https://trust402.aztecbeacon.uk/.well-known/mcp.json
+https://trust402.aztecbeacon.uk/llms.txt
+https://trust402.aztecbeacon.uk/robots.txt
+https://trust402.aztecbeacon.uk/sitemap.xml
+https://trust402.aztecbeacon.uk/api/resources
+https://trust402.aztecbeacon.uk/api/marketplace/bundle
+https://trust402.aztecbeacon.uk/api/settlement/status
+https://trust402.aztecbeacon.uk/api/launch/checklist
 ```
 
 ## Listing Copy
@@ -332,15 +328,15 @@ receipt logging.
 
 ```text
 Name: Trust402
-Website: https://trust402.vercel.app
-OpenAPI: https://trust402.vercel.app/openapi.json
-x402 discovery: https://trust402.vercel.app/.well-known/x402
-x402 discovery JSON: https://trust402.vercel.app/.well-known/x402.json
-Agent manifest: https://trust402.vercel.app/.well-known/agent.json
-Agent services: https://trust402.vercel.app/.well-known/agent-services.json
-LLM summary: https://trust402.vercel.app/llms.txt
-Sitemap: https://trust402.vercel.app/sitemap.xml
-Marketplace bundle: https://trust402.vercel.app/api/marketplace/bundle
+Website: https://trust402.aztecbeacon.uk
+OpenAPI: https://trust402.aztecbeacon.uk/openapi.json
+x402 discovery: https://trust402.aztecbeacon.uk/.well-known/x402
+x402 discovery JSON: https://trust402.aztecbeacon.uk/.well-known/x402.json
+Agent manifest: https://trust402.aztecbeacon.uk/.well-known/agent.json
+Agent services: https://trust402.aztecbeacon.uk/.well-known/agent-services.json
+LLM summary: https://trust402.aztecbeacon.uk/llms.txt
+Sitemap: https://trust402.aztecbeacon.uk/sitemap.xml
+Marketplace bundle: https://trust402.aztecbeacon.uk/api/marketplace/bundle
 Category: Agent infrastructure
 Networks: Base
 Asset: USDC
@@ -355,11 +351,11 @@ Run:
 
 ```powershell
 npm run release:check
-npm run smoke -- https://trust402.vercel.app
-npm run smoke:x402 -- https://trust402.vercel.app
-npm run bazaar:indexing:check:all -- https://trust402.vercel.app --timeout-ms=10000 --limit=20
-npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
-npx vercel@latest logs https://trust402.vercel.app --since 30m --level error
+npm run smoke -- https://trust402.aztecbeacon.uk
+npm run smoke:x402 -- https://trust402.aztecbeacon.uk
+npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --limit=20
+npm run directories:check -- https://trust402.aztecbeacon.uk --timeout-ms=10000
+npx vercel@latest logs https://trust402.aztecbeacon.uk --since 30m --level error
 ```
 
 Expected:
@@ -395,8 +391,8 @@ Future claims that require additional approval:
 
 ## Completion Evidence
 
-After a non-CDP directory visibly lists Trust402, record only public-safe
-evidence in production env:
+After CDP Bazaar reindexes the new exact resource URLs and a non-CDP directory
+visibly lists Trust402, record only public-safe evidence in production env:
 
 ```text
 TRUST402_CDP_BAZAAR_ALL_RESOURCES_INDEXED=true

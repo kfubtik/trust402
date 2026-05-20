@@ -15,8 +15,8 @@ The full final Definition of Done is pinned in
 
 | Issue | Track | Why it matters | Safe next step |
 | --- | --- | --- | --- |
-| [#5](https://github.com/kfubtik/trust402/issues/5) | Vercel Git auto-deploy | Production currently deploys through manual Vercel CLI runs. Git-backed deploys need the Vercel GitHub App to access the private repo. | Update the Vercel GitHub App installation, then verify a harmless Git-backed production deploy. |
-| [#6](https://github.com/kfubtik/trust402/issues/6) | External x402 directories | CDP Bazaar is currently 10/10, but non-CDP directories are curated, delayed, client-rendered, or custom-domain gated and do not visibly list Trust402 yet. | Attach a custom domain, rerun x402/directory checks, and submit the public-safe listing pack only where manual listing is allowed. |
+| [#5](https://github.com/kfubtik/trust402/issues/5) | Vercel Git auto-deploy | Production deploys through the Vercel GitHub App from `kfubtik/trust402` pushes. | Keep the production deploy evidence current after each release. |
+| [#6](https://github.com/kfubtik/trust402/issues/6) | External x402 directories | The custom domain is attached, but CDP Bazaar exact resource URLs are reindexing and non-CDP directories do not visibly list Trust402 yet. | Wait for CDP Bazaar to return `10/10` on `trust402.aztecbeacon.uk`, rerun directory checks, then submit the public-safe listing pack only where manual listing is allowed. |
 | [#7](https://github.com/kfubtik/trust402/issues/7) | AgentCash auto-refill policy | The Trust402-reserved AgentCash wallet is funded and dry-run refill checks exist, but live auto-refill needs provider, caps, audit, and emergency-stop rules. | Approve the refill source, threshold, amount, cap, and log format before enabling live refill. |
 | [#8](https://github.com/kfubtik/trust402/issues/8) | Live procurement policy | Trust402 can plan and quote, but should not autonomously buy downstream resources without spend controls. | Approve allowlists, per-call/job/day caps, receipt storage, and approval thresholds. |
 | [#9](https://github.com/kfubtik/trust402/issues/9) | Paid Proof402 delegation policy | Trust402 can prepare Proof402-ready hashes, but paid delegation is intentionally disabled. | Approve which hashes can be notarized, proof spend caps, retry policy, and receipt fields. |
@@ -24,16 +24,16 @@ The full final Definition of Done is pinned in
 
 ## Current Safe State
 
-- Production URL: `https://trust402.vercel.app`.
+- Production URL: `https://trust402.aztecbeacon.uk`.
 - Deployment mode: production now auto-deploys through the Vercel GitHub App
   from `kfubtik/trust402` pushes to `main`. The Git/Vercel auto-deploy
   requirement is verified in production audit.
-- Recent manual production deployment evidence snapshot:
+- Historical manual production deployment evidence snapshot:
   `dpl_9oUMANMVV69eJqQTzgDyr3tq57WK`, aliased to
   `https://trust402.vercel.app` as of 2026-05-20 09:49 +07:00. This deploy
   includes commit `e613f801ac5cdd8d603e25dae78c0c3f5b5888d8`
   (`Add final verification deployment sync gate`). Treat the latest
-  `deployment:preflight` output and `vercel inspect https://trust402.vercel.app`
+  `deployment:preflight` output and `vercel inspect https://trust402.aztecbeacon.uk`
   as the source of truth after any later deploy.
 - The current deployed runtime includes the deployment-preflight requirement
   split from `2acd266590fafcba88fb5be028bd8b5f6190430b`, the deployment-lag
@@ -60,19 +60,21 @@ The full final Definition of Done is pinned in
   check before production smoke. If production is behind the local verification
   contract, `production_smoke` is skipped as a deployment-lag blocker instead
   of being reported as an application smoke regression.
-- CDP Bazaar indexing: 10/10 paid launch resources verified as of
-  2026-05-20 04:41:54 +07:00. The checker now uses bounded concurrency so
-  CDP discovery latency does not create false launch-monitor timeouts.
-- External directory visibility: monitored read-only; latest final verifier
-  checked 13 directories, found 10 reachable, 0 visible, 3 unreachable, and 1
-  custom-domain-blocked as of 2026-05-20 09:52 +07:00.
+- CDP Bazaar indexing: after switching `PUBLIC_BASE_URL` to
+  `https://trust402.aztecbeacon.uk`, search still finds Trust402 but exact
+  resource URLs are `0/10` on the custom-domain origin as of
+  2026-05-20 15:16 +07:00. Evidence:
+  `sha256:25df12ec7547ea74c3ccc8910ffbe2cc252988ffe22b346f35ac82891af9bf3e`.
+- External directory visibility: monitored read-only; latest check found 13
+  monitored directories, 10 reachable, 0 visible, 3 unreachable, and 0
+  custom-domain-blocked as of 2026-05-20 15:14 +07:00.
 - Production gates: `node --test test` (180/180), `node scripts/release-check.js`,
   smoke, x402 smoke, Docker build, launch monitor, deployment preflight,
   AgentCash refill dry-run, production deployment sync, and external directory
   read-only check passed as of 2026-05-20 09:52 +07:00. Recent final
   verification hash:
   `sha256:44e39d236930a87c2599113b4844d7eadc2b0e6ea3a5a696239f9186f94fe6f2`.
-  `final:verify` remains blocked because Git/Vercel auto-deploy,
+  `final:verify` remains blocked because CDP Bazaar custom-domain reindexing,
   external-directory visibility, live procurement, paid Proof402 delegation,
   AgentCash auto-refill, and autonomous live job evidence are still unresolved.
 - AgentCash MCP observation: AgentCash settings currently cap requests at
@@ -125,13 +127,13 @@ The full final Definition of Done is pinned in
 Run after any production deployment:
 
 ```powershell
-npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000 --strict
+npm run launch:monitor -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --strict
 ```
 
 Run before claiming external directory visibility:
 
 ```powershell
-npm run directories:check -- https://trust402.vercel.app --timeout-ms=10000
+npm run directories:check -- https://trust402.aztecbeacon.uk --timeout-ms=10000
 ```
 
 Run before enabling any live-spend-adjacent feature:

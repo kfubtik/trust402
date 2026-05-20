@@ -75,8 +75,8 @@ monitor checks pass.
 Acceptance:
 
 - a push to `main` creates a production deployment without `vercel --prod`;
-- `https://trust402.vercel.app` remains the production alias;
-- `npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000 --strict`
+- `https://trust402.aztecbeacon.uk` remains the production alias;
+- `npm run launch:monitor -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --strict`
   passes after a Git-backed deploy.
 
 Completion evidence:
@@ -88,13 +88,13 @@ Completion evidence:
 - set `TRUST402_GIT_AUTO_DEPLOY_COMMIT_SHA` to the commit that triggered that
   deployment.
 
-Current 2026-05-20 blocker:
+Current 2026-05-20 status:
 
-- `npx vercel@latest git connect https://github.com/kfubtik/trust402.git
-  --scope sergo565456-2815s-projects` failed with private-repo access denied.
-  The Vercel GitHub App still needs access to `kfubtik/trust402`, or the
-  GitHub Actions fallback needs `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and
-  `VERCEL_PROJECT_ID` configured as GitHub Actions secrets.
+- the Vercel GitHub App is connected to `kfubtik/trust402`;
+- push-triggered production deploy evidence is visible in runtime deployment
+  metadata;
+- the custom domain `https://trust402.aztecbeacon.uk` is the current
+  buyer-facing production origin.
 
 Tracking: https://github.com/kfubtik/trust402/issues/5
 
@@ -108,8 +108,9 @@ Acceptance:
 - at least one external directory visibly shows Trust402;
 - no private keys, CDP secrets, AgentCash internals, payment headers, or paid
   receipts are submitted.
-- directories that require a custom domain, such as `x402-list.com`, stay
-  blocked until Trust402 runs on an accepted production domain.
+- directories that require a custom domain, such as `x402-list.com`, are no
+  longer blocked by the host policy because Trust402 runs on
+  `trust402.aztecbeacon.uk`.
 
 Completion evidence:
 
@@ -126,21 +127,21 @@ Completion evidence:
   result where Trust402 is visible;
 - set `TRUST402_EXTERNAL_DIRECTORY_NAME` to the non-CDP directory name.
 
-Current 2026-05-20 custom-domain snapshot:
+Current 2026-05-20 custom-domain and directory snapshot:
 
-| Domain | Availability | Vercel price |
-| --- | --- | --- |
-| `trust402.xyz` | available | `$1.99` / 1 year |
-| `trust402.org` | available | `$8.99` / 1 year |
-| `trust402.dev` | available | `$9.99` / 1 year |
-| `trust402.net` | available | `$13.50` / 1 year |
-| `trust402.io` | available | `$37.99` / 1 year |
-| `trust402.ai` | available | `$160.00` / 2 years |
+| Check | Current result |
+| --- | --- |
+| Production origin | `https://trust402.aztecbeacon.uk` |
+| DNS | A `76.76.21.21`, DNS-only in Cloudflare |
+| Vercel domain | attached to project `trust402` |
+| x402 discovery | serves custom-domain resource URLs |
+| External directory host policy | no custom-domain blocker |
+| CDP Bazaar exact resources | `0/10`, reindex pending after origin switch |
+| CDP Bazaar evidence ref | `sha256:25df12ec7547ea74c3ccc8910ffbe2cc252988ffe22b346f35ac82891af9bf3e` |
 
-Availability and pricing are time-sensitive. Recheck with Vercel or the chosen
-registrar immediately before purchase. Do not mark the custom-domain or
-external-directory requirement complete until the purchased/attached domain
-serves Trust402 over HTTPS and a non-CDP directory visibly lists it.
+Do not mark the external-directory requirement complete until CDP Bazaar
+returns to `10/10` for the custom-domain resource URLs and a non-CDP directory
+visibly lists Trust402.
 
 Tracking: https://github.com/kfubtik/trust402/issues/6
 
@@ -361,7 +362,7 @@ TRUST402_FINAL_VERIFICATION_EVIDENCE_REF=<public-safe final verification ref>
 Use the read-only verifier to produce the evidence ref:
 
 ```powershell
-npm run final:verify -- https://trust402.vercel.app --timeout-ms=10000
+npm run final:verify -- https://trust402.aztecbeacon.uk --timeout-ms=10000
 ```
 
 Public release is a separate gate after product completion. Do not delete
@@ -374,7 +375,7 @@ clean public release commit before changing repository visibility.
 Before the approved final/live window, run the read-only operator unblock report:
 
 ```powershell
-npm run completion:unblockers -- https://trust402.vercel.app
+npm run completion:unblockers -- https://trust402.aztecbeacon.uk
 ```
 
 It consolidates Git/Vercel, custom-domain, external-directory, live spend,
@@ -417,8 +418,8 @@ Or from the CLI, with the production API as source of truth and the intended
 custom listing host as the public website:
 
 ```powershell
-npm run directories:submission-pack -- https://trust402.vercel.app `
-  --listing-base-url=https://trust402.dev `
+npm run directories:submission-pack -- https://trust402.aztecbeacon.uk `
+  --listing-base-url=https://trust402.aztecbeacon.uk `
   --user-approved-outreach
 ```
 
@@ -426,38 +427,19 @@ The pack includes listing copy, directory targets, custom-domain blockers, CDP
 Bazaar readiness, evidence env names, and verification commands. It does not
 submit forms, mutate wallets, set env vars, or send payment headers.
 
-For the custom-domain step, generate the read-only activation plan:
+The custom domain is already attached. Keep the activation pack endpoint for
+future domain changes:
 
 ```text
 GET /api/domains/activation-pack
 POST /api/domains/activation-pack
 ```
 
-Or from the CLI after rechecking candidate availability:
+For the active domain, use the read-only readiness check instead:
 
 ```powershell
-npm run domains:activation-pack -- https://trust402.vercel.app `
-  --selected-domain=trust402.org `
-  --selected-domain-available=true `
-  --selected-domain-price-usd=8.99 `
-  --selected-domain-period-years=1 `
-  --selected-domain-purchase-url=https://vercel.com/domains/search?q=trust402.org `
-  --availability-source=vercel-domain-check
-```
-
-The pack checks whether the current host still blocks external directories,
-prepares `PUBLIC_BASE_URL`, Vercel verification commands, and directory
-evidence fields, but it does not buy a domain, mutate Vercel, set env vars, or
-claim availability/pricing without a fresh registrar/Vercel check. Supplied
-public-safe availability evidence is included in the `activationPackHash`, so a
-later operator can verify that the selected domain, price, period, and purchase
-URL match the reviewed plan.
-
-After the domain is bought or attached, verify the custom-domain runtime itself:
-
-```powershell
-npm run domains:readiness-check -- https://trust402.vercel.app `
-  --domain=trust402.dev
+npm run domains:readiness-check -- https://trust402.aztecbeacon.uk `
+  --domain=trust402.aztecbeacon.uk
 ```
 
 This check is also read-only. It verifies DNS records, HTTPS `/health`, x402
@@ -468,7 +450,7 @@ domain readiness, but does not set them.
 For the Git/Vercel and custom-domain portion specifically, run:
 
 ```powershell
-npm run deployment:preflight -- https://trust402.vercel.app
+npm run deployment:preflight -- https://trust402.aztecbeacon.uk
 ```
 
 This preflight is read-only and records whether the GitHub Actions fallback is
@@ -490,7 +472,7 @@ metadata. It does not read secret values and does not mutate GitHub or Vercel.
 For the GitHub Actions fallback, generate the read-only setup command pack:
 
 ```powershell
-npm run deployment:github-actions-setup -- https://trust402.vercel.app
+npm run deployment:github-actions-setup -- https://trust402.aztecbeacon.uk
 ```
 
 Agents can request the same setup pack through:
@@ -510,7 +492,7 @@ Then generate the read-only live-window plan for the exact approved resource,
 budget, and provider:
 
 ```powershell
-npm run live:window-plan -- https://trust402.vercel.app `
+npm run live:window-plan -- https://trust402.aztecbeacon.uk `
   --candidate-endpoint=https://proof402.vercel.app/api/proof/notarize `
   --candidate-price=0.005 `
   --proof-reserve-usd=0.005 `
@@ -540,8 +522,8 @@ payment. It contains:
 For the currently blocked CDP Bazaar route, generate the pack with:
 
 ```powershell
-npm run live:window-plan -- https://trust402.vercel.app `
-  --candidate-endpoint=https://trust402.vercel.app/api/trust/compare-resources `
+npm run live:window-plan -- https://trust402.aztecbeacon.uk `
+  --candidate-endpoint=https://trust402.aztecbeacon.uk/api/trust/compare-resources `
   --candidate-price=0.03 `
   --max-total-usd=0.03 `
   --live-max-per-call=0.03 `
@@ -551,7 +533,7 @@ npm run live:window-plan -- https://trust402.vercel.app `
 For the shorter local approval packet, use:
 
 ```powershell
-npm run agentcash:direct-smoke-plan -- https://trust402.vercel.app
+npm run agentcash:direct-smoke-plan -- https://trust402.aztecbeacon.uk
 ```
 
 This prints the exact one-line approval text, the temporary local policy patch,
@@ -582,7 +564,7 @@ During the approved smoke window, prefer the one-shot local wrapper:
 
 ```powershell
 $env:TRUST402_LIVE_SMOKE_WINDOW_APPROVED="true"
-npm run live:smoke-window -- https://trust402.vercel.app `
+npm run live:smoke-window -- https://trust402.aztecbeacon.uk `
   --live `
   --apply-local-policy `
   --candidate-endpoint=https://proof402.vercel.app/api/proof/notarize `
@@ -657,7 +639,7 @@ For the full remaining-blocker checklist, export the public-safe operator
 action pack:
 
 ```powershell
-npm run completion:actions -- https://trust402.vercel.app `
+npm run completion:actions -- https://trust402.aztecbeacon.uk `
   --candidate-endpoint=https://proof402.vercel.app/api/proof/notarize `
   --candidate-price=0.005 `
   --proof-reserve-usd=0.005 `
