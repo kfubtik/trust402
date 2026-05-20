@@ -86,6 +86,35 @@ Suggested topics:
 x402, agent, trust, procurement, micropayments
 ```
 
+## Public Release Cleanup Gate
+
+Keep the private working history intact while Trust402 is still being built. Do
+not delete workflow runs, rewrite `main`, or force-push only to hide failed
+iteration checks during active development.
+
+Before changing `kfubtik/trust402` from private to public, run a separate
+operator-approved public release cleanup:
+
+1. Verify the product is complete against `docs/autonomous-completion-plan.md`
+   and that the latest `main` commit has green GitHub Actions and Vercel checks.
+2. Scrub public-safe files again with `npm run privacy:check` and
+   `npm run release:check`.
+3. Export or preserve any private development evidence the operator wants to
+   keep before cleanup.
+4. Create a clean public release commit, preferably from an orphan branch or a
+   reviewed squash, with the message `Initial public release`.
+5. Push the clean release history only after explicit operator approval for a
+   history rewrite.
+6. Run the full required checks against the clean release commit.
+7. Change repository visibility to public only after the clean release commit is
+   green and the operator confirms that old private workflow history should not
+   be part of the public launch surface.
+
+GitHub warns that when a private repository is made public, repository code,
+activity, Actions history, and logs become visible to everyone. Treat that
+visibility change as irreversible from a launch-reputation perspective: finish
+the product first, then do the cleanup gate, then publish.
+
 ## Marketplace Metadata
 
 Before submitting to a marketplace, check:

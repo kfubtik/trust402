@@ -364,6 +364,13 @@ Use the read-only verifier to produce the evidence ref:
 npm run final:verify -- https://trust402.vercel.app --timeout-ms=10000
 ```
 
+Public release is a separate gate after product completion. Do not delete
+workflow runs, rewrite history, or force-push during active development just to
+hide failed iteration checks. Once every completion requirement is verified and
+the operator explicitly approves publication, follow
+`docs/github-release-checklist.md#public-release-cleanup-gate` to produce a
+clean public release commit before changing repository visibility.
+
 Before the approved final/live window, run the read-only operator unblock report:
 
 ```powershell
