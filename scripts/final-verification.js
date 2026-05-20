@@ -18,12 +18,25 @@ const nodeBin = process.execPath;
 const npxBin = "npx";
 
 async function main() {
+  const releaseCheck = runCommand("release_check", "Local release gate", nodeBin, ["scripts/release-check.js"]);
+  const dockerCheck = skipDocker
+    ? skipped("docker_build", "Docker build", "Skipped by --skip-docker.")
+    : runCommand("docker_build", "Docker build", dockerBin, ["build", "-t", "trust402:test", "."]);
+  const deploymentSyncCheck = await productionDeploymentSyncCheck(baseUrl, timeoutMs);
+  const productionSmokeCheck = deploymentSyncCheck.status === "passed"
+    ? runCommand("production_smoke", "Production smoke", nodeBin, ["scripts/smoke.js", baseUrl])
+    : skipped(
+        "production_smoke",
+        "Production smoke",
+        "Skipped because production deployment is behind the local smoke contract.",
+        true,
+        "Deploy the current GitHub HEAD to production, then rerun production smoke."
+      );
   const checks = [
-    runCommand("release_check", "Local release gate", nodeBin, ["scripts/release-check.js"]),
-    skipDocker
-      ? skipped("docker_build", "Docker build", "Skipped by --skip-docker.")
-      : runCommand("docker_build", "Docker build", dockerBin, ["build", "-t", "trust402:test", "."]),
-    runCommand("production_smoke", "Production smoke", nodeBin, ["scripts/smoke.js", baseUrl]),
+    releaseCheck,
+    dockerCheck,
+    deploymentSyncCheck,
+    productionSmokeCheck,
     runCommand("production_x402_smoke", "Production x402 smoke", nodeBin, ["scripts/x402-smoke.js", baseUrl]),
     runCommand("agentcash_refill_check", "AgentCash refill dry-run check", nodeBin, ["scripts/agentcash-refill-check.js"]),
     runCommand("launch_monitor", "Production launch monitor", nodeBin, [
@@ -100,6 +113,62 @@ function runCommand(id, label, command, commandArgs, options = {}) {
   };
 }
 
+async function productionDeploymentSyncCheck(targetBaseUrl, timeoutMs) {
+  const started = Date.now();
+  const url = `${targetBaseUrl.replace(/\/+$/, "")}/api/deployments/preflight`;
+  try {
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(timeoutMs)
+    });
+    const text = await response.text();
+    let body = null;
+    try {
+      body = text.trim() ? JSON.parse(text) : null;
+    } catch {
+      body = null;
+    }
+    const hasCurrentContract = Boolean(
+      body?.requirementStatus?.gitVercelAutoDeploy &&
+      body?.requirementStatus?.customDomain
+    );
+    const passed = response.ok && hasCurrentContract;
+    return {
+      id: "production_deployment_sync",
+      label: "Production deployment schema sync",
+      status: passed ? "passed" : "failed",
+      required: true,
+      skipped: false,
+      exitCode: passed ? 0 : 1,
+      durationMs: Date.now() - started,
+      stdout: JSON.stringify({
+        ok: response.ok,
+        status: response.status,
+        hasDeploymentPreflight: body?.tool === "deployment.preflight",
+        hasRequirementStatus: Boolean(body?.requirementStatus),
+        hasGitVercelRequirementStatus: Boolean(body?.requirementStatus?.gitVercelAutoDeploy),
+        hasCustomDomainRequirementStatus: Boolean(body?.requirementStatus?.customDomain)
+      }),
+      stderr: "",
+      nextAction: passed
+        ? null
+        : "Production is behind the local verification contract; deploy the current GitHub HEAD before running final production smoke."
+    };
+  } catch (error) {
+    return {
+      id: "production_deployment_sync",
+      label: "Production deployment schema sync",
+      status: "failed",
+      required: true,
+      skipped: false,
+      exitCode: 1,
+      durationMs: Date.now() - started,
+      stdout: "",
+      stderr: String(error?.message || error),
+      nextAction: "Production deployment sync check failed; verify the production URL and deploy current HEAD before final verification."
+    };
+  }
+}
+
 function shouldUseShell(command) {
   if (process.platform !== "win32") return false;
   const value = String(command || "");
@@ -125,7 +194,7 @@ function defaultDockerBin() {
   return existsSync(knownDockerDesktopPath) ? knownDockerDesktopPath : "docker";
 }
 
-function skipped(id, label, reason, required = true) {
+function skipped(id, label, reason, required = true, nextAction = null) {
   return {
     id,
     label,
@@ -133,7 +202,7 @@ function skipped(id, label, reason, required = true) {
     required,
     skipped: true,
     reason,
-    nextAction: required ? "Run this check before recording final verification evidence." : null
+    nextAction: required ? (nextAction || "Run this check before recording final verification evidence.") : null
   };
 }
 

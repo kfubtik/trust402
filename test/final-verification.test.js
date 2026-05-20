@@ -170,6 +170,39 @@ test("finalVerificationReport does not become ready when external evidence is fa
   assert.ok(report.blockers.some((item) => item.id === "external_directory_visibility"));
 });
 
+test("finalVerificationReport exposes production deployment lag as its own blocker", () => {
+  const report = finalVerificationReport({
+    baseUrl: "https://trust402.vercel.app",
+    checks: [
+      check("release_check", "passed"),
+      {
+        ...check("production_deployment_sync", "failed"),
+        nextAction: "Production is behind the local verification contract; deploy the current GitHub HEAD before running final production smoke."
+      },
+      {
+        ...check("production_smoke", "skipped-required"),
+        skipped: true,
+        exitCode: null,
+        nextAction: "Deploy the current GitHub HEAD to production, then rerun production smoke."
+      }
+    ],
+    productionAudit: {
+      goalComplete: false,
+      summary: { verified: 9, unverified: 1 },
+      requirements: [
+        ...verifiedRequirements,
+        { id: "final_verification", status: "unverified" }
+      ],
+      blockers: [{ id: "final_verification" }]
+    }
+  });
+
+  assert.equal(report.status, "blocked");
+  assert.ok(report.blockers.some((item) => item.id === "production_deployment_sync"));
+  assert.ok(report.blockers.some((item) => item.id === "production_smoke"));
+  assert.equal(report.suggestedEnv, null);
+});
+
 function check(id, status) {
   return {
     id,
