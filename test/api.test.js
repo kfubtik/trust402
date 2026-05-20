@@ -28,6 +28,8 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(health.response.status, 200);
     assert.equal(health.body.service, "Trust402");
     assert.equal(health.body.liveSpendEnabled, false);
+    assert.equal(health.body.deployment.provider, "local");
+    assert.equal(health.body.deployment.exposesSecretValues, false);
 
     const resources = await request(baseUrl, "/api/resources");
     assert.equal(resources.response.status, 200);

@@ -157,6 +157,7 @@ export async function handleTrust402Request(req, res) {
         paywallMode: config.paywallMode,
         realSettlementEnabled: config.realSettlementEnabled,
         liveSpendEnabled: false,
+        deployment: runtimeDeploymentMetadata(),
         safety: {
           storesPrivateKeys: false,
           paidSubcallsEnabled: false,
@@ -472,6 +473,20 @@ function setSecurityHeaders(res) {
   res.setHeader("access-control-allow-methods", "GET,POST,OPTIONS");
   res.setHeader("access-control-allow-headers", "content-type,payment-signature,x-payment,x-payment-payload,x-trust402-operator-key");
   res.setHeader("access-control-expose-headers", "payment-required,payment-response");
+}
+
+function runtimeDeploymentMetadata() {
+  const gitCommitSha = process.env.VERCEL_GIT_COMMIT_SHA || process.env.TRUST402_GIT_COMMIT_SHA || "";
+  return {
+    provider: process.env.VERCEL === "1" ? "vercel" : "local",
+    environment: process.env.VERCEL_ENV || "local",
+    region: process.env.VERCEL_REGION || null,
+    gitCommitSha: gitCommitSha || null,
+    gitCommitRef: process.env.VERCEL_GIT_COMMIT_REF || null,
+    gitCommitRepo: process.env.VERCEL_GIT_REPO_SLUG || null,
+    gitCommitOrg: process.env.VERCEL_GIT_REPO_OWNER || null,
+    exposesSecretValues: false
+  };
 }
 
 let realEntrypointAppPromise;

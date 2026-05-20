@@ -115,7 +115,8 @@ function runCommand(id, label, command, commandArgs, options = {}) {
 
 async function productionDeploymentSyncCheck(targetBaseUrl, timeoutMs) {
   const started = Date.now();
-  const url = `${targetBaseUrl.replace(/\/+$/, "")}/api/deployments/preflight`;
+  const root = targetBaseUrl.replace(/\/+$/, "");
+  const url = `${root}/api/deployments/preflight`;
   try {
     const response = await fetch(url, {
       signal: AbortSignal.timeout(timeoutMs)
@@ -127,11 +128,17 @@ async function productionDeploymentSyncCheck(targetBaseUrl, timeoutMs) {
     } catch {
       body = null;
     }
+    const health = await fetchJsonOrNull(`${root}/health`, timeoutMs);
+    const localGitHead = commandText("git", ["rev-parse", "--short", "HEAD"]);
+    const healthGitCommitSha = health?.deployment?.gitCommitSha || "";
+    const gitCommitMatchesHead = healthGitCommitSha && localGitHead
+      ? sameCommit(healthGitCommitSha, localGitHead)
+      : null;
     const hasCurrentContract = Boolean(
       body?.requirementStatus?.gitVercelAutoDeploy &&
       body?.requirementStatus?.customDomain
     );
-    const passed = response.ok && hasCurrentContract;
+    const passed = response.ok && hasCurrentContract && gitCommitMatchesHead !== false;
     return {
       id: "production_deployment_sync",
       label: "Production deployment schema sync",
@@ -146,12 +153,18 @@ async function productionDeploymentSyncCheck(targetBaseUrl, timeoutMs) {
         hasDeploymentPreflight: body?.tool === "deployment.preflight",
         hasRequirementStatus: Boolean(body?.requirementStatus),
         hasGitVercelRequirementStatus: Boolean(body?.requirementStatus?.gitVercelAutoDeploy),
-        hasCustomDomainRequirementStatus: Boolean(body?.requirementStatus?.customDomain)
+        hasCustomDomainRequirementStatus: Boolean(body?.requirementStatus?.customDomain),
+        hasHealthDeploymentMetadata: Boolean(health?.deployment),
+        healthGitCommitSha: healthGitCommitSha || null,
+        localGitHead: localGitHead || null,
+        gitCommitMatchesHead
       }),
       stderr: "",
       nextAction: passed
         ? null
-        : "Production is behind the local verification contract; deploy the current GitHub HEAD before running final production smoke."
+        : gitCommitMatchesHead === false
+          ? "Production health metadata reports a different Git commit; deploy the current GitHub HEAD before final verification."
+          : "Production is behind the local verification contract; deploy the current GitHub HEAD before running final production smoke."
     };
   } catch (error) {
     return {
@@ -167,6 +180,34 @@ async function productionDeploymentSyncCheck(targetBaseUrl, timeoutMs) {
       nextAction: "Production deployment sync check failed; verify the production URL and deploy current HEAD before final verification."
     };
   }
+}
+
+async function fetchJsonOrNull(url, timeoutMs) {
+  try {
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(timeoutMs)
+    });
+    const text = await response.text();
+    if (!response.ok || !text.trim()) return null;
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+function commandText(command, commandArgs) {
+  const result = spawnSync(command, commandArgs, {
+    cwd: process.cwd(),
+    encoding: "utf8",
+    shell: shouldUseShell(command)
+  });
+  return result.status === 0 ? String(result.stdout || "").trim() : "";
+}
+
+function sameCommit(left, right) {
+  const a = String(left || "").trim().toLowerCase();
+  const b = String(right || "").trim().toLowerCase();
+  return Boolean(a && b && (a === b || a.startsWith(b) || b.startsWith(a)));
 }
 
 function shouldUseShell(command) {

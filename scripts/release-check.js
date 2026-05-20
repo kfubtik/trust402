@@ -226,6 +226,8 @@ assert(launchMonitorWorkflow.includes("workflow_dispatch"), "launch monitor work
 assert(launchMonitorWorkflow.includes("npm run launch:monitor"), "launch monitor workflow must run npm run launch:monitor");
 assert(launchMonitorWorkflow.includes("--strict"), "launch monitor workflow must fail on required production monitor failures");
 assert(finalVerificationScript.includes("--strict"), "final verifier must run launch monitor in strict mode");
+assert(finalVerificationScript.includes("healthGitCommitSha"), "final verifier must inspect production health deployment metadata when available");
+assert(finalVerificationScript.includes("gitCommitMatchesHead"), "final verifier must compare production commit metadata to local HEAD when available");
 assert(operatorActionPackScript.includes("/api/operator/action-pack"), "operator action pack CLI must support production API mode");
 assert(operatorActionPackScript.includes("args.local"), "operator action pack CLI must preserve explicit local mode");
 assert(readFileSync("src/operatorActionPack.js", "utf8").includes("evidenceCollectionPlan"), "operator action pack must aggregate final evidence collection steps");
