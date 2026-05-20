@@ -88,6 +88,14 @@ Completion evidence:
 - set `TRUST402_GIT_AUTO_DEPLOY_COMMIT_SHA` to the commit that triggered that
   deployment.
 
+Current 2026-05-20 blocker:
+
+- `npx vercel@latest git connect https://github.com/kfubtik/trust402.git
+  --scope sergo565456-2815s-projects` failed with private-repo access denied.
+  The Vercel GitHub App still needs access to `kfubtik/trust402`, or the
+  GitHub Actions fallback needs `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and
+  `VERCEL_PROJECT_ID` configured as GitHub Actions secrets.
+
 Tracking: https://github.com/kfubtik/trust402/issues/5
 
 ## 2. External x402 Directories
@@ -117,6 +125,22 @@ Completion evidence:
 - set `TRUST402_EXTERNAL_DIRECTORY_EVIDENCE_URL` to a public listing or search
   result where Trust402 is visible;
 - set `TRUST402_EXTERNAL_DIRECTORY_NAME` to the non-CDP directory name.
+
+Current 2026-05-20 custom-domain snapshot:
+
+| Domain | Availability | Vercel price |
+| --- | --- | --- |
+| `trust402.xyz` | available | `$1.99` / 1 year |
+| `trust402.org` | available | `$8.99` / 1 year |
+| `trust402.dev` | available | `$9.99` / 1 year |
+| `trust402.net` | available | `$13.50` / 1 year |
+| `trust402.io` | available | `$37.99` / 1 year |
+| `trust402.ai` | available | `$160.00` / 2 years |
+
+Availability and pricing are time-sensitive. Recheck with Vercel or the chosen
+registrar immediately before purchase. Do not mark the custom-domain or
+external-directory requirement complete until the purchased/attached domain
+serves Trust402 over HTTPS and a non-CDP directory visibly lists it.
 
 Tracking: https://github.com/kfubtik/trust402/issues/6
 
