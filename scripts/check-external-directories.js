@@ -4,6 +4,7 @@ import { EXTERNAL_DIRECTORY_TARGETS, isFreeHostingHost, monitorUrlsFor } from ".
 const baseUrl = (process.argv.find((arg) => /^https?:\/\//.test(arg)) || config.publicBaseUrl).replace(/\/$/, "");
 const strict = process.argv.includes("--strict");
 const timeoutMs = numberArg("--timeout-ms", 10_000);
+const concurrency = numberArg("--concurrency", 6);
 const host = safeHost(baseUrl);
 const hostRequiresCustomDomain = isFreeHostingHost(host);
 const terms = Array.from(new Set([
@@ -21,10 +22,7 @@ const directories = EXTERNAL_DIRECTORY_TARGETS.map((target) => ({
 }));
 
 async function main() {
-  const results = [];
-  for (const directory of directories) {
-    results.push(await checkDirectory(directory));
-  }
+  const results = await mapWithConcurrency(directories, concurrency, checkDirectory);
 
   const visible = results.filter((item) => item.visible);
   const reachable = results.filter((item) => item.reachable);
@@ -64,10 +62,7 @@ async function main() {
 }
 
 async function checkDirectory(directory) {
-  const checks = [];
-  for (const url of directory.urls) {
-    checks.push(await checkUrl(url));
-  }
+  const checks = await mapWithConcurrency(directory.urls, Math.min(concurrency, directory.urls.length || 1), checkUrl);
   const reachableChecks = checks.filter((item) => item.reachable);
   const matchedChecks = checks.filter((item) => item.matched);
   const blockedByHost = Boolean(directory.requiresCustomDomain && hostRequiresCustomDomain);
@@ -161,6 +156,21 @@ function numberArg(name, fallback) {
   if (!match) return fallback;
   const value = Number.parseInt(match.slice(prefix.length), 10);
   return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+async function mapWithConcurrency(items, limit, mapper) {
+  const values = Array.from(items || []);
+  const results = new Array(values.length);
+  let nextIndex = 0;
+  const workerCount = Math.max(1, Math.min(limit || 1, values.length || 1));
+  await Promise.all(Array.from({ length: workerCount }, async () => {
+    while (nextIndex < values.length) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      results[currentIndex] = await mapper(values[currentIndex], currentIndex);
+    }
+  }));
+  return results;
 }
 
 function safeHost(value) {
