@@ -16,7 +16,7 @@ The full final Definition of Done is pinned in
 | Issue | Track | Why it matters | Safe next step |
 | --- | --- | --- | --- |
 | [#5](https://github.com/kfubtik/trust402/issues/5) | Vercel Git auto-deploy | Production deploys through the Vercel GitHub App from `kfubtik/trust402` pushes. | Keep the production deploy evidence current after each release. |
-| [#6](https://github.com/kfubtik/trust402/issues/6) | External x402 directories | The custom domain is attached. CDP Bazaar exact resource URLs were verified `10/10`, but the latest redeploy check is temporarily `9/10`; x402 List submission `a6c3be52-dbd9-4d86-999e-5b497443b357` is pending and probed 10 endpoints. Non-CDP directories do not visibly list Trust402 yet. | Reconfirm CDP Bazaar after async indexing, monitor x402 List, and record a visible public listing URL before closing. |
+| [#6](https://github.com/kfubtik/trust402/issues/6) | External x402 directories | The custom domain is attached. CDP Bazaar exact resource URLs are verified `10/10`; x402 List submission `a6c3be52-dbd9-4d86-999e-5b497443b357` is pending and probed 10 endpoints. Non-CDP directories do not visibly list Trust402 yet. | Keep monitoring x402 List and record a visible public listing URL before closing. |
 | [#7](https://github.com/kfubtik/trust402/issues/7) | AgentCash auto-refill policy | The Trust402-reserved AgentCash wallet is funded, dry-run refill checks exist, and production policy uses `manual-action` provider so no runtime refill credentials are held. | Keep threshold/cap evidence current; use a separate approved adapter only if live automatic refill is later required. |
 | [#8](https://github.com/kfubtik/trust402/issues/8) | Live procurement policy | Trust402 can plan and quote, but should not autonomously buy downstream resources without spend controls. | Approve allowlists, per-call/job/day caps, receipt storage, and approval thresholds. |
 | [#9](https://github.com/kfubtik/trust402/issues/9) | Paid Proof402 delegation policy | Trust402 can prepare Proof402-ready hashes, but paid delegation is intentionally disabled. | Approve which hashes can be notarized, proof spend caps, retry policy, and receipt fields. |
@@ -60,17 +60,17 @@ The full final Definition of Done is pinned in
   check before production smoke. If production is behind the local verification
   contract, `production_smoke` is skipped as a deployment-lag blocker instead
   of being reported as an application smoke regression.
-- CDP Bazaar indexing: after the latest production redeploy and a bounded paid
-  retry against `trust.compare_resources`,
+- CDP Bazaar indexing: after the latest production redeploy, a bounded paid
+  retry against `trust.compare_resources`, and asynchronous CDP Bazaar recovery,
   `npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk
   --timeout-ms=10000 --limit=20 --concurrency=8` reports
-  `partially-indexed` with `9/10` exact custom-domain paid launch resources as
-  of 2026-05-20 21:46 +07:00. Production env now records
-  `TRUST402_CDP_BAZAAR_EVIDENCE_REF=sha256:2029ef06b92daa9b730260c96bcdb7516666a49067fc7c997e4a8729f755f204`,
-  `TRUST402_CDP_BAZAAR_CHECK_STATUS=partially-indexed`,
+  `all-indexed` with `10/10` exact custom-domain paid launch resources as
+  of 2026-05-20 23:37 +07:00. Production env now records
+  `TRUST402_CDP_BAZAAR_EVIDENCE_REF=sha256:81031dc6017d9df52399ff4be0c88bdeb30525bf89e32dc5e4f4ffd3e0d78795`,
+  `TRUST402_CDP_BAZAAR_CHECK_STATUS=all-indexed`,
   `TRUST402_CDP_BAZAAR_EXPECTED_RESOURCES=10`,
-  `TRUST402_CDP_BAZAAR_INDEXED_RESOURCES=9`, and
-  `TRUST402_CDP_BAZAAR_MISSING_RESOURCES=trust.compare_resources`.
+  `TRUST402_CDP_BAZAAR_INDEXED_RESOURCES=10`, and
+  `TRUST402_CDP_BAZAAR_MISSING_RESOURCES=` with no missing resources.
 - AgentCash direct paid smoke: a one-shot x402 fetch against
   `https://trust402.aztecbeacon.uk/api/trust/compare-resources` succeeded for
   `$0.03` on 2026-05-20 at 16:44 +07:00. Public transaction hash:
@@ -119,8 +119,8 @@ The full final Definition of Done is pinned in
   `node scripts/release-check.js`, `node scripts/privacy-check.js`, production
   smoke, production x402 smoke, Docker build, AgentCash refill dry-run, and
   external directory read-only check passed in the earlier green window. The
-  current launch monitor is `needs-attention` because CDP Bazaar is back to
-  `9/10` and non-CDP directory visibility remains 0.
+  current launch monitor still needs attention for non-CDP directory visibility,
+  live procurement, paid Proof402 delegation, and autonomous live job evidence.
   Final verifier hash:
   `sha256:fcfecb8933aadd88979daecd931d5ec9faf356bf4fb806d784997e17938d0c7c`.
   Docker on this workstation requires `D:\Programs\Docker\resources\bin` in
@@ -142,9 +142,9 @@ The full final Definition of Done is pinned in
   configured production provider is `cdp-x402`; production has
   `CDP_API_KEY_ID`, `CDP_API_KEY_SECRET`, `CDP_WALLET_SECRET`, and the
   `trust402-buyer` EVM account reference. The buyer address
-  `0xaC451Dd067f0f246Fe59eA4a0707f1c99F11342B` currently has `0` Base USDC,
-  so do not enable `LIVE_SPEND_ENABLED=true` until it is funded and a bounded
-  live window is staged.
+  `0xaC451Dd067f0f246Fe59eA4a0707f1c99F11342B` currently has `2.118725` Base
+  USDC, so the funding blocker is resolved; keep live spend behind a bounded
+  staged window and current policy caps.
 - Trust402 live procurement responses now include a public-safe
   `trust402.procurement_audit.v1` `auditBundle` alongside `receiptBundle`.
   Downstream endpoint URLs are represented with origins and hashes, and any
