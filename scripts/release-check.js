@@ -25,6 +25,7 @@ const smokeScript = readFileSync("scripts/smoke.js", "utf8");
 const liveEvidenceSmokeScript = readFileSync("scripts/live-evidence-smoke.js", "utf8");
 const configSource = readFileSync("src/config.js", "utf8");
 const policySource = readFileSync("src/policies.js", "utf8");
+const procurementSource = readFileSync("src/procurement.js", "utf8");
 const localAgentcashPolicySource = readFileSync("src/localAgentcashPolicy.js", "utf8");
 const liveEvidenceSmokeSource = readFileSync("src/liveEvidenceSmoke.js", "utf8");
 const proof402ClientSource = readFileSync("src/proof402Client.js", "utf8");
@@ -182,6 +183,9 @@ assert(liveWindowPlanSource.includes("LIVE_SPENT_TODAY_USD"), "live window plan 
 assert(liveWindowPlanSource.includes("proof402PreflightCommand"), "live window plan must include Proof402 paid preflight command");
 assert(configSource.includes("liveSpentTodayUsd"), "config must expose LIVE_SPENT_TODAY_USD");
 assert(policySource.includes("dailyRemainingUsd"), "spend policy must expose remaining daily capacity");
+assert(procurementSource.includes("trust402.procurement_audit.v1"), "procurement execute must return a versioned audit bundle");
+assert(procurementSource.includes("rawPaymentHeadersStored: false"), "procurement audit bundle must not store raw payment headers");
+assert(procurementSource.includes("paymentHeadersStoredAs: \"sha256-only\""), "procurement audit bundle must record payment headers as hashes only");
 assert(existsSync("scripts/launch-monitor.js"), "production launch monitor script must exist");
 assert(liveEvidenceSmokeScript.includes("writeEvidenceLedger"), "live evidence smoke CLI must expose evidence ledger write option");
 assert(smokeScript.includes("/api/jobs/autonomous-run"), "smoke script must cover autonomous job dry-run");

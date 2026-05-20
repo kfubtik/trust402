@@ -225,6 +225,12 @@ Price: free while live spend is disabled.
 Reason: buyers need to see exactly what would happen before trusting live
 procurement.
 
+Output note: dry-run and live responses include both a Proof402-ready
+`receiptBundle` and a `trust402.procurement_audit.v1` `auditBundle`. The audit
+bundle is public-safe: downstream endpoint URLs are represented with origins
+and hashes, payment response evidence is stored only as `sha256:` hashes, and
+raw payment headers/private payloads are never included.
+
 ### `POST /api/jobs/autonomous-run`
 
 Dry-run-first autonomous workflow that turns a goal into candidate discovery,

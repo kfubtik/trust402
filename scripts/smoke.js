@@ -469,6 +469,8 @@ async function main() {
   const execute = await postJson("/api/procurement/execute", quote);
   assert(execute.mode === "dry-run", "/api/procurement/execute must stay dry-run");
   assert(execute.paidSubcallsMade === 0, "/api/procurement/execute must not make paid subcalls");
+  assert(execute.auditBundle?.publicSafety?.rawPaymentHeadersStored === false, "/api/procurement/execute must expose public-safe audit bundle");
+  assert(execute.auditBundle?.publicSafety?.paymentHeadersStoredAs === "sha256-only", "/api/procurement/execute must hash payment response evidence");
 
   const receipt = await postJson("/api/receipts/hash-result", {
     subject: "smoke result",

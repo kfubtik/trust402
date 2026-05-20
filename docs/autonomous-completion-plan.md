@@ -193,7 +193,8 @@ Acceptance:
 - the configured payment bridge has passed a dry-run no-payment preflight;
 - every paid call is within the per-call cap;
 - total planned spend is within job and daily caps;
-- every execution returns an audit/receipt bundle;
+- every execution returns a `receiptBundle` and a public-safe
+  `auditBundle`;
 - downstream `payment-response` headers are recorded only as public-safe
   `sha256:` hashes, not as raw payment headers.
 

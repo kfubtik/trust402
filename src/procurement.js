@@ -94,6 +94,13 @@ export function procurementExecute(input = {}, options = {}) {
     quoteHash: quote.quoteHash,
     audit
   });
+  const auditBundle = buildProcurementAuditBundle({
+    mode: "dry-run",
+    quote,
+    executionHash,
+    audit,
+    paidSubcallsMade: 0
+  });
 
   return {
     ok: true,
@@ -112,6 +119,7 @@ export function procurementExecute(input = {}, options = {}) {
       estimatedTotalUsd: quote.quote.estimatedTotalUsd
     },
     audit,
+    auditBundle,
     receiptBundle: receiptBundle({
       subject: quote.quote.goal || "dry-run procurement execution",
       resultHash: executionHash,
@@ -199,13 +207,42 @@ async function procurementExecuteLive(input = {}, options = {}) {
     const call = await callPaidResource({ resource, input, fetchImpl: paidFetch, cfg });
     calls.push(call);
     if (!call.ok) {
-      const executionHash = sha256Json({ quoteHash: quote.quoteHash, calls });
+      const paidSubcallsMade = calls.filter((item) => item.ok).length;
+      const executionHash = sha256Json({
+        quoteHash: quote.quoteHash,
+        calls,
+        estimatedPaidUsd,
+        failedResource: resource.id
+      });
+      const audit = buildLiveAudit({
+        quote,
+        input,
+        cfg,
+        dailyRemainingUsd,
+        estimatedPaidUsd,
+        approval
+      });
       throw new ApiError(call.status || 502, "downstream_purchase_failed", "A downstream paid resource call failed.", {
         quoteId: quote.quoteId,
         executionHash,
         failedResource: resource.id,
         calls,
-        paidSubcallsMade: calls.filter((item) => item.ok).length
+        paidSubcallsMade,
+        auditBundle: buildProcurementAuditBundle({
+          mode: "live",
+          quote,
+          executionHash,
+          audit,
+          cfg,
+          calls,
+          estimatedPaidUsd,
+          paidSubcallsMade,
+          failure: {
+            resourceId: resource.id,
+            status: call.status || null,
+            code: "downstream_purchase_failed"
+          }
+        })
       });
     }
     estimatedPaidUsd = roundUsd(estimatedPaidUsd + (resource.priceUsd || 0));
@@ -215,6 +252,24 @@ async function procurementExecuteLive(input = {}, options = {}) {
     quoteHash: quote.quoteHash,
     calls,
     estimatedPaidUsd
+  });
+  const audit = buildLiveAudit({
+    quote,
+    input,
+    cfg,
+    dailyRemainingUsd,
+    estimatedPaidUsd,
+    approval
+  });
+  const auditBundle = buildProcurementAuditBundle({
+    mode: "live",
+    quote,
+    executionHash,
+    audit,
+    cfg,
+    calls,
+    estimatedPaidUsd,
+    paidSubcallsMade: calls.length
   });
 
   return {
@@ -233,25 +288,8 @@ async function procurementExecuteLive(input = {}, options = {}) {
       estimatedPaidUsd,
       calls
     },
-    audit: {
-      goal: quote.quote.goal || input.goal || "live procurement execution",
-      policyResult: {
-        liveSpendEnabled: true,
-        paymentProvider: cfg.livePaymentProvider,
-        receiptLogMode: cfg.liveReceiptLogMode,
-        approvalRequired: approvalRequired(quote, cfg),
-        approvalObserved: approvalMatchesQuote(approval, quote)
-      },
-      limits: {
-        maxPerCallUsd: cfg.liveMaxPerCallUsd,
-        maxPerJobUsd: cfg.liveMaxPerJobUsd,
-        dailyLimitUsd: cfg.liveDailyLimitUsd,
-        spentTodayUsd: cfg.liveSpentTodayUsd,
-        dailyRemainingBeforeUsd: dailyRemainingUsd,
-        dailyRemainingAfterEstimatedUsd: roundUsd(dailyRemainingUsd - estimatedPaidUsd),
-        approvalThresholdUsd: cfg.liveApprovalThresholdUsd
-      }
-    },
+    audit,
+    auditBundle,
     receiptBundle: receiptBundle({
       subject: quote.quote.goal || "live procurement execution",
       resultHash: executionHash,
@@ -405,6 +443,110 @@ async function callPaidResource({ resource, input, fetchImpl, cfg }) {
   };
 }
 
+function buildLiveAudit({ quote, input, cfg, dailyRemainingUsd, estimatedPaidUsd, approval }) {
+  return {
+    goal: quote.quote.goal || input.goal || "live procurement execution",
+    policyResult: {
+      liveSpendEnabled: true,
+      paymentProvider: cfg.livePaymentProvider,
+      receiptLogMode: cfg.liveReceiptLogMode,
+      approvalRequired: approvalRequired(quote, cfg),
+      approvalObserved: approvalMatchesQuote(approval, quote)
+    },
+    limits: {
+      maxPerCallUsd: cfg.liveMaxPerCallUsd,
+      maxPerJobUsd: cfg.liveMaxPerJobUsd,
+      dailyLimitUsd: cfg.liveDailyLimitUsd,
+      spentTodayUsd: cfg.liveSpentTodayUsd,
+      dailyRemainingBeforeUsd: dailyRemainingUsd,
+      dailyRemainingAfterEstimatedUsd: roundUsd(dailyRemainingUsd - estimatedPaidUsd),
+      approvalThresholdUsd: cfg.liveApprovalThresholdUsd
+    }
+  };
+}
+
+function buildProcurementAuditBundle({
+  mode,
+  quote,
+  executionHash,
+  audit,
+  cfg = null,
+  calls = [],
+  estimatedPaidUsd = 0,
+  paidSubcallsMade = 0,
+  failure = null
+}) {
+  const selectedResources = quote.quote.selectedResources || [];
+  const receiptLogMode = cfg?.liveReceiptLogMode || "response-only";
+  const resourceReceipts = calls.map((call) => publicCallReceipt(call));
+  const core = {
+    schema: "trust402.procurement_audit.v1",
+    tool: "procurement.audit_bundle",
+    mode,
+    quoteId: quote.quoteId,
+    quoteHash: quote.quoteHash,
+    executionHash,
+    goal: audit.goal || quote.quote.goal || "procurement execution",
+    selectedResourceIds: selectedResources.map((resource) => resource.id),
+    spend: {
+      estimatedPaidUsd: roundUsd(estimatedPaidUsd || 0),
+      paidSubcallsMade,
+      plannedPassThroughUsd: quote.quote.passThroughEstimateUsd ?? null,
+      maxPerCallUsd: audit.limits?.maxPerCallUsd ?? quote.quote.budget?.perCallLimitUsd ?? null,
+      maxPerJobUsd: audit.limits?.maxPerJobUsd ?? quote.quote.budget?.totalUsd ?? null,
+      dailyLimitUsd: audit.limits?.dailyLimitUsd ?? null,
+      dailyRemainingAfterEstimatedUsd: audit.limits?.dailyRemainingAfterEstimatedUsd ?? null
+    },
+    receiptLog: {
+      mode: receiptLogMode,
+      storage: receiptLogMode === "response-only" ? "returned-to-caller" : receiptLogMode,
+      ledgerWritableBy: "scripts/live-evidence-smoke.js --write-evidence",
+      responseOnly: receiptLogMode === "response-only"
+    },
+    publicSafety: {
+      publicSafe: true,
+      includesSecretValues: false,
+      storesPrivatePayload: false,
+      sendsPaymentHeaders: false,
+      includesRawPaymentHeaders: false,
+      rawPaymentHeadersStored: false,
+      paymentHeadersStoredAs: "sha256-only"
+    },
+    paymentResponseHashes: resourceReceipts
+      .map((receipt) => receipt.paymentResponseHash)
+      .filter(Boolean),
+    resourceReceipts,
+    failure
+  };
+
+  return {
+    ...core,
+    generatedAt: new Date().toISOString(),
+    auditBundleHash: sha256Json(core),
+    nextAction: failure
+      ? "Review the failed downstream receipt hashes before retrying inside a new approved spend window."
+      : mode === "live"
+        ? "Store this public-safe audit bundle with the live evidence ref before marking live procurement observed."
+        : "Review this dry-run audit bundle before approving live spend."
+  };
+}
+
+function publicCallReceipt(call = {}) {
+  return {
+    id: call.id,
+    endpointOrigin: safeOrigin(call.endpoint),
+    endpointHash: call.endpoint ? sha256Text(call.endpoint) : null,
+    method: call.method || null,
+    ok: call.ok === true,
+    status: call.status ?? null,
+    plannedPriceUsd: call.plannedPriceUsd ?? null,
+    paymentResponseObserved: call.paymentResponseObserved === true,
+    paymentResponseHash: call.paymentResponseHash || null,
+    paymentRequiredObserved: call.paymentRequiredObserved === true,
+    bodyHash: call.bodyHash || null
+  };
+}
+
 async function responseBody(response) {
   const text = await response.text();
   if (!text.trim()) return null;
@@ -422,6 +564,14 @@ function summarizeBody(body) {
     tool: body.tool || null,
     keys: Object.keys(body).slice(0, 20)
   };
+}
+
+function safeOrigin(value) {
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
 }
 
 function parseEndpoint(value) {

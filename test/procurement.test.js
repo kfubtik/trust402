@@ -73,6 +73,12 @@ test("procurementExecute simulates execution and blocks paid subcalls", () => {
   assert.equal(result.audit.policyResult.liveSpendEnabled, false);
   assert.ok(result.audit.policyResult.blockedLiveActions.includes("buy"));
   assert.equal(result.result.status, "not-executed");
+  assert.equal(result.auditBundle.schema, "trust402.procurement_audit.v1");
+  assert.equal(result.auditBundle.mode, "dry-run");
+  assert.equal(result.auditBundle.spend.paidSubcallsMade, 0);
+  assert.equal(result.auditBundle.publicSafety.rawPaymentHeadersStored, false);
+  assert.equal(result.auditBundle.publicSafety.paymentHeadersStoredAs, "sha256-only");
+  assert.match(result.auditBundle.auditBundleHash, /^sha256:[a-f0-9]{64}$/);
 });
 
 test("procurementExecute blocks live spend without policy", async () => {
@@ -153,6 +159,80 @@ test("procurementExecute can run live through an injected paid fetch inside poli
   assert.equal(result.audit.limits.dailyRemainingBeforeUsd, 1);
   assert.equal(result.audit.limits.dailyRemainingAfterEstimatedUsd, 0.99);
   assert.match(result.executionHash, /^sha256:[a-f0-9]{64}$/);
+  assert.equal(result.auditBundle.mode, "live");
+  assert.equal(result.auditBundle.receiptLog.storage, "returned-to-caller");
+  assert.equal(result.auditBundle.publicSafety.rawPaymentHeadersStored, false);
+  assert.deepEqual(result.auditBundle.paymentResponseHashes, [result.result.calls[0].paymentResponseHash]);
+  assert.equal(result.auditBundle.resourceReceipts[0].endpointOrigin, "https://example.com");
+  assert.match(result.auditBundle.resourceReceipts[0].endpointHash, /^sha256:[a-f0-9]{64}$/);
+  assert.equal(JSON.stringify(result.auditBundle).includes("mock-paid-receipt"), false);
+});
+
+test("procurementExecute returns public-safe audit bundle on downstream live failure", async () => {
+  const quote = procurementQuote({
+    goal: "Buy one safe x402 data resource.",
+    budgetUsd: 0.5,
+    maxPaidCalls: 1,
+    riskTolerance: "low",
+    candidates: [goodCandidate]
+  });
+  const failingPaymentBridge = async () => new Response(JSON.stringify({
+    ok: true,
+    response: {
+      status: 503,
+      headers: {
+        "content-type": "application/json",
+        "payment-response": "mock-failed-paid-receipt"
+      },
+      body: {
+        ok: false,
+        tool: "paid.example",
+        error: "temporarily unavailable"
+      }
+    }
+  }), {
+    status: 200,
+    headers: {
+      "content-type": "application/json"
+    }
+  });
+
+  await assert.rejects(
+    procurementExecute({
+      mode: "live",
+      quote,
+      approval: {
+        approved: true,
+        quoteHash: quote.quoteHash
+      }
+    }, {
+      operatorAuthorized: true,
+      fetchImpl: failingPaymentBridge,
+      config: {
+        ...config,
+        liveSpendEnabled: true,
+        livePaymentProvider: "external-adapter",
+        livePaymentAdapterUrl: "https://pay.example/bridge",
+        operatorApiKey: "test-operator",
+        liveMaxPerCallUsd: 0.05,
+        liveMaxPerJobUsd: 0.25,
+        liveDailyLimitUsd: 1,
+        liveSpentTodayUsd: 0,
+        liveApprovalThresholdUsd: 0,
+        liveAllowedRegistries: ["https://example.com"],
+        liveEndpointDenylist: [],
+        liveReceiptLogMode: "response-only"
+      }
+    }),
+    (error) => {
+      assert.equal(error.code, "downstream_purchase_failed");
+      assert.equal(error.details?.auditBundle?.failure?.resourceId, "good");
+      assert.equal(error.details?.auditBundle?.publicSafety?.rawPaymentHeadersStored, false);
+      assert.match(error.details?.auditBundle?.paymentResponseHashes?.[0], /^sha256:[a-f0-9]{64}$/);
+      assert.equal(JSON.stringify(error.details.auditBundle).includes("mock-failed-paid-receipt"), false);
+      return true;
+    }
+  );
 });
 
 test("procurementExecute blocks live spend when daily remaining cap is exhausted", async () => {
