@@ -109,9 +109,12 @@ The full final Definition of Done is pinned in
 - Production gates: `node --test test` (187/187),
   `node scripts/release-check.js`, `node scripts/privacy-check.js`, production
   smoke, production x402 smoke, launch monitor `healthy-cdp-indexed`, CDP
-  Bazaar all-resource check, and external directory read-only check passed as
-  of 2026-05-20 17:30 +07:00. Previous Docker build evidence remains valid for
-  the current app code because this update changed docs and Vercel env only.
+  Bazaar all-resource check, Docker build, AgentCash refill dry-run, and
+  external directory read-only check passed as of 2026-05-20 17:38 +07:00.
+  Final verifier hash:
+  `sha256:fcfecb8933aadd88979daecd931d5ec9faf356bf4fb806d784997e17938d0c7c`.
+  Docker on this workstation requires `D:\Programs\Docker\resources\bin` in
+  `PATH` so `docker.exe` can find `docker-credential-desktop.exe`.
   `final:verify` remains blocked because external-directory visibility, live
   procurement, paid Proof402 delegation, AgentCash auto-refill, and autonomous
   live job evidence are still unresolved.
