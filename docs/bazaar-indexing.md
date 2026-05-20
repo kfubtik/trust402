@@ -14,7 +14,7 @@ npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-m
 
 ## Current Production State
 
-Last checked on 2026-05-20 at 15:16 +07:00 after the custom-domain switch to
+Last checked on 2026-05-20 at 16:47 +07:00 after the custom-domain switch to
 `https://trust402.aztecbeacon.uk`.
 
 Production alias:
@@ -31,6 +31,11 @@ deployment URLs rotate after each production release.
 - indexed resources: 0 of 10 exact custom-domain URLs;
 - CDP Bazaar status: `eligible-not-found-yet`;
 - missing resources: all 10 paid launch routes on the custom-domain origin;
+- latest custom-domain paid smoke: successful AgentCash x402 fetch against
+  `POST /api/trust/compare-resources` for `$0.03`, transaction
+  `0xb447b8213c9641d200d656945e95b0f5fb5e3ac2565469179c8af742cb42d1df`;
+- post-smoke CDP Bazaar recheck still reports `0/10`, so the custom-domain
+  route discovery remains pending;
 - Trust402 live procurement: disabled;
 - Proof402 paid delegation: disabled;
 - live OpenAPI and unpaid x402 challenge expose custom-domain resource URLs.
@@ -92,7 +97,9 @@ Preview that exact window without changing `.env` or spending:
 npm run settlement:preflight -- --resource-id=trust.compare_resources --max-usd=0.03 --approved --real-settlement --paywall-mode=real
 ```
 
-Do not run this while `.local/trust402-agentcash-wallet.json` reports zero
+This exact recovery step was executed once on 2026-05-20 at 16:44 +07:00 and
+settled successfully. Do not repeat it while
+`.local/trust402-agentcash-wallet.json` reports zero
 manual smoke budget or a global max below `$0.03`. The current local policy
 blocks that spend until the operator explicitly approves a temporary smoke
 window.

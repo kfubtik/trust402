@@ -63,12 +63,18 @@ The full final Definition of Done is pinned in
 - CDP Bazaar indexing: after switching `PUBLIC_BASE_URL` to
   `https://trust402.aztecbeacon.uk`, search still finds Trust402 but exact
   resource URLs are `0/10` on the custom-domain origin as of
-  2026-05-20 15:16 +07:00. Evidence:
+  2026-05-20 16:47 +07:00. Evidence:
   `sha256:25df12ec7547ea74c3ccc8910ffbe2cc252988ffe22b346f35ac82891af9bf3e`.
+- AgentCash direct paid smoke: a one-shot x402 fetch against
+  `https://trust402.aztecbeacon.uk/api/trust/compare-resources` succeeded for
+  `$0.03` on 2026-05-20 at 16:44 +07:00. Public transaction hash:
+  `0xb447b8213c9641d200d656945e95b0f5fb5e3ac2565469179c8af742cb42d1df`.
+  The temporary local policy window was closed immediately after the fetch and
+  `npm run agentcash:policy` reports locked mode again.
 - External directory visibility: monitored read-only; latest check found 13
   monitored directories, 10 reachable, 0 visible, 3 unreachable, and 0
-  custom-domain-blocked as of 2026-05-20 15:14 +07:00.
-- Production gates: `node --test test` (180/180), `node scripts/release-check.js`,
+  custom-domain-blocked as of 2026-05-20 16:47 +07:00.
+- Production gates: `node --test test` (184/184), `node scripts/release-check.js`,
   smoke, x402 smoke, Docker build, launch monitor, deployment preflight,
   AgentCash refill dry-run, production deployment sync, and external directory
   read-only check passed as of 2026-05-20 09:52 +07:00. Recent final
