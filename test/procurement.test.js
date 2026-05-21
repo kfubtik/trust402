@@ -58,6 +58,30 @@ test("procurementQuote can select one trusted candidate", () => {
   assert.equal(result.quote.withinBudget, true);
 });
 
+test("procurementQuote filters selected resources by allowed registries", () => {
+  const result = procurementQuote({
+    goal: "Buy one allowlisted safe x402 resource.",
+    budgetUsd: 0.5,
+    maxPaidCalls: 2,
+    riskTolerance: "low",
+    allowedRegistries: ["https://allow.example"],
+    candidates: [
+      {
+        ...goodCandidate,
+        id: "not-allowed",
+        endpoint: "https://blocked.example/good"
+      },
+      {
+        ...goodCandidate,
+        id: "allowed",
+        endpoint: "https://allow.example/good"
+      }
+    ]
+  });
+
+  assert.deepEqual(result.quote.selectedResources.map((resource) => resource.id), ["allowed"]);
+});
+
 test("procurementExecute simulates execution and blocks paid subcalls", () => {
   const result = procurementExecute({
     mode: "dry-run",

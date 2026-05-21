@@ -63,16 +63,20 @@ Default daily autonomy is dry-run:
 
 - `TRUST402_DAILY_AUTONOMY_ENABLED=true`;
 - `TRUST402_DAILY_AUTONOMY_MODE=dry-run`;
-- `TRUST402_DAILY_AUTONOMY_BUDGET_USD=0.02`;
+- `TRUST402_DAILY_AUTONOMY_BUDGET_USD=0.15`;
 - `TRUST402_DAILY_AUTONOMY_MAX_PAID_CALLS=1`;
 - `TRUST402_DAILY_AUTONOMY_PROOF402_MODE=preview`.
 - `TRUST402_DAILY_AUTONOMY_TARGET_WEIGHTS=proof402=4,action402=4,trust402=3,external=1`.
+
+The daily autonomy budget is the quote/decision budget. Actual live payments
+are still constrained by `LIVE_MAX_PER_CALL_USD`, `LIVE_MAX_PER_JOB_USD`, and
+`LIVE_DAILY_LIMIT_USD`.
 
 Daily target selection prioritizes known internal ecosystem agents:
 
 - Proof402 notarization;
 - Action402 bounded webhook/API execution;
-- Trust402 comparison and diligence;
+- Trust402 x402 endpoint checks and diligence;
 - external registries only at a low configured weight/chance.
 
 External discovery uses public read-only catalogs by default:
@@ -86,8 +90,9 @@ configured with `TRUST402_DAILY_AUTONOMY_EXTERNAL_REGISTRY_URLS`, but their
 origins must also be listed in
 `TRUST402_DAILY_AUTONOMY_EXTERNAL_REGISTRY_ALLOWLIST`.
 
-Random external live payment is blocked unless all live spend gates pass and
-`TRUST402_DAILY_AUTONOMY_RANDOM_EXTERNAL_LIVE_APPROVED=true`.
+Random external live payment is blocked unless all live spend gates pass,
+`TRUST402_DAILY_AUTONOMY_RANDOM_EXTERNAL_LIVE_APPROVED=true`, and the selected
+paid endpoint origin is still covered by `LIVE_ALLOWED_REGISTRIES`.
 
 For more random wake timing than Vercel Hobby allows, the repository includes a
 GitHub Actions scheduler at `.github/workflows/random-daily-autonomy.yml`. It

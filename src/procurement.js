@@ -25,7 +25,8 @@ export function procurementQuote(input = {}) {
     candidates,
     maxPaidCalls: plan.budget.maxPaidCalls,
     minimumTrustScore: plan.policy.minimumTrustScore,
-    perCallLimitUsd: plan.budget.perCallLimitUsd
+    perCallLimitUsd: plan.budget.perCallLimitUsd,
+    allowedRegistries: plan.policy.allowedRegistries
   });
   const passThroughEstimateUsd = roundUsd(selectedResources.reduce((sum, resource) => sum + (resource.priceUsd || 0), 0));
   const estimatedTrust402FeesUsd = roundUsd(QUOTE_FEE_USD + estimateTrust402DecisionFees({
@@ -304,11 +305,12 @@ async function procurementExecuteLive(input = {}, options = {}) {
   };
 }
 
-function selectResources({ ranked, candidates = [], maxPaidCalls, minimumTrustScore, perCallLimitUsd }) {
+function selectResources({ ranked, candidates = [], maxPaidCalls, minimumTrustScore, perCallLimitUsd, allowedRegistries = [] }) {
   return ranked
     .filter((resource) => resource.budgetFit)
     .filter((resource) => resource.score >= minimumTrustScore)
     .filter((resource) => resource.priceUsd === null || resource.priceUsd <= perCallLimitUsd)
+    .filter((resource) => allowedRegistries.length === 0 || resourceMatchesAllowlist(resource, allowedRegistries))
     .slice(0, maxPaidCalls)
     .map((resource) => {
       const source = findSourceCandidate(resource, candidates);
@@ -324,6 +326,11 @@ function selectResources({ ranked, candidates = [], maxPaidCalls, minimumTrustSc
         reason: "selected by quote policy"
       };
     });
+}
+
+function resourceMatchesAllowlist(resource, allowedRegistries) {
+  const endpoint = parseEndpoint(resource.endpoint);
+  return Boolean(endpoint && matchesAllowlist(endpoint, allowedRegistries));
 }
 
 function rankSingleCandidate({ candidate, budgetUsd }) {

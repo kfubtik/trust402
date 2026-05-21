@@ -177,6 +177,96 @@ test("dailyAutonomyRun can focus Action402 as a known ecosystem agent", async ()
   assert.equal(result.run.quote.quote.selectedResources[0].id, "action402.execute_webhook");
 });
 
+test("dailyAutonomyRun can focus Trust402 inside the small live cap", async () => {
+  const result = await dailyAutonomyRun({}, {
+    cronAuthorized: true,
+    now: "2026-05-21T00:00:00.000Z",
+    config: {
+      ...baseConfig,
+      dailyAutonomyEnabled: true,
+      dailyAutonomyMode: "dry-run",
+      dailyAutonomyLiveApproved: false,
+      dailyAutonomyBudgetUsd: 0.02,
+      dailyAutonomyMaxPaidCalls: 1,
+      dailyAutonomyIncludeProofPreview: true,
+      dailyAutonomyProof402Mode: "preview",
+      dailyAutonomyTargetWeights: "trust402=1",
+      dailyAutonomyExternalChance: 0
+    }
+  });
+
+  assert.equal(result.interactionProfile.primaryTarget, "trust402");
+  assert.equal(result.interactionProfile.candidates[0].id, "trust402.check_x402");
+  assert.equal(result.interactionProfile.candidates[0].priceUsd, 0.005);
+  assert.equal(result.run.quote.quote.selectedResources[0].id, "trust402.check_x402");
+});
+
+test("dailyAutonomyRun live mode selects only allowlisted payment origins", async () => {
+  const paidUrls = [];
+  const result = await dailyAutonomyRun({}, {
+    cronAuthorized: true,
+    now: "2026-05-25T00:00:00.000Z",
+    config: {
+      ...baseConfig,
+      publicBaseUrl: "https://trust402.example",
+      dailyAutonomyEnabled: true,
+      dailyAutonomyMode: "live",
+      dailyAutonomyLiveApproved: true,
+      dailyAutonomyBudgetUsd: 0.15,
+      dailyAutonomyMaxPaidCalls: 1,
+      dailyAutonomyIncludeProofPreview: true,
+      dailyAutonomyProof402Mode: "preview",
+      dailyAutonomyTargetWeights: "external=1",
+      dailyAutonomyExternalChance: 1,
+      dailyAutonomyRandomExternalLiveApproved: true,
+      liveSpendEnabled: true,
+      livePaymentProvider: "external-adapter",
+      livePaymentAdapterUrl: "https://pay.example/bridge",
+      operatorApiKey: "test-operator",
+      liveMaxPerCallUsd: 0.005,
+      liveMaxPerJobUsd: 0.02,
+      liveDailyLimitUsd: 0.05,
+      liveSpentTodayUsd: 0,
+      liveApprovalThresholdUsd: 0,
+      liveAllowedRegistries: ["https://proof402.vercel.app", "https://action402.vercel.app", "https://trust402.example"],
+      liveEndpointDenylist: [],
+      liveReceiptLogMode: "response-only"
+    },
+    fetchImpl: async () => new Response(JSON.stringify({
+      resources: [{
+        id: "random-external",
+        endpoint: "https://random.example/api/paid",
+        method: "POST",
+        priceUsd: 0.001,
+        has402: true,
+        hasInputSchema: true,
+        hasOpenApi: true,
+        hasWellKnown: true,
+        description: "Random but not payment-allowlisted."
+      }]
+    }), {
+      status: 200,
+      headers: { "content-type": "application/json" }
+    }),
+    paidFetchImpl: async (url) => {
+      paidUrls.push(String(url));
+      return new Response(JSON.stringify({ ok: true, tool: "paid.allowed" }), {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+          "payment-response": "mock-paid-receipt"
+        }
+      });
+    }
+  });
+
+  assert.equal(result.effectiveMode, "live");
+  assert.equal(result.paidSubcallsMade, 1);
+  assert.equal(paidUrls.length, 1);
+  assert.notEqual(new URL(paidUrls[0]).origin, "https://random.example");
+  assert.ok(["https://proof402.vercel.app", "https://action402.vercel.app", "https://trust402.example"].includes(new URL(paidUrls[0]).origin));
+});
+
 test("dailyAutonomyRun can include external registry discovery only through allowlisted config", async () => {
   const result = await dailyAutonomyRun({}, {
     cronAuthorized: true,

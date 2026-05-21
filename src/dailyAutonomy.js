@@ -102,6 +102,12 @@ export async function dailyAutonomyRun(input = {}, options = {}) {
       ...interactionProfile.allowedRegistryOrigins,
       ...(Array.isArray(input.allowedRegistryOrigins) ? input.allowedRegistryOrigins : [])
     ]),
+    allowedRegistries: effectiveMode === "live"
+      ? uniqueStrings([
+        ...(Array.isArray(cfg.liveAllowedRegistries) ? cfg.liveAllowedRegistries : []),
+        ...(Array.isArray(input.allowedRegistries) ? input.allowedRegistries : [])
+      ])
+      : input.allowedRegistries,
     randomizeCandidates: true,
     randomSeed: `${dateKey}:${interactionProfile.primaryTarget}:${interactionProfile.randomSearchQuery || "known"}`
   };
@@ -299,11 +305,11 @@ function action402Candidate({ dateKey }) {
 function trust402Candidate({ cfg, dateKey, budgetUsd }) {
   const baseUrl = normalizeBaseUrl(cfg.publicBaseUrl) || DEFAULT_TRUST402_BASE_URL;
   return {
-    id: "trust402.compare_resources",
-    name: "Trust402 resource comparison",
-    endpoint: `${baseUrl}/api/trust/compare-resources`,
+    id: "trust402.check_x402",
+    name: "Trust402 x402 endpoint check",
+    endpoint: `${baseUrl}/api/trust/check-x402`,
     method: "POST",
-    priceUsd: 0.03,
+    priceUsd: 0.005,
     has402: true,
     hasInputSchema: true,
     hasOpenApi: true,
@@ -318,40 +324,15 @@ function trust402Candidate({ cfg, dateKey, budgetUsd }) {
       asset: cfg.x402Asset || BASE_USDC,
       payTo: TRUST402_PAY_TO
     },
-    description: "Trust402 paid x402 resource that compares candidate paid resources for a budgeted autonomous buyer.",
+    description: "Trust402 paid x402 resource that checks one x402 endpoint for challenge and payment-flow readiness.",
     receiptReady: true,
     proofReady: true,
     category: "trust",
     source: "daily-autonomy-known-agent",
     dailyTarget: "trust402",
     requestBody: {
-      goal: "Compare known x402 agents for the daily autonomy loop.",
-      budgetUsd: Math.max(0.005, Math.min(budgetUsd || 0.02, 0.05)),
-      candidates: [
-        {
-          id: "proof402.notarize",
-          endpoint: `${normalizeBaseUrl(cfg.proof402BaseUrl) || DEFAULT_PROOF402_BASE_URL}/api/proof/notarize`,
-          priceUsd: 0.005,
-          has402: true,
-          hasInputSchema: true,
-          hasOpenApi: true,
-          hasWellKnown: true,
-          receiptReady: true
-        },
-        {
-          id: "action402.execute_webhook",
-          endpoint: `${DEFAULT_ACTION402_BASE_URL}/api/execute/webhook`,
-          priceUsd: 0.003,
-          has402: true,
-          hasInputSchema: true,
-          hasOpenApi: true,
-          hasWellKnown: true,
-          payTo: ACTION402_PAY_TO,
-          network: "eip155:8453",
-          asset: BASE_USDC,
-          receiptReady: true
-        }
-      ],
+      endpoint: `${normalizeBaseUrl(cfg.proof402BaseUrl) || DEFAULT_PROOF402_BASE_URL}/api/proof/notarize`,
+      method: "POST",
       idempotencyKey: `trust402-daily-self-${dateKey}`
     }
   };
