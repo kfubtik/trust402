@@ -548,7 +548,7 @@ service:
 ```powershell
 npm run deployment:preflight -- https://trust402.aztecbeacon.uk
 npm run deployment:preflight -- https://trust402.aztecbeacon.uk --probe-github-cli
-npm run deployment:preflight -- https://trust402.aztecbeacon.uk --probe-vercel-api --vercel-scope sergo565456-2815s-projects
+npm run deployment:preflight -- https://trust402.aztecbeacon.uk --probe-vercel-api --vercel-scope <vercel-scope>
 npm run deployment:github-actions-setup -- https://trust402.aztecbeacon.uk
 ```
 

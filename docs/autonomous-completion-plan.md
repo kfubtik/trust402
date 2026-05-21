@@ -219,7 +219,7 @@ Current evidence snapshot:
   `LIVE_MAX_PER_JOB_USD=0.015`, `LIVE_DAILY_LIMIT_USD=0.05`, and
   `LIVE_ALLOWED_REGISTRIES=https://proof402.vercel.app`;
 - opening deployment:
-  `https://trust402-qj5v444zu-sergo565456-2815s-projects.vercel.app`;
+  a private Vercel preview deployment URL;
 - the live policy gate passed through `/api/policies/spend` with
   `liveProcurementReady=true`, `proof402DelegationReady=true`, and provider
   `cdp-x402`;
@@ -228,7 +228,7 @@ Current evidence snapshot:
 - live procurement evidence ref:
   `sha256:3cd0cc03075c8e4a223e63af59a424d6af7b91a459df5bb32cf02ed051af274d`;
 - closing deployment:
-  `https://trust402-lj806gplc-sergo565456-2815s-projects.vercel.app`;
+  a private Vercel preview deployment URL;
 - the live window was closed immediately after evidence collection:
   `LIVE_SPEND_ENABLED=false`, `PROOF402_DELEGATION_MODE=disabled`, and the
   operator key was rotated to a dormant value.

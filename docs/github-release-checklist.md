@@ -92,6 +92,10 @@ Keep the private working history intact while Trust402 is still being built. Do
 not delete workflow runs, rewrite `main`, or force-push only to hide failed
 iteration checks during active development.
 
+Trust402 reached its first completed production freeze on 2026-05-21. Use
+[public-release-cleanup.md](public-release-cleanup.md) as the active cleanup
+gate before making the repository public.
+
 Before changing `kfubtik/trust402` from private to public, run a separate
 operator-approved public release cleanup:
 
@@ -149,13 +153,14 @@ Track the remaining manual and spend-policy gates in
 from the launch MVP because they either require third-party dashboard access or
 explicit live-spend policy.
 
-Current open tracks:
+Current release tracks:
 
-- Git-backed Vercel deploys for the private repo;
-- external directory submissions and visibility;
-- AgentCash auto-refill policy;
-- live procurement spend limits;
-- paid Proof402 delegation policy.
+- Git-backed Vercel deploys are verified for the private repo;
+- CDP Bazaar is verified `10/10`, and x402scan visibly lists Trust402;
+- AgentCash auto-refill is configured as `manual-action`;
+- live procurement and paid Proof402 delegation passed a bounded production
+  evidence smoke and returned to locked defaults;
+- public release cleanup is the remaining repository-visibility gate.
 
 ## Launch Positioning
 

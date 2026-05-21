@@ -11,16 +11,16 @@ payment headers, private receipts, or AgentCash internals.
 The full final Definition of Done is pinned in
 [autonomous-completion-plan.md](autonomous-completion-plan.md).
 
-## Open Launch Backlog
+## Launch Tracks
 
 | Issue | Track | Why it matters | Safe next step |
 | --- | --- | --- | --- |
 | [#5](https://github.com/kfubtik/trust402/issues/5) | Vercel Git auto-deploy | Production deploys through the Vercel GitHub App from `kfubtik/trust402` pushes. | Keep the production deploy evidence current after each release. |
 | [#6](https://github.com/kfubtik/trust402/issues/6) | External x402 directories | The custom domain is attached. CDP Bazaar exact resource URLs are verified `10/10`; x402scan visibly lists Trust402; x402 List submission `a6c3be52-dbd9-4d86-999e-5b497443b357` remains pending. | Record the x402scan production evidence env and keep monitoring x402 List as a secondary directory. |
 | [#7](https://github.com/kfubtik/trust402/issues/7) | AgentCash auto-refill policy | The Trust402-reserved AgentCash wallet is funded, dry-run refill checks exist, and production policy uses `manual-action` provider so no runtime refill credentials are held. | Keep threshold/cap evidence current; use a separate approved adapter only if live automatic refill is later required. |
-| [#8](https://github.com/kfubtik/trust402/issues/8) | Live procurement policy | Trust402 can plan and quote, but should not autonomously buy downstream resources without spend controls. | Approve allowlists, per-call/job/day caps, receipt storage, and approval thresholds. |
-| [#9](https://github.com/kfubtik/trust402/issues/9) | Paid Proof402 delegation policy | Trust402 can prepare Proof402-ready hashes, but paid delegation is intentionally disabled. | Approve which hashes can be notarized, proof spend caps, retry policy, and receipt fields. |
-| [#10](https://github.com/kfubtik/trust402/issues/10) | Final autonomous buyer-agent plan | The full success criteria need one canonical tracking issue. | Keep `docs/autonomous-completion-plan.md` and this issue aligned until every safe gate is complete. |
+| [#8](https://github.com/kfubtik/trust402/issues/8) | Live procurement policy | A bounded production smoke proved controlled live procurement with receipts and audit bundles. | Keep default live spend locked; open only explicit capped windows. |
+| [#9](https://github.com/kfubtik/trust402/issues/9) | Paid Proof402 delegation policy | A bounded production smoke proved hash-only Proof402 delegation under cap. | Keep default delegation locked; notarize only approved hashes. |
+| [#10](https://github.com/kfubtik/trust402/issues/10) | Final autonomous buyer-agent plan | The full success criteria are complete in the production freeze. | Use public-release cleanup as the remaining repository-visibility gate. |
 
 ## Current Safe State
 
@@ -133,14 +133,12 @@ The full final Definition of Done is pinned in
   `node scripts/release-check.js`, `node scripts/privacy-check.js`, production
   smoke, production x402 smoke, Docker build, AgentCash refill dry-run, launch
   monitor, completion audit, and external directory read-only check passed on
-  2026-05-21. The final verifier now has all required command checks passing.
+  2026-05-21. The final verifier completed successfully and is pinned in
+  [production-freeze.md](production-freeze.md).
   Final verifier hash:
-  `sha256:f87e4f41a5fd6128d4fef6a5674e0c2382214f9217be54ba69e0db51a1ea1960`.
+  `sha256:406c19995a5129a1d6ab19c6024c5a2f542e6c9f52306cd45ff5bd226336caf2`.
   Docker Desktop is installed at `D:\Programs\Docker`; if the daemon is not
   running, start Docker Desktop and use a local `DOCKER_CONFIG` under `.tmp`.
-  `final:verify` remains blocked because external-directory visibility,
-  closed live-procurement policy, closed paid Proof402 policy, and autonomous
-  live job evidence are still unresolved.
 - AgentCash MCP observation: AgentCash settings were restored to cap requests
   at `$0.01` after the route smokes. Balance was `$0.953` after the `$0.30`
   route-indexing batch and `$0.948` after the later `$0.005` Proof402 direct
@@ -154,16 +152,12 @@ The full final Definition of Done is pinned in
   the generated downstream request as hash-only/public-safe. The current
   configured production provider is `cdp-x402`; production has
   `CDP_API_KEY_ID`, `CDP_API_KEY_SECRET`, `CDP_WALLET_SECRET`, and the
-  `trust402-buyer` EVM account reference. The buyer address
-  `0xaC451Dd067f0f246Fe59eA4a0707f1c99F11342B` currently has `2.118725` Base
-  USDC, so the funding blocker is resolved; keep live spend behind a bounded
-  staged window and current policy caps.
+  `trust402-buyer` EVM account reference. The production CDP buyer account is
+  funded, so the funding blocker is resolved. Keep exact account/balance
+  details in private evidence, not in public launch notes.
 - Trust402 production `cdp-x402` live evidence smoke succeeded on 2026-05-21 at
-  11:30 +07:00 inside the approved `$0.015` total spend cap. Opening
-  deployment:
-  `https://trust402-qj5v444zu-sergo565456-2815s-projects.vercel.app`.
-  Closing deployment:
-  `https://trust402-lj806gplc-sergo565456-2815s-projects.vercel.app`.
+  11:30 +07:00 inside the approved `$0.015` total spend cap. Opening and
+  closing Vercel deployment URLs were recorded in private evidence.
   Smoke evidence hash:
   `sha256:ccf853d3307b4e57bd0628d077b2d820953b042a1f3f5161d8c690da89c34d31`.
   Live procurement and paid Proof402 evidence ref:

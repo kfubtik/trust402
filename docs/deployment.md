@@ -530,7 +530,7 @@ authenticated:
 
 ```powershell
 npm run deployment:preflight -- https://trust402.aztecbeacon.uk --probe-github-cli
-npm run deployment:preflight -- https://trust402.aztecbeacon.uk --probe-vercel-api --vercel-scope sergo565456-2815s-projects
+npm run deployment:preflight -- https://trust402.aztecbeacon.uk --probe-vercel-api --vercel-scope <vercel-scope>
 ```
 
 The GitHub probe checks CLI auth, secret names, workflow visibility, and recent

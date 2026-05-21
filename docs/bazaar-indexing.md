@@ -32,7 +32,7 @@ https://trust402.aztecbeacon.uk
 ```
 
 Use `npm run deployment:preflight -- https://trust402.aztecbeacon.uk
---probe-vercel-api --vercel-scope sergo565456-2815s-projects` for the current
+--probe-vercel-api --vercel-scope <vercel-scope>` for the current
 deployment id and commit SHA. The alias is the stable buyer-facing endpoint;
 deployment URLs rotate after each production release.
 
