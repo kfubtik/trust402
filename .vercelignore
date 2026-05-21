@@ -5,6 +5,7 @@
 !.env.example
 .agentcash
 .local
+.tmp
 .vercel
 data
 wallet*.json
