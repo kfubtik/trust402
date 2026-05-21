@@ -182,9 +182,7 @@ async function x402ChallengeCheck(fetcher, url, timeoutMs) {
   });
   const paymentRequired = headerValue(response.headers, "payment-required");
   const decoded = decodePaymentRequired(paymentRequired);
-  const acceptResources = Array.isArray(decoded?.accepts)
-    ? decoded.accepts.map((item) => item.resource).filter(Boolean)
-    : [];
+  const acceptResources = challengeResourceUrls(decoded);
   return {
     id: url,
     ok: response.status === 402 && Boolean(paymentRequired),
@@ -246,7 +244,7 @@ function blockersFor({ host, policy, dns, health, wellKnown, discovery, challeng
   if (!host) blockers.push(blocker("custom_domain_missing", "Provide the custom domain to check."));
   if (!policy.valid) blockers.push(blocker("custom_domain_invalid", "Custom domain must be a bare domain such as trust402.dev."));
   if (policy.freeHostingSuffix) blockers.push(blocker("custom_domain_free_hosting", "Custom domain is still a known free-hosting/dev-tunnel host."));
-  if (!dns.ok) blockers.push(blocker("dns_not_ready", "DNS records were not found for the custom domain."));
+  if (!dns.ok && !health.ok) blockers.push(blocker("dns_not_ready", "DNS records were not found for the custom domain."));
   if (!health.ok || health.body?.service !== "Trust402") blockers.push(blocker("health_not_ready", "Custom domain /health must return Trust402 health JSON."));
   if (!wellKnown.ok) blockers.push(blocker("x402_discovery_not_ready", "Custom domain /.well-known/x402 must return JSON."));
   if (wellKnown.ok && !discovery.resourcesUseExpectedBaseUrl) {
@@ -316,6 +314,20 @@ function decodePaymentRequired(value) {
   } catch {
     return null;
   }
+}
+
+function challengeResourceUrls(decoded) {
+  const resources = [];
+  const topLevelResource = decoded?.resource;
+  if (typeof topLevelResource === "string") resources.push(topLevelResource);
+  if (topLevelResource && typeof topLevelResource.url === "string") resources.push(topLevelResource.url);
+  if (Array.isArray(decoded?.accepts)) {
+    for (const item of decoded.accepts) {
+      if (typeof item?.resource === "string") resources.push(item.resource);
+      if (item?.resource && typeof item.resource.url === "string") resources.push(item.resource.url);
+    }
+  }
+  return [...new Set(resources.filter(Boolean))];
 }
 
 function headersObject(headers) {

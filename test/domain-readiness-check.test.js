@@ -47,6 +47,45 @@ test("domainReadinessCheck blocks stale PUBLIC_BASE_URL discovery", async () => 
   assert.ok(result.blockers.some((item) => item.id === "x402_challenge_resource_mismatch"));
 });
 
+test("domainReadinessCheck accepts top-level payment challenge resource URLs", async () => {
+  const result = await domainReadinessCheck({
+    domain: "trust402.dev",
+    expectedBaseUrl: "https://trust402.dev",
+    timeoutMs: 1000
+  }, {
+    config: { publicBaseUrl: "https://trust402.vercel.app" },
+    resolver: async () => ({
+      cname: ["cname.vercel-dns.com"],
+      a: [],
+      aaaa: []
+    }),
+    fetch: readyFetch("https://trust402.dev", { topLevelResourceOnly: true })
+  });
+
+  assert.equal(result.status, "ready");
+  assert.deepEqual(result.checks.x402Challenge.acceptResources, ["https://trust402.dev/api/trust/score-resource"]);
+  assert.equal(result.checks.x402Challenge.resourceUsesExpectedBaseUrl, true);
+});
+
+test("domainReadinessCheck tolerates local DNS timeout when HTTPS proves the domain", async () => {
+  const result = await domainReadinessCheck({
+    domain: "trust402.dev",
+    expectedBaseUrl: "https://trust402.dev",
+    timeoutMs: 1000
+  }, {
+    config: { publicBaseUrl: "https://trust402.vercel.app" },
+    resolver: async () => {
+      throw new DOMException("The operation was aborted", "AbortError");
+    },
+    fetch: readyFetch("https://trust402.dev")
+  });
+
+  assert.equal(result.checks.dns.ok, false);
+  assert.equal(result.checks.health.ok, true);
+  assert.equal(result.status, "ready");
+  assert.ok(!result.blockers.some((item) => item.id === "dns_not_ready"));
+});
+
 test("domainReadinessCheck blocks free-hosting domains", async () => {
   const result = await domainReadinessCheck({
     domain: "trust402.vercel.app",
@@ -60,8 +99,8 @@ test("domainReadinessCheck blocks free-hosting domains", async () => {
   assert.ok(result.blockers.some((item) => item.id === "custom_domain_free_hosting"));
 });
 
-function readyFetch(resourceBaseUrl) {
-  return async (url, options = {}) => {
+function readyFetch(resourceBaseUrl, fetchOptions = {}) {
+  return async (url, request = {}) => {
     const parsed = new URL(url);
     if (parsed.pathname === "/health") {
       return jsonResponse(200, { ok: true, service: "Trust402" });
@@ -73,15 +112,19 @@ function readyFetch(resourceBaseUrl) {
         openapi: `${resourceBaseUrl}/openapi.json`
       });
     }
-    if (parsed.pathname === "/api/trust/score-resource" && options.method === "POST") {
+    if (parsed.pathname === "/api/trust/score-resource" && request.method === "POST") {
+      const challenge = {
+        x402Version: 2,
+        accepts: fetchOptions.topLevelResourceOnly ? [{}] : [{ resource: `${resourceBaseUrl}/api/trust/score-resource` }]
+      };
+      if (fetchOptions.topLevelResourceOnly) {
+        challenge.resource = { url: `${resourceBaseUrl}/api/trust/score-resource` };
+      }
       return jsonResponse(402, {
         ok: false,
         x402Version: 2
       }, {
-        "payment-required": Buffer.from(JSON.stringify({
-          x402Version: 2,
-          accepts: [{ resource: `${resourceBaseUrl}/api/trust/score-resource` }]
-        })).toString("base64url")
+        "payment-required": Buffer.from(JSON.stringify(challenge)).toString("base64url")
       });
     }
     return jsonResponse(404, { ok: false });

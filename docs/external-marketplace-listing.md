@@ -24,6 +24,7 @@ CDP Bazaar state:
 status = all-indexed
 missing =
 evidence = sha256:7f8c5c87c60f6c63e9289b454d331d9481c780498c0d92395c19ca65f62c45af
+latest evidence = sha256:81031dc6017d9df52399ff4be0c88bdeb30525bf89e32dc5e4f4ffd3e0d78795
 ```
 
 Trust402 is live as a production x402 service on the Cloudflare-backed custom
@@ -34,7 +35,7 @@ and AgentCash auto-refill remain disabled until separately approved.
 
 ## Current External Directory Visibility
 
-Last checked on 2026-05-20 at 21:31 +07:00 with:
+Last checked on 2026-05-21 at 11:37 +07:00 with:
 
 ```powershell
 npm run directories:check -- https://trust402.aztecbeacon.uk --timeout-ms=10000
@@ -63,6 +64,14 @@ probe_result.errors = []
 contact_email = kfubtik00@gmail.com
 ```
 
+Repeated x402 List submission attempt on 2026-05-21 at 12:01 +07:00 was
+rejected by the directory review throttle:
+
+```text
+HTTP 303 /submit?error=Please wait 7 days between submissions.
+reason = previous submission from this email is still within the review window
+```
+
 Interpretation:
 
 - the custom-domain blocker is removed for monitored directories;
@@ -71,8 +80,10 @@ Interpretation:
 - the requested custom-domain external-directory attempt has been completed;
   no monitored non-CDP directory visibly lists Trust402 yet;
 - x402 List has a pending review submission that successfully probed 10
-  endpoints, but this does not complete the external-directory requirement
-  until a public listing/search result visibly shows Trust402;
+  endpoints, and the directory currently blocks another submission from
+  `kfubtik00@gmail.com` until its 7-day review window expires; this does not
+  complete the external-directory requirement until a public listing/search
+  result visibly shows Trust402;
 - Agentic.Market, x402scan, x402Bazaar, x402.org ecosystem, RelAI market,
   x402list.fun, Orbis API Marketplace, World.fun x402 Market, x402agency,
   Agent Bazaar, the402, x402-list.com, and Agora402 are monitored for public
@@ -251,7 +262,13 @@ npm run domains:readiness-check -- https://trust402.aztecbeacon.uk `
 Latest custom-domain CDP Bazaar all-resource evidence:
 
 ```text
-sha256:7f8c5c87c60f6c63e9289b454d331d9481c780498c0d92395c19ca65f62c45af
+sha256:81031dc6017d9df52399ff4be0c88bdeb30525bf89e32dc5e4f4ffd3e0d78795
+```
+
+Latest local custom-domain readiness evidence:
+
+```text
+sha256:8da65381983fbc9998401cefba576d4ce29af40b3b4d6610c81ec055c0d54f8d
 ```
 
 Useful public URLs:

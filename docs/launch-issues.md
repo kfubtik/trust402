@@ -115,6 +115,14 @@ The full final Definition of Done is pinned in
   custom-domain-blocked as of 2026-05-21 11:37 +07:00. `x402-list.com`
   submission `a6c3be52-dbd9-4d86-999e-5b497443b357` is pending and its probe
   found 10 endpoints without errors.
+- A repeated `x402-list.com` API submission attempt on 2026-05-21 at 12:01
+  +07:00 was rejected by the directory's 7-day review throttle for
+  `kfubtik00@gmail.com`; continue monitoring the existing pending submission
+  instead of submitting duplicates.
+- Local custom-domain readiness check now accepts both top-level
+  `Payment-Required.resource.url` and `accepts[].resource` challenge formats.
+  Latest local readiness evidence:
+  `sha256:8da65381983fbc9998401cefba576d4ce29af40b3b4d6610c81ec055c0d54f8d`.
 - Production gates: `node --test test` (187/187),
   `node scripts/release-check.js`, `node scripts/privacy-check.js`, production
   smoke, production x402 smoke, Docker build, AgentCash refill dry-run, launch
