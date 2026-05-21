@@ -36,6 +36,8 @@ export const config = {
   dailyAutonomyProof402Mode: process.env.TRUST402_DAILY_AUTONOMY_PROOF402_MODE || "preview",
   dailyAutonomyTargetWeights: process.env.TRUST402_DAILY_AUTONOMY_TARGET_WEIGHTS || "proof402=4,action402=4,trust402=3,external=1",
   dailyAutonomyExternalChance: Number.parseFloat(process.env.TRUST402_DAILY_AUTONOMY_EXTERNAL_CHANCE || "0.15"),
+  dailyAutonomyRandomExternalLiveApproved: process.env.TRUST402_DAILY_AUTONOMY_RANDOM_EXTERNAL_LIVE_APPROVED === "true",
+  dailyAutonomyExternalQueries: parseList(process.env.TRUST402_DAILY_AUTONOMY_EXTERNAL_QUERIES || "agent data,trust score,market intelligence,web research,crypto data"),
   dailyAutonomyExternalRegistryUrls: parseList(process.env.TRUST402_DAILY_AUTONOMY_EXTERNAL_REGISTRY_URLS || ""),
   dailyAutonomyExternalRegistryAllowlist: parseList(process.env.TRUST402_DAILY_AUTONOMY_EXTERNAL_REGISTRY_ALLOWLIST || ""),
   emergencyStop: process.env.TRUST402_EMERGENCY_STOP === "true" || process.env.LIVE_EMERGENCY_STOP === "true",

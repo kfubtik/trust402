@@ -103,6 +103,17 @@ window, when a non-zero exit should block the smoke.
   `TRUST402_DAILY_AUTONOMY_LIVE_APPROVED=true`, and the normal `LIVE_*` policy
   gates. The default target weights prefer known ecosystem agents:
   `proof402=4,action402=4,trust402=3,external=1`.
+- The optional GitHub Actions workflow `.github/workflows/random-daily-autonomy.yml`
+  provides a stronger random wake pattern: it runs hourly, chooses one random
+  UTC hour per date, sleeps a random offset inside that hour, and then calls
+  `/api/cron/daily-autonomous`. Add a GitHub Actions secret named
+  `TRUST402_CRON_SECRET` with the same value as Vercel `CRON_SECRET` before
+  relying on it. Without the secret, the workflow skips safely.
+- External daily discovery reads public catalogs by default:
+  `https://x402-list.com/api/v1/services` and CDP Bazaar semantic search.
+  Random external live payments remain blocked unless
+  `TRUST402_DAILY_AUTONOMY_RANDOM_EXTERNAL_LIVE_APPROVED=true` and all normal
+  live spend policy gates pass.
 - Use `npm run bazaar:indexing:check -- https://trust402.aztecbeacon.uk` after a successful paid smoke to check asynchronous CDP Bazaar visibility.
 - Use `npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --limit=20` before public launch claims about every paid resource.
 - After the 2026-05-20 custom-domain switch, CDP Bazaar completed indexing for

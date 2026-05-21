@@ -24,6 +24,8 @@ const baseConfig = {
   discoveryRegistryAllowlist: [],
   dailyAutonomyTargetWeights: "proof402=4,action402=4,trust402=3,external=1",
   dailyAutonomyExternalChance: 0,
+  dailyAutonomyRandomExternalLiveApproved: false,
+  dailyAutonomyExternalQueries: ["agent data", "trust score"],
   dailyAutonomyExternalRegistryUrls: [],
   dailyAutonomyExternalRegistryAllowlist: []
 };
@@ -94,6 +96,35 @@ test("dailyAutonomyRun falls back to dry-run when live is requested without appr
   assert.equal(result.paidSubcallsMade, 0);
 });
 
+test("dailyAutonomyRun blocks random external live mode without separate approval", async () => {
+  const result = await dailyAutonomyRun({}, {
+    cronAuthorized: true,
+    now: "2026-05-21T00:00:00.000Z",
+    config: {
+      ...baseConfig,
+      dailyAutonomyEnabled: true,
+      dailyAutonomyMode: "live",
+      dailyAutonomyLiveApproved: true,
+      dailyAutonomyBudgetUsd: 0.02,
+      dailyAutonomyMaxPaidCalls: 1,
+      dailyAutonomyIncludeProofPreview: true,
+      dailyAutonomyProof402Mode: "preview",
+      dailyAutonomyTargetWeights: "external=1",
+      dailyAutonomyExternalChance: 1,
+      dailyAutonomyRandomExternalLiveApproved: false,
+      liveSpendEnabled: true
+    },
+    fetchImpl: async () => new Response(JSON.stringify({ resources: [] }), {
+      status: 200,
+      headers: { "content-type": "application/json" }
+    })
+  });
+
+  assert.equal(result.requestedMode, "live");
+  assert.equal(result.effectiveMode, "dry-run");
+  assert.ok(result.liveBlockers.some((blocker) => blocker.id === "random_external_live_not_approved"));
+});
+
 test("dailyAutonomyRun executes exactly one pseudo-random slot per date", async () => {
   const config = {
     ...baseConfig,
@@ -161,27 +192,38 @@ test("dailyAutonomyRun can include external registry discovery only through allo
       dailyAutonomyProof402Mode: "preview",
       dailyAutonomyTargetWeights: "external=1",
       dailyAutonomyExternalChance: 1,
+      dailyAutonomyExternalQueries: ["agent data"],
       dailyAutonomyExternalRegistryUrls: ["https://registry.example/resources.json"],
       dailyAutonomyExternalRegistryAllowlist: ["https://registry.example"]
     },
-    fetchImpl: async () => new Response(JSON.stringify({
-      paidLaunchResources: [{
-        id: "external-agent",
-        path: "/api/paid",
-        method: "POST",
-        priceUsd: 0.01,
-        description: "External allowlisted x402 agent resource for occasional daily discovery.",
-        payTo: "0x1111111111111111111111111111111111111111"
-      }]
-    }), {
-      status: 200,
-      headers: { "content-type": "application/json" }
-    })
+    fetchImpl: async (url) => {
+      if (String(url).startsWith("https://registry.example")) {
+        return new Response(JSON.stringify({
+          paidLaunchResources: [{
+            id: "external-agent",
+            path: "/api/paid",
+            method: "POST",
+            priceUsd: 0.01,
+            description: "External allowlisted x402 agent resource for occasional daily discovery.",
+            payTo: "0x1111111111111111111111111111111111111111"
+          }]
+        }), {
+          status: 200,
+          headers: { "content-type": "application/json" }
+        });
+      }
+      return new Response(JSON.stringify({ resources: [] }), {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      });
+    }
   });
 
   assert.equal(result.interactionProfile.primaryTarget, "external");
   assert.equal(result.interactionProfile.externalSelected, true);
   assert.equal(result.interactionProfile.externalRegistryConfigured, true);
+  assert.ok(result.interactionProfile.registryUrls.some((url) => url.startsWith("https://x402-list.com")));
+  assert.ok(result.interactionProfile.registryUrls.some((url) => url.startsWith("https://api.cdp.coinbase.com")));
   assert.equal(result.run.discovery.summary.fetchedRegistryCandidates, 1);
 });
 

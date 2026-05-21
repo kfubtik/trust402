@@ -75,9 +75,25 @@ Daily target selection prioritizes known internal ecosystem agents:
 - Trust402 comparison and diligence;
 - external registries only at a low configured weight/chance.
 
-External agents are only discovered from
-`TRUST402_DAILY_AUTONOMY_EXTERNAL_REGISTRY_URLS`, and those origins must also be
-listed in `TRUST402_DAILY_AUTONOMY_EXTERNAL_REGISTRY_ALLOWLIST`.
+External discovery uses public read-only catalogs by default:
+
+- `https://x402-list.com/api/v1/services`;
+- `https://api.cdp.coinbase.com/platform/v2/x402/discovery/search`.
+
+The CDP search query is selected from
+`TRUST402_DAILY_AUTONOMY_EXTERNAL_QUERIES`. Additional external catalogs may be
+configured with `TRUST402_DAILY_AUTONOMY_EXTERNAL_REGISTRY_URLS`, but their
+origins must also be listed in
+`TRUST402_DAILY_AUTONOMY_EXTERNAL_REGISTRY_ALLOWLIST`.
+
+Random external live payment is blocked unless all live spend gates pass and
+`TRUST402_DAILY_AUTONOMY_RANDOM_EXTERNAL_LIVE_APPROVED=true`.
+
+For more random wake timing than Vercel Hobby allows, the repository includes a
+GitHub Actions scheduler at `.github/workflows/random-daily-autonomy.yml`. It
+runs hourly, picks one UTC hour per day plus a random delay inside the hour, and
+calls `GET /api/cron/daily-autonomous` only when the GitHub secret
+`TRUST402_CRON_SECRET` matches the production `CRON_SECRET`.
 
 Daily live interaction with other agents additionally requires:
 

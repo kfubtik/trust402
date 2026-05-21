@@ -24,9 +24,12 @@ export async function discoverResourceCandidates(input = {}, options = {}) {
     ...registryFetches.candidates,
     ...seedCandidates
   ].filter(Boolean);
-  const unique = uniqueByEndpoint(pool)
-    .filter((candidate) => candidate.priceUsd === null || candidate.priceUsd <= budgetUsd)
-    .slice(0, clampInt(input.maxCandidates, 1, 10, 10));
+  const filtered = uniqueByEndpoint(pool)
+    .filter((candidate) => candidate.priceUsd === null || candidate.priceUsd <= budgetUsd);
+  const ordered = input.randomizeCandidates === true
+    ? seededShuffle(filtered, input.randomSeed || sha256Json({ goal, budgetUsd, candidates: filtered.map((candidate) => candidate.endpoint) }))
+    : filtered;
+  const unique = ordered.slice(0, clampInt(input.maxCandidates, 1, 10, 10));
   const discoveryCore = {
     goal,
     budgetUsd,
@@ -225,6 +228,7 @@ function collectCandidateArrays(body) {
   if (Array.isArray(body)) return [{ name: "root", entries: body }];
   if (!body || typeof body !== "object") return [];
   return [
+    ["services", body.services],
     ["resources", body.resources],
     ["paidLaunchResources", body.paidLaunchResources],
     ["freeResources", body.freeResources],
@@ -239,18 +243,22 @@ function collectCandidateArrays(body) {
 
 function candidateFromRegistryEntry(entry, registryUrl, collectionName, cfg) {
   if (!entry || typeof entry !== "object") return null;
+  if (String(entry.status || "").toLowerCase() === "offline") return null;
   const endpoint = endpointFromEntry(entry, registryUrl);
   if (!endpoint) return null;
   const paymentInfo = entry["x-payment-info"] || entry.payment || entry.paymentInfo || {};
-  const priceUsd = numberOrNull(entry.priceUsd ?? entry.price ?? paymentInfo.priceUsd ?? paymentInfo.usd);
+  const accepts = Array.isArray(entry.accepts) ? entry.accepts : Array.isArray(paymentInfo.accepts) ? paymentInfo.accepts : [];
+  const accept = entry.accept || accepts[0] || {};
+  const priceUsd = numberOrNull(entry.priceUsd ?? entry.price ?? entry.min_price_usd ?? paymentInfo.priceUsd ?? paymentInfo.usd) ??
+    priceUsdFromAccept(accept);
   const inferredPaid = collectionName.toLowerCase().includes("paid") ||
     (priceUsd !== null && priceUsd > 0) ||
-    /paid|x402/i.test(String(entry.status || ""));
+    /paid|x402/i.test(String(entry.status || entry.description || ""));
   const defaultOpenapiUrl = `${registryUrl.origin}/openapi.json`;
   const defaultWellKnownUrl = `${registryUrl.origin}/.well-known/x402`;
-  const accepts = Array.isArray(entry.accepts) ? entry.accepts : Array.isArray(paymentInfo.accepts) ? paymentInfo.accepts : [];
-  const accept = entry.accept || accepts[0] || (inferredPaid ? {
-    network: entry.network || paymentInfo.network || cfg.x402Network || "eip155:8453",
+  const network = normalizeNetwork(entry.network || accept.network || paymentInfo.network || firstNetwork(entry.networks) || cfg.x402Network);
+  const effectiveAccept = Object.keys(accept).length > 0 ? accept : (inferredPaid ? {
+    network: network || "eip155:8453",
     asset: entry.asset || paymentInfo.asset || cfg.x402Asset || BASE_USDC
   } : {});
   return normalizeCandidate({
@@ -260,17 +268,20 @@ function candidateFromRegistryEntry(entry, registryUrl, collectionName, cfg) {
     method: entry.method || entry.httpMethod || "POST",
     priceUsd,
     has402: entry.has402 === true || Boolean(entry["x-payment-info"] || entry.paymentRequired || accepts.length || inferredPaid),
-    hasInputSchema: entry.hasInputSchema === true || Boolean(entry.inputSchema || entry.requestSchema || entry.schema || (entry.path && defaultOpenapiUrl)),
-    hasOpenApi: entry.hasOpenApi === true || Boolean(entry.openapiUrl || entry.openApiUrl || defaultOpenapiUrl),
+    hasInputSchema: entry.hasInputSchema === true || Boolean(entry.inputSchema || entry.requestSchema || entry.schema || entry.extensions?.bazaar?.schema || entry.endpoint_count || (entry.path && defaultOpenapiUrl)),
+    hasOpenApi: entry.hasOpenApi === true || Boolean(entry.openapiUrl || entry.openApiUrl || entry.base_url || defaultOpenapiUrl),
     hasWellKnown: entry.hasWellKnown === true || Boolean(entry.wellKnownUrl || entry.x402Url || defaultWellKnownUrl),
     openapiUrl: entry.openapiUrl || entry.openApiUrl || defaultOpenapiUrl,
     wellKnownUrl: entry.wellKnownUrl || entry.x402Url || defaultWellKnownUrl,
     payTo: entry.payTo || accept.payTo || null,
-    network: entry.network || accept.network || paymentInfo.network || null,
-    asset: entry.asset || accept.asset || paymentInfo.asset || null,
-    accept: Object.keys(accept).length > 0 ? accept : undefined,
+    network,
+    asset: entry.asset || accept.asset || paymentInfo.asset || cfg.x402Asset || BASE_USDC,
+    accept: Object.keys(effectiveAccept).length > 0 ? {
+      ...effectiveAccept,
+      network: normalizeNetwork(effectiveAccept.network) || effectiveAccept.network
+    } : undefined,
     description: entry.description || entry.purpose || entry.summary || "",
-    receiptReady: entry.receiptReady === true || entry.proofReady === true || Boolean(entry.receiptUrl || inferredPaid),
+    receiptReady: entry.receiptReady === true || entry.proofReady === true || Boolean(entry.receiptUrl || inferredPaid || entry.verified),
     proofReady: entry.proofReady === true,
     requestBody: entry.requestBody || entry.body || entry.request?.body || {},
     category: entry.category || entry.tags?.[0] || null,
@@ -280,7 +291,8 @@ function candidateFromRegistryEntry(entry, registryUrl, collectionName, cfg) {
 }
 
 function endpointFromEntry(entry, registryUrl) {
-  const endpoint = entry.endpoint || entry.url || entry.resourceUrl;
+  const endpoint = entry.endpoint || entry.url || entry.resourceUrl || entry.resource || entry.base_url;
+  if (endpoint && typeof endpoint === "object" && typeof endpoint.url === "string") return endpoint.url.trim();
   if (typeof endpoint === "string" && endpoint.trim()) return endpoint.trim();
   const path = entry.path || entry.route;
   if (typeof path === "string" && path.startsWith("/")) return `${registryUrl.origin}${path}`;
@@ -315,6 +327,16 @@ function uniqueByEndpoint(candidates) {
 
 function uniqueStrings(values) {
   return Array.from(new Set(values.map((value) => String(value || "").trim()).filter(Boolean)));
+}
+
+function seededShuffle(values, seed) {
+  return values
+    .map((value, index) => ({
+      value,
+      sortKey: sha256Json({ seed, endpoint: value.endpoint, index })
+    }))
+    .sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+    .map((item) => item.value);
 }
 
 function safeUrl(value) {
@@ -370,6 +392,27 @@ function numberOrNull(value) {
     if (Number.isFinite(parsed)) return parsed;
   }
   return null;
+}
+
+function priceUsdFromAccept(accept) {
+  if (!accept || typeof accept !== "object") return null;
+  const atomic = accept.amount ?? accept.maxAmountRequired;
+  const parsed = numberOrNull(atomic);
+  if (parsed === null) return null;
+  const asset = String(accept.asset || "").toLowerCase();
+  const decimals = asset === BASE_USDC.toLowerCase() || asset.includes("usdc") ? 6 : 6;
+  return Math.round((parsed / 10 ** decimals) * 1_000_000) / 1_000_000;
+}
+
+function firstNetwork(networks) {
+  return Array.isArray(networks) ? networks[0] : networks;
+}
+
+function normalizeNetwork(value) {
+  const network = String(value || "").trim();
+  if (!network) return null;
+  if (/^(bse|base)$/i.test(network)) return "eip155:8453";
+  return network;
 }
 
 function numberOr(value, fallback) {

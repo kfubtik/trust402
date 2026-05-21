@@ -13,6 +13,14 @@ const SLOTS = [
   { id: "morning", schedule: "10 1 * * *", utc: "01:10", krasnoyarsk: "08:10" },
   { id: "evening", schedule: "47 13 * * *", utc: "13:47", krasnoyarsk: "20:47" }
 ];
+const DEFAULT_EXTERNAL_CATALOGS = [
+  "https://x402-list.com/api/v1/services",
+  "https://api.cdp.coinbase.com/platform/v2/x402/discovery/search"
+];
+const DEFAULT_EXTERNAL_CATALOG_ORIGINS = [
+  "https://x402-list.com",
+  "https://api.cdp.coinbase.com"
+];
 
 export async function dailyAutonomyRun(input = {}, options = {}) {
   const cfg = options.config || config;
@@ -22,11 +30,9 @@ export async function dailyAutonomyRun(input = {}, options = {}) {
   const randomSchedule = randomSchedulePlan({ cfg, dateKey, currentSlot });
   const enabled = boolOr(input.enabled, cfg.dailyAutonomyEnabled);
   const requestedMode = normalizeMode(input.mode || cfg.dailyAutonomyMode);
-  const liveRequested = requestedMode === "live";
-  const liveBlockers = liveRequested ? liveModeBlockers({ cfg, options }) : [];
-  const effectiveMode = liveRequested && liveBlockers.length === 0 ? "live" : "dry-run";
 
   if (!enabled) {
+    const liveBlockers = requestedMode === "live" ? liveModeBlockers({ cfg, options }) : [];
     return {
       ok: true,
       tool: "cron.daily_autonomy",
@@ -43,6 +49,14 @@ export async function dailyAutonomyRun(input = {}, options = {}) {
       ]
     };
   }
+
+  const goal = stringOr(input.goal, cfg.dailyAutonomyGoal, DEFAULT_GOAL);
+  const budgetUsd = positiveNumberOr(input.budgetUsd, cfg.dailyAutonomyBudgetUsd, 0.02);
+  const maxPaidCalls = positiveIntegerOr(input.maxPaidCalls, cfg.dailyAutonomyMaxPaidCalls, 1);
+  const interactionProfile = dailyInteractionProfile({ cfg, input, dateKey, budgetUsd });
+  const liveRequested = requestedMode === "live";
+  const liveBlockers = liveRequested ? liveModeBlockers({ cfg, options, interactionProfile }) : [];
+  const effectiveMode = liveRequested && liveBlockers.length === 0 ? "live" : "dry-run";
 
   if (currentSlot && currentSlot !== randomSchedule.selectedSlot) {
     return {
@@ -63,14 +77,10 @@ export async function dailyAutonomyRun(input = {}, options = {}) {
     };
   }
 
-  const goal = stringOr(input.goal, cfg.dailyAutonomyGoal, DEFAULT_GOAL);
-  const budgetUsd = positiveNumberOr(input.budgetUsd, cfg.dailyAutonomyBudgetUsd, 0.02);
-  const maxPaidCalls = positiveIntegerOr(input.maxPaidCalls, cfg.dailyAutonomyMaxPaidCalls, 1);
   const includeProofPreview = boolOr(input.includeProofPreview, cfg.dailyAutonomyIncludeProofPreview);
   const proof402Mode = effectiveMode === "live"
     ? normalizeProofMode(input.proof402Mode || cfg.dailyAutonomyProof402Mode)
     : "preview";
-  const interactionProfile = dailyInteractionProfile({ cfg, input, dateKey, budgetUsd });
   const jobInput = {
     ...input,
     goal,
@@ -91,7 +101,9 @@ export async function dailyAutonomyRun(input = {}, options = {}) {
     allowedRegistryOrigins: uniqueStrings([
       ...interactionProfile.allowedRegistryOrigins,
       ...(Array.isArray(input.allowedRegistryOrigins) ? input.allowedRegistryOrigins : [])
-    ])
+    ]),
+    randomizeCandidates: true,
+    randomSeed: `${dateKey}:${interactionProfile.primaryTarget}:${interactionProfile.randomSearchQuery || "known"}`
   };
 
   const run = await autonomousRun(jobInput, {
@@ -149,27 +161,53 @@ function dailyInteractionProfile({ cfg, input, dateKey, budgetUsd }) {
   const externalSelected = primaryTarget === "external" || seededUnit(`${dateKey}:external`) < externalChance;
   const target = primaryTarget === "external" ? fallbackKnownTarget(dateKey) : primaryTarget;
   const candidates = candidatesForTarget(target, { cfg, dateKey, budgetUsd });
-  const registryUrls = externalSelected ? cfg.dailyAutonomyExternalRegistryUrls || [] : [];
-  const allowedRegistryOrigins = externalSelected ? cfg.dailyAutonomyExternalRegistryAllowlist || [] : [];
+  const randomSearchQuery = pickSearchQuery({ cfg, dateKey });
+  const externalDiscovery = externalSelected
+    ? externalRegistryPlan({ cfg, dateKey, budgetUsd, randomSearchQuery })
+    : { registryUrls: [], allowedRegistryOrigins: [] };
   return {
     primaryTarget,
     effectiveKnownTarget: target,
     targetWeights,
     externalSelected,
-    externalRegistryConfigured: registryUrls.length > 0,
-    externalRegistryUrlsCount: registryUrls.length,
+    randomSearchQuery: externalSelected ? randomSearchQuery : null,
+    externalRegistryConfigured: externalDiscovery.registryUrls.length > 0,
+    externalRegistryUrlsCount: externalDiscovery.registryUrls.length,
     candidates: candidates.map((candidate) => ({
       ...candidate,
       dailyTarget: candidate.dailyTarget || target
     })),
-    registryUrls,
-    allowedRegistryOrigins,
+    registryUrls: externalDiscovery.registryUrls,
+    allowedRegistryOrigins: externalDiscovery.allowedRegistryOrigins,
     safety: {
       externalFetchRequiresAllowlist: true,
+      externalLiveRequiresSeparateApproval: true,
       sendsPaymentHeadersDuringDiscovery: false,
       preferredKnownTargets: ["proof402", "action402", "trust402"]
     }
   };
+}
+
+function externalRegistryPlan({ cfg, budgetUsd, randomSearchQuery }) {
+  const configuredUrls = Array.isArray(cfg.dailyAutonomyExternalRegistryUrls) ? cfg.dailyAutonomyExternalRegistryUrls : [];
+  const configuredAllowlist = Array.isArray(cfg.dailyAutonomyExternalRegistryAllowlist) ? cfg.dailyAutonomyExternalRegistryAllowlist : [];
+  const query = encodeURIComponent(randomSearchQuery || "agent data");
+  const maxUsdPrice = encodeURIComponent(String(Math.max(0.001, Math.min(budgetUsd || 0.02, 0.05))));
+  const defaultUrls = [
+    DEFAULT_EXTERNAL_CATALOGS[0],
+    `${DEFAULT_EXTERNAL_CATALOGS[1]}?query=${query}&network=eip155:8453&maxUsdPrice=${maxUsdPrice}&limit=20`
+  ];
+  return {
+    registryUrls: uniqueStrings([...configuredUrls, ...defaultUrls]),
+    allowedRegistryOrigins: uniqueStrings([...configuredAllowlist, ...DEFAULT_EXTERNAL_CATALOG_ORIGINS])
+  };
+}
+
+function pickSearchQuery({ cfg, dateKey }) {
+  const queries = Array.isArray(cfg.dailyAutonomyExternalQueries) && cfg.dailyAutonomyExternalQueries.length > 0
+    ? cfg.dailyAutonomyExternalQueries
+    : ["agent data", "trust score", "market intelligence", "web research", "crypto data"];
+  return queries[pickIndex(`${dateKey}:external-query`, queries.length)];
 }
 
 function candidatesForTarget(target, { cfg, dateKey, budgetUsd }) {
@@ -319,7 +357,7 @@ function trust402Candidate({ cfg, dateKey, budgetUsd }) {
   };
 }
 
-function liveModeBlockers({ cfg, options }) {
+function liveModeBlockers({ cfg, options, interactionProfile = null }) {
   const blockers = [];
   if (options.cronAuthorized !== true) {
     blockers.push({
@@ -337,6 +375,12 @@ function liveModeBlockers({ cfg, options }) {
     blockers.push({
       id: "live_spend_disabled",
       message: "LIVE_SPEND_ENABLED is false."
+    });
+  }
+  if (interactionProfile?.externalSelected && !cfg.dailyAutonomyRandomExternalLiveApproved) {
+    blockers.push({
+      id: "random_external_live_not_approved",
+      message: "TRUST402_DAILY_AUTONOMY_RANDOM_EXTERNAL_LIVE_APPROVED is false."
     });
   }
   return blockers;

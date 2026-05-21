@@ -1,0 +1,72 @@
+name: random-daily-autonomy
+
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Trust402 production base URL
+        required: true
+        default: https://trust402.aztecbeacon.uk
+      force:
+        description: Run now instead of waiting for today's random hour
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  random-daily-autonomy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Choose random daily wake window
+        id: plan
+        shell: bash
+        env:
+          FORCE: ${{ github.event_name == 'workflow_dispatch' && inputs.force }}
+        run: |
+          set -euo pipefail
+          day="$(date -u +%F)"
+          hour="$(date -u +%H)"
+          seed="${day}:${GITHUB_REPOSITORY}:trust402-random-daily-autonomy"
+          selected_hour="$(node -e "const crypto=require('crypto'); const h=crypto.createHash('sha256').update(process.argv[1]).digest(); console.log(h[0] % 24)" "$seed")"
+          delay_seconds="$(node -e "const crypto=require('crypto'); const h=crypto.createHash('sha256').update(process.argv[1] + ':delay').digest(); console.log(h.readUInt16BE(0) % 3000)" "$seed")"
+          if [ "${FORCE}" = "true" ]; then
+            should_run="true"
+            delay_seconds="0"
+          elif [ "$((10#$hour))" -eq "$selected_hour" ]; then
+            should_run="true"
+          else
+            should_run="false"
+          fi
+          {
+            echo "day=${day}"
+            echo "selected_hour=${selected_hour}"
+            echo "delay_seconds=${delay_seconds}"
+            echo "should_run=${should_run}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Skip non-selected hour
+        if: steps.plan.outputs.should_run != 'true'
+        run: |
+          echo "Not today's random wake hour. Selected UTC hour: ${{ steps.plan.outputs.selected_hour }}."
+
+      - name: Sleep random offset inside selected hour
+        if: steps.plan.outputs.should_run == 'true'
+        run: sleep "${{ steps.plan.outputs.delay_seconds }}"
+
+      - name: Call Trust402 daily autonomy
+        if: steps.plan.outputs.should_run == 'true'
+        env:
+          TRUST402_CRON_SECRET: ${{ secrets.TRUST402_CRON_SECRET }}
+          BASE_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.base_url || 'https://trust402.aztecbeacon.uk' }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TRUST402_CRON_SECRET:-}" ]; then
+            echo "TRUST402_CRON_SECRET GitHub secret is not configured; skipping without calling production."
+            exit 0
+          fi
+          curl -fsS \
+            -H "Authorization: Bearer ${TRUST402_CRON_SECRET}" \
+            "${BASE_URL%/}/api/cron/daily-autonomous"
