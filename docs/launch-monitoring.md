@@ -74,7 +74,7 @@ public directory pages.
 ## Current Custom-Domain Baseline
 
 Last checked on 2026-05-21 after the repository was made public and production
-was serving commit `c2a6a84c0e2b1c783fc93619462487242abd4256` with:
+was serving commit `e7fdf1c8bac0c1ed6515eeb167147c717ba26d7e` with:
 
 ```powershell
 npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --limit=20 --concurrency=8
@@ -86,7 +86,7 @@ npm run directories:check -- https://trust402.aztecbeacon.uk --timeout-ms=10000
 Trust402's verified production/discovery state is:
 
 ```text
-status = needs-attention
+status = healthy
 api.status = healthy
 api.catalogStatus = production-mvp
 api.paidLaunchResources = 10
@@ -109,10 +109,9 @@ dailyAutonomy.scheduler = Vercel Cron two-slot pseudo-random selection
 externalDirectories.checked = 13
 ```
 
-That state is production-healthy for API/x402/spend safety, but launch
-attention is required until the production runtime is redeployed with the
-updated CDP Bazaar env evidence and at least one non-CDP external directory
-visibly lists Trust402.
+That state is production-healthy for API/x402/spend safety. CDP Bazaar is
+`10/10 all-indexed`, x402scan visibly lists Trust402, and completion audit is
+`10/10 verified`.
 
 The earlier final verifier passed local release checks, Docker build,
 production smoke, production x402 smoke, AgentCash refill dry-run, external

@@ -100,6 +100,10 @@ runs hourly, picks one UTC hour per day plus a random delay inside the hour, and
 calls `GET /api/cron/daily-autonomous` only when the GitHub secret
 `TRUST402_CRON_SECRET` matches the production `CRON_SECRET`.
 
+Current production choice: do not store `TRUST402_CRON_SECRET` in GitHub. The
+GitHub workflow therefore skips safely, and Vercel Cron remains the active
+autonomy scheduler.
+
 Daily live interaction with other agents additionally requires:
 
 - `TRUST402_DAILY_AUTONOMY_MODE=live`;

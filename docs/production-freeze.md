@@ -9,15 +9,17 @@ cleanup and the first scheduled autonomy window.
 
 - Production URL: `https://trust402.aztecbeacon.uk`
 - Current release line: `v0.1.1`
-- Runtime commit observed in production: `c2a6a84c0e2b1c783fc93619462487242abd4256`
+- Runtime commit observed in production: `e7fdf1c8bac0c1ed6515eeb167147c717ba26d7e`
+- Release tag: `v0.1.1`
 - Completion audit: `goalComplete=true`
 - Requirements: `10/10 verified`
 - Daily autonomy: enabled through Vercel Cron
 - Daily autonomy mode: `live`
 - Daily autonomy payment policy: one paid call max, allowlisted origins only,
   per-call cap `$0.005`, per-job cap `$0.02`, daily cap `$0.05`
-- GitHub random scheduler: present but intentionally not activated unless the
-  operator chooses to add `TRUST402_CRON_SECRET` in GitHub Secrets.
+- GitHub random scheduler: present but intentionally not activated. The
+  operator chose not to send `TRUST402_CRON_SECRET` to GitHub; Vercel Cron
+  remains the scheduler of record.
 
 ## Frozen Production State
 

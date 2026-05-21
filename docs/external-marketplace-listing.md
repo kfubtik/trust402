@@ -31,11 +31,12 @@ Trust402 is live as a production x402 service on the Cloudflare-backed custom
 domain. CDP Bazaar search now finds every paid resource URL on
 `trust402.aztecbeacon.uk`; some historical `trust402.vercel.app` rows may still
 appear in search results. Live Trust402 procurement, paid Proof402 delegation,
-and AgentCash auto-refill remain disabled until separately approved.
+and AgentCash refill checks are enabled only through policy/operator gates,
+caps, allowlists, and receipt/audit evidence.
 
 ## Current External Directory Visibility
 
-Last checked on 2026-05-21 at 12:33 +07:00 with:
+Last checked on 2026-05-21 at 19:23 +07:00 with:
 
 ```powershell
 npm run directories:check -- https://trust402.aztecbeacon.uk --timeout-ms=15000 --concurrency=4 --x402scan-origin-id=239600ba-27ae-44f1-92b0-8ea1c8fb8a14
@@ -90,8 +91,9 @@ Interpretation:
   x402list.fun, Orbis API Marketplace, World.fun x402 Market, x402agency,
   Agent Bazaar, the402, x402-list.com, and Agora402 are monitored for public
   Trust402 visibility;
-- x402scan, x402.org ecosystem, and Agora402 were not reliably reachable within
-  the 10-second read-only check window;
+- x402scan's visible server page is reachable, while some x402scan index pages,
+  x402.org ecosystem, and Agora402 were not reliably reachable within the
+  read-only script timeout window;
 - `not-visible-yet` is not proof of absence because several directories are
   client-rendered, asynchronously indexed, curated, or rate-limited.
 

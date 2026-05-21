@@ -24,8 +24,10 @@ the pre-public safety checks passed.
 - Public branch check: unauthenticated `git ls-remote` sees `main`
 - Launch baseline commit: `d3ae50591323005867f955d7d4331a97757bb387`
 - Daily-autonomy baseline commit: `c2a6a84c0e2b1c783fc93619462487242abd4256`
+- Public release cleanup commit: `e7fdf1c8bac0c1ed6515eeb167147c717ba26d7e`
+- Release tag: `v0.1.1`
 - Production URL: `https://trust402.aztecbeacon.uk`
-- Production runtime commit observed: `c2a6a84c0e2b1c783fc93619462487242abd4256`
+- Production runtime commit observed: `e7fdf1c8bac0c1ed6515eeb167147c717ba26d7e`
 - Production smoke: passed
 - Unpaid x402 smoke: passed
 - CDP Bazaar: `10/10 all-indexed`
@@ -33,6 +35,8 @@ the pre-public safety checks passed.
   `https://www.x402scan.com/server/239600ba-27ae-44f1-92b0-8ea1c8fb8a14`
 - Daily live autonomy: enabled through Vercel Cron with allowlisted paid origins
   and strict caps.
+- GitHub random scheduler: intentionally inactive because no cron secret is
+  stored in GitHub.
 
 ## Cleanup Audit Snapshot
 

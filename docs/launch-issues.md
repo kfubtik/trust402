@@ -131,11 +131,13 @@ The full final Definition of Done is pinned in
   `Payment-Required.resource.url` and `accepts[].resource` challenge formats.
   Latest local readiness evidence:
   `sha256:8da65381983fbc9998401cefba576d4ce29af40b3b4d6610c81ec055c0d54f8d`.
-- Production gates: `node --test test` (187/187),
+- Production gates: `node --test test` (206/206),
   `node scripts/release-check.js`, `node scripts/privacy-check.js`, production
   smoke, production x402 smoke, Docker build, AgentCash refill dry-run, launch
   monitor, completion audit, and external directory read-only check passed on
-  2026-05-21. The final verifier completed successfully and is pinned in
+  2026-05-21. Production now serves commit
+  `e7fdf1c8bac0c1ed6515eeb167147c717ba26d7e`, tagged `v0.1.1`. The final
+  verifier completed successfully and is pinned in
   [production-freeze.md](production-freeze.md).
   Final verifier hash:
   `sha256:406c19995a5129a1d6ab19c6024c5a2f542e6c9f52306cd45ff5bd226336caf2`.
@@ -145,9 +147,10 @@ The full final Definition of Done is pinned in
   at `$0.01` after the route smokes. Balance was `$0.953` after the `$0.30`
   route-indexing batch and `$0.948` after the later `$0.005` Proof402 direct
   smoke. Balance was `$0.918` after the latest `$0.03` compare-resources retry.
-  The local Trust402 policy still keeps manual smoke
-  budget at `$0` and leaves live procurement, paid Proof402 delegation, and
-  auto-refill disabled until a bounded operator window is explicitly approved.
+  The local Trust402 policy still keeps manual smoke budget at `$0`. Production
+  policy gates for live procurement, paid Proof402 delegation, and manual-action
+  refill checks are enabled only through the configured caps, allowlists,
+  operator authorization, and audit/receipt evidence.
 - Live evidence staging: production action pack now defaults the bounded
   downstream smoke to `https://proof402.vercel.app/api/proof/notarize` at
   `$0.005`, caps the combined procurement/proof window at `$0.015`, and marks
@@ -166,11 +169,10 @@ The full final Definition of Done is pinned in
   `sha256:3cd0cc03075c8e4a223e63af59a424d6af7b91a459df5bb32cf02ed051af274d`.
   AgentCash refill decision evidence ref:
   `sha256:6b97ce7e38c793d19af3880683cef074f9d215e5c0675546c1289f17b633c12c`.
-  The window was closed immediately after evidence env refs were recorded:
-  `LIVE_SPEND_ENABLED=false`, `PROOF402_DELEGATION_MODE=disabled`, and the
-  operator key was rotated. Use `/api/policies/spend`, not `/health`, to verify
-  a temporary live window; `/health` intentionally reports
-  `liveSpendEnabled=false`.
+  The original smoke window was closed immediately after evidence env refs were
+  recorded. Production has since moved to the approved daily live policy. Use
+  `/api/policies/spend`, not `/health`, to verify live policy readiness;
+  `/health` intentionally reports `liveSpendEnabled=false`.
 - Trust402 live procurement responses now include a public-safe
   `trust402.procurement_audit.v1` `auditBundle` alongside `receiptBundle`.
   Downstream endpoint URLs are represented with origins and hashes, and any
