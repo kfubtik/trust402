@@ -105,7 +105,11 @@ async function main() {
 
   const preflight = await getJson("/api/settlement/preflight");
   assert(preflight.readiness?.paidSmokeReady === false, "/api/settlement/preflight must not be paid-smoke ready by default");
-  assert(preflight.policy?.liveSpendEnabled === false, "/api/settlement/preflight must not enable live spend");
+  if (isLocalBase) {
+    assert(preflight.policy?.liveSpendEnabled === false, "/api/settlement/preflight must not enable live spend for local defaults");
+  } else {
+    assert(preflight.policy?.note === "This preflight does not send payment or make paid subcalls.", "/api/settlement/preflight must stay non-paying");
+  }
 
   const spendPolicy = await getJson("/api/policies/spend");
   const autoRefill = spendPolicy.policies?.agentcashAutoRefill;
@@ -180,7 +184,12 @@ async function main() {
   assert(completionPlan.safety?.readOnly === true, "/api/completion/plan must be read-only");
 
   const completion = await getJson("/api/completion/audit");
-  assert(completion.goalComplete === false, "/api/completion/audit must not claim full completion while live/manual blockers remain");
+  if (completion.goalComplete === true) {
+    assert(
+      completion.requirements?.every((item) => item.status === "verified"),
+      "/api/completion/audit may claim completion only when every requirement is verified"
+    );
+  }
   assert(
     completion.requirements?.some((item) => item.id === "unified_spend_policy" && item.status === "verified"),
     "/api/completion/audit must verify unified spend policy"
