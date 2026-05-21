@@ -186,6 +186,10 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(registryCandidatesGet.body.safety.paidSubcallsMade, 0);
     assert.ok(registryCandidatesGet.body.candidates.some((candidate) => candidate.id === "proof402.notarize"));
 
+    const dailyCronUnauthorized = await request(baseUrl, "/api/cron/daily-autonomous");
+    assert.equal(dailyCronUnauthorized.response.status, 401);
+    assert.equal(dailyCronUnauthorized.body.error.code, "cron_not_authorized");
+
     const checklist = await request(baseUrl, "/api/launch/checklist");
     assert.equal(checklist.response.status, 200);
     assert.equal(checklist.body.tool, "launch.checklist");

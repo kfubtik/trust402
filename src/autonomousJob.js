@@ -17,7 +17,7 @@ export async function autonomousRun(input = {}, options = {}) {
     ...quoteInput,
     mode,
     quote,
-    approval: input.approval || input.approvalPayload
+    approval: input.approval || input.approvalPayload || autoApproval(options, quote)
   }, options);
   const finalReport = {
     goal: quote.quote.goal || input.goal || "autonomous Trust402 job",
@@ -65,6 +65,16 @@ export async function autonomousRun(input = {}, options = {}) {
     proofReceiptBundle,
     proof,
     nextSteps: nextSteps({ mode, proof })
+  };
+}
+
+function autoApproval(options, quote) {
+  if (options.autoApproveQuote !== true) return undefined;
+  return {
+    approved: true,
+    quoteHash: quote.quoteHash,
+    quoteId: quote.quoteId,
+    reason: "pre-approved autonomous run inside a separately authorized policy window"
   };
 }
 

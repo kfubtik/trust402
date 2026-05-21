@@ -9,6 +9,7 @@ import { ApiError, errorBody } from "./errors.js";
 import { autonomousRun } from "./autonomousJob.js";
 import { domainActivationPack } from "./domainActivationPack.js";
 import { domainReadinessCheck } from "./domainReadinessCheck.js";
+import { dailyAutonomyRun } from "./dailyAutonomy.js";
 import { deploymentPreflight } from "./deploymentPreflight.js";
 import { githubActionsSetupPack } from "./githubActionsSetupPack.js";
 import { marketplaceBundle } from "./marketplace.js";
@@ -130,6 +131,7 @@ export async function handleTrust402Request(req, res) {
           agentcashRefillCheck: "/api/agentcash/refill-check",
           agentcashMcpObservation: "/api/agentcash/mcp-observation",
           autonomousRun: "/api/jobs/autonomous-run",
+          dailyAutonomyCron: "/api/cron/daily-autonomous",
           registryCandidates: "/api/registries/candidates",
           resources: "/api/resources",
           proof402Preview: "/api/receipts/notarize-result",
@@ -244,6 +246,15 @@ export async function handleTrust402Request(req, res) {
 
     if (req.method === "GET" && path === "/api/registries/candidates") {
       return sendJson(res, 200, await discoverResourceCandidates());
+    }
+
+    if (req.method === "GET" && path === "/api/cron/daily-autonomous") {
+      if (!isCronAuthorized(req)) {
+        throw new ApiError(401, "cron_not_authorized", "Daily autonomy cron requires Authorization: Bearer CRON_SECRET.", {
+          cronSecretConfigured: config.cronSecretConfigured
+        });
+      }
+      return sendJson(res, 200, await dailyAutonomyRun({}, { cronAuthorized: true }));
     }
 
     if (req.method === "GET" && path === "/openapi.json") {
@@ -374,6 +385,7 @@ function statusSummary() {
       agentcashRefillCheck: "/api/agentcash/refill-check",
       agentcashMcpObservation: "/api/agentcash/mcp-observation",
       autonomousRun: "/api/jobs/autonomous-run",
+      dailyAutonomyCron: "/api/cron/daily-autonomous",
       registryCandidates: "/api/registries/candidates",
       openapi: "/openapi.json",
       x402WellKnown: "/.well-known/x402",
@@ -464,6 +476,12 @@ function isOperatorAuthorized(req) {
   return typeof supplied === "string" && supplied === config.operatorApiKey;
 }
 
+function isCronAuthorized(req) {
+  if (!config.cronSecret) return false;
+  const supplied = req.headers.authorization;
+  return typeof supplied === "string" && supplied === `Bearer ${config.cronSecret}`;
+}
+
 function setSecurityHeaders(res) {
   res.setHeader("x-content-type-options", "nosniff");
   res.setHeader("x-frame-options", "DENY");
@@ -471,7 +489,7 @@ function setSecurityHeaders(res) {
   res.setHeader("cross-origin-resource-policy", "same-origin");
   res.setHeader("access-control-allow-origin", "*");
   res.setHeader("access-control-allow-methods", "GET,POST,OPTIONS");
-  res.setHeader("access-control-allow-headers", "content-type,payment-signature,x-payment,x-payment-payload,x-trust402-operator-key");
+  res.setHeader("access-control-allow-headers", "authorization,content-type,payment-signature,x-payment,x-payment-payload,x-trust402-operator-key");
   res.setHeader("access-control-expose-headers", "payment-required,payment-response");
 }
 

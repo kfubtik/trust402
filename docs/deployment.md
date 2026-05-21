@@ -94,6 +94,12 @@ window, when a non-zero exit should block the smoke.
 - Use `/api/launch/checklist` or `npm run doctor` before marketplace submission.
 - Use `/api/marketplace/bundle` or `npm run marketplace:bundle` to inspect Bazaar-style resource metadata before submitting anywhere.
 - Use `/api/settlement/preflight` or `npm run settlement:preflight` before the one approved paid smoke.
+- Vercel Cron calls `GET /api/cron/daily-autonomous` once per day at
+  `10 1 * * *`. Configure `CRON_SECRET` before enabling
+  `TRUST402_DAILY_AUTONOMY_ENABLED=true`; live daily autonomy also requires
+  `TRUST402_DAILY_AUTONOMY_MODE=live`,
+  `TRUST402_DAILY_AUTONOMY_LIVE_APPROVED=true`, and the normal `LIVE_*`
+  policy gates.
 - Use `npm run bazaar:indexing:check -- https://trust402.aztecbeacon.uk` after a successful paid smoke to check asynchronous CDP Bazaar visibility.
 - Use `npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --limit=20` before public launch claims about every paid resource.
 - After the 2026-05-20 custom-domain switch, CDP Bazaar completed indexing for

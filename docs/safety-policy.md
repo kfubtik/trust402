@@ -23,6 +23,8 @@ In dry-run mode Trust402 may:
   `PROOF402_DELEGATION_MODE=probe`.
 - expose settlement-readiness metadata and unpaid x402 challenge tests.
 - expose a paid-smoke preflight that checks readiness without sending payment.
+- run the daily autonomy cron in dry-run mode and produce an autonomous
+  discovery, quote, audit, receipt, and Proof402 preview.
 
 In dry-run mode Trust402 must not:
 
@@ -38,6 +40,35 @@ In dry-run mode Trust402 must not:
 - store private keys;
 - ask for customer private keys;
 - write wallet material to tracked files.
+
+## Daily Autonomy
+
+Trust402 may take initiative on a schedule, but the schedule is not allowed to
+silently bypass spend policy.
+
+The production cron endpoint is `GET /api/cron/daily-autonomous`. It must be
+called with `Authorization: Bearer $CRON_SECRET`. The Vercel schedule is
+`10 1 * * *`, which is 01:10 UTC / 08:10 Asia/Krasnoyarsk once per day.
+
+Default daily autonomy is dry-run:
+
+- `TRUST402_DAILY_AUTONOMY_ENABLED=true`;
+- `TRUST402_DAILY_AUTONOMY_MODE=dry-run`;
+- `TRUST402_DAILY_AUTONOMY_BUDGET_USD=0.02`;
+- `TRUST402_DAILY_AUTONOMY_MAX_PAID_CALLS=1`;
+- `TRUST402_DAILY_AUTONOMY_PROOF402_MODE=preview`.
+
+Daily live interaction with other agents additionally requires:
+
+- `TRUST402_DAILY_AUTONOMY_MODE=live`;
+- `TRUST402_DAILY_AUTONOMY_LIVE_APPROVED=true`;
+- a valid `CRON_SECRET`;
+- explicit `LIVE_SPEND_ENABLED=true`;
+- live caps, allowlists, denylist, and real payment provider;
+- Proof402 live mode only if paid proof spending is separately approved.
+
+If daily live mode is requested while any live blocker remains, the cron falls
+back to dry-run and reports the blocker list instead of spending.
 
 ## Live Spend Requirements
 
