@@ -1,0 +1,50 @@
+:root {
+  --trust402-radar-black: #07110f;
+  --trust402-deep-field: #0b1715;
+  --trust402-panel-graphite: #111e1b;
+  --trust402-panel-raised: #172622;
+  --trust402-mist: #f2f7f4;
+  --trust402-soft-mist: #d7e5de;
+  --trust402-muted-steel: #b4c8be;
+  --trust402-line: #244039;
+  --trust402-signal-green: #54f2a1;
+  --trust402-cyan-trace: #58d6ff;
+  --trust402-magenta-ping: #f05bce;
+  --trust402-amber-risk: #f5b84b;
+  --trust402-red-deny: #ff5c66;
+
+  --trust402-font-ui: Inter, Geist, "Segoe UI", Arial, sans-serif;
+  --trust402-font-mono: "JetBrains Mono", "Geist Mono", Consolas, monospace;
+
+  --trust402-container-max: 1180px;
+  --trust402-section-y: 88px;
+  --trust402-grid-gap: 20px;
+  --trust402-panel-padding: 20px;
+
+  --trust402-radius-panel: 8px;
+  --trust402-radius-card: 8px;
+  --trust402-radius-button: 8px;
+  --trust402-radius-chip: 999px;
+
+  --trust402-shadow-panel: 0 24px 70px rgba(0, 0, 0, 0.35);
+  --trust402-shadow-signal: 0 0 32px rgba(84, 242, 161, 0.18);
+  --trust402-shadow-cyan: 0 0 28px rgba(88, 214, 255, 0.16);
+}
+
+.trust402-radar-surface {
+  background: var(--trust402-radar-black);
+  color: var(--trust402-mist);
+  font-family: var(--trust402-font-ui);
+  letter-spacing: 0;
+}
+
+.trust402-radar-panel {
+  background: var(--trust402-panel-graphite);
+  border: 1px solid var(--trust402-line);
+  border-radius: var(--trust402-radius-panel);
+  box-shadow: var(--trust402-shadow-panel);
+}
+
+.trust402-radar-mono {
+  font-family: var(--trust402-font-mono);
+}

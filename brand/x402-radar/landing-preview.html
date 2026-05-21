@@ -1,0 +1,1273 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Trust402 - x402 Radar</title>
+  <meta name="description" content="Trust402 is a live radar and buyer-side procurement agent for x402 resources.">
+  <link rel="stylesheet" href="./tokens.css">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--trust402-radar-black);
+      color: var(--trust402-mist);
+      font-family: var(--trust402-font-ui);
+      letter-spacing: 0;
+      line-height: 1.5;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button,
+    a {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .page {
+      min-height: 100vh;
+      background:
+        linear-gradient(180deg, rgba(11, 23, 21, 0.98), rgba(7, 17, 15, 1) 68%),
+        var(--trust402-radar-black);
+      overflow: hidden;
+    }
+
+    .container {
+      width: min(100% - 40px, var(--trust402-container-max));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid rgba(215, 229, 222, 0.1);
+      background: rgba(7, 17, 15, 0.84);
+      backdrop-filter: blur(18px);
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 68px;
+      gap: 22px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      font-weight: 760;
+      color: var(--trust402-mist);
+    }
+
+    .brand-mark {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 32px;
+      aspect-ratio: 1;
+      border: 1px solid rgba(84, 242, 161, 0.38);
+      border-radius: 8px;
+      background: rgba(84, 242, 161, 0.08);
+      color: var(--trust402-signal-green);
+      font-family: var(--trust402-font-mono);
+      font-size: 12px;
+      box-shadow: var(--trust402-shadow-signal);
+    }
+
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      inset: 7px;
+      border: 1px solid rgba(88, 214, 255, 0.36);
+      border-radius: 50%;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      color: var(--trust402-muted-steel);
+      font-size: 15px;
+    }
+
+    .nav a:hover {
+      color: var(--trust402-cyan-trace);
+    }
+
+    .nav .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border: 1px solid rgba(84, 242, 161, 0.24);
+      border-radius: var(--trust402-radius-chip);
+      color: var(--trust402-soft-mist);
+      background: rgba(84, 242, 161, 0.07);
+    }
+
+    .pulse {
+      width: 7px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--trust402-signal-green);
+      box-shadow: 0 0 0 5px rgba(84, 242, 161, 0.1);
+    }
+
+    .hero {
+      position: relative;
+      min-height: calc(100svh - 68px);
+      display: grid;
+      align-items: center;
+      padding: 66px 0 52px;
+      border-bottom: 1px solid rgba(215, 229, 222, 0.1);
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(215, 229, 222, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(215, 229, 222, 0.035) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9), transparent 86%);
+      pointer-events: none;
+    }
+
+    .hero-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(480px, 1.1fr);
+      align-items: center;
+      gap: 54px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 22px;
+      color: var(--trust402-cyan-trace);
+      font-family: var(--trust402-font-mono);
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 28px;
+      height: 1px;
+      background: var(--trust402-cyan-trace);
+      box-shadow: var(--trust402-shadow-cyan);
+    }
+
+    h1 {
+      max-width: 660px;
+      margin: 0;
+      color: var(--trust402-mist);
+      font-size: clamp(46px, 7vw, 82px);
+      font-weight: 780;
+      line-height: 0.95;
+      letter-spacing: 0;
+    }
+
+    .hero-copy {
+      max-width: 620px;
+      margin: 24px 0 0;
+      color: var(--trust402-soft-mist);
+      font-size: clamp(17px, 2vw, 21px);
+    }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 34px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 0 18px;
+      border: 1px solid transparent;
+      border-radius: var(--trust402-radius-button);
+      font-weight: 720;
+      font-size: 14px;
+    }
+
+    .button.primary {
+      color: #04100c;
+      background: var(--trust402-signal-green);
+      box-shadow: var(--trust402-shadow-signal);
+    }
+
+    .button.secondary {
+      color: var(--trust402-soft-mist);
+      border-color: rgba(215, 229, 222, 0.16);
+      background: rgba(215, 229, 222, 0.055);
+    }
+
+    .proof-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 9px;
+      max-width: 650px;
+      margin-top: 34px;
+    }
+
+    .proof-chip {
+      min-height: 54px;
+      padding: 10px 12px;
+      border: 1px solid rgba(215, 229, 222, 0.12);
+      border-radius: 8px;
+      background: rgba(215, 229, 222, 0.045);
+      color: var(--trust402-soft-mist);
+      font-size: 13px;
+    }
+
+    .proof-chip strong {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--trust402-mist);
+      font-family: var(--trust402-font-mono);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .radar-shell {
+      position: relative;
+      min-height: 640px;
+      border: 1px solid rgba(215, 229, 222, 0.14);
+      border-radius: 8px;
+      background:
+        linear-gradient(180deg, rgba(23, 38, 34, 0.94), rgba(11, 23, 21, 0.96)),
+        var(--trust402-panel-graphite);
+      box-shadow: var(--trust402-shadow-panel);
+      overflow: hidden;
+    }
+
+    .radar-shell::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      background:
+        linear-gradient(120deg, transparent 0 32%, rgba(84, 242, 161, 0.16) 47%, transparent 64%),
+        repeating-linear-gradient(0deg, rgba(215, 229, 222, 0.032) 0 1px, transparent 1px 10px);
+      opacity: 0.72;
+      pointer-events: none;
+    }
+
+    .radar-header {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(215, 229, 222, 0.12);
+      color: var(--trust402-soft-mist);
+      font-family: var(--trust402-font-mono);
+      font-size: 13px;
+    }
+
+    .radar-mode {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--trust402-signal-green);
+    }
+
+    .radar-stage {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 260px;
+      min-height: 572px;
+    }
+
+    .radar-map {
+      position: relative;
+      min-height: 572px;
+      border-right: 1px solid rgba(215, 229, 222, 0.1);
+      overflow: hidden;
+    }
+
+    .rings {
+      position: absolute;
+      left: 50%;
+      top: 45%;
+      width: min(86%, 510px);
+      aspect-ratio: 1;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background:
+        conic-gradient(from 38deg, rgba(84, 242, 161, 0.32), rgba(84, 242, 161, 0.04) 16%, transparent 32% 100%),
+        repeating-radial-gradient(circle, transparent 0 62px, rgba(84, 242, 161, 0.18) 63px 64px),
+        radial-gradient(circle at center, rgba(88, 214, 255, 0.1), transparent 58%);
+      border: 1px solid rgba(84, 242, 161, 0.18);
+      box-shadow: inset 0 0 70px rgba(84, 242, 161, 0.05);
+      animation: sweep 8s linear infinite;
+    }
+
+    @keyframes sweep {
+      to {
+        transform: translate(-50%, -50%) rotate(360deg);
+      }
+    }
+
+    .crosshair {
+      position: absolute;
+      left: 50%;
+      top: 45%;
+      width: min(86%, 510px);
+      aspect-ratio: 1;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .crosshair::before,
+    .crosshair::after {
+      content: "";
+      position: absolute;
+      background: rgba(215, 229, 222, 0.1);
+    }
+
+    .crosshair::before {
+      left: 50%;
+      top: 0;
+      width: 1px;
+      height: 100%;
+    }
+
+    .crosshair::after {
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: 1px;
+    }
+
+    .node {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      width: 16px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 1px solid rgba(242, 247, 244, 0.56);
+      background: var(--trust402-signal-green);
+      box-shadow: 0 0 0 8px rgba(84, 242, 161, 0.08), 0 0 28px rgba(84, 242, 161, 0.42);
+    }
+
+    .node::after {
+      content: attr(data-label);
+      position: absolute;
+      left: 22px;
+      top: -4px;
+      width: max-content;
+      max-width: 130px;
+      color: var(--trust402-soft-mist);
+      font-family: var(--trust402-font-mono);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .node.review {
+      background: var(--trust402-amber-risk);
+      box-shadow: 0 0 0 8px rgba(245, 184, 75, 0.08), 0 0 28px rgba(245, 184, 75, 0.28);
+    }
+
+    .node.external {
+      background: var(--trust402-magenta-ping);
+      box-shadow: 0 0 0 8px rgba(240, 91, 206, 0.08), 0 0 28px rgba(240, 91, 206, 0.28);
+    }
+
+    .n1 { left: 18%; top: 28%; }
+    .n2 { left: 39%; top: 16%; }
+    .n3 { left: 67%; top: 24%; }
+    .n4 { left: 74%; top: 52%; }
+    .n5 { left: 48%; top: 68%; }
+    .n6 { left: 22%; top: 61%; }
+    .n7 { left: 59%; top: 43%; }
+
+    .scan-card {
+      position: absolute;
+      left: 24px;
+      bottom: 24px;
+      width: min(90%, 430px);
+      padding: 15px;
+      border: 1px solid rgba(88, 214, 255, 0.18);
+      border-radius: 8px;
+      background: rgba(7, 17, 15, 0.78);
+      box-shadow: var(--trust402-shadow-cyan);
+    }
+
+    .scan-card h2 {
+      margin: 0 0 12px;
+      color: var(--trust402-mist);
+      font-size: 15px;
+      text-align: center;
+    }
+
+    .scan-route {
+      display: grid;
+      grid-template-columns: repeat(5, max-content);
+      gap: 6px;
+      justify-content: center;
+      color: var(--trust402-muted-steel);
+      font-family: var(--trust402-font-mono);
+      font-size: 11px;
+    }
+
+    .scan-route span {
+      min-width: max-content;
+      padding: 7px 9px;
+      border: 1px solid rgba(215, 229, 222, 0.1);
+      border-radius: 6px;
+      text-align: center;
+      justify-content: center;
+      white-space: nowrap;
+      overflow-wrap: normal;
+      background: rgba(215, 229, 222, 0.045);
+    }
+
+    .scan-route .active {
+      color: #07110f;
+      border-color: var(--trust402-signal-green);
+      background: var(--trust402-signal-green);
+    }
+
+    .side-panel {
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      min-width: 0;
+      background: rgba(7, 17, 15, 0.36);
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      border-bottom: 1px solid rgba(215, 229, 222, 0.1);
+    }
+
+    .metric {
+      min-height: 86px;
+      padding: 14px;
+      border-right: 1px solid rgba(215, 229, 222, 0.1);
+    }
+
+    .metric:nth-child(2n) {
+      border-right: 0;
+    }
+
+    .metric label {
+      display: block;
+      color: var(--trust402-muted-steel);
+      font-family: var(--trust402-font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 8px;
+      color: var(--trust402-mist);
+      font-size: 23px;
+      line-height: 1;
+    }
+
+    .resource-list {
+      padding: 14px;
+    }
+
+    .resource-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(215, 229, 222, 0.09);
+    }
+
+    .resource-row:last-child {
+      border-bottom: 0;
+    }
+
+    .resource-row strong {
+      display: block;
+      color: var(--trust402-soft-mist);
+      font-size: 13px;
+    }
+
+    .resource-row span {
+      color: var(--trust402-muted-steel);
+      font-family: var(--trust402-font-mono);
+      font-size: 12px;
+    }
+
+    .price {
+      color: var(--trust402-signal-green);
+      font-family: var(--trust402-font-mono);
+      font-size: 13px;
+      text-align: right;
+    }
+
+    .section {
+      padding: var(--trust402-section-y) 0;
+      border-bottom: 1px solid rgba(215, 229, 222, 0.1);
+    }
+
+    .section-header {
+      display: grid;
+      grid-template-columns: minmax(0, 0.78fr) minmax(260px, 0.42fr);
+      gap: 48px;
+      align-items: end;
+      margin-bottom: 36px;
+    }
+
+    .section-kicker {
+      margin-bottom: 9px;
+      color: var(--trust402-cyan-trace);
+      font-family: var(--trust402-font-mono);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .section h2 {
+      margin: 0;
+      color: var(--trust402-mist);
+      font-size: clamp(32px, 5vw, 54px);
+      font-weight: 740;
+      line-height: 1;
+    }
+
+    .section-header p {
+      margin: 0;
+      color: var(--trust402-muted-steel);
+      font-size: 18px;
+    }
+
+    .resource-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--trust402-grid-gap);
+    }
+
+    .resource-card,
+    .policy-panel,
+    .receipt-panel,
+    .api-panel {
+      border: 1px solid rgba(215, 229, 222, 0.12);
+      border-radius: 8px;
+      background: rgba(17, 30, 27, 0.78);
+    }
+
+    .resource-card {
+      min-height: 218px;
+      padding: 18px;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 8px;
+      border: 1px solid rgba(84, 242, 161, 0.2);
+      border-radius: var(--trust402-radius-chip);
+      color: var(--trust402-signal-green);
+      background: rgba(84, 242, 161, 0.07);
+      font-family: var(--trust402-font-mono);
+      font-size: 11px;
+    }
+
+    .badge.review {
+      color: var(--trust402-amber-risk);
+      border-color: rgba(245, 184, 75, 0.2);
+      background: rgba(245, 184, 75, 0.07);
+    }
+
+    .resource-card h3 {
+      margin: 0 0 7px;
+      color: var(--trust402-mist);
+      font-size: 19px;
+    }
+
+    .host {
+      color: var(--trust402-muted-steel);
+      font-family: var(--trust402-font-mono);
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .signals {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .signal label {
+      display: block;
+      color: var(--trust402-muted-steel);
+      font-family: var(--trust402-font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .signal strong {
+      color: var(--trust402-soft-mist);
+      font-size: 15px;
+    }
+
+    .policy-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.92fr) minmax(360px, 0.58fr);
+      gap: var(--trust402-grid-gap);
+      align-items: stretch;
+    }
+
+    .policy-panel,
+    .receipt-panel,
+    .api-panel {
+      padding: 20px;
+    }
+
+    .gate-row {
+      display: grid;
+      grid-template-columns: 150px 1fr auto;
+      gap: 14px;
+      align-items: center;
+      min-height: 58px;
+      border-bottom: 1px solid rgba(215, 229, 222, 0.09);
+    }
+
+    .gate-row:last-child {
+      border-bottom: 0;
+    }
+
+    .gate-row label {
+      color: var(--trust402-muted-steel);
+      font-family: var(--trust402-font-mono);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .gate-row strong {
+      color: var(--trust402-soft-mist);
+      font-size: 15px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 0 9px;
+      border-radius: var(--trust402-radius-chip);
+      font-family: var(--trust402-font-mono);
+      font-size: 11px;
+      color: #07110f;
+      background: var(--trust402-signal-green);
+    }
+
+    .status-pill.review {
+      color: #241300;
+      background: var(--trust402-amber-risk);
+    }
+
+    .status-pill.blocked {
+      color: #260306;
+      background: var(--trust402-red-deny);
+    }
+
+    .policy-summary {
+      display: grid;
+      gap: 14px;
+      min-height: 100%;
+    }
+
+    .summary-number {
+      padding: 18px;
+      border: 1px solid rgba(84, 242, 161, 0.16);
+      border-radius: 8px;
+      background: rgba(84, 242, 161, 0.06);
+    }
+
+    .summary-number label {
+      display: block;
+      color: var(--trust402-muted-steel);
+      font-family: var(--trust402-font-mono);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .summary-number strong {
+      display: block;
+      margin-top: 8px;
+      color: var(--trust402-signal-green);
+      font-size: 34px;
+      line-height: 1;
+    }
+
+    .receipt-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.66fr) minmax(320px, 0.34fr);
+      gap: var(--trust402-grid-gap);
+    }
+
+    .receipt-row {
+      display: grid;
+      grid-template-columns: 128px 1fr 92px 108px;
+      gap: 12px;
+      align-items: center;
+      min-height: 56px;
+      border-bottom: 1px solid rgba(215, 229, 222, 0.09);
+      color: var(--trust402-soft-mist);
+      font-family: var(--trust402-font-mono);
+      font-size: 13px;
+    }
+
+    .receipt-row:first-child {
+      color: var(--trust402-muted-steel);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .receipt-row:last-child {
+      border-bottom: 0;
+    }
+
+    .hash {
+      color: var(--trust402-cyan-trace);
+      overflow-wrap: anywhere;
+    }
+
+    .proof-box {
+      display: grid;
+      gap: 16px;
+      align-content: start;
+    }
+
+    .proof-box h3,
+    .api-panel h3 {
+      margin: 0;
+      color: var(--trust402-mist);
+      font-size: 20px;
+    }
+
+    .proof-box p,
+    .api-panel p {
+      margin: 0;
+      color: var(--trust402-muted-steel);
+    }
+
+    .api-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.55fr) minmax(0, 0.45fr);
+      gap: var(--trust402-grid-gap);
+    }
+
+    .code-window {
+      border: 1px solid rgba(215, 229, 222, 0.12);
+      border-radius: 8px;
+      background: #050c0a;
+      overflow: hidden;
+    }
+
+    .code-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(215, 229, 222, 0.1);
+      color: var(--trust402-muted-steel);
+      font-family: var(--trust402-font-mono);
+      font-size: 12px;
+    }
+
+    pre {
+      margin: 0;
+      padding: 18px;
+      color: var(--trust402-soft-mist);
+      font-family: var(--trust402-font-mono);
+      font-size: 13px;
+      line-height: 1.75;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .endpoint-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .endpoint {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 48px;
+      padding: 0 14px;
+      border: 1px solid rgba(215, 229, 222, 0.1);
+      border-radius: 8px;
+      background: rgba(215, 229, 222, 0.04);
+      font-family: var(--trust402-font-mono);
+      font-size: 13px;
+    }
+
+    .endpoint span {
+      color: var(--trust402-muted-steel);
+    }
+
+    .closing {
+      padding: 72px 0 92px;
+      background: var(--trust402-deep-field);
+    }
+
+    .closing-panel {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 28px;
+      align-items: center;
+      padding: 28px;
+      border: 1px solid rgba(84, 242, 161, 0.18);
+      border-radius: 8px;
+      background: rgba(84, 242, 161, 0.06);
+    }
+
+    .closing h2 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1;
+    }
+
+    .closing p {
+      max-width: 680px;
+      margin: 12px 0 0;
+      color: var(--trust402-soft-mist);
+    }
+
+    @media (max-width: 980px) {
+      .nav a {
+        display: none;
+      }
+
+      .hero-grid,
+      .section-header,
+      .policy-grid,
+      .receipt-grid,
+      .api-grid,
+      .closing-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .radar-shell {
+        min-height: auto;
+      }
+
+      .radar-stage {
+        grid-template-columns: 1fr;
+      }
+
+      .radar-map {
+        min-height: 500px;
+        border-right: 0;
+        border-bottom: 1px solid rgba(215, 229, 222, 0.1);
+      }
+
+      .resource-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 620px) {
+      .container {
+        width: min(100% - 24px, var(--trust402-container-max));
+      }
+
+      .hero {
+        padding-top: 40px;
+      }
+
+      .proof-strip,
+      .resource-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .radar-map {
+        min-height: 430px;
+      }
+
+      .node::after {
+        max-width: 92px;
+        white-space: normal;
+      }
+
+      .scan-card {
+        left: 12px;
+        right: 12px;
+        width: auto;
+      }
+
+      .scan-route {
+        grid-template-columns: 1fr;
+      }
+
+      .gate-row,
+      .receipt-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+        padding: 14px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="container topbar-inner">
+        <a class="brand" href="#top" aria-label="Trust402 home">
+          <span class="brand-mark">402</span>
+          <span>Trust402</span>
+        </a>
+        <nav class="nav" aria-label="Primary navigation">
+          <a href="#resources">Resources</a>
+          <a href="#policy">Policy</a>
+          <a href="#discovery">Discovery</a>
+          <a href="https://github.com/kfubtik/trust402">GitHub</a>
+          <span class="status"><span class="pulse"></span>live radar</span>
+        </nav>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="container hero-grid">
+          <div>
+            <div class="eyebrow">x402 buyer-side trust layer</div>
+            <h1 id="hero-title">Trust402</h1>
+            <p class="hero-copy">
+              A live radar for x402 resources. Trust before you pay, proof after you buy: compare prices, detect risk, and route safe payments through policy-controlled procurement.
+            </p>
+            <div class="cta-row">
+              <a class="button primary" href="https://trust402.aztecbeacon.uk/api/resources">Inspect Resources</a>
+              <a class="button secondary" href="https://trust402.aztecbeacon.uk/openapi.json">View API</a>
+              <a class="button secondary" href="https://www.x402scan.com/server/239600ba-27ae-44f1-92b0-8ea1c8fb8a14">x402scan Evidence</a>
+            </div>
+            <div class="proof-strip" aria-label="Trust402 capabilities">
+              <div class="proof-chip"><strong>policy</strong>Spend caps and allowlists</div>
+              <div class="proof-chip"><strong>receipts</strong>Audit trail for paid calls</div>
+              <div class="proof-chip"><strong>proof</strong>Proof402-ready hashes</div>
+              <div class="proof-chip"><strong>autonomy</strong>Goal to safe execution</div>
+            </div>
+          </div>
+
+          <div class="radar-shell" aria-label="x402 resource radar preview">
+            <div class="radar-header">
+              <span class="radar-mode"><span class="pulse"></span>SCAN ACTIVE</span>
+              <span>policy: guarded</span>
+            </div>
+            <div class="radar-stage">
+              <div class="radar-map">
+                <div class="rings"></div>
+                <div class="crosshair"></div>
+                <span class="node n1" data-label="proof402"></span>
+                <span class="node n2 external" data-label="new endpoint"></span>
+                <span class="node n3" data-label="$0.005"></span>
+                <span class="node n4 review" data-label="review"></span>
+                <span class="node n5" data-label="receipt ok"></span>
+                <span class="node n6" data-label="allowlist"></span>
+                <span class="node n7" data-label="x402"></span>
+
+                <div class="scan-card">
+                  <h2>Selected procurement route</h2>
+                  <div class="scan-route" aria-label="Procurement route">
+                    <span>discover</span>
+                    <span>quote</span>
+                    <span class="active">policy</span>
+                    <span>pay</span>
+                    <span>receipt</span>
+                  </div>
+                </div>
+              </div>
+
+              <aside class="side-panel" aria-label="Radar telemetry">
+                <div class="metric-grid">
+                  <div class="metric"><label>resources</label><strong>12</strong></div>
+                  <div class="metric"><label>allowed</label><strong>8</strong></div>
+                  <div class="metric"><label>max call</label><strong>$0.005</strong></div>
+                  <div class="metric"><label>proofs</label><strong>live</strong></div>
+                </div>
+                <div class="resource-list">
+                  <div class="resource-row">
+                    <div><strong>Proof402</strong><span>proof notarize</span></div>
+                    <div class="price">$0.005</div>
+                  </div>
+                  <div class="resource-row">
+                    <div><strong>Compare</strong><span>resource ranking</span></div>
+                    <div class="price">$0.015</div>
+                  </div>
+                  <div class="resource-row">
+                    <div><strong>Policy</strong><span>dry-run gate</span></div>
+                    <div class="price">free</div>
+                  </div>
+                  <div class="resource-row">
+                    <div><strong>Receipts</strong><span>audit bundle</span></div>
+                    <div class="price">free</div>
+                  </div>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="resources">
+        <div class="container">
+          <div class="section-header">
+            <div>
+              <div class="section-kicker">resource radar</div>
+              <h2>See the market before your agent pays</h2>
+            </div>
+            <p>
+              Trust402 turns scattered x402 endpoints into a resource map with price, uptime, proof support, and policy fit before a paid call is made.
+            </p>
+          </div>
+
+          <div class="resource-grid">
+            <article class="resource-card">
+              <div class="card-top"><span class="badge">allowed</span><span class="price">$0.005</span></div>
+              <h3>Proof402 Notary</h3>
+              <div class="host">proof402.vercel.app</div>
+              <div class="signals">
+                <div class="signal"><label>uptime</label><strong>ready</strong></div>
+                <div class="signal"><label>proof</label><strong>yes</strong></div>
+                <div class="signal"><label>risk</label><strong>low</strong></div>
+                <div class="signal"><label>policy</label><strong>pass</strong></div>
+              </div>
+            </article>
+
+            <article class="resource-card">
+              <div class="card-top"><span class="badge">allowed</span><span class="price">$0.015</span></div>
+              <h3>Compare Resources</h3>
+              <div class="host">trust402.aztecbeacon.uk</div>
+              <div class="signals">
+                <div class="signal"><label>uptime</label><strong>ready</strong></div>
+                <div class="signal"><label>proof</label><strong>hash</strong></div>
+                <div class="signal"><label>risk</label><strong>low</strong></div>
+                <div class="signal"><label>policy</label><strong>pass</strong></div>
+              </div>
+            </article>
+
+            <article class="resource-card">
+              <div class="card-top"><span class="badge review">review</span><span class="price">$0.03</span></div>
+              <h3>External Signal</h3>
+              <div class="host">candidate endpoint</div>
+              <div class="signals">
+                <div class="signal"><label>uptime</label><strong>unknown</strong></div>
+                <div class="signal"><label>proof</label><strong>none</strong></div>
+                <div class="signal"><label>risk</label><strong>medium</strong></div>
+                <div class="signal"><label>policy</label><strong>review</strong></div>
+              </div>
+            </article>
+
+            <article class="resource-card">
+              <div class="card-top"><span class="badge">free</span><span class="price">$0</span></div>
+              <h3>Spend Policy</h3>
+              <div class="host">/api/policies/spend</div>
+              <div class="signals">
+                <div class="signal"><label>uptime</label><strong>ready</strong></div>
+                <div class="signal"><label>proof</label><strong>n/a</strong></div>
+                <div class="signal"><label>risk</label><strong>none</strong></div>
+                <div class="signal"><label>policy</label><strong>source</strong></div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="policy">
+        <div class="container">
+          <div class="section-header">
+            <div>
+              <div class="section-kicker">policy gate</div>
+              <h2>Autonomy with visible limits</h2>
+            </div>
+            <p>
+              Every live action is checked against machine-readable budget, allowlist, proof, and receipt rules before execution.
+            </p>
+          </div>
+
+          <div class="policy-grid">
+            <div class="policy-panel">
+              <div class="gate-row"><label>per call</label><strong>Max spend $0.005</strong><span class="status-pill">allowed</span></div>
+              <div class="gate-row"><label>per job</label><strong>Max job budget $0.02</strong><span class="status-pill">allowed</span></div>
+              <div class="gate-row"><label>daily cap</label><strong>Max daily spend $0.05</strong><span class="status-pill review">watch</span></div>
+              <div class="gate-row"><label>allowlist</label><strong>proof402.vercel.app</strong><span class="status-pill">match</span></div>
+              <div class="gate-row"><label>deny rule</label><strong>Unknown paid endpoint</strong><span class="status-pill blocked">blocked</span></div>
+            </div>
+
+            <aside class="policy-summary">
+              <div class="summary-number"><label>live spend state</label><strong>guarded</strong></div>
+              <div class="summary-number"><label>receipt requirement</label><strong>100%</strong></div>
+              <div class="summary-number"><label>unapproved spend</label><strong>$0</strong></div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="discovery">
+        <div class="container">
+          <div class="section-header">
+            <div>
+              <div class="section-kicker">discovery</div>
+              <h2>Find usable x402 resources before spend</h2>
+            </div>
+            <p>
+              Trust402 exposes discovery surfaces for agents, directories, and developers: marketplace metadata, well-known manifests, OpenAPI, and resource catalogs.
+            </p>
+          </div>
+
+          <div class="api-grid">
+            <div class="api-panel">
+              <h3>Discovery surfaces</h3>
+              <p>Use these routes to inspect Trust402 or let another agent understand what it can buy, verify, and prove.</p>
+              <div class="endpoint-list" style="margin-top: 18px;">
+                <div class="endpoint"><strong>GET</strong><span>/.well-known/x402</span></div>
+                <div class="endpoint"><strong>GET</strong><span>/.well-known/agent.json</span></div>
+                <div class="endpoint"><strong>GET</strong><span>/api/marketplace/bundle</span></div>
+                <div class="endpoint"><strong>GET</strong><span>/directory.json</span></div>
+                <div class="endpoint"><strong>GET</strong><span>/llms.txt</span></div>
+              </div>
+            </div>
+
+            <div class="code-window">
+              <div class="code-head"><span>discovery-response.json</span><span>machine readable</span></div>
+              <pre>{
+  "service": "Trust402",
+  "category": "x402 procurement",
+  "resources": ["compare", "policy", "receipts"],
+  "payments": {
+    "mode": "policy-gated",
+    "receipts": true,
+    "proof402": "optional"
+  }
+}</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="receipts">
+        <div class="container">
+          <div class="section-header">
+            <div>
+              <div class="section-kicker">receipts and proof</div>
+              <h2>Every paid action leaves evidence</h2>
+            </div>
+            <p>
+              Paid calls return a receipt trail that can include endpoint details, spend policy state, response hashes, and Proof402 notarization metadata.
+            </p>
+          </div>
+
+          <div class="receipt-grid">
+            <div class="receipt-panel">
+              <div class="receipt-row"><span>time</span><span>endpoint</span><span>amount</span><span>proof</span></div>
+              <div class="receipt-row"><span>21:14</span><span class="hash">proof402/notarize</span><span>$0.005</span><span>verified</span></div>
+              <div class="receipt-row"><span>21:16</span><span class="hash">trust/compare</span><span>$0.015</span><span>hash</span></div>
+              <div class="receipt-row"><span>21:18</span><span class="hash">policy/spend</span><span>$0</span><span>n/a</span></div>
+            </div>
+
+            <aside class="receipt-panel proof-box">
+              <h3>Audit bundle</h3>
+              <p>Trust402 stores the decision path: quote, policy gate, payment receipt, output hash, and final report.</p>
+              <span class="badge">proof-ready</span>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="api">
+        <div class="container">
+          <div class="section-header">
+            <div>
+              <div class="section-kicker">developer api</div>
+              <h2>Built for agents and APIs</h2>
+            </div>
+            <p>
+              Discovery, comparison, policy, procurement, and proof workflows are exposed as predictable API routes.
+            </p>
+          </div>
+
+          <div class="api-grid">
+            <div class="code-window">
+              <div class="code-head"><span>autonomous-job.json</span><span>dry-run first</span></div>
+              <pre>{
+  "goal": "find a proof-ready x402 resource",
+  "budgetUsd": 0.02,
+  "policy": "guarded-live",
+  "steps": [
+    "discover",
+    "compare",
+    "quote",
+    "policy_gate",
+    "pay",
+    "receipt",
+    "proof"
+  ]
+}</pre>
+            </div>
+
+            <div class="api-panel">
+              <h3>Core routes</h3>
+              <p>Use Trust402 as a procurement layer between your agent and paid x402 resources.</p>
+              <div class="endpoint-list" style="margin-top: 18px;">
+                <div class="endpoint"><strong>GET</strong><span>/api/resources</span></div>
+                <div class="endpoint"><strong>POST</strong><span>/api/trust/compare-resources</span></div>
+                <div class="endpoint"><strong>GET</strong><span>/api/policies/spend</span></div>
+                <div class="endpoint"><strong>POST</strong><span>/api/procurement/execute</span></div>
+                <div class="endpoint"><strong>POST</strong><span>/api/jobs/autonomous</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="closing">
+        <div class="container">
+          <div class="closing-panel">
+            <div>
+              <h2>Give your agent a budget, not a blank check</h2>
+              <p>Trust402 helps autonomous buyers spend only where policy, price, and evidence line up.</p>
+            </div>
+            <a class="button primary" href="https://trust402.aztecbeacon.uk/">Open Trust402</a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
