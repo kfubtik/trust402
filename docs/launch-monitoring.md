@@ -57,7 +57,7 @@ npm run launch:monitor -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --s
 
 ## GitHub Workflow
 
-The private repository includes a manual workflow:
+The public repository includes a manual workflow:
 
 ```text
 .github/workflows/launch-monitor.yml
@@ -73,8 +73,8 @@ public directory pages.
 
 ## Current Custom-Domain Baseline
 
-Last checked on 2026-05-20 at 15:16 +07:00 after switching production to
-`https://trust402.aztecbeacon.uk` with:
+Last checked on 2026-05-21 after the repository was made public and production
+was serving commit `d3ae50591323005867f955d7d4331a97757bb387` with:
 
 ```powershell
 npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --limit=20 --concurrency=8

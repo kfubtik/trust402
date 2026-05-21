@@ -1,6 +1,6 @@
 # Trust402 Launch Issues
 
-Created on 2026-05-18 in the private GitHub repository:
+Created on 2026-05-18 in the GitHub repository:
 `kfubtik/trust402`.
 
 This file mirrors the remote launch backlog so the release package carries the
@@ -20,11 +20,13 @@ The full final Definition of Done is pinned in
 | [#7](https://github.com/kfubtik/trust402/issues/7) | AgentCash auto-refill policy | The Trust402-reserved AgentCash wallet is funded, dry-run refill checks exist, and production policy uses `manual-action` provider so no runtime refill credentials are held. | Keep threshold/cap evidence current; use a separate approved adapter only if live automatic refill is later required. |
 | [#8](https://github.com/kfubtik/trust402/issues/8) | Live procurement policy | A bounded production smoke proved controlled live procurement with receipts and audit bundles. | Keep default live spend locked; open only explicit capped windows. |
 | [#9](https://github.com/kfubtik/trust402/issues/9) | Paid Proof402 delegation policy | A bounded production smoke proved hash-only Proof402 delegation under cap. | Keep default delegation locked; notarize only approved hashes. |
-| [#10](https://github.com/kfubtik/trust402/issues/10) | Final autonomous buyer-agent plan | The full success criteria are complete in the production freeze. | Use public-release cleanup as the remaining repository-visibility gate. |
+| [#10](https://github.com/kfubtik/trust402/issues/10) | Final autonomous buyer-agent plan | The full success criteria are complete in the production freeze. | Public release cleanup is complete; keep evidence fresh after future releases. |
 
 ## Current Safe State
 
 - Production URL: `https://trust402.aztecbeacon.uk`.
+- GitHub repository: `https://github.com/kfubtik/trust402` is public as of
+  2026-05-21.
 - Deployment mode: production now auto-deploys through the Vercel GitHub App
   from `kfubtik/trust402` pushes to `main`. The Git/Vercel auto-deploy
   requirement is verified in production audit.

@@ -96,10 +96,9 @@ window, when a non-zero exit should block the smoke.
 - Use `/api/settlement/preflight` or `npm run settlement:preflight` before the one approved paid smoke.
 - Use `npm run bazaar:indexing:check -- https://trust402.aztecbeacon.uk` after a successful paid smoke to check asynchronous CDP Bazaar visibility.
 - Use `npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --limit=20` before public launch claims about every paid resource.
-- After the 2026-05-20 custom-domain switch, CDP Bazaar search finds Trust402
-  but exact paid resource URLs are still reindexing from the old
-  `trust402.vercel.app` origin; keep the completion gate blocked until the
-  custom-domain all-resource check returns `10/10`.
+- After the 2026-05-20 custom-domain switch, CDP Bazaar completed indexing for
+  the custom domain. Keep the completion gate tied to a current
+  `10/10 all-indexed` check before making future marketplace claims.
 - See `docs/bazaar-indexing.md` for the current production indexing state and completion gate.
 
 ## Vercel
@@ -246,21 +245,19 @@ Manual Vercel CLI production deploys work:
 npx vercel@latest --prod --yes
 ```
 
-Git-backed auto-deploy is still a Vercel/GitHub integration permission issue,
-not a Trust402 code issue. The current private GitHub remote is:
+Git-backed auto-deploy is verified. The current public GitHub remote is:
 
 ```text
 https://github.com/kfubtik/trust402.git
 ```
 
-This command currently fails until the Vercel GitHub App has access to that
-private repository:
+The Vercel GitHub App should already have access to this public repository:
 
 ```powershell
 npx vercel@latest git connect https://github.com/kfubtik/trust402.git --non-interactive
 ```
 
-Expected failure while access is missing:
+If access is missing or the GitHub App is disconnected, Vercel may report:
 
 ```text
 Failed to connect kfubtik/trust402 to project. Make sure there aren't any
@@ -269,7 +266,6 @@ typos and that you have access to the repository if it's private.
 
 Fix in Vercel/GitHub UI:
 
-- keep the GitHub repository private;
 - open the Vercel project `trust402`;
 - connect the Git repository or update the Vercel GitHub App installation;
 - grant access to `kfubtik/trust402`;
@@ -301,8 +297,8 @@ not read secret values and does not mutate GitHub or Vercel.
 
 ### GitHub Actions Fallback Deploy
 
-If the Vercel GitHub App cannot access the private repository or a manual
-evidence deploy is needed, the repo also contains a fallback production deploy
+If the Vercel GitHub App cannot access the repository or a manual evidence
+deploy is needed, the repo also contains a fallback production deploy
 workflow:
 
 ```text

@@ -66,7 +66,7 @@ be current, production-observed, public-safe, and visible through
 
 ## 1. Git/Vercel Auto-Deploy
 
-Goal: connect the private repository `kfubtik/trust402` to the Vercel project.
+Goal: connect the GitHub repository `kfubtik/trust402` to the Vercel project.
 The preferred path is the Vercel GitHub App integration. A GitHub Actions
 fallback deploy is acceptable evidence only if a push to `main` creates a
 production Vercel deployment and the workflow's smoke, x402 smoke, and launch
@@ -440,21 +440,19 @@ npm run final:verify -- https://trust402.aztecbeacon.uk --timeout-ms=10000
 Current 2026-05-21 final-verifier snapshot:
 
 - verification hash:
-  `sha256:f87e4f41a5fd6128d4fef6a5674e0c2382214f9217be54ba69e0db51a1ea1960`;
+  `sha256:406c19995a5129a1d6ab19c6024c5a2f542e6c9f52306cd45ff5bd226336caf2`;
 - required command checks passed, including local release gate, Docker build,
   production deployment sync, production smoke, production x402 smoke,
   AgentCash refill dry-run check, launch monitor, and completion audit;
-- final status remains `blocked` because no non-CDP external directory visibly
-  lists Trust402 yet, the production live procurement and Proof402 policies are
-  intentionally closed after the approved smoke, and autonomous live job
-  evidence has not been collected.
+- final status is `complete`; production audit reports `10/10` verified, CDP
+  Bazaar is `10/10 all-indexed`, x402scan visibly lists Trust402, and controlled
+  live procurement, paid Proof402, autonomous job, and refill evidence are
+  recorded behind locked default spend policy.
 
-Public release is a separate gate after product completion. Do not delete
-workflow runs, rewrite history, or force-push during active development just to
-hide failed iteration checks. Once every completion requirement is verified and
-the operator explicitly approves publication, follow
-`docs/github-release-checklist.md#public-release-cleanup-gate` to produce a
-clean public release commit before changing repository visibility.
+Public release is complete as of 2026-05-21. Do not delete workflow runs,
+rewrite history, or force-push just to hide failed iteration checks. For any
+future clean-history relaunch, follow
+`docs/github-release-checklist.md#public-release-cleanup-gate` first.
 
 Before the approved final/live window, run the read-only operator unblock report:
 

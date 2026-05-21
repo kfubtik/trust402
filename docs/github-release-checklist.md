@@ -1,7 +1,6 @@
 # Trust402 GitHub Release Checklist
 
-Use this checklist before the private GitHub push and again before any later
-public release.
+Use this checklist before release pushes and before any later public relaunch.
 
 ## Required Checks
 
@@ -71,8 +70,8 @@ Never publish:
 
 ## Remote Setup
 
-Wait for final user confirmation before pushing. The first repository should
-stay private; public release comes only after the user explicitly approves it.
+The repository is public at `https://github.com/kfubtik/trust402`. Push release
+changes only after local checks pass.
 
 Suggested repository description:
 
@@ -88,16 +87,14 @@ x402, agent, trust, procurement, micropayments
 
 ## Public Release Cleanup Gate
 
-Keep the private working history intact while Trust402 is still being built. Do
-not delete workflow runs, rewrite `main`, or force-push only to hide failed
-iteration checks during active development.
+Keep the public working history intact. Do not delete workflow runs, rewrite
+`main`, or force-push only to hide failed iteration checks.
 
-Trust402 reached its first completed production freeze on 2026-05-21. Use
-[public-release-cleanup.md](public-release-cleanup.md) as the active cleanup
-gate before making the repository public.
+Trust402 reached its first completed production freeze and public GitHub launch
+on 2026-05-21. Use [public-release-cleanup.md](public-release-cleanup.md) as the
+record of the completed cleanup gate.
 
-Before changing `kfubtik/trust402` from private to public, run a separate
-operator-approved public release cleanup:
+For any future clean-history relaunch, run a separate operator-approved cleanup:
 
 1. Verify the product is complete against `docs/autonomous-completion-plan.md`
    and that the latest `main` commit has green GitHub Actions and Vercel checks.
@@ -110,14 +107,11 @@ operator-approved public release cleanup:
 5. Push the clean release history only after explicit operator approval for a
    history rewrite.
 6. Run the full required checks against the clean release commit.
-7. Change repository visibility to public only after the clean release commit is
-   green and the operator confirms that old private workflow history should not
-   be part of the public launch surface.
+7. Change repository visibility only after the clean release commit is green
+   and the operator confirms the public launch surface.
 
-GitHub warns that when a private repository is made public, repository code,
-activity, Actions history, and logs become visible to everyone. Treat that
-visibility change as irreversible from a launch-reputation perspective: finish
-the product first, then do the cleanup gate, then publish.
+GitHub public history and workflow activity are visible to everyone. Treat any
+future history rewrite or visibility change as a launch-reputation decision.
 
 ## Marketplace Metadata
 
@@ -129,18 +123,10 @@ npm run marketplace:bundle
 npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --limit=20
 ```
 
-`dryRunLaunchReady` may be `true` locally. `publicMarketplaceReady` should stay
-`false` until the service has HTTPS `PUBLIC_BASE_URL`, a reviewed `PAY_TO`,
-approved CDP/facilitator credentials, and a successful paid settlement smoke.
-
-`/api/settlement/status` should show no blockers only after explicit operator
-approval, CDP/facilitator setup, and a paid smoke plan. Marketplace indexing
-readiness should still stay false until paid settlement evidence exists.
-After the 2026-05-20 custom-domain switch, production CDP Bazaar search finds
-Trust402 but exact launch resources are still reindexing from the old
-`trust402.vercel.app` origin to `trust402.aztecbeacon.uk`. Local default
-configs should not claim marketplace readiness without current `10/10`
-custom-domain evidence and matching receipt evidence.
+Production now has HTTPS `PUBLIC_BASE_URL`, reviewed `PAY_TO`, approved
+CDP/facilitator credentials, successful paid settlement evidence, and current
+CDP Bazaar `10/10` custom-domain evidence. Keep local default configs from
+claiming marketplace readiness unless they carry matching current evidence.
 
 Use [external-marketplace-listing.md](external-marketplace-listing.md) as the
 public-safe payload for external directories after the user approves public
@@ -155,12 +141,12 @@ explicit live-spend policy.
 
 Current release tracks:
 
-- Git-backed Vercel deploys are verified for the private repo;
+- Git-backed Vercel deploys are verified for the public repo;
 - CDP Bazaar is verified `10/10`, and x402scan visibly lists Trust402;
 - AgentCash auto-refill is configured as `manual-action`;
 - live procurement and paid Proof402 delegation passed a bounded production
   evidence smoke and returned to locked defaults;
-- public release cleanup is the remaining repository-visibility gate.
+- public release cleanup is complete for the first public launch.
 
 ## Launch Positioning
 

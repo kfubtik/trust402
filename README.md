@@ -14,12 +14,14 @@ Trust before you pay. Proof after you buy.
 
 ## Current Status
 
-This folder contains a working public MVP API. It keeps Trust402's own live
-procurement and Proof402 delegation disabled, while production can run a
+This repository contains a working public MVP API. Production serves from
+`https://trust402.aztecbeacon.uk`, CDP Bazaar indexes all 10 custom-domain paid
+resources, and x402scan visibly lists Trust402. The GitHub repository is public
+at `https://github.com/kfubtik/trust402`.
+
+Trust402's own live procurement and paid Proof402 delegation are implemented
+behind spend-policy gates and remain locked by default. Production can run a
 guarded real x402 Express middleware bridge for paid launch resources.
-Production currently serves from `https://trust402.aztecbeacon.uk`. CDP Bazaar
-search finds Trust402, but exact custom-domain paid resource URLs are still
-reindexing from the earlier `trust402.vercel.app` origin.
 
 Implemented:
 
@@ -44,13 +46,14 @@ Implemented:
 - optional mock 402 paywall for local payment-flow testing;
 - tests and smoke script.
 
-Not implemented yet:
+Locked by default:
 
 - live paid subcalls to other agents;
 - autonomous hot-wallet execution;
 - paid Proof402 receipt delegation.
 
-Those are intentionally later phases.
+Those paths require explicit operator-approved spend windows, allowlists,
+receipts, and caps before any wallet mutation.
 
 ## Run
 
