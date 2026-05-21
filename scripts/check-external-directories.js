@@ -125,7 +125,7 @@ async function fetchText(url) {
     const response = await fetch(url, {
       headers: {
         accept: "text/html,application/json;q=0.9,text/plain;q=0.8,*/*;q=0.5",
-        "user-agent": "Trust402 external directory check/0.1"
+        "user-agent": "Mozilla/5.0 (compatible; Trust402 external directory check/0.1; +https://trust402.aztecbeacon.uk)"
       },
       redirect: "follow",
       signal: controller.signal
