@@ -14,8 +14,12 @@
   },
   "crons": [
     {
-      "path": "/api/cron/daily-autonomous",
+      "path": "/api/cron/daily-autonomous/morning",
       "schedule": "10 1 * * *"
+    },
+    {
+      "path": "/api/cron/daily-autonomous/evening",
+      "schedule": "47 13 * * *"
     }
   ]
 }

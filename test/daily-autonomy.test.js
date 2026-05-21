@@ -21,7 +21,11 @@ const baseConfig = {
   requestTimeoutMs: 100,
   maxJsonBytes: 10000,
   discoveryRegistryUrls: [],
-  discoveryRegistryAllowlist: []
+  discoveryRegistryAllowlist: [],
+  dailyAutonomyTargetWeights: "proof402=4,action402=4,trust402=3,external=1",
+  dailyAutonomyExternalChance: 0,
+  dailyAutonomyExternalRegistryUrls: [],
+  dailyAutonomyExternalRegistryAllowlist: []
 };
 
 test("dailyAutonomyRun stays disabled until explicitly enabled", async () => {
@@ -59,6 +63,8 @@ test("dailyAutonomyRun executes a dry-run autonomous job with proof preview", as
   assert.equal(result.status, "executed");
   assert.equal(result.requestedMode, "dry-run");
   assert.equal(result.effectiveMode, "dry-run");
+  assert.ok(["proof402", "action402", "trust402"].includes(result.interactionProfile.effectiveKnownTarget));
+  assert.equal(result.interactionProfile.candidates.length, 1);
   assert.equal(result.paidSubcallsMade, 0);
   assert.equal(result.run.mode, "dry-run");
   assert.equal(result.run.proof.delegation.paidProofCallMade, false);
@@ -88,8 +94,101 @@ test("dailyAutonomyRun falls back to dry-run when live is requested without appr
   assert.equal(result.paidSubcallsMade, 0);
 });
 
-test("vercel cron is wired to the daily autonomy endpoint", () => {
+test("dailyAutonomyRun executes exactly one pseudo-random slot per date", async () => {
+  const config = {
+    ...baseConfig,
+    dailyAutonomyEnabled: true,
+    dailyAutonomyMode: "dry-run",
+    dailyAutonomyLiveApproved: false,
+    dailyAutonomyBudgetUsd: 0.02,
+    dailyAutonomyMaxPaidCalls: 1,
+    dailyAutonomyIncludeProofPreview: true,
+    dailyAutonomyProof402Mode: "preview"
+  };
+  const morning = await dailyAutonomyRun({ slot: "morning" }, {
+    cronAuthorized: true,
+    now: "2026-05-21T00:00:00.000Z",
+    config
+  });
+  const evening = await dailyAutonomyRun({ slot: "evening" }, {
+    cronAuthorized: true,
+    now: "2026-05-21T00:00:00.000Z",
+    config
+  });
+
+  assert.deepEqual(new Set([morning.status, evening.status]), new Set(["executed", "skipped"]));
+  const executed = [morning, evening].find((result) => result.status === "executed");
+  const skipped = [morning, evening].find((result) => result.status === "skipped");
+  assert.equal(executed.randomSchedule.selectedSlot, skipped.randomSchedule.selectedSlot);
+  assert.equal(skipped.paidSubcallsMade, 0);
+});
+
+test("dailyAutonomyRun can focus Action402 as a known ecosystem agent", async () => {
+  const result = await dailyAutonomyRun({}, {
+    cronAuthorized: true,
+    now: "2026-05-21T00:00:00.000Z",
+    config: {
+      ...baseConfig,
+      dailyAutonomyEnabled: true,
+      dailyAutonomyMode: "dry-run",
+      dailyAutonomyLiveApproved: false,
+      dailyAutonomyBudgetUsd: 0.02,
+      dailyAutonomyMaxPaidCalls: 1,
+      dailyAutonomyIncludeProofPreview: true,
+      dailyAutonomyProof402Mode: "preview",
+      dailyAutonomyTargetWeights: "action402=1",
+      dailyAutonomyExternalChance: 0
+    }
+  });
+
+  assert.equal(result.interactionProfile.primaryTarget, "action402");
+  assert.equal(result.interactionProfile.candidates[0].id, "action402.execute_webhook");
+  assert.equal(result.run.quote.quote.selectedResources[0].id, "action402.execute_webhook");
+});
+
+test("dailyAutonomyRun can include external registry discovery only through allowlisted config", async () => {
+  const result = await dailyAutonomyRun({}, {
+    cronAuthorized: true,
+    now: "2026-05-21T00:00:00.000Z",
+    config: {
+      ...baseConfig,
+      dailyAutonomyEnabled: true,
+      dailyAutonomyMode: "dry-run",
+      dailyAutonomyLiveApproved: false,
+      dailyAutonomyBudgetUsd: 0.02,
+      dailyAutonomyMaxPaidCalls: 1,
+      dailyAutonomyIncludeProofPreview: true,
+      dailyAutonomyProof402Mode: "preview",
+      dailyAutonomyTargetWeights: "external=1",
+      dailyAutonomyExternalChance: 1,
+      dailyAutonomyExternalRegistryUrls: ["https://registry.example/resources.json"],
+      dailyAutonomyExternalRegistryAllowlist: ["https://registry.example"]
+    },
+    fetchImpl: async () => new Response(JSON.stringify({
+      paidLaunchResources: [{
+        id: "external-agent",
+        path: "/api/paid",
+        method: "POST",
+        priceUsd: 0.01,
+        description: "External allowlisted x402 agent resource for occasional daily discovery.",
+        payTo: "0x1111111111111111111111111111111111111111"
+      }]
+    }), {
+      status: 200,
+      headers: { "content-type": "application/json" }
+    })
+  });
+
+  assert.equal(result.interactionProfile.primaryTarget, "external");
+  assert.equal(result.interactionProfile.externalSelected, true);
+  assert.equal(result.interactionProfile.externalRegistryConfigured, true);
+  assert.equal(result.run.discovery.summary.fetchedRegistryCandidates, 1);
+});
+
+test("vercel cron is wired to two pseudo-random daily autonomy slots", () => {
   const vercel = JSON.parse(readFileSync(new URL("../vercel.json", import.meta.url), "utf8"));
-  assert.ok(vercel.crons.some((cron) => cron.path === "/api/cron/daily-autonomous"));
+  assert.ok(vercel.crons.some((cron) => cron.path === "/api/cron/daily-autonomous/morning"));
+  assert.ok(vercel.crons.some((cron) => cron.path === "/api/cron/daily-autonomous/evening"));
   assert.ok(vercel.crons.some((cron) => cron.schedule === "10 1 * * *"));
+  assert.ok(vercel.crons.some((cron) => cron.schedule === "47 13 * * *"));
 });

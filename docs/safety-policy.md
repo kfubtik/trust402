@@ -46,9 +46,18 @@ In dry-run mode Trust402 must not:
 Trust402 may take initiative on a schedule, but the schedule is not allowed to
 silently bypass spend policy.
 
-The production cron endpoint is `GET /api/cron/daily-autonomous`. It must be
-called with `Authorization: Bearer $CRON_SECRET`. The Vercel schedule is
-`10 1 * * *`, which is 01:10 UTC / 08:10 Asia/Krasnoyarsk once per day.
+The production cron endpoints are:
+
+- `GET /api/cron/daily-autonomous/morning` at `10 1 * * *`
+  (01:10 UTC / 08:10 Asia/Krasnoyarsk);
+- `GET /api/cron/daily-autonomous/evening` at `47 13 * * *`
+  (13:47 UTC / 20:47 Asia/Krasnoyarsk).
+
+Both must be called with `Authorization: Bearer $CRON_SECRET`. Trust402 picks
+one slot per date with deterministic pseudo-random jitter and skips the other
+slot. This gives daily randomized timing within the Vercel Hobby limit of two
+daily cron jobs. For arbitrary minute-level randomness, use an external
+scheduler or Vercel Pro hourly cron.
 
 Default daily autonomy is dry-run:
 
@@ -57,6 +66,18 @@ Default daily autonomy is dry-run:
 - `TRUST402_DAILY_AUTONOMY_BUDGET_USD=0.02`;
 - `TRUST402_DAILY_AUTONOMY_MAX_PAID_CALLS=1`;
 - `TRUST402_DAILY_AUTONOMY_PROOF402_MODE=preview`.
+- `TRUST402_DAILY_AUTONOMY_TARGET_WEIGHTS=proof402=4,action402=4,trust402=3,external=1`.
+
+Daily target selection prioritizes known internal ecosystem agents:
+
+- Proof402 notarization;
+- Action402 bounded webhook/API execution;
+- Trust402 comparison and diligence;
+- external registries only at a low configured weight/chance.
+
+External agents are only discovered from
+`TRUST402_DAILY_AUTONOMY_EXTERNAL_REGISTRY_URLS`, and those origins must also be
+listed in `TRUST402_DAILY_AUTONOMY_EXTERNAL_REGISTRY_ALLOWLIST`.
 
 Daily live interaction with other agents additionally requires:
 

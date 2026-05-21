@@ -248,13 +248,14 @@ export async function handleTrust402Request(req, res) {
       return sendJson(res, 200, await discoverResourceCandidates());
     }
 
-    if (req.method === "GET" && path === "/api/cron/daily-autonomous") {
+    const dailyAutonomousCron = path.match(/^\/api\/cron\/daily-autonomous(?:\/([a-z0-9-]+))?$/);
+    if (req.method === "GET" && dailyAutonomousCron) {
       if (!isCronAuthorized(req)) {
         throw new ApiError(401, "cron_not_authorized", "Daily autonomy cron requires Authorization: Bearer CRON_SECRET.", {
           cronSecretConfigured: config.cronSecretConfigured
         });
       }
-      return sendJson(res, 200, await dailyAutonomyRun({}, { cronAuthorized: true }));
+      return sendJson(res, 200, await dailyAutonomyRun({ slot: dailyAutonomousCron[1] || null }, { cronAuthorized: true }));
     }
 
     if (req.method === "GET" && path === "/openapi.json") {
