@@ -144,8 +144,11 @@ Current release tracks:
 - Git-backed Vercel deploys are verified for the public repo;
 - CDP Bazaar is verified `10/10`, and x402scan visibly lists Trust402;
 - AgentCash auto-refill is configured as `manual-action`;
-- live procurement and paid Proof402 delegation passed a bounded production
-  evidence smoke and returned to locked defaults;
+- live procurement and paid Proof402 delegation passed bounded production
+  evidence smoke;
+- daily autonomy is enabled in production through Vercel Cron with one paid
+  call max, strict caps, and payment restricted to the Proof402, Action402, and
+  Trust402 allowed origins;
 - public release cleanup is complete for the first public launch.
 
 ## Launch Positioning

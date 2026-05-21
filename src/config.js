@@ -5,7 +5,7 @@ loadDotEnv();
 
 export const config = {
   serviceName: process.env.TRUST402_SERVICE_NAME || "Trust402",
-  version: process.env.npm_package_version || "0.1.0",
+  version: process.env.npm_package_version || "0.1.1",
   host: process.env.HOST || "127.0.0.1",
   port: Number.parseInt(process.env.PORT || "4032", 10),
   publicBaseUrl: process.env.PUBLIC_BASE_URL || vercelPublicBaseUrl() || "http://127.0.0.1:4032",

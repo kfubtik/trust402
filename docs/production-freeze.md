@@ -2,7 +2,22 @@
 
 Freeze date: 2026-05-21
 
-This document pins the first completed Trust402 production state before public-release cleanup.
+This document pins completed Trust402 production states around public-release
+cleanup and the first scheduled autonomy window.
+
+## Current Production State
+
+- Production URL: `https://trust402.aztecbeacon.uk`
+- Current release line: `v0.1.1`
+- Runtime commit observed in production: `c2a6a84c0e2b1c783fc93619462487242abd4256`
+- Completion audit: `goalComplete=true`
+- Requirements: `10/10 verified`
+- Daily autonomy: enabled through Vercel Cron
+- Daily autonomy mode: `live`
+- Daily autonomy payment policy: one paid call max, allowlisted origins only,
+  per-call cap `$0.005`, per-job cap `$0.02`, daily cap `$0.05`
+- GitHub random scheduler: present but intentionally not activated unless the
+  operator chooses to add `TRUST402_CRON_SECRET` in GitHub Secrets.
 
 ## Frozen Production State
 
@@ -29,7 +44,8 @@ Checked at: `2026-05-21T06:45:15.302Z`
 
 ## Release Guardrail
 
-Until public-release cleanup is complete, avoid risky product changes. New work should be limited to:
+Public-release cleanup is complete. Future changes should still respect the
+same release discipline. New work should be limited to:
 
 - public cleanup and secret-scrub checks;
 - resolving untracked release-scope files;

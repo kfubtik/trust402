@@ -220,7 +220,8 @@ no payment headers, no wallet mutation, no private payload.
 Dry-run helper that simulates controlled procurement execution and returns an
 audit bundle without making paid subcalls.
 
-Price: free while live spend is disabled.
+Price: free. In production, the same endpoint can execute live only inside an
+approved operator or cron policy window with caps, allowlists, and receipts.
 
 Reason: buyers need to see exactly what would happen before trusting live
 procurement.
@@ -240,7 +241,8 @@ or the trusted seed registry before quote generation. In live mode it uses the
 same spend policy, operator authorization, allowlist, denylist, caps, and
 receipt rules as controlled procurement.
 
-Price: free while live spend is disabled.
+Price: free. In production, the same workflow can execute live only inside an
+approved operator or cron policy window with caps, allowlists, and receipts.
 
 Reason: this is the top-level buyer-agent workflow. It must be inspectable and
 dry-run-first before it can safely buy downstream resources.

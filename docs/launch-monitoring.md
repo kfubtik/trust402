@@ -74,7 +74,7 @@ public directory pages.
 ## Current Custom-Domain Baseline
 
 Last checked on 2026-05-21 after the repository was made public and production
-was serving commit `d3ae50591323005867f955d7d4331a97757bb387` with:
+was serving commit `c2a6a84c0e2b1c783fc93619462487242abd4256` with:
 
 ```powershell
 npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --limit=20 --concurrency=8
@@ -101,8 +101,11 @@ cdpBazaar.status = all-indexed
 cdpBazaar.routeSummary.expected = 10
 cdpBazaar.routeSummary.indexed = 10
 cdpBazaar.routeSummary.missing = []
-externalDirectories.status = not-visible-yet
-externalDirectories.visible = 0
+externalDirectories.status = visible
+externalDirectories.visible = 1
+dailyAutonomy.status = enabled
+dailyAutonomy.mode = live
+dailyAutonomy.scheduler = Vercel Cron two-slot pseudo-random selection
 externalDirectories.checked = 13
 ```
 

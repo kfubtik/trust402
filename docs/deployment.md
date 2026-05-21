@@ -103,6 +103,10 @@ window, when a non-zero exit should block the smoke.
   `TRUST402_DAILY_AUTONOMY_LIVE_APPROVED=true`, and the normal `LIVE_*` policy
   gates. The default target weights prefer known ecosystem agents:
   `proof402=4,action402=4,trust402=3,external=1`.
+  Current production uses an approved daily live window with one paid call max,
+  `LIVE_MAX_PER_CALL_USD=0.005`, `LIVE_MAX_PER_JOB_USD=0.02`,
+  `LIVE_DAILY_LIMIT_USD=0.05`, and three allowed paid origins:
+  Proof402, Action402, and Trust402.
 - The optional GitHub Actions workflow `.github/workflows/random-daily-autonomy.yml`
   provides a stronger random wake pattern: it runs hourly, chooses one random
   UTC hour per date, sleeps a random offset inside that hour, and then calls

@@ -12,6 +12,7 @@ the pre-public safety checks passed.
 - Keep the public repository history intact unless the operator explicitly
   approves a later history rewrite.
 - Treat `d3ae505` as the first public launch baseline.
+- Treat `c2a6a84` as the first public post-launch daily-autonomy baseline.
 - Preserve detailed live-spend evidence privately; publish only public-safe
   hashes, directory links, and high-level verification status unless the
   operator chooses an evidence-first release.
@@ -22,13 +23,16 @@ the pre-public safety checks passed.
 - Visibility: `public`
 - Public branch check: unauthenticated `git ls-remote` sees `main`
 - Launch baseline commit: `d3ae50591323005867f955d7d4331a97757bb387`
+- Daily-autonomy baseline commit: `c2a6a84c0e2b1c783fc93619462487242abd4256`
 - Production URL: `https://trust402.aztecbeacon.uk`
-- Production runtime commit observed: `d3ae50591323005867f955d7d4331a97757bb387`
+- Production runtime commit observed: `c2a6a84c0e2b1c783fc93619462487242abd4256`
 - Production smoke: passed
 - Unpaid x402 smoke: passed
 - CDP Bazaar: `10/10 all-indexed`
 - External directory: x402scan visible at
   `https://www.x402scan.com/server/239600ba-27ae-44f1-92b0-8ea1c8fb8a14`
+- Daily live autonomy: enabled through Vercel Cron with allowlisted paid origins
+  and strict caps.
 
 ## Cleanup Audit Snapshot
 

@@ -20,8 +20,10 @@ resources, and x402scan visibly lists Trust402. The GitHub repository is public
 at `https://github.com/kfubtik/trust402`.
 
 Trust402's own live procurement and paid Proof402 delegation are implemented
-behind spend-policy gates and remain locked by default. Production can run a
-guarded real x402 Express middleware bridge for paid launch resources.
+behind spend-policy gates. Production now runs an operator-approved daily
+autonomy window that may spend only against allowlisted origins, with strict
+per-call, per-job, and daily caps. Production can also run a guarded real x402
+Express middleware bridge for paid launch resources.
 
 Implemented:
 
@@ -42,15 +44,18 @@ Implemented:
 - real x402 settlement readiness endpoint and unpaid challenge smoke script;
 - paid settlement smoke preflight endpoint and script;
 - operator-gated payment bridge dry-run preflight plus live evidence runner enforcement;
+- scheduled daily autonomy through Vercel Cron, with pseudo-random target
+  selection and allowlisted live procurement;
 - x402 SDK adapter/check plus an Express middleware bridge for future live settlement;
 - optional mock 402 paywall for local payment-flow testing;
 - tests and smoke script.
 
-Locked by default:
+Still locked outside approved policy windows:
 
-- live paid subcalls to other agents;
-- autonomous hot-wallet execution;
-- paid Proof402 receipt delegation.
+- arbitrary live paid subcalls to unknown agents;
+- random external paid calls outside `LIVE_ALLOWED_REGISTRIES`;
+- paid Proof402 receipt delegation outside the configured proof cap;
+- AgentCash refill execution beyond the approved manual-action policy.
 
 Those paths require explicit operator-approved spend windows, allowlists,
 receipts, and caps before any wallet mutation.
@@ -584,9 +589,10 @@ Trust402 is allowed to reason about spending before it is allowed to spend.
 
 MVP guarantees:
 
-- live spend is disabled;
-- no private keys are required;
-- no paid subcalls are made;
+- live spend is policy-gated and capped in production;
+- private keys and wallet secrets are never stored in tracked files;
+- paid subcalls can be made only from approved live windows, with allowlists,
+  caps, receipts, and operator/cron authorization;
 - `/api/procurement/execute` is dry-run by default and cannot enter live mode
   unless operator authorization, caps, allowlists, and a real payment adapter
   are all configured;
