@@ -12,7 +12,7 @@ test("agentcashDirectSmokeWindow status is read-only and reports a closed window
   const cwd = makePolicyWorkspace();
   try {
     const before = readPolicy(cwd);
-    const result = agentcashDirectSmokeWindow({ mode: "status" }, { cwd });
+    const result = agentcashDirectSmokeWindow({ mode: "status" }, { cwd, config: testConfig() });
     const after = readPolicy(cwd);
 
     assert.equal(result.status, "closed");
@@ -28,7 +28,7 @@ test("agentcashDirectSmokeWindow refuses to open without exact approval", () => 
   const cwd = makePolicyWorkspace();
   try {
     assert.throws(
-      () => agentcashDirectSmokeWindow({ mode: "open", approval: "yes" }, { cwd }),
+      () => agentcashDirectSmokeWindow({ mode: "open", approval: "yes" }, { cwd, config: testConfig() }),
       { code: "agentcash_direct_smoke_window_blocked" }
     );
     assert.equal(existsSync(join(cwd, ".local", "trust402-agentcash-direct-smoke-window.json")), false);
@@ -45,7 +45,7 @@ test("agentcashDirectSmokeWindow opens and closes a bounded local policy window"
     const open = agentcashDirectSmokeWindow({
       mode: "open",
       approval: approvalText
-    }, { cwd });
+    }, { cwd, config: testConfig() });
     const staged = readPolicy(cwd);
     const statePath = join(cwd, ".local", "trust402-agentcash-direct-smoke-window.json");
 
@@ -59,7 +59,7 @@ test("agentcashDirectSmokeWindow opens and closes a bounded local policy window"
     assert.match(open.openedWindow.paidFetchInputHash, /^sha256:[a-f0-9]{64}$/);
     assert.equal(JSON.stringify(open).includes(original.wallet.address), false);
 
-    const close = agentcashDirectSmokeWindow({ mode: "close" }, { cwd });
+    const close = agentcashDirectSmokeWindow({ mode: "close" }, { cwd, config: testConfig() });
     const restored = readPolicy(cwd);
 
     assert.equal(close.status, "closed");
@@ -74,10 +74,10 @@ test("agentcashDirectSmokeWindow opens and closes a bounded local policy window"
 test("agentcashDirectSmokeWindow blocks a second open until the first is closed", () => {
   const cwd = makePolicyWorkspace();
   try {
-    agentcashDirectSmokeWindow({ mode: "open", approval: approvalText }, { cwd });
+    agentcashDirectSmokeWindow({ mode: "open", approval: approvalText }, { cwd, config: testConfig() });
 
     assert.throws(
-      () => agentcashDirectSmokeWindow({ mode: "open", approval: approvalText }, { cwd }),
+      () => agentcashDirectSmokeWindow({ mode: "open", approval: approvalText }, { cwd, config: testConfig() }),
       { code: "agentcash_direct_smoke_window_blocked" }
     );
   } finally {
@@ -94,6 +94,14 @@ function makePolicyWorkspace() {
 
 function readPolicy(cwd) {
   return JSON.parse(readFileSync(join(cwd, ".local", "trust402-agentcash-wallet.json"), "utf8"));
+}
+
+function testConfig() {
+  return {
+    publicBaseUrl: "https://trust402.vercel.app",
+    proof402BaseUrl: "https://proof402.vercel.app",
+    livePaymentProvider: "disabled"
+  };
 }
 
 function basePolicy(cwd) {
