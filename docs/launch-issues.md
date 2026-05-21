@@ -112,21 +112,20 @@ The full final Definition of Done is pinned in
   (`0x59c54d9d89a27587d686524f7ce2814154700dd5c4745c1018b6c249ef9f8bff`).
 - External directory visibility: monitored read-only; latest check found 13
   monitored directories, 10 reachable, 0 visible, 3 unreachable, and 0
-  custom-domain-blocked as of 2026-05-20 21:43 +07:00. `x402-list.com`
+  custom-domain-blocked as of 2026-05-21 11:37 +07:00. `x402-list.com`
   submission `a6c3be52-dbd9-4d86-999e-5b497443b357` is pending and its probe
   found 10 endpoints without errors.
 - Production gates: `node --test test` (187/187),
   `node scripts/release-check.js`, `node scripts/privacy-check.js`, production
-  smoke, production x402 smoke, Docker build, AgentCash refill dry-run, and
-  external directory read-only check passed in the earlier green window. The
-  current launch monitor still needs attention for non-CDP directory visibility,
-  live procurement, paid Proof402 delegation, and autonomous live job evidence.
+  smoke, production x402 smoke, Docker build, AgentCash refill dry-run, launch
+  monitor, completion audit, and external directory read-only check passed on
+  2026-05-21. The final verifier now has all required command checks passing.
   Final verifier hash:
-  `sha256:fcfecb8933aadd88979daecd931d5ec9faf356bf4fb806d784997e17938d0c7c`.
-  Docker on this workstation requires `D:\Programs\Docker\resources\bin` in
-  `PATH` so `docker.exe` can find `docker-credential-desktop.exe`.
-  `final:verify` remains blocked because external-directory visibility, live
-  procurement, paid Proof402 delegation, AgentCash auto-refill, and autonomous
+  `sha256:f87e4f41a5fd6128d4fef6a5674e0c2382214f9217be54ba69e0db51a1ea1960`.
+  Docker Desktop is installed at `D:\Programs\Docker`; if the daemon is not
+  running, start Docker Desktop and use a local `DOCKER_CONFIG` under `.tmp`.
+  `final:verify` remains blocked because external-directory visibility,
+  closed live-procurement policy, closed paid Proof402 policy, and autonomous
   live job evidence are still unresolved.
 - AgentCash MCP observation: AgentCash settings were restored to cap requests
   at `$0.01` after the route smokes. Balance was `$0.953` after the `$0.30`
@@ -145,6 +144,23 @@ The full final Definition of Done is pinned in
   `0xaC451Dd067f0f246Fe59eA4a0707f1c99F11342B` currently has `2.118725` Base
   USDC, so the funding blocker is resolved; keep live spend behind a bounded
   staged window and current policy caps.
+- Trust402 production `cdp-x402` live evidence smoke succeeded on 2026-05-21 at
+  11:30 +07:00 inside the approved `$0.015` total spend cap. Opening
+  deployment:
+  `https://trust402-qj5v444zu-sergo565456-2815s-projects.vercel.app`.
+  Closing deployment:
+  `https://trust402-lj806gplc-sergo565456-2815s-projects.vercel.app`.
+  Smoke evidence hash:
+  `sha256:ccf853d3307b4e57bd0628d077b2d820953b042a1f3f5161d8c690da89c34d31`.
+  Live procurement and paid Proof402 evidence ref:
+  `sha256:3cd0cc03075c8e4a223e63af59a424d6af7b91a459df5bb32cf02ed051af274d`.
+  AgentCash refill decision evidence ref:
+  `sha256:6b97ce7e38c793d19af3880683cef074f9d215e5c0675546c1289f17b633c12c`.
+  The window was closed immediately after evidence env refs were recorded:
+  `LIVE_SPEND_ENABLED=false`, `PROOF402_DELEGATION_MODE=disabled`, and the
+  operator key was rotated. Use `/api/policies/spend`, not `/health`, to verify
+  a temporary live window; `/health` intentionally reports
+  `liveSpendEnabled=false`.
 - Trust402 live procurement responses now include a public-safe
   `trust402.procurement_audit.v1` `auditBundle` alongside `receiptBundle`.
   Downstream endpoint URLs are represented with origins and hashes, and any
@@ -183,8 +199,8 @@ The full final Definition of Done is pinned in
   and AgentCash `maxAmount` was restored to `$0.01`. This proves an
   out-of-band paid Proof402 smoke; it does not prove Trust402's production
   payment adapter until `LIVE_PAYMENT_ADAPTER_URL` or `cdp-x402` is configured.
-- Trust402 live procurement: disabled.
-- Paid Proof402 delegation: disabled.
+- Trust402 live procurement: disabled after the 2026-05-21 bounded smoke.
+- Paid Proof402 delegation: disabled after the 2026-05-21 bounded smoke.
 - AgentCash auto-refill policy: approved and enabled in production with
   provider `manual-action`, threshold `$0.50`, refill amount `$1.00`, and daily
   cap `$2.00`. Current-balance dry-run decision at `$0.948` produced

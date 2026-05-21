@@ -400,6 +400,13 @@ values that can be reviewed before adding them to production.
 For the Proof402 candidate, the downstream procurement request contains only a
 generated `contentHash`, `label`, `idempotencyKey`, and public-safe metadata.
 
+When verifying whether a temporary production live window is open, check
+`/api/policies/spend` for `liveProcurementReady`,
+`proof402DelegationReady`, provider, allowlist, and caps. Do not use `/health`
+as the open-window gate: `/health` intentionally reports
+`liveSpendEnabled=false` even during an approved temporary window so public
+health checks do not advertise spend availability.
+
 Before the live window, verify the exact approved proof candidate in read-only
 mode:
 
