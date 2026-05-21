@@ -35,22 +35,24 @@ and AgentCash auto-refill remain disabled until separately approved.
 
 ## Current External Directory Visibility
 
-Last checked on 2026-05-21 at 11:37 +07:00 with:
+Last checked on 2026-05-21 at 12:33 +07:00 with:
 
 ```powershell
-npm run directories:check -- https://trust402.aztecbeacon.uk --timeout-ms=10000
+npm run directories:check -- https://trust402.aztecbeacon.uk --timeout-ms=15000 --concurrency=4 --x402scan-origin-id=239600ba-27ae-44f1-92b0-8ea1c8fb8a14
 ```
 
 Result:
 
 ```text
-status = not-visible-yet
+status = visible-in-some-directories
 checked = 13
-reachable = 10
-visible = 0
+reachable = 11
+visible = 1
 notVisibleYet = 10
-unreachable = 3
+unreachable = 2
 customDomainBlocked = 0
+visible_directory = x402scan
+evidence_url = https://www.x402scan.com/server/239600ba-27ae-44f1-92b0-8ea1c8fb8a14
 ```
 
 x402 List API submission was sent on 2026-05-20 at 21:33 +07:00 with public
@@ -77,8 +79,8 @@ Interpretation:
 - the custom-domain blocker is removed for monitored directories;
 - CDP Bazaar remains the authoritative x402 discovery signal, and exact
   resources for the custom-domain origin are currently verified `10/10`;
-- the requested custom-domain external-directory attempt has been completed;
-  no monitored non-CDP directory visibly lists Trust402 yet;
+- x402scan now visibly lists Trust402 on a public server page and its public
+  registration API reports all 10 paid launch routes as registered;
 - x402 List has a pending review submission that successfully probed 10
   endpoints, and the directory currently blocks another submission from
   `kfubtik00@gmail.com` until its 7-day review window expires; this does not
@@ -99,6 +101,12 @@ Run the read-only directory visibility monitor:
 
 ```powershell
 npm run directories:check -- https://trust402.aztecbeacon.uk --timeout-ms=10000
+```
+
+Pass the x402scan origin id when verifying the current visible listing:
+
+```powershell
+npm run directories:check -- https://trust402.aztecbeacon.uk --timeout-ms=15000 --concurrency=4 --x402scan-origin-id=239600ba-27ae-44f1-92b0-8ea1c8fb8a14
 ```
 
 Use `--strict` only for a gate that should fail until at least one external

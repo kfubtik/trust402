@@ -5,6 +5,7 @@ const baseUrl = (process.argv.find((arg) => /^https?:\/\//.test(arg)) || config.
 const strict = process.argv.includes("--strict");
 const timeoutMs = numberArg("--timeout-ms", 10_000);
 const concurrency = numberArg("--concurrency", 6);
+const x402scanOriginId = valueArg("--x402scan-origin-id") || process.env.TRUST402_X402SCAN_ORIGIN_ID || "";
 const host = safeHost(baseUrl);
 const hostRequiresCustomDomain = isFreeHostingHost(host);
 const terms = Array.from(new Set([
@@ -20,6 +21,16 @@ const directories = EXTERNAL_DIRECTORY_TARGETS.map((target) => ({
   status: target.mode,
   urls: monitorUrlsFor(target, host)
 }));
+
+if (x402scanOriginId) {
+  const x402scan = directories.find((target) => target.id === "x402scan");
+  if (x402scan) {
+    x402scan.urls = [
+      `https://www.x402scan.com/server/${encodeURIComponent(x402scanOriginId)}`,
+      ...x402scan.urls
+    ];
+  }
+}
 
 async function main() {
   const results = await mapWithConcurrency(directories, concurrency, checkDirectory);
@@ -156,6 +167,12 @@ function numberArg(name, fallback) {
   if (!match) return fallback;
   const value = Number.parseInt(match.slice(prefix.length), 10);
   return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+function valueArg(name) {
+  const prefix = `${name}=`;
+  const match = process.argv.find((arg) => arg.startsWith(prefix));
+  return match ? match.slice(prefix.length).trim() : "";
 }
 
 async function mapWithConcurrency(items, limit, mapper) {

@@ -16,7 +16,7 @@ The full final Definition of Done is pinned in
 | Issue | Track | Why it matters | Safe next step |
 | --- | --- | --- | --- |
 | [#5](https://github.com/kfubtik/trust402/issues/5) | Vercel Git auto-deploy | Production deploys through the Vercel GitHub App from `kfubtik/trust402` pushes. | Keep the production deploy evidence current after each release. |
-| [#6](https://github.com/kfubtik/trust402/issues/6) | External x402 directories | The custom domain is attached. CDP Bazaar exact resource URLs are verified `10/10`; x402 List submission `a6c3be52-dbd9-4d86-999e-5b497443b357` is pending and probed 10 endpoints. Non-CDP directories do not visibly list Trust402 yet. | Keep monitoring x402 List and record a visible public listing URL before closing. |
+| [#6](https://github.com/kfubtik/trust402/issues/6) | External x402 directories | The custom domain is attached. CDP Bazaar exact resource URLs are verified `10/10`; x402scan visibly lists Trust402; x402 List submission `a6c3be52-dbd9-4d86-999e-5b497443b357` remains pending. | Record the x402scan production evidence env and keep monitoring x402 List as a secondary directory. |
 | [#7](https://github.com/kfubtik/trust402/issues/7) | AgentCash auto-refill policy | The Trust402-reserved AgentCash wallet is funded, dry-run refill checks exist, and production policy uses `manual-action` provider so no runtime refill credentials are held. | Keep threshold/cap evidence current; use a separate approved adapter only if live automatic refill is later required. |
 | [#8](https://github.com/kfubtik/trust402/issues/8) | Live procurement policy | Trust402 can plan and quote, but should not autonomously buy downstream resources without spend controls. | Approve allowlists, per-call/job/day caps, receipt storage, and approval thresholds. |
 | [#9](https://github.com/kfubtik/trust402/issues/9) | Paid Proof402 delegation policy | Trust402 can prepare Proof402-ready hashes, but paid delegation is intentionally disabled. | Approve which hashes can be notarized, proof spend caps, retry policy, and receipt fields. |
@@ -110,11 +110,17 @@ The full final Definition of Done is pinned in
   (`0x6c828f10e7aac7e20db8001eab8557451a086b95350292c4219f5330e53dfc98`), and
   `reports.x402_diligence`
   (`0x59c54d9d89a27587d686524f7ce2814154700dd5c4745c1018b6c249ef9f8bff`).
-- External directory visibility: monitored read-only; latest check found 13
-  monitored directories, 10 reachable, 0 visible, 3 unreachable, and 0
-  custom-domain-blocked as of 2026-05-21 11:37 +07:00. `x402-list.com`
-  submission `a6c3be52-dbd9-4d86-999e-5b497443b357` is pending and its probe
-  found 10 endpoints without errors.
+- External directory visibility: Trust402 was registered on x402scan on
+  2026-05-21 at 12:30 +07:00. Public evidence page:
+  `https://www.x402scan.com/server/239600ba-27ae-44f1-92b0-8ea1c8fb8a14`.
+  The page title is `Trust402 | x402scan`, includes
+  `trust402.aztecbeacon.uk`, and the x402scan public `checkRegistered` API
+  reports all 10 paid launch routes registered. Latest read-only directory
+  check with `--x402scan-origin-id=239600ba-27ae-44f1-92b0-8ea1c8fb8a14`
+  found 13 monitored directories, 11 reachable, 1 visible, 2 unreachable, and
+  0 custom-domain-blocked. `x402-list.com` submission
+  `a6c3be52-dbd9-4d86-999e-5b497443b357` is still pending and its probe found
+  10 endpoints without errors.
 - A repeated `x402-list.com` API submission attempt on 2026-05-21 at 12:01
   +07:00 was rejected by the directory's 7-day review throttle for
   `kfubtik00@gmail.com`; continue monitoring the existing pending submission
