@@ -91,7 +91,7 @@ async function checkProductionApi() {
   if (!spendPolicy.ok) failures.push("/api/policies/spend failed");
   if (!isAllowedSpendReadiness(spendPolicy.body)) {
     failures.push(
-      "/api/policies/spend may only expose live spend readiness for approved manual-action AgentCash auto-refill while buyer spend remains gated"
+      "/api/policies/spend may only expose live spend readiness through controlled buyer spend or approved manual-action AgentCash auto-refill"
     );
   }
   if (spendPolicy.body?.emergencyStop === true) failures.push("/api/policies/spend emergencyStop is active");
@@ -136,6 +136,7 @@ async function checkProductionApi() {
 function isAllowedSpendReadiness(spendPolicy) {
   const readiness = spendPolicy?.readiness || {};
   if (readiness.anyLiveSpendReady === false) return true;
+  if (isControlledBuyerSpendReadiness(spendPolicy)) return true;
   const autoRefill = spendPolicy?.policies?.agentcashAutoRefill;
   return (
     readiness.anyLiveSpendReady === true &&
@@ -144,6 +145,33 @@ function isAllowedSpendReadiness(spendPolicy) {
     readiness.agentcashAutoRefillReady === true &&
     autoRefill?.ready === true &&
     autoRefill?.controls?.provider === "manual-action"
+  );
+}
+
+function isControlledBuyerSpendReadiness(spendPolicy) {
+  const readiness = spendPolicy?.readiness || {};
+  const live = spendPolicy?.policies?.liveProcurement;
+  const proof = spendPolicy?.policies?.proof402Delegation;
+  const liveControls = live?.controls || {};
+  const proofControls = proof?.controls || {};
+  return (
+    spendPolicy?.emergencyStop === false &&
+    readiness.anyLiveSpendReady === true &&
+    readiness.liveProcurementReady === true &&
+    readiness.proof402DelegationReady === true &&
+    live?.ready === true &&
+    proof?.ready === true &&
+    liveControls.operatorApiKeyConfigured === true &&
+    proofControls.operatorApiKeyConfigured === true &&
+    liveControls.allowedRegistriesCount > 0 &&
+    liveControls.maxPerCallUsd > 0 &&
+    liveControls.maxPerJobUsd >= liveControls.maxPerCallUsd &&
+    liveControls.dailyLimitUsd >= liveControls.maxPerJobUsd &&
+    liveControls.dailyRemainingUsd >= 0 &&
+    proofControls.maxSpendUsd > 0 &&
+    proofControls.proof402BaseUrlConfigured === true &&
+    liveControls.paymentAdapter?.ready === true &&
+    proofControls.paymentAdapter?.ready === true
   );
 }
 

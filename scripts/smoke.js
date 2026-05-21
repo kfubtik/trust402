@@ -112,6 +112,15 @@ async function main() {
   if (isLocalBase) {
     assert(spendPolicy.readiness?.anyLiveSpendReady === false, "/api/policies/spend must not make live spend ready by local default");
     assert(autoRefill?.ready === false, "/api/policies/spend must keep auto-refill gated by local default");
+  } else if (isControlledLiveSpendPolicy(spendPolicy)) {
+    assert(
+      spendPolicy.policies?.liveProcurement?.controls?.paymentAdapter?.ready === true,
+      "/api/policies/spend live procurement must expose a ready payment adapter"
+    );
+    assert(
+      spendPolicy.policies?.proof402Delegation?.controls?.paymentAdapter?.ready === true,
+      "/api/policies/spend Proof402 delegation must expose a ready payment adapter"
+    );
   } else if (autoRefill?.ready === true) {
     assert(autoRefill.controls?.provider === "manual-action", "/api/policies/spend may only expose ready auto-refill through manual-action");
     assert(spendPolicy.readiness?.liveProcurementReady === false, "/api/policies/spend must keep live procurement gated during manual auto-refill");
@@ -577,6 +586,28 @@ function assert(condition, message) {
   if (!condition) {
     throw new Error(message);
   }
+}
+
+function isControlledLiveSpendPolicy(spendPolicy) {
+  const readiness = spendPolicy?.readiness || {};
+  const live = spendPolicy?.policies?.liveProcurement;
+  const proof = spendPolicy?.policies?.proof402Delegation;
+  const liveControls = live?.controls || {};
+  const proofControls = proof?.controls || {};
+  return spendPolicy?.emergencyStop === false &&
+    readiness.liveProcurementReady === true &&
+    readiness.proof402DelegationReady === true &&
+    live?.ready === true &&
+    proof?.ready === true &&
+    liveControls.operatorApiKeyConfigured === true &&
+    proofControls.operatorApiKeyConfigured === true &&
+    liveControls.allowedRegistriesCount > 0 &&
+    liveControls.maxPerCallUsd > 0 &&
+    liveControls.maxPerJobUsd >= liveControls.maxPerCallUsd &&
+    liveControls.dailyLimitUsd >= liveControls.maxPerJobUsd &&
+    liveControls.dailyRemainingUsd >= 0 &&
+    proofControls.maxSpendUsd > 0 &&
+    proofControls.proof402BaseUrlConfigured === true;
 }
 
 main().catch((error) => {

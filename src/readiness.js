@@ -1,5 +1,6 @@
 import { loadCatalog } from "./catalog.js";
 import { config } from "./config.js";
+import { spendPolicyStatus } from "./policies.js";
 import { settlementStatus } from "./settlement.js";
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
@@ -11,6 +12,8 @@ export function launchChecklist(runtimeConfig = config) {
   const laterResources = catalog.laterResourcesToPreserve || [];
   const publicBase = parseUrl(runtimeConfig.publicBaseUrl);
   const settlement = settlementStatus({ config: runtimeConfig, catalog });
+  const spendPolicy = spendPolicyStatus(runtimeConfig);
+  const controlledLiveSpend = isControlledLiveSpendReady(runtimeConfig, spendPolicy);
   const checks = [
     check({
       id: "catalog_paid_launch_resources",
@@ -45,11 +48,13 @@ export function launchChecklist(runtimeConfig = config) {
       fail: "Default mode must stay dry-run for the MVP."
     }),
     check({
-      id: "live_spend_disabled",
+      id: "live_spend_policy",
       scope: "dry-run-launch",
-      passed: isLiveSpendDisabled(runtimeConfig),
-      pass: "Live spend and Proof402 paid delegation are disabled.",
-      fail: "Live spend settings must be disabled before launch."
+      passed: isLiveSpendDisabled(runtimeConfig) || controlledLiveSpend,
+      pass: runtimeConfig.liveSpendEnabled
+        ? "Live spend is enabled only through controlled caps, allowlist, operator authorization, and reviewed smoke evidence."
+        : "Live spend and Proof402 paid delegation are disabled.",
+      fail: "Live spend must be disabled or controlled by ready policies with reviewed procurement, Proof402, and autonomous-job evidence."
     }),
     check({
       id: "public_base_url_present",
@@ -132,9 +137,23 @@ export function launchChecklist(runtimeConfig = config) {
       liveSpentTodayUsd: runtimeConfig.liveSpentTodayUsd,
       liveAllowedRegistriesCount: runtimeConfig.liveAllowedRegistries.length,
       proof402DelegationMode: runtimeConfig.proof402DelegationMode,
-      proof402MaxSpendUsd: runtimeConfig.proof402MaxSpendUsd
+      proof402MaxSpendUsd: runtimeConfig.proof402MaxSpendUsd,
+      controlledLiveSpendReady: controlledLiveSpend,
+      liveProcurementSmokeObserved: runtimeConfig.liveProcurementSmokeObserved,
+      liveProcurementEvidenceRefConfigured: Boolean(runtimeConfig.liveProcurementEvidenceRef),
+      proof402PaidSmokeObserved: runtimeConfig.proof402PaidSmokeObserved,
+      proof402EvidenceRefConfigured: Boolean(runtimeConfig.proof402EvidenceRef),
+      autonomousJobSmokeObserved: runtimeConfig.autonomousJobSmokeObserved,
+      autonomousJobEvidenceRefConfigured: Boolean(runtimeConfig.autonomousJobEvidenceRef)
     },
     settlement: settlement.readiness,
+    spendPolicy: {
+      liveProcurementReady: spendPolicy.readiness.liveProcurementReady,
+      proof402DelegationReady: spendPolicy.readiness.proof402DelegationReady,
+      agentcashAutoRefillReady: spendPolicy.readiness.agentcashAutoRefillReady,
+      anyLiveSpendReady: spendPolicy.readiness.anyLiveSpendReady,
+      emergencyStop: spendPolicy.emergencyStop
+    },
     resources: {
       free: freeResources.length,
       paidLaunch: paidLaunchResources.length,
@@ -174,6 +193,9 @@ function nextActions(failedChecks) {
   if (missing.has("successful_settlement_observed")) {
     actions.push("Run one explicit paid settlement smoke, review the receipt, then mark successful settlement observed.");
   }
+  if (missing.has("live_spend_policy")) {
+    actions.push("Keep live spend disabled, or enable it only with ready caps, allowlist, operator key, and reviewed smoke evidence.");
+  }
   if (actions.length === 0) actions.push("Run release check, Docker build, and API smoke before publishing.");
   return actions;
 }
@@ -182,6 +204,25 @@ function isLiveSpendDisabled(runtimeConfig) {
   return runtimeConfig.defaultMode === "dry-run" &&
     runtimeConfig.liveSpendEnabled === false &&
     runtimeConfig.proof402DelegationMode !== "live";
+}
+
+function isControlledLiveSpendReady(runtimeConfig, spendPolicy) {
+  return runtimeConfig.defaultMode === "dry-run" &&
+    runtimeConfig.liveSpendEnabled === true &&
+    runtimeConfig.proof402DelegationMode === "live" &&
+    spendPolicy.readiness.liveProcurementReady === true &&
+    spendPolicy.readiness.proof402DelegationReady === true &&
+    spendPolicy.emergencyStop === false &&
+    runtimeConfig.liveProcurementSmokeObserved === true &&
+    isEvidenceRef(runtimeConfig.liveProcurementEvidenceRef) &&
+    runtimeConfig.proof402PaidSmokeObserved === true &&
+    isEvidenceRef(runtimeConfig.proof402EvidenceRef) &&
+    runtimeConfig.autonomousJobSmokeObserved === true &&
+    isEvidenceRef(runtimeConfig.autonomousJobEvidenceRef);
+}
+
+function isEvidenceRef(value) {
+  return typeof value === "string" && value.trim().length > 0;
 }
 
 function isNonZeroPayTo(payTo) {
