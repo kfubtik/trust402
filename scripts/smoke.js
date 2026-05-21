@@ -3,6 +3,15 @@ const base = new URL(baseUrl);
 const isLocalBase = ["127.0.0.1", "localhost", "::1"].includes(base.hostname);
 
 async function main() {
+  const landing = await getText("/");
+  assert(landing.includes("<h1 id=\"hero-title\">Trust402</h1>"), "/ must render the Trust402 landing page");
+  assert(landing.includes("/api/policies/spend"), "/ landing page must expose spend policy");
+  assert(!/CDP_API_KEY|CDP_WALLET_SECRET|PRIVATE_KEY|PAYMENT-SIGNATURE/.test(landing), "/ landing page must not expose secret-like names or payment headers");
+
+  const rootJson = await getJson("/", { headers: { accept: "application/json" } });
+  assert(rootJson.service === "Trust402", "/ JSON root service mismatch");
+  assert(rootJson.links?.openapi === "/openapi.json", "/ JSON root must preserve machine-readable links");
+
   const health = await getJson("/health");
   assert(health.ok === true, "/health ok mismatch");
   assert(health.liveSpendEnabled === false, "/health must keep liveSpendEnabled=false");
@@ -542,8 +551,8 @@ async function main() {
   console.log(`Trust402 smoke passed for ${baseUrl}`);
 }
 
-async function getJson(path) {
-  const response = await fetch(`${baseUrl}${path}`);
+async function getJson(path, options = {}) {
+  const response = await fetch(`${baseUrl}${path}`, options);
   return parseJson(response, path);
 }
 

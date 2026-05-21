@@ -38,6 +38,11 @@ async function request(baseUrl, path, options = {}) {
 
 test("Express entrypoint serves normal demo traffic", async () => {
   await withExpressApp({ config: testConfig() }, async (baseUrl) => {
+    const landing = await request(baseUrl, "/");
+    assert.equal(landing.response.status, 200);
+    assert.match(landing.response.headers.get("content-type") || "", /text\/html/);
+    assert.match(landing.body, /Trust before you pay/);
+
     const health = await request(baseUrl, "/health");
     assert.equal(health.response.status, 200);
     assert.equal(health.body.service, "Trust402");

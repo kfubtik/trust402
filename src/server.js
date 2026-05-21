@@ -40,6 +40,7 @@ import { hashResult } from "./receipts.js";
 import { paymentChallengeFor, settlementPreflight, settlementStatus } from "./settlement.js";
 import { directorySubmissionPack } from "./directorySubmissionPack.js";
 import { directoryProfile, directoryProfileHtml } from "./directoryProfile.js";
+import { landingPageHtml, rootLinks } from "./landingPage.js";
 import { liveWindowPlan } from "./liveWindowPlan.js";
 import { operatorActionPack } from "./operatorActionPack.js";
 import { operatorReadiness } from "./operatorReadiness.js";
@@ -99,55 +100,12 @@ export async function handleTrust402Request(req, res) {
     const path = url.pathname;
 
     if (req.method === "GET" && path === "/") {
-      return sendJson(res, 200, {
-        ok: true,
-        service: config.serviceName,
-        tagline: "Trust before you pay. Proof after you buy.",
-        links: {
-          health: "/health",
-          status: "/api/status",
-          launchChecklist: "/api/launch/checklist",
-          marketplaceBundle: "/api/marketplace/bundle",
-          settlementStatus: "/api/settlement/status",
-          settlementPreflight: "/api/settlement/preflight",
-          spendPolicy: "/api/policies/spend",
-          paymentBuyerPreflight: "/api/payments/buyer-preflight",
-          paymentBridgeCheck: "/api/payments/bridge-check",
-          proof402Preflight: "/api/proof402/preflight",
-          completionPlan: "/api/completion/plan",
-          completionAudit: "/api/completion/audit",
-          deploymentPreflight: "/api/deployments/preflight",
-          githubActionsSetup: "/api/deployments/github-actions-setup",
-          domainActivationPack: "/api/domains/activation-pack",
-          domainReadinessCheck: "/api/domains/readiness-check",
-          directoryProfile: "/directory",
-          directoryProfileJson: "/directory.json",
-          apiDirectoryProfile: "/api/directories/profile",
-          directorySubmissionPack: "/api/directories/submission-pack",
-          liveWindowPlan: "/api/live/window-plan",
-          operatorUnblockReport: "/api/operator/unblock-report",
-          operatorActionPack: "/api/operator/action-pack",
-          operatorReadiness: "/api/operator/readiness",
-          agentcashRefillCheck: "/api/agentcash/refill-check",
-          agentcashMcpObservation: "/api/agentcash/mcp-observation",
-          autonomousRun: "/api/jobs/autonomous-run",
-          dailyAutonomyCron: "/api/cron/daily-autonomous",
-          registryCandidates: "/api/registries/candidates",
-          resources: "/api/resources",
-          proof402Preview: "/api/receipts/notarize-result",
-          capabilities: "/api/capabilities",
-          openapi: "/openapi.json",
-          x402WellKnown: "/.well-known/x402",
-          x402WellKnownJson: "/.well-known/x402.json",
-          agentManifest: "/.well-known/agent.json",
-          agentServices: "/.well-known/agent-services.json",
-          aiPlugin: "/.well-known/ai-plugin.json",
-          mcpManifest: "/.well-known/mcp.json",
-          llms: "/llms.txt",
-          robots: "/robots.txt",
-          sitemap: "/sitemap.xml"
-        }
-      });
+      if (prefersJson(req)) return sendJson(res, 200, rootLinks());
+      return sendText(res, 200, landingPageHtml(), "text/html; charset=utf-8");
+    }
+
+    if (req.method === "GET" && path === "/api") {
+      return sendJson(res, 200, rootLinks());
     }
 
     if (req.method === "GET" && path === "/health") {
@@ -434,6 +392,11 @@ function hasPaymentAttempt(req) {
     req.headers["x-payment"] ||
     req.headers["x-payment-payload"]
   );
+}
+
+function prefersJson(req) {
+  const accept = String(req.headers.accept || "");
+  return accept.includes("application/json") && !accept.includes("text/html");
 }
 
 async function readJson(req) {

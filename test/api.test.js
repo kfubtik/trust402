@@ -24,6 +24,23 @@ async function request(baseUrl, path, options = {}) {
 
 test("discovery endpoints expose Trust402 launch resources", async () => {
   await withServer(async (baseUrl) => {
+    const landing = await request(baseUrl, "/");
+    assert.equal(landing.response.status, 200);
+    assert.match(landing.response.headers.get("content-type") || "", /text\/html/);
+    assert.match(landing.body, /<h1[^>]*>Trust402<\/h1>/);
+    assert.match(landing.body, /x402scan Evidence/);
+    assert.match(landing.body, /\/api\/policies\/spend/);
+    assert.doesNotMatch(landing.body, /CDP_API_KEY|CDP_WALLET_SECRET|PRIVATE_KEY|PAYMENT-SIGNATURE/);
+
+    const rootJson = await request(baseUrl, "/", { headers: { accept: "application/json" } });
+    assert.equal(rootJson.response.status, 200);
+    assert.equal(rootJson.body.service, "Trust402");
+    assert.equal(rootJson.body.links.openapi, "/openapi.json");
+
+    const apiRoot = await request(baseUrl, "/api");
+    assert.equal(apiRoot.response.status, 200);
+    assert.equal(apiRoot.body.links.spendPolicy, "/api/policies/spend");
+
     const health = await request(baseUrl, "/health");
     assert.equal(health.response.status, 200);
     assert.equal(health.body.service, "Trust402");
