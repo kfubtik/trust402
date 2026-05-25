@@ -85,7 +85,7 @@ jobs:
         run: npm run launch:monitor -- https://trust402.vercel.app --timeout-ms=10000 --skip-directories --strict
 
       - name: Upload deployment evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: trust402-deployment-evidence
           path: |
