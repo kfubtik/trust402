@@ -29,6 +29,8 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.match(landing.response.headers.get("content-type") || "", /text\/html/);
     assert.match(landing.body, /<h1[^>]*>Trust402<\/h1>/);
     assert.match(landing.body, /x402scan Evidence/);
+    assert.match(landing.body, /Hire Trust402/);
+    assert.match(landing.body, /\/radar/);
     assert.match(landing.body, /\/api\/policies\/spend/);
     assert.doesNotMatch(landing.body, /CDP_API_KEY|CDP_WALLET_SECRET|PRIVATE_KEY|PAYMENT-SIGNATURE/);
 
@@ -36,6 +38,8 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(rootJson.response.status, 200);
     assert.equal(rootJson.body.service, "Trust402");
     assert.equal(rootJson.body.links.openapi, "/openapi.json");
+    assert.equal(rootJson.body.links.radar, "/radar");
+    assert.equal(rootJson.body.links.radarDigest, "/api/radar/digest");
 
     const apiRoot = await request(baseUrl, "/api");
     assert.equal(apiRoot.response.status, 200);
@@ -73,6 +77,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/registries/candidates"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/agentcash/refill-check"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/payments/bridge-check"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/radar/digest"));
     for (const path of [
       "/.well-known/x402.json",
       "/.well-known/agent.json",
@@ -81,6 +86,8 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
       "/.well-known/mcp.json",
       "/directory",
       "/directory.json",
+      "/radar",
+      "/radar.json",
       "/llms.txt",
       "/robots.txt",
       "/sitemap.xml"
@@ -203,6 +210,24 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(registryCandidatesGet.body.safety.paidSubcallsMade, 0);
     assert.ok(registryCandidatesGet.body.candidates.some((candidate) => candidate.id === "proof402.notarize"));
 
+    const radarHtml = await request(baseUrl, "/radar");
+    assert.equal(radarHtml.response.status, 200);
+    assert.match(radarHtml.body, /Trust402 Radar/);
+    assert.match(radarHtml.body, /Quick x402 Check/);
+    assert.doesNotMatch(radarHtml.body, /CDP_API_KEY|CDP_WALLET_SECRET|PRIVATE_KEY|PAYMENT-SIGNATURE/i);
+
+    const radarJson = await request(baseUrl, "/radar.json");
+    assert.equal(radarJson.response.status, 200);
+    assert.equal(radarJson.body.tool, "radar.digest");
+    assert.equal(radarJson.body.primaryOffers.length, 3);
+    assert.ok(radarJson.body.primaryOffers.some((offer) => offer.id === "trust.check_x402" && offer.priceDisplay === "$0.005"));
+    assert.equal(radarJson.body.safety.sendsPaymentHeaders, false);
+    assert.equal(radarJson.body.marketSnapshot.paidSubcallsMade, 0);
+
+    const radarApi = await request(baseUrl, "/api/radar/digest");
+    assert.equal(radarApi.response.status, 200);
+    assert.equal(radarApi.body.digestHash, radarJson.body.digestHash);
+
     const dailyCronUnauthorized = await request(baseUrl, "/api/cron/daily-autonomous");
     assert.equal(dailyCronUnauthorized.response.status, 401);
     assert.equal(dailyCronUnauthorized.body.error.code, "cron_not_authorized");
@@ -221,6 +246,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(bundle.body.listingState.cdpBazaarIndexingReady, false);
     assert.equal(bundle.body.indexing.cdpBazaar.status, "blocked");
     assert.ok(bundle.body.discovery.agentManifest.endsWith("/.well-known/agent.json"));
+    assert.ok(bundle.body.discovery.radar.endsWith("/radar"));
     assert.ok(bundle.body.discovery.llms.endsWith("/llms.txt"));
     assert.ok(bundle.body.discovery.sitemap.endsWith("/sitemap.xml"));
     assert.ok(bundle.body.resources.every((resource) => resource.bazaarExtensionDraft?.bazaar));
@@ -267,6 +293,9 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/.well-known/mcp.json"].get);
     assert.ok(openapi.body.paths["/directory"].get);
     assert.ok(openapi.body.paths["/directory.json"].get);
+    assert.ok(openapi.body.paths["/radar"].get);
+    assert.ok(openapi.body.paths["/radar.json"].get);
+    assert.ok(openapi.body.paths["/api/radar/digest"].get);
     assert.ok(openapi.body.paths["/api/directories/profile"].get);
     assert.ok(openapi.body.paths["/llms.txt"].get);
     assert.ok(openapi.body.paths["/robots.txt"].get);
@@ -337,6 +366,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(directoryHtml.response.status, 200);
     assert.match(directoryHtml.body, /<script type="application\/ld\+json">/);
     assert.match(directoryHtml.body, /Paid x402 Resources/);
+    assert.match(directoryHtml.body, /Trust402 Radar/);
     assert.doesNotMatch(directoryHtml.body, /CDP_API_KEY|CDP_WALLET_SECRET|0x1111111111111111111111111111111111111111/i);
 
     const llms = await request(baseUrl, "/llms.txt");
@@ -344,6 +374,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.match(llms.body, /# Trust402/);
     assert.match(llms.body, /Paid x402 Resources/);
     assert.match(llms.body, /Directory profile/);
+    assert.match(llms.body, /Trust402 Radar/);
 
     const robots = await request(baseUrl, "/robots.txt");
     assert.equal(robots.response.status, 200);
@@ -353,6 +384,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(sitemap.response.status, 200);
     assert.match(sitemap.body, /<urlset/);
     assert.match(sitemap.body, /\/directory/);
+    assert.match(sitemap.body, /\/radar/);
     assert.match(sitemap.body, /\/api\/trust\/score-resource/);
 
     const liveWindow = await request(baseUrl, "/api/live/window-plan", {

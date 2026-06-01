@@ -203,6 +203,7 @@ Operational launch backlog:
 ```text
 docs/launch-issues.md
 docs/autonomous-completion-plan.md
+docs/visibility-growth-plan.md
 ```
 
 ## Modes

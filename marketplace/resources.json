@@ -79,6 +79,22 @@
       "purpose": "Public-safe directory profile JSON for external listings and crawlers."
     },
     {
+      "id": "discovery.radar_page",
+      "method": "GET",
+      "path": "/radar",
+      "priceUsd": 0,
+      "status": "free-discovery",
+      "purpose": "Public Trust402 Radar page with primary paid offers, daily resource focus, policy state, and evidence links."
+    },
+    {
+      "id": "discovery.radar_digest",
+      "method": "GET",
+      "path": "/radar.json",
+      "priceUsd": 0,
+      "status": "free-discovery",
+      "purpose": "Public-safe Trust402 Radar daily digest JSON for crawlers, directories, and agent buyers."
+    },
+    {
       "id": "discovery.llms",
       "method": "GET",
       "path": "/llms.txt",
@@ -199,6 +215,14 @@
       "method": "GET",
       "path": "/api/resources",
       "purpose": "Public resource catalog."
+    },
+    {
+      "id": "radar.digest",
+      "method": "GET",
+      "path": "/api/radar/digest",
+      "priceUsd": 0,
+      "status": "free-discovery",
+      "purpose": "API alias for the public-safe Trust402 Radar daily digest JSON."
     },
     {
       "id": "receipts.hash_result",

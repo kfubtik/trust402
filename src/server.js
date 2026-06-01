@@ -45,6 +45,7 @@ import { liveWindowPlan } from "./liveWindowPlan.js";
 import { operatorActionPack } from "./operatorActionPack.js";
 import { operatorReadiness } from "./operatorReadiness.js";
 import { operatorUnblockReport } from "./operatorUnblockReport.js";
+import { radarDigest, radarPageHtml } from "./radar.js";
 import {
   checkX402,
   compareResources,
@@ -128,6 +129,14 @@ export async function handleTrust402Request(req, res) {
 
     if (req.method === "GET" && path === "/api/resources") {
       return sendJson(res, 200, publicResources());
+    }
+
+    if (req.method === "GET" && path === "/radar") {
+      return sendText(res, 200, radarPageHtml(), "text/html; charset=utf-8");
+    }
+
+    if (req.method === "GET" && (path === "/radar.json" || path === "/api/radar/digest")) {
+      return sendJson(res, 200, radarDigest());
     }
 
     if (req.method === "GET" && path === "/api/capabilities") {
@@ -346,6 +355,9 @@ function statusSummary() {
       autonomousRun: "/api/jobs/autonomous-run",
       dailyAutonomyCron: "/api/cron/daily-autonomous",
       registryCandidates: "/api/registries/candidates",
+      radar: "/radar",
+      radarJson: "/radar.json",
+      radarDigest: "/api/radar/digest",
       openapi: "/openapi.json",
       x402WellKnown: "/.well-known/x402",
       x402WellKnownJson: "/.well-known/x402.json",

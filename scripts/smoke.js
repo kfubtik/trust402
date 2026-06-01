@@ -6,11 +6,14 @@ async function main() {
   const landing = await getText("/");
   assert(landing.includes("<h1 id=\"hero-title\">Trust402</h1>"), "/ must render the Trust402 landing page");
   assert(landing.includes("/api/policies/spend"), "/ landing page must expose spend policy");
+  assert(landing.includes("/radar"), "/ landing page must expose Trust402 Radar");
+  assert(landing.includes("Hire Trust402"), "/ landing page must expose a hire path");
   assert(!/CDP_API_KEY|CDP_WALLET_SECRET|PRIVATE_KEY|PAYMENT-SIGNATURE/.test(landing), "/ landing page must not expose secret-like names or payment headers");
 
   const rootJson = await getJson("/", { headers: { accept: "application/json" } });
   assert(rootJson.service === "Trust402", "/ JSON root service mismatch");
   assert(rootJson.links?.openapi === "/openapi.json", "/ JSON root must preserve machine-readable links");
+  assert(rootJson.links?.radar === "/radar", "/ JSON root must expose radar page");
 
   const health = await getJson("/health");
   assert(health.ok === true, "/health ok mismatch");
@@ -46,6 +49,10 @@ async function main() {
     resources.freeResources?.some((item) => item.path === "/api/registries/candidates"),
     "/api/resources must expose registry candidate discovery"
   );
+  assert(
+    resources.freeResources?.some((item) => item.path === "/api/radar/digest"),
+    "/api/resources must expose Radar digest"
+  );
 
   const wellKnown = await getJson("/.well-known/x402");
   assert(wellKnown.resources?.length === 10, "/.well-known/x402 expected 10 paid resources");
@@ -78,12 +85,14 @@ async function main() {
   const llms = await getText("/llms.txt");
   assert(llms.includes("# Trust402"), "/llms.txt heading mismatch");
   assert(llms.includes("Paid x402 Resources"), "/llms.txt must list paid resources");
+  assert(llms.includes("Trust402 Radar"), "/llms.txt must expose Radar discovery");
 
   const robots = await getText("/robots.txt");
   assert(robots.includes("Sitemap:"), "/robots.txt must include sitemap");
 
   const sitemap = await getText("/sitemap.xml");
   assert(sitemap.includes("<urlset"), "/sitemap.xml must include urlset");
+  assert(sitemap.includes("/radar"), "/sitemap.xml must include Radar routes");
   assert(sitemap.includes("/api/trust/score-resource"), "/sitemap.xml must include paid resource routes");
 
   const status = await getJson("/api/status");
@@ -274,6 +283,19 @@ async function main() {
     "/api/registries/candidates must include trusted Proof402 seed candidate"
   );
 
+  const radarHtml = await getText("/radar");
+  assert(radarHtml.includes("Trust402 Radar"), "/radar must render Trust402 Radar");
+  assert(radarHtml.includes("Quick x402 Check"), "/radar must promote quick check");
+  assert(!/CDP_API_KEY|CDP_WALLET_SECRET|PRIVATE_KEY|PAYMENT-SIGNATURE/i.test(radarHtml), "/radar must not expose secrets or payment headers");
+
+  const radarJson = await getJson("/radar.json");
+  assert(radarJson.tool === "radar.digest", "/radar.json tool mismatch");
+  assert(radarJson.primaryOffers?.length === 3, "/radar.json must expose three primary offers");
+  assert(radarJson.safety?.sendsPaymentHeaders === false, "/radar.json must stay public safe");
+
+  const radarDigest = await getJson("/api/radar/digest");
+  assert(radarDigest.digestHash === radarJson.digestHash, "/api/radar/digest must match /radar.json");
+
   const liveWindow = await postJson("/api/live/window-plan", {
     candidateEndpoint: "https://trusted.example/api/paid",
     candidatePriceUsd: 0.01,
@@ -411,6 +433,9 @@ async function main() {
   assert(openapi.paths?.["/api/operator/readiness"]?.post, "/openapi missing operator readiness POST");
   assert(openapi.paths?.["/api/registries/candidates"]?.get, "/openapi missing registry candidates GET");
   assert(openapi.paths?.["/api/registries/candidates"]?.post, "/openapi missing registry candidates POST");
+  assert(openapi.paths?.["/radar"]?.get, "/openapi missing Radar page");
+  assert(openapi.paths?.["/radar.json"]?.get, "/openapi missing Radar JSON");
+  assert(openapi.paths?.["/api/radar/digest"]?.get, "/openapi missing Radar digest");
   assert(openapi.paths?.["/api/jobs/autonomous-run"]?.post, "/openapi missing autonomous run");
   assert(openapi.paths?.["/api/agentcash/mcp-observation"]?.post, "/openapi missing AgentCash MCP observation guard");
   assert(openapi.paths?.["/api/monitor/snapshot"]?.post, "/openapi missing monitor snapshot");

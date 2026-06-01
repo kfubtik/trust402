@@ -954,7 +954,9 @@
           <span>Trust402</span>
         </a>
         <nav class="nav" aria-label="Primary navigation">
+          <a href="/radar">Radar</a>
           <a href="#resources">Resources</a>
+          <a href="#hire">Hire</a>
           <a href="#policy">Policy</a>
           <a href="#discovery">Discovery</a>
           <a href="https://github.com/kfubtik/trust402">GitHub</a>
@@ -973,7 +975,8 @@
               A live radar for x402 resources. Trust before you pay, proof after you buy: compare prices, detect risk, and route safe payments through policy-controlled procurement.
             </p>
             <div class="cta-row">
-              <a class="button primary" href="https://trust402.aztecbeacon.uk/api/resources">Inspect Resources</a>
+              <a class="button primary" href="https://trust402.aztecbeacon.uk/radar">Open Radar</a>
+              <a class="button secondary" href="#hire">Hire Trust402</a>
               <a class="button secondary" href="https://trust402.aztecbeacon.uk/openapi.json">View API</a>
               <a class="button secondary" href="https://www.x402scan.com/server/239600ba-27ae-44f1-92b0-8ea1c8fb8a14">x402scan Evidence</a>
             </div>
@@ -1059,21 +1062,9 @@
 
           <div class="resource-grid">
             <article class="resource-card">
-              <div class="card-top"><span class="badge">allowed</span><span class="price">$0.005</span></div>
-              <h3>Proof402 Notary</h3>
-              <div class="host">proof402.vercel.app</div>
-              <div class="signals">
-                <div class="signal"><label>uptime</label><strong>ready</strong></div>
-                <div class="signal"><label>proof</label><strong>yes</strong></div>
-                <div class="signal"><label>risk</label><strong>low</strong></div>
-                <div class="signal"><label>policy</label><strong>pass</strong></div>
-              </div>
-            </article>
-
-            <article class="resource-card">
-              <div class="card-top"><span class="badge">allowed</span><span class="price">$0.015</span></div>
-              <h3>Compare Resources</h3>
-              <div class="host">trust402.aztecbeacon.uk</div>
+              <div class="card-top"><span class="badge">entry</span><span class="price">$0.005</span></div>
+              <h3>Quick x402 Check</h3>
+              <div class="host">/api/trust/check-x402</div>
               <div class="signals">
                 <div class="signal"><label>uptime</label><strong>ready</strong></div>
                 <div class="signal"><label>proof</label><strong>hash</strong></div>
@@ -1083,28 +1074,78 @@
             </article>
 
             <article class="resource-card">
-              <div class="card-top"><span class="badge review">review</span><span class="price">$0.03</span></div>
-              <h3>External Signal</h3>
-              <div class="host">candidate endpoint</div>
+              <div class="card-top"><span class="badge">decision</span><span class="price">$0.01</span></div>
+              <h3>Resource Score</h3>
+              <div class="host">/api/trust/score-resource</div>
               <div class="signals">
-                <div class="signal"><label>uptime</label><strong>unknown</strong></div>
-                <div class="signal"><label>proof</label><strong>none</strong></div>
-                <div class="signal"><label>risk</label><strong>medium</strong></div>
-                <div class="signal"><label>policy</label><strong>review</strong></div>
+                <div class="signal"><label>uptime</label><strong>ready</strong></div>
+                <div class="signal"><label>proof</label><strong>hash</strong></div>
+                <div class="signal"><label>risk</label><strong>low</strong></div>
+                <div class="signal"><label>policy</label><strong>pass</strong></div>
+              </div>
+            </article>
+
+            <article class="resource-card">
+              <div class="card-top"><span class="badge review">report</span><span class="price">$0.08-$0.15</span></div>
+              <h3>x402 Diligence</h3>
+              <div class="host">/api/reports/x402-diligence</div>
+              <div class="signals">
+                <div class="signal"><label>depth</label><strong>full</strong></div>
+                <div class="signal"><label>proof</label><strong>ready</strong></div>
+                <div class="signal"><label>risk</label><strong>mapped</strong></div>
+                <div class="signal"><label>policy</label><strong>audit</strong></div>
               </div>
             </article>
 
             <article class="resource-card">
               <div class="card-top"><span class="badge">free</span><span class="price">$0</span></div>
-              <h3>Spend Policy</h3>
-              <div class="host">/api/policies/spend</div>
+              <h3>Public Radar Digest</h3>
+              <div class="host">/radar.json</div>
               <div class="signals">
                 <div class="signal"><label>uptime</label><strong>ready</strong></div>
-                <div class="signal"><label>proof</label><strong>n/a</strong></div>
+                <div class="signal"><label>proof</label><strong>links</strong></div>
                 <div class="signal"><label>risk</label><strong>none</strong></div>
-                <div class="signal"><label>policy</label><strong>source</strong></div>
+                <div class="signal"><label>policy</label><strong>public</strong></div>
               </div>
             </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="hire">
+        <div class="container">
+          <div class="section-header">
+            <div>
+              <div class="section-kicker">hire trust402</div>
+              <h2>Three clear calls for autonomous buyers</h2>
+            </div>
+            <p>
+              Start with a cheap endpoint check, upgrade to a score when choosing between resources, and use a diligence report when a result needs public-safe evidence.
+            </p>
+          </div>
+
+          <div class="api-grid">
+            <div class="api-panel">
+              <h3>Buyer path</h3>
+              <p>Trust402 is designed to be called before your agent spends on another x402 resource.</p>
+              <div class="endpoint-list" style="margin-top: 18px;">
+                <div class="endpoint"><strong>$0.005</strong><span>quick x402 check</span></div>
+                <div class="endpoint"><strong>$0.01</strong><span>resource score</span></div>
+                <div class="endpoint"><strong>$0.08+</strong><span>diligence report</span></div>
+                <div class="endpoint"><strong>GET</strong><span>/radar.json</span></div>
+              </div>
+            </div>
+
+            <div class="code-window">
+              <div class="code-head"><span>first-paid-call.sh</span><span>$0.005</span></div>
+              <pre>curl -X POST https://trust402.aztecbeacon.uk/api/trust/check-x402 \
+  -H "content-type: application/json" \
+  -d '{
+    "endpoint": "https://proof402.vercel.app/api/proof/notarize",
+    "method": "POST",
+    "expectedPriceUsd": 0.005
+  }'</pre>
+            </div>
           </div>
         </div>
       </section>
@@ -1159,6 +1200,7 @@
                 <div class="endpoint"><strong>GET</strong><span>/.well-known/x402</span></div>
                 <div class="endpoint"><strong>GET</strong><span>/.well-known/agent.json</span></div>
                 <div class="endpoint"><strong>GET</strong><span>/api/marketplace/bundle</span></div>
+                <div class="endpoint"><strong>GET</strong><span>/radar.json</span></div>
                 <div class="endpoint"><strong>GET</strong><span>/directory.json</span></div>
                 <div class="endpoint"><strong>GET</strong><span>/llms.txt</span></div>
               </div>
@@ -1246,10 +1288,11 @@
               <p>Use Trust402 as a procurement layer between your agent and paid x402 resources.</p>
               <div class="endpoint-list" style="margin-top: 18px;">
                 <div class="endpoint"><strong>GET</strong><span>/api/resources</span></div>
+                <div class="endpoint"><strong>GET</strong><span>/api/radar/digest</span></div>
                 <div class="endpoint"><strong>POST</strong><span>/api/trust/compare-resources</span></div>
                 <div class="endpoint"><strong>GET</strong><span>/api/policies/spend</span></div>
                 <div class="endpoint"><strong>POST</strong><span>/api/procurement/execute</span></div>
-                <div class="endpoint"><strong>POST</strong><span>/api/jobs/autonomous</span></div>
+                <div class="endpoint"><strong>POST</strong><span>/api/jobs/autonomous-run</span></div>
               </div>
             </div>
           </div>

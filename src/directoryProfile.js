@@ -158,6 +158,8 @@ export function directoryProfileHtml(input = {}, options = {}) {
     <ul>
       <li><a href="${htmlEscape(profile.discovery.openapi)}">OpenAPI</a></li>
       <li><a href="${htmlEscape(profile.discovery.x402)}">x402 discovery</a></li>
+      <li><a href="${htmlEscape(profile.discovery.radar)}">Trust402 Radar</a></li>
+      <li><a href="${htmlEscape(profile.discovery.radarJson)}">Radar digest JSON</a></li>
       <li><a href="${htmlEscape(profile.discovery.agentManifest)}">Agent manifest</a></li>
       <li><a href="${htmlEscape(profile.discovery.resources)}">Resource catalog</a></li>
       <li><a href="${htmlEscape(profile.discovery.marketplaceBundle)}">Marketplace bundle</a></li>
@@ -183,6 +185,9 @@ function publicDiscoveryLinks(baseUrl) {
   return {
     directoryProfile: `${baseUrl}/directory`,
     directoryProfileJson: `${baseUrl}/directory.json`,
+    radar: `${baseUrl}/radar`,
+    radarJson: `${baseUrl}/radar.json`,
+    radarDigest: `${baseUrl}/api/radar/digest`,
     apiDirectoryProfile: `${baseUrl}/api/directories/profile`,
     openapi: `${baseUrl}/openapi.json`,
     x402: `${baseUrl}/.well-known/x402`,

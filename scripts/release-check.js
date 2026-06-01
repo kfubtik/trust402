@@ -103,6 +103,7 @@ assert(existsSync(".github/workflows/vercel-production-deploy.yml"), "Vercel pro
 assert(existsSync("vercel.json"), "vercel.json must exist");
 assert(existsSync("api/index.js"), "Vercel API handler must exist");
 assert(existsSync("src/expressApp.js"), "Express x402 entrypoint bridge must exist");
+assert(existsSync("src/radar.js"), "Trust402 Radar module must exist");
 assert(existsSync("src/autonomousJob.js"), "autonomous job flow module must exist");
 assert(existsSync("src/resourceDiscovery.js"), "resource discovery module must exist");
 assert(existsSync("src/agentcashRefill.js"), "AgentCash refill workflow module must exist");
@@ -131,6 +132,7 @@ assert(existsSync("compose.yaml"), "compose.yaml must exist");
 assert(existsSync("docs/deployment.md"), "deployment docs must exist");
 assert(existsSync("docs/bazaar-indexing.md"), "Bazaar indexing runbook must exist");
 assert(existsSync("docs/external-marketplace-listing.md"), "external marketplace listing pack must exist");
+assert(existsSync("docs/visibility-growth-plan.md"), "visibility growth plan must exist");
 assert(existsSync("docs/github-release-checklist.md"), "GitHub release checklist must exist");
 assert(existsSync("docs/launch-issues.md"), "launch issue mirror must exist");
 assert(existsSync("docs/autonomous-completion-plan.md"), "autonomous completion plan must exist");
@@ -211,6 +213,8 @@ assert(smokeScript.includes("/api/operator/unblock-report"), "smoke script must 
 assert(smokeScript.includes("/api/operator/action-pack"), "smoke script must cover operator action pack");
 assert(smokeScript.includes("/api/operator/readiness"), "smoke script must cover operator readiness profile");
 assert(smokeScript.includes("/api/registries/candidates"), "smoke script must cover registry candidate discovery");
+assert(smokeScript.includes("/api/radar/digest"), "smoke script must cover Radar digest");
+assert(smokeScript.includes("/radar"), "smoke script must cover Radar page");
 assert(smokeScript.includes("/.well-known/agent.json"), "smoke script must cover agent manifest discovery");
 assert(smokeScript.includes("/llms.txt"), "smoke script must cover llms.txt discovery");
 assert(smokeScript.includes("/sitemap.xml"), "smoke script must cover sitemap discovery");
@@ -384,12 +388,18 @@ assert(
   catalog.freeResources.some((resource) => resource.path === "/api/proof402/preflight" && resource.priceUsd === 0),
   "free Proof402 paid preflight helper must exist"
 );
+assert(
+  catalog.freeResources.some((resource) => resource.path === "/api/radar/digest" && resource.priceUsd === 0),
+  "free Radar digest API helper must exist"
+);
 for (const path of [
   "/.well-known/x402.json",
   "/.well-known/agent.json",
   "/.well-known/agent-services.json",
   "/.well-known/ai-plugin.json",
   "/.well-known/mcp.json",
+  "/radar",
+  "/radar.json",
   "/llms.txt",
   "/robots.txt",
   "/sitemap.xml"
@@ -433,6 +443,9 @@ assert(openapi.paths?.["/api/agentcash/mcp-observation"]?.post, "AgentCash MCP o
 assert(openapi.paths?.["/api/payments/bridge-check"]?.post, "payment bridge check must be present in OpenAPI");
 assert(openapi.paths?.["/api/payments/buyer-preflight"]?.post, "CDP buyer preflight must be present in OpenAPI");
 assert(openapi.paths?.["/api/proof402/preflight"]?.post, "Proof402 paid preflight must be present in OpenAPI");
+assert(openapi.paths?.["/radar"]?.get, "Radar page must be present in OpenAPI");
+assert(openapi.paths?.["/radar.json"]?.get, "Radar JSON must be present in OpenAPI");
+assert(openapi.paths?.["/api/radar/digest"]?.get, "Radar digest API must be present in OpenAPI");
 assert(openapi.paths?.["/.well-known/x402.json"]?.get, "x402 JSON alias must be present in OpenAPI");
 assert(openapi.paths?.["/.well-known/agent.json"]?.get, "agent manifest must be present in OpenAPI");
 assert(openapi.paths?.["/.well-known/agent-services.json"]?.get, "agent services manifest must be present in OpenAPI");

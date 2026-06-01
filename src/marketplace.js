@@ -33,6 +33,9 @@ export function marketplaceBundle() {
       launchChecklist: `${config.publicBaseUrl}/api/launch/checklist`,
       marketplaceBundle: `${config.publicBaseUrl}/api/marketplace/bundle`,
       settlementStatus: `${config.publicBaseUrl}/api/settlement/status`,
+      radar: `${config.publicBaseUrl}/radar`,
+      radarJson: `${config.publicBaseUrl}/radar.json`,
+      radarDigest: `${config.publicBaseUrl}/api/radar/digest`,
       openapi: `${config.publicBaseUrl}/openapi.json`,
       x402WellKnown: `${config.publicBaseUrl}/.well-known/x402`,
       x402WellKnownJson: `${config.publicBaseUrl}/.well-known/x402.json`,
@@ -85,7 +88,7 @@ function indexingPlan(settlement, listingState) {
         paymentPayloadResourceRequired: true
       },
       discoveryCheck: {
-        command: "npm run bazaar:indexing:check -- https://trust402.vercel.app",
+        command: `npm run bazaar:indexing:check -- ${config.publicBaseUrl}`,
         cdnOrCatalogLagExpected: true
       }
     },
