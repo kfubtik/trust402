@@ -35,9 +35,10 @@ export function finalVerificationReport({
     : readyForFinalEvidence
       ? "ready-for-final-evidence"
       : "blocked";
+  const hashChecks = normalizedChecks.map(({ durationMs, ...check }) => check);
   const evidenceSubject = {
     baseUrl,
-    checks: normalizedChecks,
+    checks: hashChecks,
     requirementStatuses,
     productionGoalComplete: goalComplete,
     productionSummary: productionAudit?.summary || null,

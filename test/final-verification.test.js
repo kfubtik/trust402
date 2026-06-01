@@ -241,6 +241,35 @@ test("finalVerificationReport accepts explicit public external directory evidenc
   assert.equal(report.externalEvidence.externalDirectories.evidence.directoryName, "x402scan");
 });
 
+test("finalVerificationReport hash ignores command duration churn", () => {
+  const base = {
+    baseUrl: "https://trust402.vercel.app",
+    checks: [
+      check("release_check", "passed"),
+      check("docker_build", "passed")
+    ],
+    productionAudit: {
+      goalComplete: true,
+      summary: { verified: 10 },
+      requirements: [
+        ...verifiedRequirements,
+        { id: "final_verification", status: "verified" }
+      ],
+      blockers: []
+    }
+  };
+  const first = finalVerificationReport(base);
+  const second = finalVerificationReport({
+    ...base,
+    checks: base.checks.map((item, index) => ({
+      ...item,
+      durationMs: 1000 + index
+    }))
+  });
+
+  assert.equal(first.verificationHash, second.verificationHash);
+});
+
 test("finalVerificationReport exposes production deployment lag as its own blocker", () => {
   const report = finalVerificationReport({
     baseUrl: "https://trust402.vercel.app",

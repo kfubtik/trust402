@@ -36,7 +36,7 @@ caps, allowlists, and receipt/audit evidence.
 
 ## Current External Directory Visibility
 
-Last checked on 2026-06-01 at 15:07 +07:00 with:
+Last checked on 2026-06-01 at 15:14 +07:00 with:
 
 ```powershell
 node scripts\final-verification.js https://trust402.aztecbeacon.uk `
@@ -50,7 +50,7 @@ Result:
 
 ```text
 final_verification_status = complete
-verification_hash = sha256:df71aa5b21f99a1059b72a14c19f17c200771272049427a7e37f8341f8c2b585
+verification_hash = sha256:049d99370d525e0ab5d4fd149f0678fbe076f5863a85d3c2e005c2ffb4dd4949
 commands_passed = true
 production_goal_complete = true
 cdp_bazaar_status = all-indexed
