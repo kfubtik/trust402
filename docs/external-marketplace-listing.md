@@ -36,22 +36,24 @@ caps, allowlists, and receipt/audit evidence.
 
 ## Current External Directory Visibility
 
-Last checked on 2026-06-01 at 15:14 +07:00 with:
+Last checked on 2026-06-01 at 15:19 +07:00 with:
 
 ```powershell
 node scripts\final-verification.js https://trust402.aztecbeacon.uk `
   --timeout-ms=15000 `
   --external-directory-name=x402scan `
   --external-directory-evidence-url=https://www.x402scan.com/server/239600ba-27ae-44f1-92b0-8ea1c8fb8a14 `
-  --external-directory-evidence-source=browser-confirmed
+  --external-directory-evidence-source=browser-confirmed `
+  --with-vercel-logs
 ```
 
 Result:
 
 ```text
 final_verification_status = complete
-verification_hash = sha256:049d99370d525e0ab5d4fd149f0678fbe076f5863a85d3c2e005c2ffb4dd4949
+verification_hash = sha256:420e6ca805da9bf78593689e51bf6399f678279c8c08b43704ebd8ddb96d29a6
 commands_passed = true
+skipped_checks = 0
 production_goal_complete = true
 cdp_bazaar_status = all-indexed
 external_directory_status = visible-in-some-directories

@@ -180,4 +180,4 @@ Current completion evidence, 2026-06-01:
 - browser-confirmed x402scan evidence:
   `https://www.x402scan.com/server/239600ba-27ae-44f1-92b0-8ea1c8fb8a14`;
 - final verifier completed with
-  `sha256:049d99370d525e0ab5d4fd149f0678fbe076f5863a85d3c2e005c2ffb4dd4949`.
+  `sha256:420e6ca805da9bf78593689e51bf6399f678279c8c08b43704ebd8ddb96d29a6`.
