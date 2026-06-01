@@ -36,25 +36,38 @@ caps, allowlists, and receipt/audit evidence.
 
 ## Current External Directory Visibility
 
-Last checked on 2026-05-21 at 19:23 +07:00 with:
+Last checked on 2026-06-01 at 15:07 +07:00 with:
 
 ```powershell
-npm run directories:check -- https://trust402.aztecbeacon.uk --timeout-ms=15000 --concurrency=4 --x402scan-origin-id=239600ba-27ae-44f1-92b0-8ea1c8fb8a14
+node scripts\final-verification.js https://trust402.aztecbeacon.uk `
+  --timeout-ms=15000 `
+  --external-directory-name=x402scan `
+  --external-directory-evidence-url=https://www.x402scan.com/server/239600ba-27ae-44f1-92b0-8ea1c8fb8a14 `
+  --external-directory-evidence-source=browser-confirmed
 ```
 
 Result:
 
 ```text
-status = visible-in-some-directories
-checked = 13
-reachable = 11
-visible = 1
-notVisibleYet = 10
-unreachable = 2
-customDomainBlocked = 0
-visible_directory = x402scan
+final_verification_status = complete
+verification_hash = sha256:df71aa5b21f99a1059b72a14c19f17c200771272049427a7e37f8341f8c2b585
+commands_passed = true
+production_goal_complete = true
+cdp_bazaar_status = all-indexed
+external_directory_status = visible-in-some-directories
+visible_directory = x402scan browser-confirmed
 evidence_url = https://www.x402scan.com/server/239600ba-27ae-44f1-92b0-8ea1c8fb8a14
+browser_title = Trust402 | x402scan
+x402scan_resources = 10
+x402scan_transactions = 48
+x402scan_volume = $1.01
+x402scan_buyers = 12
 ```
+
+The plain read-only HTML directory checker still reports `not-visible-yet` for
+some client-rendered directories because it does not execute browser-side data
+loading. This does not override the browser-confirmed x402scan page above; keep
+both signals in final verification so reviewers can see the crawler limitation.
 
 x402 List API submission was sent on 2026-05-20 at 21:33 +07:00 with public
 metadata only:

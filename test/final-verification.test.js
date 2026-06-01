@@ -170,6 +170,77 @@ test("finalVerificationReport does not become ready when external evidence is fa
   assert.ok(report.blockers.some((item) => item.id === "external_directory_visibility"));
 });
 
+test("finalVerificationReport accepts explicit public external directory evidence", () => {
+  const report = finalVerificationReport({
+    baseUrl: "https://trust402.vercel.app",
+    checks: [
+      check("release_check", "passed"),
+      check("docker_build", "passed"),
+      {
+        ...check("launch_monitor", "passed"),
+        stdout: JSON.stringify({
+          summary: {
+            cdpBazaar: {
+              status: "all-indexed",
+              routeSummary: {
+                expected: 10,
+                indexed: 10,
+                missing: []
+              }
+            },
+            externalDirectories: {
+              status: "not-visible-yet",
+              visible: 0,
+              checked: 7
+            }
+          }
+        })
+      },
+      {
+        ...check("external_directories", "passed"),
+        required: false,
+        stdout: JSON.stringify({
+          status: "not-visible-yet",
+          summary: {
+            checked: 13,
+            visible: 0
+          }
+        })
+      },
+      {
+        ...check("external_directory_evidence", "passed"),
+        required: false,
+        stdout: JSON.stringify({
+          status: "visible-in-some-directories",
+          source: "browser-confirmed",
+          evidence: {
+            directoryName: "x402scan",
+            evidenceUrl: "https://www.x402scan.com/server/example"
+          },
+          summary: {
+            checked: 1,
+            visible: 1
+          }
+        })
+      }
+    ],
+    productionAudit: {
+      goalComplete: false,
+      summary: { verified: 9, unverified: 1 },
+      requirements: [
+        ...verifiedRequirements,
+        { id: "final_verification", status: "unverified" }
+      ],
+      blockers: [{ id: "final_verification" }]
+    }
+  });
+
+  assert.equal(report.status, "ready-for-final-evidence");
+  assert.equal(report.summary.externalEvidenceBlockers, 0);
+  assert.equal(report.summary.externalDirectoryStatus, "visible-in-some-directories");
+  assert.equal(report.externalEvidence.externalDirectories.evidence.directoryName, "x402scan");
+});
+
 test("finalVerificationReport exposes production deployment lag as its own blocker", () => {
   const report = finalVerificationReport({
     baseUrl: "https://trust402.vercel.app",

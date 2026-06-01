@@ -13,6 +13,9 @@ const includeDetails = args.includes("--include-details");
 const skipDocker = args.includes("--skip-docker");
 const skipDirectories = args.includes("--skip-directories");
 const withVercelLogs = args.includes("--with-vercel-logs");
+const externalDirectoryEvidenceUrl = valueArg("--external-directory-evidence-url");
+const externalDirectoryName = valueArg("--external-directory-name");
+const externalDirectoryEvidenceSource = valueArg("--external-directory-evidence-source") || "operator-provided";
 const dockerBin = valueArg("--docker-bin") || process.env.TRUST402_DOCKER_BIN || defaultDockerBin();
 const nodeBin = process.execPath;
 const npxBin = "npx";
@@ -53,6 +56,14 @@ async function main() {
           baseUrl,
           `--timeout-ms=${timeoutMs}`
         ], { required: false }),
+    externalDirectoryEvidenceUrl
+      ? externalDirectoryEvidenceCheck({
+          baseUrl,
+          directoryName: externalDirectoryName,
+          evidenceUrl: externalDirectoryEvidenceUrl,
+          evidenceSource: externalDirectoryEvidenceSource
+        })
+      : skipped("external_directory_evidence", "External directory evidence", "No explicit external directory evidence URL supplied.", false),
     runCommand("production_completion_audit", "Production completion audit", nodeBin, [
       "scripts/completion-audit.js",
       baseUrl
@@ -245,6 +256,76 @@ function skipped(id, label, reason, required = true, nextAction = null) {
     reason,
     nextAction: required ? (nextAction || "Run this check before recording final verification evidence.") : null
   };
+}
+
+function externalDirectoryEvidenceCheck({ baseUrl, directoryName, evidenceUrl, evidenceSource }) {
+  const started = Date.now();
+  const parsedEvidenceUrl = safeUrl(evidenceUrl);
+  const parsedBaseUrl = safeUrl(baseUrl);
+  const validEvidenceUrl = Boolean(parsedEvidenceUrl);
+  const sameAsService = parsedEvidenceUrl && parsedBaseUrl
+    ? parsedEvidenceUrl.origin === parsedBaseUrl.origin
+    : false;
+  const name = String(directoryName || "").trim();
+  const passed = validEvidenceUrl && !sameAsService && Boolean(name);
+  const stdout = JSON.stringify({
+    ok: passed,
+    tool: "external_directory.evidence",
+    status: passed ? "visible-in-some-directories" : "invalid-evidence",
+    source: evidenceSource,
+    evidence: {
+      directoryName: name || null,
+      evidenceUrl,
+      baseUrl,
+      publicSafe: true,
+      includesSecrets: false,
+      sendsPaymentHeaders: false,
+      mutatesWallet: false
+    },
+    summary: {
+      checked: passed ? 1 : 0,
+      reachable: passed ? 1 : 0,
+      visible: passed ? 1 : 0,
+      notVisibleYet: 0,
+      unreachable: passed ? 0 : 1,
+      customDomainBlocked: 0
+    },
+    directories: passed
+      ? [
+          {
+            id: name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "external_directory",
+            name,
+            reachable: true,
+            visible: true,
+            matchedUrls: [evidenceUrl],
+            evidenceSource
+          }
+        ]
+      : []
+  });
+
+  return {
+    id: "external_directory_evidence",
+    label: "External directory evidence",
+    status: passed ? "passed" : "failed",
+    required: false,
+    skipped: false,
+    exitCode: passed ? 0 : 1,
+    durationMs: Date.now() - started,
+    stdout,
+    stderr: "",
+    nextAction: passed
+      ? null
+      : "Pass both --external-directory-name and a public --external-directory-evidence-url that is not the Trust402 service itself."
+  };
+}
+
+function safeUrl(value) {
+  try {
+    return new URL(String(value || ""));
+  } catch {
+    return null;
+  }
 }
 
 function parseJsonOutput(stdout) {

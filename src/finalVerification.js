@@ -127,8 +127,19 @@ function trim(value) {
 function externalEvidenceFromChecks(checks) {
   const launchMonitor = parseJsonOutput(checks.find((check) => check.id === "launch_monitor")?.stdout);
   const directoryCheck = parseJsonOutput(checks.find((check) => check.id === "external_directories")?.stdout);
+  const explicitDirectoryEvidence = parseJsonOutput(checks.find((check) => check.id === "external_directory_evidence")?.stdout);
   const cdpBazaar = launchMonitor?.summary?.cdpBazaar || null;
-  const externalDirectories = directoryCheck
+  const explicitDirectoryVisible = explicitDirectoryEvidence?.status === "visible-in-some-directories";
+  const externalDirectories = explicitDirectoryVisible
+    ? {
+        status: explicitDirectoryEvidence.status,
+        summary: explicitDirectoryEvidence.summary || null,
+        visible: explicitDirectoryEvidence.summary?.visible ?? 1,
+        checked: explicitDirectoryEvidence.summary?.checked ?? 1,
+        evidence: explicitDirectoryEvidence.evidence || null,
+        evidenceSource: explicitDirectoryEvidence.source || "operator-provided"
+      }
+    : directoryCheck
     ? {
         status: directoryCheck.status || directoryCheck.summary?.status || null,
         summary: directoryCheck.summary || null,

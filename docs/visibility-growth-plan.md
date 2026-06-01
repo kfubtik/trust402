@@ -171,3 +171,13 @@ This visibility track is complete when:
 - at least one non-CDP directory visibly lists Trust402;
 - production checks and smoke tests still pass after the changes.
 
+Current completion evidence, 2026-06-01:
+
+- Radar HTML/JSON is live at `https://trust402.aztecbeacon.uk/radar` and
+  `https://trust402.aztecbeacon.uk/radar.json`;
+- landing, OpenAPI, directory profile, sitemap, and marketplace bundle link the
+  Radar/Hire surfaces;
+- browser-confirmed x402scan evidence:
+  `https://www.x402scan.com/server/239600ba-27ae-44f1-92b0-8ea1c8fb8a14`;
+- final verifier completed with
+  `sha256:df71aa5b21f99a1059b72a14c19f17c200771272049427a7e37f8341f8c2b585`.
