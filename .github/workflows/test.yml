@@ -20,16 +20,20 @@ jobs:
       - name: Smoke Docker image
         run: |
           set -euo pipefail
-          docker run -d --name trust402-test -p 127.0.0.1::4032 -e PUBLIC_BASE_URL=http://127.0.0.1:4032 trust402:test
-          TRUST402_TEST_PORT="$(docker port trust402-test 4032/tcp | awk -F: '{print $NF}')"
+          TRUST402_TEST_PORT="$(node -e "const net=require('node:net'); const server=net.createServer(); server.listen(0, '127.0.0.1', () => { console.log(server.address().port); server.close(); });")"
+          docker run -d --name trust402-test -p 127.0.0.1:${TRUST402_TEST_PORT}:4032 -e PUBLIC_BASE_URL=http://127.0.0.1:${TRUST402_TEST_PORT} trust402:test
+          TRUST402_TEST_MAPPED_PORT="$(docker port trust402-test 4032/tcp | awk -F: '{print $NF}')"
+          test "$TRUST402_TEST_MAPPED_PORT" = "$TRUST402_TEST_PORT"
           TRUST402_TEST_URL="http://127.0.0.1:${TRUST402_TEST_PORT}"
           node -e "const url=process.argv[1]; let tries=0; const wait=async()=>{try{const r=await fetch(url + '/health'); if(r.ok) return;}catch{} if(++tries>30) process.exit(1); setTimeout(wait, 1000)}; wait()" "$TRUST402_TEST_URL"
           npm run smoke -- "$TRUST402_TEST_URL"
       - name: Smoke mock x402 challenge
         run: |
           set -euo pipefail
-          docker run -d --name trust402-x402-test -p 127.0.0.1::4032 -e PUBLIC_BASE_URL=http://127.0.0.1:4036 -e TRUST402_PAYWALL_MODE=mock -e PAY_TO=0x1111111111111111111111111111111111111111 trust402:test
-          TRUST402_X402_TEST_PORT="$(docker port trust402-x402-test 4032/tcp | awk -F: '{print $NF}')"
+          TRUST402_X402_TEST_PORT="$(node -e "const net=require('node:net'); const server=net.createServer(); server.listen(0, '127.0.0.1', () => { console.log(server.address().port); server.close(); });")"
+          docker run -d --name trust402-x402-test -p 127.0.0.1:${TRUST402_X402_TEST_PORT}:4032 -e PUBLIC_BASE_URL=http://127.0.0.1:${TRUST402_X402_TEST_PORT} -e TRUST402_PAYWALL_MODE=mock -e PAY_TO=0x1111111111111111111111111111111111111111 trust402:test
+          TRUST402_X402_TEST_MAPPED_PORT="$(docker port trust402-x402-test 4032/tcp | awk -F: '{print $NF}')"
+          test "$TRUST402_X402_TEST_MAPPED_PORT" = "$TRUST402_X402_TEST_PORT"
           TRUST402_X402_TEST_URL="http://127.0.0.1:${TRUST402_X402_TEST_PORT}"
           node -e "const url=process.argv[1]; let tries=0; const wait=async()=>{try{const r=await fetch(url + '/health'); if(r.ok) return;}catch{} if(++tries>30) process.exit(1); setTimeout(wait, 1000)}; wait()" "$TRUST402_X402_TEST_URL"
           npm run smoke:x402 -- "$TRUST402_X402_TEST_URL"
