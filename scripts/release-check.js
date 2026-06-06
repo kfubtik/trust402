@@ -140,6 +140,7 @@ assert(existsSync("examples/x402-diligence.json"), "x402 diligence example must 
 assert(existsSync("examples/proof402-preflight.json"), "Proof402 preflight example must exist");
 assert(dockerfile.includes("HEALTHCHECK"), "Dockerfile must expose a healthcheck");
 assert(dockerfile.includes("npm ci --omit=dev"), "Dockerfile must install production dependencies");
+assert(dockerfile.includes("COPY brand ./brand"), "Dockerfile must include brand landing assets");
 assert(compose.includes("TRUST402_MODE: dry-run"), "compose must keep Trust402 in dry-run mode");
 assert(compose.includes("TRUST402_REAL_SETTLEMENT_ENABLED: \"false\""), "compose must keep real settlement disabled");
 assert(compose.includes("PROOF402_DELEGATION_MODE: disabled"), "compose must keep Proof402 delegation disabled");

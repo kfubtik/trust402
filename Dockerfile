@@ -12,6 +12,7 @@ COPY package.json ./
 COPY package-lock.json ./
 RUN npm ci --omit=dev
 
+COPY brand ./brand
 COPY marketplace ./marketplace
 COPY src ./src
 
