@@ -5,7 +5,10 @@ const baseUrl = (process.argv.find((arg) => /^https?:\/\//.test(arg)) || config.
 const strict = process.argv.includes("--strict");
 const timeoutMs = numberArg("--timeout-ms", 10_000);
 const concurrency = numberArg("--concurrency", 6);
-const x402scanOriginId = valueArg("--x402scan-origin-id") || process.env.TRUST402_X402SCAN_ORIGIN_ID || "";
+const x402scanOriginId = valueArg("--x402scan-origin-id") ||
+  process.env.TRUST402_X402SCAN_ORIGIN_ID ||
+  x402scanOriginIdFromEvidenceUrl(config.externalDirectoryEvidenceUrl) ||
+  "";
 const host = safeHost(baseUrl);
 const hostRequiresCustomDomain = isFreeHostingHost(host);
 const terms = Array.from(new Set([
@@ -173,6 +176,18 @@ function valueArg(name) {
   const prefix = `${name}=`;
   const match = process.argv.find((arg) => arg.startsWith(prefix));
   return match ? match.slice(prefix.length).trim() : "";
+}
+
+function x402scanOriginIdFromEvidenceUrl(value) {
+  if (!value) return "";
+  try {
+    const url = new URL(value);
+    if (url.hostname !== "www.x402scan.com" && url.hostname !== "x402scan.com") return "";
+    const match = url.pathname.match(/^\/server\/([^/]+)$/);
+    return match ? decodeURIComponent(match[1]) : "";
+  } catch {
+    return "";
+  }
 }
 
 async function mapWithConcurrency(items, limit, mapper) {

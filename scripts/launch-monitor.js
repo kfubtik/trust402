@@ -16,9 +16,13 @@ async function main() {
     "cdp_bazaar",
     ["scripts/check-bazaar-indexing.js", "--all-resources", baseUrl, `--timeout-ms=${timeoutMs}`, "--limit=20"]
   );
+  const x402scanOriginId = x402scanOriginIdFromEvidenceUrl(api.details.externalDirectoryEvidenceUrl);
+  const externalTimeoutMs = x402scanOriginId ? Math.max(timeoutMs, 30_000) : timeoutMs;
+  const externalDirectoryArgs = ["scripts/check-external-directories.js", baseUrl, `--timeout-ms=${externalTimeoutMs}`];
+  if (x402scanOriginId) externalDirectoryArgs.push(`--x402scan-origin-id=${x402scanOriginId}`);
   const externalDirectories = skipDirectories ? skipped("external_directories", "Skipped by --skip-directories.") : runJsonScript(
     "external_directories",
-    ["scripts/check-external-directories.js", baseUrl, `--timeout-ms=${timeoutMs}`]
+    externalDirectoryArgs
   );
 
   const requiredChecks = [
@@ -73,6 +77,7 @@ async function checkProductionApi() {
   const bundle = await getJson("/api/marketplace/bundle");
   const settlement = await getJson("/api/settlement/status");
   const spendPolicy = await getJson("/api/policies/spend");
+  const completionAudit = await getJson("/api/completion/audit");
   const failures = [];
 
   if (!health.ok) failures.push("/health failed");
@@ -128,7 +133,8 @@ async function checkProductionApi() {
         proof402DelegationReady: spendPolicy.body?.readiness?.proof402DelegationReady ?? null,
         agentcashAutoRefillReady: spendPolicy.body?.readiness?.agentcashAutoRefillReady ?? null,
         agentcashAutoRefillProvider: spendPolicy.body?.policies?.agentcashAutoRefill?.controls?.provider ?? null
-      }
+      },
+      externalDirectoryEvidenceUrl: externalDirectoryEvidenceUrlFromAudit(completionAudit.body)
     }
   };
 }
@@ -447,6 +453,25 @@ function numberArg(name, fallback) {
   if (!match) return fallback;
   const value = Number.parseInt(match.slice(prefix.length), 10);
   return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+function externalDirectoryEvidenceUrlFromAudit(audit) {
+  const external = audit?.requirements?.find((item) => item.id === "external_x402_directories");
+  const evidence = external?.evidence || [];
+  const entry = evidence.find((item) => typeof item === "string" && item.startsWith("evidenceUrl="));
+  return entry ? entry.slice("evidenceUrl=".length) : "";
+}
+
+function x402scanOriginIdFromEvidenceUrl(value) {
+  if (!value) return "";
+  try {
+    const url = new URL(value);
+    if (url.hostname !== "www.x402scan.com" && url.hostname !== "x402scan.com") return "";
+    const match = url.pathname.match(/^\/server\/([^/]+)$/);
+    return match ? decodeURIComponent(match[1]) : "";
+  } catch {
+    return "";
+  }
 }
 
 function trim(value) {
