@@ -1,5 +1,6 @@
 import { loadCatalog } from "./catalog.js";
 import { config } from "./config.js";
+import { ecosystemPulseSummary } from "./ecosystemPulse.js";
 import { sha256Json } from "./hash.js";
 import { spendPolicyStatus } from "./policies.js";
 
@@ -31,6 +32,7 @@ export function radarDigest(input = {}, options = {}) {
   ];
   const dailyFocus = rotate(resourceMap, digestDate).slice(0, 3);
   const policy = spendPolicyStatus(cfg);
+  const ecosystemPulse = ecosystemPulseSummary({ baseUrl, now }, { config: cfg, catalog });
   const core = {
     baseUrl,
     digestDate,
@@ -69,6 +71,7 @@ export function radarDigest(input = {}, options = {}) {
       liveSpendEnabled: cfg.liveSpendEnabled === true,
       proof402Mode: cfg.proof402DelegationMode || "disabled"
     },
+    ecosystemPulse,
     evidence: evidenceLinks(baseUrl),
     policy: {
       liveProcurementReady: policy.readiness.liveProcurementReady,
@@ -90,6 +93,7 @@ export function radarDigest(input = {}, options = {}) {
     },
     nextActions: [
       "Promote the three primary offers from the landing page and directory profiles.",
+      "Expose the ecosystem pulse to show buyers current x402 ranking, recency, and hardening signals.",
       "Use this digest as the public crawlable artifact for daily market activity.",
       "Refresh external directory listings with the Radar URL after production smoke passes."
     ]
@@ -117,6 +121,8 @@ export function radarPageHtml(input = {}, options = {}) {
             <td>${htmlEscape(resource.riskLevel)}</td>
             <td>${htmlEscape(resource.checkMode)}</td>
           </tr>`).join("");
+  const pulseItems = digest.ecosystemPulse.signalIds.slice(0, 4).map((id) => `
+        <li><code>${htmlEscape(id)}</code></li>`).join("");
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Dataset",
@@ -215,6 +221,7 @@ export function radarPageHtml(input = {}, options = {}) {
     <nav aria-label="Radar navigation">
       <a href="/">Home</a>
       <a href="/radar.json">Digest JSON</a>
+      <a href="/api/radar/ecosystem-pulse">Pulse JSON</a>
       <a href="/api/resources">Resources</a>
       <a href="/.well-known/x402">x402</a>
       <a href="https://github.com/kfubtik/trust402">GitHub</a>
@@ -226,6 +233,7 @@ export function radarPageHtml(input = {}, options = {}) {
     <p class="lead">${htmlEscape(digest.summary)}</p>
     <div class="actions">
       <a class="button primary" href="/radar.json">Open digest JSON</a>
+      <a class="button" href="/api/radar/ecosystem-pulse">Market pulse</a>
       <a class="button" href="/api/trust/check-x402">Hire quick check</a>
       <a class="button" href="/openapi.json">OpenAPI</a>
     </div>
@@ -243,6 +251,14 @@ ${offerCards}
 ${focusRows}
         </tbody>
       </table>
+    </section>
+
+    <section class="panel" aria-labelledby="pulse-title">
+      <h2 id="pulse-title">Market pulse</h2>
+      <p>Current x402 signals Trust402 tracks for buyer safety and marketplace visibility.</p>
+      <ul>
+${pulseItems}
+      </ul>
     </section>
 
     <section class="panel" aria-labelledby="evidence-title">

@@ -40,6 +40,8 @@ import { hashResult } from "./receipts.js";
 import { paymentChallengeFor, settlementPreflight, settlementStatus } from "./settlement.js";
 import { directorySubmissionPack } from "./directorySubmissionPack.js";
 import { directoryProfile, directoryProfileHtml } from "./directoryProfile.js";
+import { ecosystemPulse } from "./ecosystemPulse.js";
+import { ecosystemTrends, ecosystemTrendsHtml } from "./ecosystemTrends.js";
 import { landingPageHtml, rootLinks } from "./landingPage.js";
 import { liveWindowPlan } from "./liveWindowPlan.js";
 import { operatorActionPack } from "./operatorActionPack.js";
@@ -137,6 +139,18 @@ export async function handleTrust402Request(req, res) {
 
     if (req.method === "GET" && (path === "/radar.json" || path === "/api/radar/digest")) {
       return sendJson(res, 200, radarDigest());
+    }
+
+    if (req.method === "GET" && path === "/api/radar/ecosystem-pulse") {
+      return sendJson(res, 200, ecosystemPulse());
+    }
+
+    if (req.method === "GET" && path === "/ecosystem") {
+      return sendText(res, 200, ecosystemTrendsHtml(), "text/html; charset=utf-8");
+    }
+
+    if (req.method === "GET" && path === "/api/ecosystem/trends") {
+      return sendJson(res, 200, ecosystemTrends());
     }
 
     if (req.method === "GET" && path === "/api/capabilities") {
@@ -358,6 +372,9 @@ function statusSummary() {
       radar: "/radar",
       radarJson: "/radar.json",
       radarDigest: "/api/radar/digest",
+      ecosystemPulse: "/api/radar/ecosystem-pulse",
+      ecosystem: "/ecosystem",
+      ecosystemTrends: "/api/ecosystem/trends",
       openapi: "/openapi.json",
       x402WellKnown: "/.well-known/x402",
       x402WellKnownJson: "/.well-known/x402.json",

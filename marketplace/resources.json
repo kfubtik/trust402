@@ -95,6 +95,22 @@
       "purpose": "Public-safe Trust402 Radar daily digest JSON for crawlers, directories, and agent buyers."
     },
     {
+      "id": "discovery.ecosystem_page",
+      "method": "GET",
+      "path": "/ecosystem",
+      "priceUsd": 0,
+      "status": "free-discovery",
+      "purpose": "Public Base/x402 ecosystem trend intelligence page for buyer agents, directories, and marketplace reviewers."
+    },
+    {
+      "id": "discovery.ecosystem_trends",
+      "method": "GET",
+      "path": "/api/ecosystem/trends",
+      "priceUsd": 0,
+      "status": "free-discovery",
+      "purpose": "Machine-readable Base/x402 ecosystem trend intelligence, buyer workflow guidance, and Trust402 product positioning."
+    },
+    {
       "id": "discovery.llms",
       "method": "GET",
       "path": "/llms.txt",
@@ -223,6 +239,14 @@
       "priceUsd": 0,
       "status": "free-discovery",
       "purpose": "API alias for the public-safe Trust402 Radar daily digest JSON."
+    },
+    {
+      "id": "radar.ecosystem_pulse",
+      "method": "GET",
+      "path": "/api/radar/ecosystem-pulse",
+      "priceUsd": 0,
+      "status": "free-discovery",
+      "purpose": "Public-safe x402/Base ecosystem pulse for buyer agents, directories, and marketplace reviewers."
     },
     {
       "id": "receipts.hash_result",

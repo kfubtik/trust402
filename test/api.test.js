@@ -40,6 +40,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(rootJson.body.links.openapi, "/openapi.json");
     assert.equal(rootJson.body.links.radar, "/radar");
     assert.equal(rootJson.body.links.radarDigest, "/api/radar/digest");
+    assert.equal(rootJson.body.links.ecosystemPulse, "/api/radar/ecosystem-pulse");
 
     const apiRoot = await request(baseUrl, "/api");
     assert.equal(apiRoot.response.status, 200);
@@ -78,6 +79,9 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/agentcash/refill-check"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/payments/bridge-check"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/radar/digest"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/radar/ecosystem-pulse"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/ecosystem"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/ecosystem/trends"));
     for (const path of [
       "/.well-known/x402.json",
       "/.well-known/agent.json",
@@ -88,6 +92,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
       "/directory.json",
       "/radar",
       "/radar.json",
+      "/ecosystem",
       "/llms.txt",
       "/robots.txt",
       "/sitemap.xml"
@@ -228,6 +233,28 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(radarApi.response.status, 200);
     assert.equal(radarApi.body.digestHash, radarJson.body.digestHash);
 
+    const ecosystemPulse = await request(baseUrl, "/api/radar/ecosystem-pulse");
+    assert.equal(ecosystemPulse.response.status, 200);
+    assert.equal(ecosystemPulse.body.tool, "radar.ecosystem_pulse");
+    assert.ok(ecosystemPulse.body.marketSignals.some((signal) => signal.id === "x402-security-hardening"));
+    assert.ok(ecosystemPulse.body.recommendations.some((item) => item.id === "guard-live-spend"));
+    assert.equal(ecosystemPulse.body.safety.publicSafe, true);
+    assert.equal(ecosystemPulse.body.safety.sendsPaymentHeaders, false);
+    assert.equal(ecosystemPulse.body.safety.paidSubcallsMade, 0);
+    assert.doesNotMatch(JSON.stringify(ecosystemPulse.body), /CDP_API_KEY|CDP_WALLET_SECRET|PRIVATE_KEY|PAYMENT-SIGNATURE/i);
+
+    const ecosystemHtml = await request(baseUrl, "/ecosystem");
+    assert.equal(ecosystemHtml.response.status, 200);
+    assert.match(ecosystemHtml.body, /Trust before agents spend/);
+    assert.match(ecosystemHtml.body, /Buyer-agent workflow/);
+    assert.doesNotMatch(ecosystemHtml.body, /CDP_API_KEY|CDP_WALLET_SECRET|PRIVATE_KEY|PAYMENT-SIGNATURE/i);
+
+    const ecosystemJson = await request(baseUrl, "/api/ecosystem/trends");
+    assert.equal(ecosystemJson.response.status, 200);
+    assert.equal(ecosystemJson.body.tool, "ecosystem.trends");
+    assert.ok(ecosystemJson.body.categories.some((category) => category.id === "verification_native_clearing"));
+    assert.equal(ecosystemJson.body.safety.sendsPaymentHeaders, false);
+
     const dailyCronUnauthorized = await request(baseUrl, "/api/cron/daily-autonomous");
     assert.equal(dailyCronUnauthorized.response.status, 401);
     assert.equal(dailyCronUnauthorized.body.error.code, "cron_not_authorized");
@@ -296,6 +323,9 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/radar"].get);
     assert.ok(openapi.body.paths["/radar.json"].get);
     assert.ok(openapi.body.paths["/api/radar/digest"].get);
+    assert.ok(openapi.body.paths["/api/radar/ecosystem-pulse"].get);
+    assert.ok(openapi.body.paths["/ecosystem"].get);
+    assert.ok(openapi.body.paths["/api/ecosystem/trends"].get);
     assert.ok(openapi.body.paths["/api/directories/profile"].get);
     assert.ok(openapi.body.paths["/llms.txt"].get);
     assert.ok(openapi.body.paths["/robots.txt"].get);
@@ -375,6 +405,8 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.match(llms.body, /Paid x402 Resources/);
     assert.match(llms.body, /Directory profile/);
     assert.match(llms.body, /Trust402 Radar/);
+    assert.match(llms.body, /Ecosystem pulse JSON/);
+    assert.match(llms.body, /Ecosystem trends/);
 
     const robots = await request(baseUrl, "/robots.txt");
     assert.equal(robots.response.status, 200);
@@ -385,6 +417,8 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.match(sitemap.body, /<urlset/);
     assert.match(sitemap.body, /\/directory/);
     assert.match(sitemap.body, /\/radar/);
+    assert.match(sitemap.body, /\/api\/radar\/ecosystem-pulse/);
+    assert.match(sitemap.body, /\/ecosystem/);
     assert.match(sitemap.body, /\/api\/trust\/score-resource/);
 
     const liveWindow = await request(baseUrl, "/api/live/window-plan", {

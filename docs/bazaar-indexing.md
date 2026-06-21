@@ -55,18 +55,29 @@ deployment URLs rotate after each production release.
 - Proof402 paid delegation: disabled;
 - live OpenAPI and unpaid x402 challenge expose custom-domain resource URLs.
 
+Fresh read-only refresh on 2026-06-21:
+
+- production smoke passed against `https://trust402.aztecbeacon.uk`;
+- unpaid x402 smoke passed against `https://trust402.aztecbeacon.uk`;
+- completion audit still reports all ten launch requirements verified from its
+  configured evidence bundle;
+- live CDP Bazaar all-resource check currently reports `partially-indexed`
+  with 2 of 10 exact custom-domain routes indexed;
+- current exact-route missing resources:
+  `trust.score_resource`, `trust.evaluate_origin`, `seller.readiness`,
+  `procurement.plan`, `procurement.quote`, `monitor.snapshot`,
+  `monitor.badge`, and `reports.x402_diligence`;
+- `final:verify` is therefore still blocked by live external visibility checks
+  even though the core production and unpaid x402 routes respond correctly;
+- no paid calls were made during this refresh.
+
+Treat older `all-indexed` claims as historical evidence until the route-level
+CDP Bazaar check returns `all-indexed` again.
+
 Indexed right now on the custom-domain exact route check:
 
 - `trust.check_x402`
-- `trust.score_resource`
-- `trust.evaluate_origin`
 - `trust.compare_resources`
-- `seller.readiness`
-- `procurement.plan`
-- `procurement.quote`
-- `monitor.snapshot`
-- `monitor.badge`
-- `reports.x402_diligence`
 
 CDP Bazaar search still returns some historical `trust402.vercel.app` rows,
 including old compare-resources matches. The current custom-domain

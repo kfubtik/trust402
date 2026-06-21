@@ -101,6 +101,9 @@ http://127.0.0.1:4032/api/directories/submission-pack
 http://127.0.0.1:4032/api/jobs/autonomous-run
 http://127.0.0.1:4032/api/agentcash/refill-check
 http://127.0.0.1:4032/api/payments/bridge-check
+http://127.0.0.1:4032/api/radar/ecosystem-pulse
+http://127.0.0.1:4032/ecosystem
+http://127.0.0.1:4032/api/ecosystem/trends
 http://127.0.0.1:4032/api/resources
 http://127.0.0.1:4032/openapi.json
 http://127.0.0.1:4032/.well-known/x402
@@ -282,6 +285,9 @@ GET /api/domains/activation-pack
 POST /api/domains/activation-pack
 GET /api/directories/submission-pack
 POST /api/directories/submission-pack
+GET /api/radar/ecosystem-pulse
+GET /ecosystem
+GET /api/ecosystem/trends
 GET /api/resources
 POST /api/receipts/hash-result
 POST /api/receipts/notarize-result
@@ -683,6 +689,8 @@ Future live procurement must require:
 - `src/completionAudit.js` - final buyer-agent requirement audit and blockers.
 - `src/completionPlan.js` - pinned autonomous buyer-agent success contract.
 - `src/marketplace.js` - marketplace submission bundle and Bazaar extension drafts.
+- `src/ecosystemPulse.js` - public-safe x402/Base market pulse for Radar, directories, and buyer agents.
+- `src/ecosystemTrends.js` - public-safe Base/x402 ecosystem trend intelligence and buyer-agent workflow guidance.
 - `src/openapi.js` - OpenAPI, capabilities, and `.well-known/x402`.
 - `src/readiness.js` - dry-run launch and public marketplace readiness checks.
 - `src/receipts.js` - dry-run receipt bundles and Proof402-ready hashes.
