@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { liveWindowPlan } from "../src/liveWindowPlan.js";
+import { liveWindowPlan, trust402RouteSmokeBodyForEndpoint } from "../src/liveWindowPlan.js";
 
 const baseConfig = {
   publicBaseUrl: "https://trust402.vercel.app",
@@ -271,4 +271,33 @@ test("live window plan can include autonomous and auto-refill staging without en
   assert.equal(result.localPolicyPatch.limits.autoRefill.enabled, true);
   assert.match(result.command, /--include-autonomous-live/);
   assert.equal(result.safety.mutatesWallet, false);
+});
+
+test("Trust402 route smoke bodies cover route-level Bazaar reindex resources", () => {
+  const baseUrl = "https://trust402.aztecbeacon.uk";
+  const scoreBody = trust402RouteSmokeBodyForEndpoint(`${baseUrl}/api/trust/score-resource`, baseUrl);
+  assert.equal(scoreBody.id, "trust.check_x402");
+  assert.equal(scoreBody.endpoint, `${baseUrl}/api/trust/check-x402`);
+
+  const originBody = trust402RouteSmokeBodyForEndpoint(`${baseUrl}/api/trust/evaluate-origin`, baseUrl);
+  assert.deepEqual(originBody, { origin: baseUrl });
+
+  const sellerBody = trust402RouteSmokeBodyForEndpoint(`${baseUrl}/api/seller/readiness`, baseUrl);
+  assert.equal(sellerBody.origin, baseUrl);
+  assert.equal(sellerBody.endpoint, `${baseUrl}/api/trust/check-x402`);
+
+  const quoteBody = trust402RouteSmokeBodyForEndpoint(`${baseUrl}/api/procurement/quote`, baseUrl);
+  assert.equal(quoteBody.candidates.length, 2);
+  assert.equal(quoteBody.candidates[1].endpoint, `${baseUrl}/api/trust/check-x402`);
+
+  const monitorBody = trust402RouteSmokeBodyForEndpoint(`${baseUrl}/api/monitor/snapshot`, baseUrl);
+  assert.deepEqual(monitorBody, {
+    endpoint: `${baseUrl}/api/trust/check-x402`,
+    method: "POST",
+    expectedPriceUsd: 0.005
+  });
+
+  const reportBody = trust402RouteSmokeBodyForEndpoint(`${baseUrl}/api/reports/x402-diligence`, baseUrl);
+  assert.equal(reportBody.origin, baseUrl);
+  assert.equal(reportBody.endpoint, `${baseUrl}/api/trust/check-x402`);
 });

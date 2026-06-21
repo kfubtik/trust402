@@ -41,6 +41,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(rootJson.body.links.radar, "/radar");
     assert.equal(rootJson.body.links.radarDigest, "/api/radar/digest");
     assert.equal(rootJson.body.links.ecosystemPulse, "/api/radar/ecosystem-pulse");
+    assert.equal(rootJson.body.links.bazaarReindexWindow, "/api/bazaar/reindex-window");
 
     const apiRoot = await request(baseUrl, "/api");
     assert.equal(apiRoot.response.status, 200);
@@ -85,6 +86,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/mcp"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/mcp/tools"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/indexing/routes"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/bazaar/reindex-window"));
     for (const path of [
       "/.well-known/x402.json",
       "/.well-known/agent.json",
@@ -308,6 +310,14 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.equal(indexing.body.records.length, 10);
     assert.ok(indexing.body.records.some((record) => record.slug === "trust-score-resource" && record.mcpToolName === "score_x402_resource"));
 
+    const reindexWindow = await request(baseUrl, "/api/bazaar/reindex-window");
+    assert.equal(reindexWindow.response.status, 200);
+    assert.equal(reindexWindow.body.tool, "bazaar.reindex_window");
+    assert.equal(reindexWindow.body.mode, "plan-only");
+    assert.equal(reindexWindow.body.safety.executesPayment, false);
+    assert.equal(reindexWindow.body.currentEvidence.missingResourceIds.length, 8);
+    assert.ok(reindexWindow.body.routes.some((route) => route.id === "trust.score_resource"));
+
     const routePage = await request(baseUrl, "/resources/trust-score-resource");
     assert.equal(routePage.response.status, 200);
     assert.match(routePage.body, /Trust Score Resource|Trust Score/);
@@ -389,6 +399,8 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/api/ecosystem/trends"].get);
     assert.ok(openapi.body.paths["/api/mcp/tools"].get);
     assert.ok(openapi.body.paths["/api/indexing/routes"].get);
+    assert.ok(openapi.body.paths["/api/bazaar/reindex-window"].get);
+    assert.ok(openapi.body.paths["/api/bazaar/reindex-window"].post);
     assert.ok(openapi.body.paths["/resources/{slug}"].get);
     assert.ok(openapi.body.paths["/api/directories/profile"].get);
     assert.ok(openapi.body.paths["/llms.txt"].get);

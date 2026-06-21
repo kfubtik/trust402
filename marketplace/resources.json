@@ -135,6 +135,14 @@
       "purpose": "Route-level indexing feed with semantic queries, MCP mapping, paid route URLs, and crawler-friendly resource pages."
     },
     {
+      "id": "bazaar.reindex_window",
+      "method": "GET/POST",
+      "path": "/api/bazaar/reindex-window",
+      "priceUsd": 0,
+      "status": "operator-helper",
+      "purpose": "Generate a controlled route-by-route CDP Bazaar reindex/evidence window plan for missing paid resources without spending or mutating policy."
+    },
+    {
       "id": "discovery.llms",
       "method": "GET",
       "path": "/llms.txt",

@@ -15,9 +15,12 @@ Trust before you pay. Proof after you buy.
 ## Current Status
 
 This repository contains a working public MVP API. Production serves from
-`https://trust402.aztecbeacon.uk`, CDP Bazaar indexes all 10 custom-domain paid
-resources, and x402scan visibly lists Trust402. The GitHub repository is public
-at `https://github.com/kfubtik/trust402`.
+`https://trust402.aztecbeacon.uk`, x402scan visibly lists Trust402, and the
+GitHub repository is public at `https://github.com/kfubtik/trust402`. The core
+production and unpaid x402 routes are healthy. A fresh CDP Bazaar route-level
+check on 2026-06-21 reports 2 of 10 exact custom-domain paid routes indexed,
+so the current recovery path is the controlled reindex/evidence window in
+`/api/bazaar/reindex-window`.
 
 Trust402's own live procurement and paid Proof402 delegation are implemented
 behind spend-policy gates. Production now runs an operator-approved daily
@@ -108,6 +111,7 @@ http://127.0.0.1:4032/.well-known/mcp.json
 http://127.0.0.1:4032/mcp
 http://127.0.0.1:4032/api/mcp/tools
 http://127.0.0.1:4032/api/indexing/routes
+http://127.0.0.1:4032/api/bazaar/reindex-window
 http://127.0.0.1:4032/resources/trust-score-resource
 http://127.0.0.1:4032/api/resources
 http://127.0.0.1:4032/openapi.json
@@ -142,10 +146,12 @@ settle. This is read-only and never sends payment:
 ```powershell
 npm run bazaar:indexing:check -- https://trust402.aztecbeacon.uk
 npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk --timeout-ms=10000 --limit=20
+npm run bazaar:reindex-window -- https://trust402.aztecbeacon.uk
 ```
 
 See [docs/bazaar-indexing.md](docs/bazaar-indexing.md) for the current
-production indexing state and verification commands.
+production indexing state, controlled reindex window, and verification
+commands.
 
 Check external directory visibility without submitting forms:
 
@@ -298,6 +304,8 @@ GET /mcp
 POST /mcp
 GET /api/mcp/tools
 GET /api/indexing/routes
+GET /api/bazaar/reindex-window
+POST /api/bazaar/reindex-window
 GET /resources/{slug}
 GET /api/resources
 POST /api/receipts/hash-result
@@ -601,6 +609,11 @@ read-only: it does not call AgentCash, write `.local`, or spend.
 AgentCash policy window after the exact approval phrase is supplied; status mode
 is read-only.
 
+`bazaar:reindex-window` is the preferred recovery planner when CDP Bazaar drops
+route-level visibility. It emits one temporary CDP/Vercel live window per
+missing route, skips Proof402 by default, and never spends or mutates policy by
+itself.
+
 ## Safety
 
 Trust402 is allowed to reason about spending before it is allowed to spend.
@@ -704,6 +717,7 @@ Future live procurement must require:
 - `src/ecosystemTrends.js` - public-safe Base/x402 ecosystem trend intelligence and buyer-agent workflow guidance.
 - `src/mcpWrapper.js` - MCP JSON-RPC wrapper that maps agent tools to paid x402 request packages.
 - `src/indexingRoutes.js` - route-level indexing feed and crawler-friendly paid resource pages.
+- `src/bazaarReindexWindow.js` - controlled CDP Bazaar route-level reindex window planner.
 - `src/openapi.js` - OpenAPI, capabilities, and `.well-known/x402`.
 - `src/readiness.js` - dry-run launch and public marketplace readiness checks.
 - `src/receipts.js` - dry-run receipt bundles and Proof402-ready hashes.
@@ -720,6 +734,7 @@ Future live procurement must require:
 - `compose.yaml` - local Docker Compose service with dry-run defaults.
 - `docs/github-release-checklist.md` - public release checklist.
 - `scripts/check-bazaar-indexing.js` - read-only CDP Bazaar visibility check.
+- `scripts/bazaar-reindex-window.js` - read-only route-by-route Bazaar reindex/evidence window plan.
 - `scripts/check-external-directories.js` - read-only external directory visibility check.
 - `scripts/env-doctor.js` - local `.env` shape checker that reports only
   `present`, `nonEmpty`, and `placeholderLike` flags, never values or lengths.

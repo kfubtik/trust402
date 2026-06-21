@@ -10,6 +10,7 @@ import { autonomousRun } from "./autonomousJob.js";
 import { domainActivationPack } from "./domainActivationPack.js";
 import { domainReadinessCheck } from "./domainReadinessCheck.js";
 import { dailyAutonomyRun } from "./dailyAutonomy.js";
+import { bazaarReindexWindow } from "./bazaarReindexWindow.js";
 import { deploymentPreflight } from "./deploymentPreflight.js";
 import { githubActionsSetupPack } from "./githubActionsSetupPack.js";
 import { marketplaceBundle } from "./marketplace.js";
@@ -73,6 +74,7 @@ const routes = new Map([
   ["POST /api/domains/activation-pack", domainActivationPack],
   ["POST /api/domains/readiness-check", domainReadinessCheck],
   ["POST /api/live/window-plan", liveWindowPlan],
+  ["POST /api/bazaar/reindex-window", bazaarReindexWindow],
   ["POST /api/directories/submission-pack", directorySubmissionPack],
   ["POST /api/operator/unblock-report", operatorUnblockReport],
   ["POST /api/operator/action-pack", operatorActionPack],
@@ -170,6 +172,10 @@ export async function handleTrust402Request(req, res) {
 
     if (req.method === "GET" && path === "/api/indexing/routes") {
       return sendJson(res, 200, indexingRoutes());
+    }
+
+    if (req.method === "GET" && path === "/api/bazaar/reindex-window") {
+      return sendJson(res, 200, bazaarReindexWindow());
     }
 
     const resourcePage = path.match(/^\/resources\/([a-z0-9._-]+)$/i);
@@ -402,6 +408,7 @@ function statusSummary() {
       mcp: "/mcp",
       mcpTools: "/api/mcp/tools",
       indexingRoutes: "/api/indexing/routes",
+      bazaarReindexWindow: "/api/bazaar/reindex-window",
       openapi: "/openapi.json",
       x402WellKnown: "/.well-known/x402",
       x402WellKnownJson: "/.well-known/x402.json",

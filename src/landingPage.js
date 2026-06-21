@@ -46,6 +46,7 @@ export function rootLinks() {
       mcpTools: "/api/mcp/tools",
       indexingRoutes: "/api/indexing/routes",
       liveWindowPlan: "/api/live/window-plan",
+      bazaarReindexWindow: "/api/bazaar/reindex-window",
       operatorUnblockReport: "/api/operator/unblock-report",
       operatorActionPack: "/api/operator/action-pack",
       operatorReadiness: "/api/operator/readiness",

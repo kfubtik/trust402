@@ -207,6 +207,11 @@ export function liveWindowPlan(input = {}, options = {}) {
   };
 }
 
+export function trust402RouteSmokeBodyForEndpoint(candidateEndpoint, baseUrl = DEFAULT_BASE_URL) {
+  const trustOrigin = normalizeBaseUrl(originOf(candidateEndpoint) || baseUrl || DEFAULT_BASE_URL);
+  return trust402RouteSmokeBody(pathOf(candidateEndpoint), trustOrigin);
+}
+
 function agentcashDirectSmokePlan({
   baseUrl,
   candidateEndpoint,
@@ -365,7 +370,7 @@ function agentcashDirectSmokeBody(candidateEndpoint, baseUrl) {
   }
 
   const trustOrigin = normalizeBaseUrl(originOf(candidateEndpoint) || baseUrl || DEFAULT_BASE_URL);
-  return trust402RouteSmokeBody(pathOf(candidateEndpoint), trustOrigin);
+  return trust402RouteSmokeBodyForEndpoint(candidateEndpoint, trustOrigin);
 }
 
 function planBlockers(input) {

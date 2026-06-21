@@ -2,6 +2,7 @@ import { ApiError } from "./errors.js";
 import { appendEvidenceLedger } from "./evidenceLedger.js";
 import { sha256Json } from "./hash.js";
 import { evaluateLocalAgentcashPolicyForLive, readLocalAgentcashPolicy } from "./localAgentcashPolicy.js";
+import { trust402RouteSmokeBodyForEndpoint } from "./liveWindowPlan.js";
 import { procurementQuote } from "./procurement.js";
 
 const DEFAULT_BASE_URL = "https://trust402.vercel.app";
@@ -326,6 +327,8 @@ function candidateRequestBody({ input, endpoint, baseUrl }) {
       ]
     };
   }
+  const trust402RouteBody = trust402RouteSmokeBodyForEndpoint(endpoint, baseUrl);
+  if (trust402RouteBody) return trust402RouteBody;
   return {
     goal: input.goal || "Trust402 live evidence smoke"
   };

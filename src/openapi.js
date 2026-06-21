@@ -90,6 +90,35 @@ export function openApiSpec() {
     "/api/ecosystem/trends": getPath("Public-safe Base/x402 ecosystem trend intelligence for buyer agents"),
     "/api/mcp/tools": getPath("Trust402 MCP tool catalog for Base MCP, Hermes, Codex, and buyer agents"),
     "/api/indexing/routes": getPath("Route-level indexing feed for paid x402 resources and external marketplaces"),
+    "/api/bazaar/reindex-window": {
+      get: {
+        operationId: "bazaar_reindex_window_get",
+        summary: "Generate the default read-only CDP Bazaar route-level reindex window plan",
+        tags: ["Trust402"],
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse
+        }
+      },
+      post: {
+        operationId: "bazaar_reindex_window",
+        summary: "Generate a controlled route-by-route CDP Bazaar reindex/evidence window plan without spending",
+        tags: ["Trust402"],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: requestSchemaFor("bazaar.reindex_window"),
+              example: exampleFor("bazaar.reindex_window")
+            }
+          }
+        },
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse
+        }
+      }
+    },
     "/resources/{slug}": textPath("Crawler-friendly route-level paid resource page", "text/html"),
     "/llms.txt": textPath("LLM-readable Trust402 discovery and safety summary", "text/plain"),
     "/robots.txt": textPath("Crawler policy and sitemap pointer", "text/plain"),
@@ -768,6 +797,7 @@ export function llmsText() {
     `- MCP endpoint: ${config.publicBaseUrl}/mcp`,
     `- MCP tools: ${config.publicBaseUrl}/api/mcp/tools`,
     `- Route indexing feed: ${config.publicBaseUrl}/api/indexing/routes`,
+    `- Bazaar reindex window plan: ${config.publicBaseUrl}/api/bazaar/reindex-window`,
     `- x402 discovery: ${config.publicBaseUrl}/.well-known/x402`,
     `- x402 discovery JSON alias: ${config.publicBaseUrl}/.well-known/x402.json`,
     `- Agent manifest: ${config.publicBaseUrl}/.well-known/agent.json`,
@@ -826,6 +856,7 @@ export function sitemapXml() {
     "/api/ecosystem/trends",
     "/api/mcp/tools",
     "/api/indexing/routes",
+    "/api/bazaar/reindex-window",
     "/api/capabilities",
     "/api/status",
     "/api/marketplace/bundle",
@@ -882,6 +913,7 @@ export function capabilities() {
       mcp: "/mcp",
       mcpTools: "/api/mcp/tools",
       indexingRoutes: "/api/indexing/routes",
+      bazaarReindexWindow: "/api/bazaar/reindex-window",
       apiDirectoryProfile: "/api/directories/profile",
       directorySubmissionPack: "/api/directories/submission-pack",
       liveWindowPlan: "/api/live/window-plan",
@@ -930,6 +962,7 @@ function discoveryLinks() {
     resources: `${config.publicBaseUrl}/api/resources`,
     marketplaceBundle: `${config.publicBaseUrl}/api/marketplace/bundle`,
     indexingRoutes: `${config.publicBaseUrl}/api/indexing/routes`,
+    bazaarReindexWindow: `${config.publicBaseUrl}/api/bazaar/reindex-window`,
     completionAudit: `${config.publicBaseUrl}/api/completion/audit`
   };
 }
@@ -1298,6 +1331,39 @@ function requestSchemaFor(id) {
         liveSpentTodayUsd: { type: "number", default: 0 },
         lastVerifiedBalanceUsd: { type: "number" },
         minimumReserveUsd: { type: "number" }
+      }
+    };
+  }
+
+  if (id === "bazaar.reindex_window") {
+    return {
+      type: "object",
+      properties: {
+        baseUrl: { type: "string", format: "uri" },
+        indexedResourceIds: {
+          oneOf: [
+            { type: "string" },
+            { type: "array", items: { type: "string" } }
+          ]
+        },
+        missingResourceIds: {
+          oneOf: [
+            { type: "string" },
+            { type: "array", items: { type: "string" } }
+          ]
+        },
+        routeIds: {
+          oneOf: [
+            { type: "string" },
+            { type: "array", items: { type: "string" } }
+          ]
+        },
+        starterCapUsd: { type: "number", default: 0.05 },
+        paymentProvider: { type: "string", enum: ["agentcash-mcp", "cdp-x402", "x402-fetch", "external-adapter"] },
+        includeProof: { type: "boolean", default: false },
+        proofReserveUsd: { type: "number", default: 0.005 },
+        lastVerifiedBalanceUsd: { type: "number" },
+        minimumReserveUsd: { type: "number", default: 0.5 }
       }
     };
   }
@@ -1718,6 +1784,24 @@ function exampleFor(id) {
       maxTotalUsd: 0.03,
       paymentProvider: "agentcash-mcp",
       includeProof: true
+    };
+  }
+  if (id === "bazaar.reindex_window") {
+    return {
+      baseUrl: "https://trust402.aztecbeacon.uk",
+      missingResourceIds: [
+        "trust.score_resource",
+        "trust.evaluate_origin",
+        "seller.readiness",
+        "procurement.plan",
+        "procurement.quote",
+        "monitor.snapshot",
+        "monitor.badge",
+        "reports.x402_diligence"
+      ],
+      paymentProvider: "cdp-x402",
+      includeProof: false,
+      starterCapUsd: 0.05
     };
   }
   if (id === "directories.submission_pack") {

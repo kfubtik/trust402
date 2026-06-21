@@ -18,6 +18,19 @@ The route-by-route indexing plan is also read-only:
 npm run bazaar:indexing:plan -- https://trust402.aztecbeacon.uk --indexed=trust.compare_resources
 ```
 
+The controlled reindex/evidence window plan is read-only and is the preferred
+operator runbook when CDP Bazaar shows route-level drift:
+
+```powershell
+npm run bazaar:reindex-window -- https://trust402.aztecbeacon.uk
+```
+
+Production exposes the same public-safe plan at:
+
+```text
+https://trust402.aztecbeacon.uk/api/bazaar/reindex-window
+```
+
 ## Current Production State
 
 Last checked on 2026-05-20 at 23:37 +07:00 after the latest production
@@ -83,6 +96,43 @@ CDP Bazaar search still returns some historical `trust402.vercel.app` rows,
 including old compare-resources matches. The current custom-domain
 all-resource check verifies the exact
 `trust402.aztecbeacon.uk/api/trust/compare-resources` URL again.
+
+## Controlled Reindex Window
+
+Use `bazaar.reindex_window` instead of random daily spending when the goal is
+to recover route-level CDP Bazaar visibility.
+
+The window is intentionally route-by-route:
+
+1. Run the read-only all-resource check and confirm the route is still missing.
+2. Pick exactly one `batches.starter.routeIds` item from
+   `/api/bazaar/reindex-window`.
+3. Stage only that route's `requiredTemporaryPolicyWindow.vercelEnv` in Vercel
+   production.
+4. Run the route's provider preflight command.
+5. Run the generated `commands.liveEvidenceSmoke` command only during the
+   approved spend window.
+6. Immediately restore the previous Vercel env snapshot or apply
+   `closeWindowEnv`.
+7. Re-run `npm run bazaar:indexing:check:all -- https://trust402.aztecbeacon.uk
+   --timeout-ms=10000 --limit=20 --concurrency=8`.
+
+For the 2026-06-21 drift, the default selected routes are:
+
+- starter batch: `trust.score_resource`, `trust.evaluate_origin`,
+  `seller.readiness`, `procurement.plan`, `procurement.quote`,
+  `monitor.snapshot`, `monitor.badge`;
+- high-cost batch: `reports.x402_diligence`.
+
+The starter batch max route spend is `$0.145` and the high-cost report route
+is `$0.15`, for `$0.295` maximum route spend if all eight routes are retried.
+Do not run the whole set as one open budget. Open one temporary policy window
+per route and close it immediately after the smoke.
+
+Proof402 is disabled by default in this recovery plan. That keeps spend focused
+on the route settlement that CDP Bazaar uses for indexing evidence. Add
+`--include-proof` only with a separate approval for the extra per-route proof
+reserve.
 
 ## 2026-05-20 Custom-Domain Route Smoke Ledger
 

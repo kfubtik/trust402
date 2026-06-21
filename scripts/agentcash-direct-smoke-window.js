@@ -12,6 +12,8 @@ try {
     candidateEndpoint: args.candidateEndpoint || process.env.TRUST402_LIVE_SMOKE_CANDIDATE_ENDPOINT,
     candidatePriceUsd: args.candidatePrice || args.candidatePriceUsd || process.env.TRUST402_LIVE_SMOKE_CANDIDATE_PRICE_USD,
     maxAmountUsd: args.maxAmount || args.maxAmountUsd || args.maxTotalUsd,
+    lastVerifiedBalanceUsd: args.lastVerifiedBalance || args.lastVerifiedBalanceUsd,
+    minimumReserveUsd: args.minimumReserve || args.minimumReserveUsd,
     approval: args.approval,
     policyPath: args.policyPath,
     statePath: args.statePath,
