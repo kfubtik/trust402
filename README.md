@@ -104,6 +104,11 @@ http://127.0.0.1:4032/api/payments/bridge-check
 http://127.0.0.1:4032/api/radar/ecosystem-pulse
 http://127.0.0.1:4032/ecosystem
 http://127.0.0.1:4032/api/ecosystem/trends
+http://127.0.0.1:4032/.well-known/mcp.json
+http://127.0.0.1:4032/mcp
+http://127.0.0.1:4032/api/mcp/tools
+http://127.0.0.1:4032/api/indexing/routes
+http://127.0.0.1:4032/resources/trust-score-resource
 http://127.0.0.1:4032/api/resources
 http://127.0.0.1:4032/openapi.json
 http://127.0.0.1:4032/.well-known/x402
@@ -288,6 +293,12 @@ POST /api/directories/submission-pack
 GET /api/radar/ecosystem-pulse
 GET /ecosystem
 GET /api/ecosystem/trends
+GET /.well-known/mcp.json
+GET /mcp
+POST /mcp
+GET /api/mcp/tools
+GET /api/indexing/routes
+GET /resources/{slug}
 GET /api/resources
 POST /api/receipts/hash-result
 POST /api/receipts/notarize-result
@@ -691,6 +702,8 @@ Future live procurement must require:
 - `src/marketplace.js` - marketplace submission bundle and Bazaar extension drafts.
 - `src/ecosystemPulse.js` - public-safe x402/Base market pulse for Radar, directories, and buyer agents.
 - `src/ecosystemTrends.js` - public-safe Base/x402 ecosystem trend intelligence and buyer-agent workflow guidance.
+- `src/mcpWrapper.js` - MCP JSON-RPC wrapper that maps agent tools to paid x402 request packages.
+- `src/indexingRoutes.js` - route-level indexing feed and crawler-friendly paid resource pages.
 - `src/openapi.js` - OpenAPI, capabilities, and `.well-known/x402`.
 - `src/readiness.js` - dry-run launch and public marketplace readiness checks.
 - `src/receipts.js` - dry-run receipt bundles and Proof402-ready hashes.

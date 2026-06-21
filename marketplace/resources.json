@@ -60,7 +60,15 @@
       "path": "/.well-known/mcp.json",
       "priceUsd": 0,
       "status": "free-discovery",
-      "purpose": "MCP discovery placeholder that directs agents to OpenAPI and x402 resources."
+      "purpose": "MCP discovery manifest for the Trust402 wrapper tools that prepare paid x402 request packages."
+    },
+    {
+      "id": "discovery.mcp_endpoint",
+      "method": "GET/POST",
+      "path": "/mcp",
+      "priceUsd": 0,
+      "status": "free-discovery",
+      "purpose": "Streamable HTTP JSON-RPC MCP wrapper endpoint for score_x402_resource, compare_x402_resources, and prepare_x402_purchase."
     },
     {
       "id": "discovery.directory_profile",
@@ -109,6 +117,22 @@
       "priceUsd": 0,
       "status": "free-discovery",
       "purpose": "Machine-readable Base/x402 ecosystem trend intelligence, buyer workflow guidance, and Trust402 product positioning."
+    },
+    {
+      "id": "discovery.mcp_tools",
+      "method": "GET",
+      "path": "/api/mcp/tools",
+      "priceUsd": 0,
+      "status": "free-discovery",
+      "purpose": "Machine-readable MCP tool catalog mapping buyer-agent tool names to paid Trust402 x402 routes."
+    },
+    {
+      "id": "discovery.indexing_routes",
+      "method": "GET",
+      "path": "/api/indexing/routes",
+      "priceUsd": 0,
+      "status": "free-discovery",
+      "purpose": "Route-level indexing feed with semantic queries, MCP mapping, paid route URLs, and crawler-friendly resource pages."
     },
     {
       "id": "discovery.llms",

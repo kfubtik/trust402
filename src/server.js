@@ -42,8 +42,10 @@ import { directorySubmissionPack } from "./directorySubmissionPack.js";
 import { directoryProfile, directoryProfileHtml } from "./directoryProfile.js";
 import { ecosystemPulse } from "./ecosystemPulse.js";
 import { ecosystemTrends, ecosystemTrendsHtml } from "./ecosystemTrends.js";
+import { indexingRoutes, routeIndexPageHtml } from "./indexingRoutes.js";
 import { landingPageHtml, rootLinks } from "./landingPage.js";
 import { liveWindowPlan } from "./liveWindowPlan.js";
+import { handleMcpJsonRpc, mcpToolsCatalog } from "./mcpWrapper.js";
 import { operatorActionPack } from "./operatorActionPack.js";
 import { operatorReadiness } from "./operatorReadiness.js";
 import { operatorUnblockReport } from "./operatorUnblockReport.js";
@@ -151,6 +153,28 @@ export async function handleTrust402Request(req, res) {
 
     if (req.method === "GET" && path === "/api/ecosystem/trends") {
       return sendJson(res, 200, ecosystemTrends());
+    }
+
+    if (req.method === "GET" && path === "/api/mcp/tools") {
+      return sendJson(res, 200, mcpToolsCatalog());
+    }
+
+    if (req.method === "GET" && path === "/mcp") {
+      return sendJson(res, 200, mcpManifest());
+    }
+
+    if (req.method === "POST" && path === "/mcp") {
+      const body = await readJson(req);
+      return sendJson(res, 200, await handleMcpJsonRpc(body));
+    }
+
+    if (req.method === "GET" && path === "/api/indexing/routes") {
+      return sendJson(res, 200, indexingRoutes());
+    }
+
+    const resourcePage = path.match(/^\/resources\/([a-z0-9._-]+)$/i);
+    if (req.method === "GET" && resourcePage) {
+      return sendText(res, 200, routeIndexPageHtml(resourcePage[1]), "text/html; charset=utf-8");
     }
 
     if (req.method === "GET" && path === "/api/capabilities") {
@@ -375,6 +399,9 @@ function statusSummary() {
       ecosystemPulse: "/api/radar/ecosystem-pulse",
       ecosystem: "/ecosystem",
       ecosystemTrends: "/api/ecosystem/trends",
+      mcp: "/mcp",
+      mcpTools: "/api/mcp/tools",
+      indexingRoutes: "/api/indexing/routes",
       openapi: "/openapi.json",
       x402WellKnown: "/.well-known/x402",
       x402WellKnownJson: "/.well-known/x402.json",

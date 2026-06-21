@@ -1,5 +1,7 @@
 import { config } from "./config.js";
 import { loadCatalog } from "./catalog.js";
+import { indexingRoutes } from "./indexingRoutes.js";
+import { mcpServerManifest, mcpTools } from "./mcpWrapper.js";
 
 const jsonResponse = {
   description: "JSON response",
@@ -43,6 +45,42 @@ export function openApiSpec() {
     "/.well-known/agent-services.json": getPath("Agent services manifest for crawler ingestion"),
     "/.well-known/ai-plugin.json": getPath("OpenAPI plugin-style discovery manifest"),
     "/.well-known/mcp.json": getPath("MCP discovery placeholder and OpenAPI/x402 pointers"),
+    "/mcp": {
+      get: {
+        operationId: "mcp_manifest_get",
+        summary: "Trust402 MCP wrapper manifest",
+        tags: ["Trust402"],
+        responses: {
+          "200": jsonResponse
+        }
+      },
+      post: {
+        operationId: "mcp_jsonrpc",
+        summary: "Trust402 MCP JSON-RPC wrapper for paid x402 request packages",
+        tags: ["Trust402"],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["jsonrpc", "method"],
+                properties: {
+                  jsonrpc: { type: "string", const: "2.0" },
+                  id: {},
+                  method: { type: "string" },
+                  params: { type: "object" }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          "200": jsonResponse,
+          "400": errorResponse
+        }
+      }
+    },
     "/directory": textPath("Crawler-friendly public directory profile", "text/html"),
     "/directory.json": getPath("Public-safe directory profile JSON"),
     "/radar": textPath("Public Trust402 Radar page with primary paid offers and daily digest evidence", "text/html"),
@@ -50,6 +88,9 @@ export function openApiSpec() {
     "/api/radar/ecosystem-pulse": getPath("Public-safe x402/Base ecosystem pulse for buyer agents"),
     "/ecosystem": textPath("Public Base/x402 ecosystem trend intelligence page", "text/html"),
     "/api/ecosystem/trends": getPath("Public-safe Base/x402 ecosystem trend intelligence for buyer agents"),
+    "/api/mcp/tools": getPath("Trust402 MCP tool catalog for Base MCP, Hermes, Codex, and buyer agents"),
+    "/api/indexing/routes": getPath("Route-level indexing feed for paid x402 resources and external marketplaces"),
+    "/resources/{slug}": textPath("Crawler-friendly route-level paid resource page", "text/html"),
     "/llms.txt": textPath("LLM-readable Trust402 discovery and safety summary", "text/plain"),
     "/robots.txt": textPath("Crawler policy and sitemap pointer", "text/plain"),
     "/sitemap.xml": textPath("Sitemap for public discovery surfaces", "application/xml"),
@@ -682,12 +723,21 @@ export function aiPluginManifest() {
 
 export function mcpManifest() {
   return {
-    mcpServers: {},
-    note: "Trust402 does not expose a live MCP server yet. Use OpenAPI and x402 discovery resources for agent access.",
+    mcpServers: {
+      trust402: {
+        transport: "streamable-http",
+        url: `${config.publicBaseUrl}/mcp`
+      }
+    },
+    server: mcpServerManifest(),
+    tools: mcpTools(),
+    note: "Trust402 MCP tools prepare paid x402 request packages. They do not bypass payment or execute paid resources for free.",
     discovery: discoveryLinks(),
     safety: {
       includesSecrets: false,
-      liveSpendEnabledByDefault: false
+      liveSpendEnabledByDefault: false,
+      sendsPaymentHeaders: false,
+      bypassesX402Payment: false
     }
   };
 }
@@ -714,6 +764,10 @@ export function llmsText() {
     `- Ecosystem pulse JSON: ${config.publicBaseUrl}/api/radar/ecosystem-pulse`,
     `- Ecosystem trends: ${config.publicBaseUrl}/ecosystem`,
     `- Ecosystem trends JSON: ${config.publicBaseUrl}/api/ecosystem/trends`,
+    `- MCP manifest: ${config.publicBaseUrl}/.well-known/mcp.json`,
+    `- MCP endpoint: ${config.publicBaseUrl}/mcp`,
+    `- MCP tools: ${config.publicBaseUrl}/api/mcp/tools`,
+    `- Route indexing feed: ${config.publicBaseUrl}/api/indexing/routes`,
     `- x402 discovery: ${config.publicBaseUrl}/.well-known/x402`,
     `- x402 discovery JSON alias: ${config.publicBaseUrl}/.well-known/x402.json`,
     `- Agent manifest: ${config.publicBaseUrl}/.well-known/agent.json`,
@@ -759,6 +813,7 @@ export function sitemapXml() {
     "/.well-known/agent-services.json",
     "/.well-known/ai-plugin.json",
     "/.well-known/mcp.json",
+    "/mcp",
     "/directory",
     "/directory.json",
     "/radar",
@@ -769,6 +824,8 @@ export function sitemapXml() {
     "/api/radar/digest",
     "/api/radar/ecosystem-pulse",
     "/api/ecosystem/trends",
+    "/api/mcp/tools",
+    "/api/indexing/routes",
     "/api/capabilities",
     "/api/status",
     "/api/marketplace/bundle",
@@ -777,7 +834,8 @@ export function sitemapXml() {
     "/api/deployments/github-actions-setup",
     "/api/registries/candidates",
     "/api/proof402/preflight",
-    ...loadCatalog().paidLaunchResources.map((resource) => resource.path)
+    ...loadCatalog().paidLaunchResources.map((resource) => resource.path),
+    ...indexingRoutes().records.map((record) => `/resources/${record.slug}`)
   ];
   const body = urls.map((path) => `  <url><loc>${xmlEscape(`${config.publicBaseUrl}${path}`)}</loc></url>`).join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`;
@@ -821,6 +879,9 @@ export function capabilities() {
       ecosystemPulse: "/api/radar/ecosystem-pulse",
       ecosystem: "/ecosystem",
       ecosystemTrends: "/api/ecosystem/trends",
+      mcp: "/mcp",
+      mcpTools: "/api/mcp/tools",
+      indexingRoutes: "/api/indexing/routes",
       apiDirectoryProfile: "/api/directories/profile",
       directorySubmissionPack: "/api/directories/submission-pack",
       liveWindowPlan: "/api/live/window-plan",
@@ -852,6 +913,8 @@ function discoveryLinks() {
     agentServices: `${config.publicBaseUrl}/.well-known/agent-services.json`,
     aiPlugin: `${config.publicBaseUrl}/.well-known/ai-plugin.json`,
     mcp: `${config.publicBaseUrl}/.well-known/mcp.json`,
+    mcpEndpoint: `${config.publicBaseUrl}/mcp`,
+    mcpTools: `${config.publicBaseUrl}/api/mcp/tools`,
     directoryProfile: `${config.publicBaseUrl}/directory`,
     directoryProfileJson: `${config.publicBaseUrl}/directory.json`,
     radar: `${config.publicBaseUrl}/radar`,
@@ -866,13 +929,16 @@ function discoveryLinks() {
     sitemap: `${config.publicBaseUrl}/sitemap.xml`,
     resources: `${config.publicBaseUrl}/api/resources`,
     marketplaceBundle: `${config.publicBaseUrl}/api/marketplace/bundle`,
+    indexingRoutes: `${config.publicBaseUrl}/api/indexing/routes`,
     completionAudit: `${config.publicBaseUrl}/api/completion/audit`
   };
 }
 
 function endpointDiscoveryRecord(resource) {
+  const routeRecord = indexingRoutes().records.find((record) => record.id === resource.id);
   return {
     id: resource.id,
+    name: routeRecord?.name || resource.id,
     url: `${config.publicBaseUrl}${resource.path}`,
     resource: `${config.publicBaseUrl}${resource.path}`,
     path: resource.path,
@@ -881,6 +947,10 @@ function endpointDiscoveryRecord(resource) {
     x402Version: 2,
     price_usd: resource.priceUsd,
     description: resource.purpose,
+    keywords: routeRecord?.keywords || [],
+    semanticQueries: routeRecord?.semanticQueries || [],
+    mcpToolName: routeRecord?.mcpToolName || null,
+    resourcePage: routeRecord?.pageUrl || null,
     category: categoryFor(resource),
     accepts: [paymentInfo(resource).protocols[0].x402],
     inputSchema: requestSchemaFor(resource.id),

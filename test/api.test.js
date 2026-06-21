@@ -82,12 +82,16 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/radar/ecosystem-pulse"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/ecosystem"));
     assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/ecosystem/trends"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/mcp"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/mcp/tools"));
+    assert.ok(resources.body.freeResources.some((resource) => resource.path === "/api/indexing/routes"));
     for (const path of [
       "/.well-known/x402.json",
       "/.well-known/agent.json",
       "/.well-known/agent-services.json",
       "/.well-known/ai-plugin.json",
       "/.well-known/mcp.json",
+      "/mcp",
       "/directory",
       "/directory.json",
       "/radar",
@@ -255,6 +259,61 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(ecosystemJson.body.categories.some((category) => category.id === "verification_native_clearing"));
     assert.equal(ecosystemJson.body.safety.sendsPaymentHeaders, false);
 
+    const mcpManifestGet = await request(baseUrl, "/.well-known/mcp.json");
+    assert.equal(mcpManifestGet.response.status, 200);
+    assert.ok(mcpManifestGet.body.mcpServers.trust402.url.endsWith("/mcp"));
+    assert.ok(mcpManifestGet.body.tools.some((tool) => tool.name === "score_x402_resource"));
+    assert.equal(mcpManifestGet.body.safety.bypassesX402Payment, false);
+
+    const mcpGet = await request(baseUrl, "/mcp");
+    assert.equal(mcpGet.response.status, 200);
+    assert.ok(mcpGet.body.server.tools.some((tool) => tool.name === "compare_x402_resources"));
+
+    const mcpTools = await request(baseUrl, "/api/mcp/tools");
+    assert.equal(mcpTools.response.status, 200);
+    assert.equal(mcpTools.body.tool, "mcp.tools_catalog");
+    assert.ok(mcpTools.body.tools.some((tool) => tool.x402?.url?.endsWith("/api/procurement/quote")));
+
+    const mcpInit = await request(baseUrl, "/mcp", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize" })
+    });
+    assert.equal(mcpInit.response.status, 200);
+    assert.equal(mcpInit.body.result.serverInfo.name, "trust402");
+
+    const mcpCall = await request(baseUrl, "/mcp", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 2,
+        method: "tools/call",
+        params: {
+          name: "score_x402_resource",
+          arguments: {
+            endpoint: "https://example.com/api/paid",
+            priceUsd: 0.01
+          }
+        }
+      })
+    });
+    assert.equal(mcpCall.response.status, 200);
+    assert.equal(mcpCall.body.result.structuredContent.request.resourceId, "trust.score_resource");
+    assert.equal(mcpCall.body.result.structuredContent.safety.bypassesX402Payment, false);
+
+    const indexing = await request(baseUrl, "/api/indexing/routes");
+    assert.equal(indexing.response.status, 200);
+    assert.equal(indexing.body.tool, "indexing.routes");
+    assert.equal(indexing.body.records.length, 10);
+    assert.ok(indexing.body.records.some((record) => record.slug === "trust-score-resource" && record.mcpToolName === "score_x402_resource"));
+
+    const routePage = await request(baseUrl, "/resources/trust-score-resource");
+    assert.equal(routePage.response.status, 200);
+    assert.match(routePage.body, /Trust Score Resource|Trust Score/);
+    assert.match(routePage.body, /Paid x402 route/);
+    assert.doesNotMatch(routePage.body, /CDP_API_KEY|CDP_WALLET_SECRET|PRIVATE_KEY|PAYMENT-SIGNATURE/i);
+
     const dailyCronUnauthorized = await request(baseUrl, "/api/cron/daily-autonomous");
     assert.equal(dailyCronUnauthorized.response.status, 401);
     assert.equal(dailyCronUnauthorized.body.error.code, "cron_not_authorized");
@@ -318,6 +377,8 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/.well-known/agent-services.json"].get);
     assert.ok(openapi.body.paths["/.well-known/ai-plugin.json"].get);
     assert.ok(openapi.body.paths["/.well-known/mcp.json"].get);
+    assert.ok(openapi.body.paths["/mcp"].get);
+    assert.ok(openapi.body.paths["/mcp"].post);
     assert.ok(openapi.body.paths["/directory"].get);
     assert.ok(openapi.body.paths["/directory.json"].get);
     assert.ok(openapi.body.paths["/radar"].get);
@@ -326,6 +387,9 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(openapi.body.paths["/api/radar/ecosystem-pulse"].get);
     assert.ok(openapi.body.paths["/ecosystem"].get);
     assert.ok(openapi.body.paths["/api/ecosystem/trends"].get);
+    assert.ok(openapi.body.paths["/api/mcp/tools"].get);
+    assert.ok(openapi.body.paths["/api/indexing/routes"].get);
+    assert.ok(openapi.body.paths["/resources/{slug}"].get);
     assert.ok(openapi.body.paths["/api/directories/profile"].get);
     assert.ok(openapi.body.paths["/llms.txt"].get);
     assert.ok(openapi.body.paths["/robots.txt"].get);
@@ -350,6 +414,8 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.ok(wellKnown.body.resources.every((resource) => !resource.startsWith("POST ")));
     assert.ok(wellKnown.body.endpoints.some((endpoint) => endpoint.path === "/api/procurement/quote"));
     assert.ok(wellKnown.body.endpoints.every((endpoint) => endpoint.accepts?.[0]?.network));
+    assert.ok(wellKnown.body.endpoints.some((endpoint) => endpoint.mcpToolName === "score_x402_resource"));
+    assert.ok(wellKnown.body.endpoints.every((endpoint) => endpoint.resourcePage));
 
     const wellKnownJson = await request(baseUrl, "/.well-known/x402.json");
     assert.equal(wellKnownJson.response.status, 200);
@@ -374,6 +440,7 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     const mcp = await request(baseUrl, "/.well-known/mcp.json");
     assert.equal(mcp.response.status, 200);
     assert.equal(mcp.body.safety.liveSpendEnabledByDefault, false);
+    assert.equal(mcp.body.safety.bypassesX402Payment, false);
 
     const directoryJson = await request(baseUrl, "/directory.json");
     assert.equal(directoryJson.response.status, 200);
@@ -407,6 +474,8 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.match(llms.body, /Trust402 Radar/);
     assert.match(llms.body, /Ecosystem pulse JSON/);
     assert.match(llms.body, /Ecosystem trends/);
+    assert.match(llms.body, /MCP endpoint/);
+    assert.match(llms.body, /Route indexing feed/);
 
     const robots = await request(baseUrl, "/robots.txt");
     assert.equal(robots.response.status, 200);
@@ -419,6 +488,8 @@ test("discovery endpoints expose Trust402 launch resources", async () => {
     assert.match(sitemap.body, /\/radar/);
     assert.match(sitemap.body, /\/api\/radar\/ecosystem-pulse/);
     assert.match(sitemap.body, /\/ecosystem/);
+    assert.match(sitemap.body, /\/api\/indexing\/routes/);
+    assert.match(sitemap.body, /\/resources\/trust-score-resource/);
     assert.match(sitemap.body, /\/api\/trust\/score-resource/);
 
     const liveWindow = await request(baseUrl, "/api/live/window-plan", {
